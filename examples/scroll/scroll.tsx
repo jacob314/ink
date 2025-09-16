@@ -112,7 +112,8 @@ function ScrollableContent() {
 			getNewValue: (current: number) => number,
 		) => {
 			let frame = 0;
-			const frames = 10;
+			const frames = 3;
+			setter(s => getNewValue(s));
 			scrollIntervalReference.current = setInterval(() => {
 				if (frame < frames) {
 					setter(s => getNewValue(s));
