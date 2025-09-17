@@ -32,4 +32,6 @@ export {
 	getScrollHeight,
 	getScrollWidth,
 } from './measure-element.js';
+export {default as VirtualizedList} from './components/VirtualizedList.js';
+export type {VirtualizedListRef} from './components/VirtualizedList.js';
 export type {DOMElement} from './dom.js';
