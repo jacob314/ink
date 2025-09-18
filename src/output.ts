@@ -1,6 +1,4 @@
 import sliceAnsi from 'slice-ansi';
-import stringWidth from 'string-width';
-import widestLine from 'widest-line';
 import {
 	type StyledChar,
 	styledCharsFromTokens,
@@ -8,6 +6,7 @@ import {
 	tokenize,
 } from '@alcalzone/ansi-tokenize';
 import {type OutputTransformer} from './render-node-to-output.js';
+import measureText, { inkStringWidth } from './measure-text.js';
 
 /**
 "Virtual" output class
@@ -223,7 +222,7 @@ export default class Output {
 				currentLine[offsetX] = character;
 
 				// Determine printed width using string-width to align with measurement
-				const characterWidth = Math.max(1, stringWidth(character.value));
+				const characterWidth = Math.max(1, inkStringWidth(character.value));
 
 				// For multi-column characters, clear following cells to avoid stray spaces/artifacts
 				if (characterWidth > 1) {
@@ -257,7 +256,7 @@ export default class Output {
 			typeof clip?.y1 === 'number' && typeof clip?.y2 === 'number';
 
 		if (clipHorizontally) {
-			const width = widestLine(lines.join('\n'));
+			const width = measureText(lines.join('\n')).width;
 
 			if (x + width < clip.x1! || x > clip.x2!) {
 				return undefined;
@@ -275,7 +274,7 @@ export default class Output {
 		if (clipHorizontally) {
 			lines = lines.map(line => {
 				const from = x < clip.x1! ? clip.x1! - x : 0;
-				const width = stringWidth(line);
+				const width = inkStringWidth(line);
 				const to = x + width > clip.x2! ? clip.x2! - x : width;
 
 				return sliceAnsi(line, from, to);

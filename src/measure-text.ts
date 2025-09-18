@@ -1,5 +1,19 @@
-import widestLine from 'widest-line';
+import {stringWidth } from 'tty-strings';
+import stripAnsi from 'strip-ansi';
 
+export function inkStringWidth(text: string): number {
+	return stringWidth(stripAnsi(text));
+}
+
+function widestLine(text:string):number {
+	let lineWidth = 0;
+
+	for (const line of text.split('\n')) {
+		lineWidth = Math.max(lineWidth, inkStringWidth(line));
+	}
+
+	return lineWidth;
+}
 const cache = new Map<string, Output>();
 
 type Output = {
