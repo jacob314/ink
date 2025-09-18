@@ -1,5 +1,8 @@
 import test from 'ava';
-import measureText from '../src/measure-text.js';
+import {measureStyledChars, toStyledCharacters} from '../src/measure-text.js';
+
+const measureText = (text: string) =>
+	measureStyledChars(toStyledCharacters(text));
 
 test('measure "constructor"', t => {
 	const {width} = measureText('constructor');
