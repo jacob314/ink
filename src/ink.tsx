@@ -17,6 +17,7 @@ import logUpdate, {type LogUpdate} from './log-update.js';
 import instances from './instances.js';
 import App from './components/App.js';
 import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
+import {setStringWidthFunction} from './measure-text.js';
 
 const noop = () => {};
 
@@ -30,6 +31,7 @@ export type Options = {
 	isScreenReaderEnabled?: boolean;
 	waitUntilExit?: () => Promise<void>;
 	maxFps?: number;
+	stringWidth?: (text: string) => number;
 };
 
 export default class Ink {
@@ -55,6 +57,11 @@ export default class Ink {
 		autoBind(this);
 
 		this.options = options;
+
+		if (options.stringWidth) {
+			setStringWidthFunction(options.stringWidth);
+		}
+
 		this.rootNode = dom.createNode('ink-root');
 		this.rootNode.onComputeLayout = this.calculateLayout;
 
