@@ -1,6 +1,4 @@
 import sliceAnsi from 'slice-ansi';
-import stringWidth from 'string-width';
-import widestLine from 'widest-line';
 import {
 	type StyledChar,
 	styledCharsFromTokens,
@@ -8,15 +6,25 @@ import {
 	tokenize,
 } from '@alcalzone/ansi-tokenize';
 import {type OutputTransformer} from './render-node-to-output.js';
+import measureText, {inkCharacterWidth, inkStringWidth} from './measure-text.js';
+
+import path from 'node:path';
+import os from 'node:os';
+import fs from 'node:fs';
+
+const DEBUG_LOG = false;
+
+const logFile = path.join(os.homedir(), 'log.txt');
 
 /**
-"Virtual" output class
-
-Handles the positioning and saving of the output of each node in the tree. Also responsible for applying transformations to each character of the output.
-
-Used to generate the final output of all nodes before writing it to actual output stream (e.g. stdout)
-*/
-
+ * "Virtual" output class
+ *
+ * Handles the positioning and saving of the output of each node in the tree.
+ * Also responsible for applying transformations to each character of the output.
+ *
+ * Used to generate the final output of all nodes before writing it to actual
+ * output stream (e.g. stdout)
+ */
 type Options = {
 	width: number;
 	height: number;
@@ -204,7 +212,8 @@ export default class Output {
 
 		let offsetY = 0;
 
-		for (let [index, line] of lines.entries()) {
+		for (const [index, initialLine] of lines.entries()) {
+			let line = initialLine;
 			const currentLine = output[y + offsetY];
 
 			// Line can be missing if `text` is taller than height of pre-initialized `this.output`
@@ -217,13 +226,123 @@ export default class Output {
 			}
 
 			const characters = styledCharsFromTokens(tokenize(line));
+			const combinedCharacters: StyledChar[] = [];
+
+			if (DEBUG_LOG) {
+				const charactersForLog = characters.map(character => {
+					if (character.type !== 'char') {
+						return character;
+					}
+
+					const value = character.value;
+					const codePoints = Array.from(value).map(char =>
+						char.codePointAt(0)?.toString(16).toUpperCase(),
+					);
+
+					return {
+						...character,
+						codePoints,
+						length: codePoints.length,
+					};
+				});
+
+				fs.appendFileSync(
+					logFile,
+					`[output.ts] rendering  "${line}": ${JSON.stringify(
+						charactersForLog,
+						null,
+						2,
+					)}\n`,
+				);
+			}
+
+			for (let i = 0; i < characters.length; i++) {
+				const character = characters[i];
+
+				if (character === undefined) {
+					continue;
+				}
+				if (character.value == '\t') {
+					character.value = '    ';
+				}
+
+				// Look ahead for combining characters.
+				// See: https://en.wikipedia.org/wiki/Combining_character
+				while (i + 1 < characters.length) {
+					const nextCharacter = characters[i + 1];
+					if (nextCharacter === undefined) { break; }
+
+					let codePoints =  Array.from(nextCharacter.value).map(char =>char.codePointAt(0));
+					// Variation selectors
+					const isVariationSelector =
+						nextCharacter.value.length === 1 &&
+						codePoints[0]! >= 0xFE00 &&
+						codePoints[0]! <= 0xFE0F;
+
+					// Skin tone modifiers
+					const isSkinToneModifier =
+						codePoints.length === 2 &&
+						codePoints[0] === 0xD83C &&
+						codePoints[1]! >= 0xDFFB &&
+						codePoints[1]! <= 0xDFFF;
+
+					const isZeroWidthJoiner = codePoints.length === 1 && codePoints[0] === 0x200D;
+					const isKeycap = codePoints.length === 1 && codePoints[0] === 0x20E3;
+
+					// Tags block (U+E0000 - U+E007F)
+					const isTagsBlock =
+						codePoints[0]! >= 0xE0000 &&
+						codePoints[0]! <= 0xE007F;
+
+					const isCombining =
+						isVariationSelector ||
+						isSkinToneModifier ||
+						isZeroWidthJoiner ||
+						isKeycap ||
+						isTagsBlock;
+
+					if (
+						isCombining
+					) {
+						if (DEBUG_LOG) {
+							fs.appendFileSync(
+								logFile,
+								`[output.ts] XXX Combining "${nextCharacter.value}" (U+${codePoints
+									.map(cp => cp!.toString(16).toUpperCase())
+									.join(', U+')}) with preceding character "${character.value}"\n`,
+							);
+						}
+						// Merge with previous character
+						character.value += nextCharacter.value;
+						i++; // Consume next character.
+
+						// If it was a ZWJ, also consume the character after it.
+						// TODO(jacobr): if there are dangling ZWJ chars we are in trouble. we probably need to add in an extra
+						// empty character or something to ensure no bad things happen or perhaps strip the ZWJ completely.
+						if (isZeroWidthJoiner && i + 1 < characters.length) {
+							const characterAfterZwj = characters[i + 1];
+							if (
+								characterAfterZwj !== undefined
+							) {
+								character.value += characterAfterZwj.value;
+								i++; // Consume character after ZWJ.
+							}
+						}
+					} else {
+						break;
+					}
+				}
+
+				combinedCharacters.push(character);
+			}
+
 			let offsetX = x;
 
-			for (const character of characters) {
+			for (const character of combinedCharacters) {
 				currentLine[offsetX] = character;
 
 				// Determine printed width using string-width to align with measurement
-				const characterWidth = Math.max(1, stringWidth(character.value));
+				const characterWidth = Math.max(1, inkCharacterWidth(character.value));
 
 				// For multi-column characters, clear following cells to avoid stray spaces/artifacts
 				if (characterWidth > 1) {
@@ -250,14 +369,12 @@ export default class Output {
 		y: number,
 		clip: Clip,
 	): {lines: string[]; x: number; y: number} | undefined {
-		const clipHorizontally =
-			typeof clip?.x1 === 'number' && typeof clip?.x2 === 'number';
-
-		const clipVertically =
-			typeof clip?.y1 === 'number' && typeof clip?.y2 === 'number';
+		const {x1, x2, y1, y2} = clip;
+		const clipHorizontally = typeof x1 === 'number' && typeof x2 === 'number';
+		const clipVertically = typeof y1 === 'number' && typeof y2 === 'number';
 
 		if (clipHorizontally) {
-			const width = widestLine(lines.join('\n'));
+			const width = measureText(lines.join('\n')).width;
 
 			if (x + width < clip.x1! || x > clip.x2!) {
 				return undefined;
@@ -275,7 +392,7 @@ export default class Output {
 		if (clipHorizontally) {
 			lines = lines.map(line => {
 				const from = x < clip.x1! ? clip.x1! - x : 0;
-				const width = stringWidth(line);
+				const width = inkStringWidth(line);
 				const to = x + width > clip.x2! ? clip.x2! - x : width;
 
 				return sliceAnsi(line, from, to);

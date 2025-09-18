@@ -57,6 +57,13 @@ export type RenderOptions = {
 	@default 30
 	*/
 	maxFps?: number;
+
+	/**
+	 * A custom function to measure text width. This is useful for handling strings
+	 * containing emojis or other complex characters. The function should take a
+	 * string as input and return its visual width.
+	 */
+	stringWidth?: (text: string) => number;
 };
 
 export type Instance = {

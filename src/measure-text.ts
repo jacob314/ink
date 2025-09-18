@@ -1,6 +1,48 @@
-import widestLine from 'widest-line';
+import stringWidth from 'string-width';
+import {tokenize} from '@alcalzone/ansi-tokenize';
 
+type StringWidth = (text: string) => number;
+
+const defaultStringWidth: StringWidth = stringWidth;
+
+let currentStringWidth: StringWidth = defaultStringWidth;
 const cache = new Map<string, Output>();
+
+export function setStringWidthFunction(fn: StringWidth) {
+	currentStringWidth = fn;
+	cache.clear();
+}
+
+export function clearStringWidthCache() {
+	cache.clear();
+}
+
+export function inkStringWidth(text: string): number {
+	/// XXX tokenize needs to use merging logic.
+	const tokens = tokenize(text);
+	let length = 0;
+	for (const token of tokens) {
+		if (token.type === 'char') {
+			length += inkCharacterWidth(token.value);
+		}
+	}
+
+	return length;
+}
+
+export function inkCharacterWidth(text: string): number {
+	return currentStringWidth(text);
+}
+
+function widestLine(text: string): number {
+	let lineWidth = 0;
+
+	for (const line of text.split('\n')) {
+		lineWidth = Math.max(lineWidth, inkStringWidth(line));
+	}
+
+	return lineWidth;
+}
 
 type Output = {
 	width: number;
