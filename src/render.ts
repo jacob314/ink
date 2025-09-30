@@ -81,6 +81,13 @@ export type RenderOptions = {
 	 * @default false
 	 */
 	alternateBufferAlreadyActive?: boolean;
+	/**
+	Enable incremental rendering mode which only updates changed lines instead of redrawing the entire output.
+	This can reduce flickering and improve performance for frequently updating UIs.
+
+	@default false
+	*/
+	incrementalRendering?: boolean;
 };
 
 export type Instance = {
@@ -129,6 +136,7 @@ const render = (
 		maxFps: 30,
 		alternateBuffer: false,
 		alternateBufferAlreadyActive: false,
+		incrementalRendering: false,
 		...getOptions(options),
 	};
 

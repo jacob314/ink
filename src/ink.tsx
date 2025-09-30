@@ -46,6 +46,7 @@ export type Options = {
 	maxFps?: number;
 	alternateBuffer?: boolean;
 	alternateBufferAlreadyActive?: boolean;
+	incrementalRendering?: boolean;
 };
 
 export default class Ink {
@@ -96,6 +97,7 @@ export default class Ink {
 			alternateBuffer: options.alternateBuffer,
 			alternateBufferAlreadyActive: options.alternateBufferAlreadyActive,
 			getRows: () => options.stdout.rows,
+			incremental: options.incrementalRendering,
 		});
 		this.throttledLog = unthrottled
 			? this.log
