@@ -179,109 +179,138 @@ export default createReconciler<
 				continue;
 			}
 
-			if (key === 'internal_transform') {
-				node.internal_transform = value as OutputTransformer;
-				continue;
-			}
+			            if (key === 'internal_transform') {
+			                node.internal_transform = value as OutputTransformer;
+			                continue;
+			            }
+			
+			            if (key === 'sticky') {
+			                node.internal_sticky = value as boolean;
+			                continue;
+			            }
 
-			if (key === 'internal_static') {
-				currentRootNode = rootNode;
-				node.internal_static = true;
-				rootNode.isStaticDirty = true;
+			            if (key === 'internal_sticky_alternate') {
+			                node.internal_sticky_alternate = value as boolean;
+			                continue;
+			            }
+			
+			            if (key === 'internal_static') {
+			                currentRootNode = rootNode;
+			                node.internal_static = true;
+			                rootNode.isStaticDirty = true;
+			
+			                // Save reference to <Static> node to skip traversal of entire
+			                // node tree to find it
+			                rootNode.staticNode = node;
+			                continue;
+			            }
 
-				// Save reference to <Static> node to skip traversal of entire
-				// node tree to find it
-				rootNode.staticNode = node;
-				continue;
-			}
+			            if (key === 'opaque') {
+			            	node.internal_opaque = value as boolean;
+			            	continue;
+			            }
+			
+			            setAttribute(node, key, value as DOMNodeAttribute);
+			        }
+			
+			        return node;
+			    },
+			    createTextInstance(text, _root, hostContext) {
+			        if (!hostContext.isInsideText) {
+			            throw new Error(
+			                `Text string "${text}" must be rendered inside <Text> component`,
+			            );
+			        }
+			
+			        return createTextNode(text);
+			    },
+			    resetTextContent() {},
+			    hideTextInstance(node) {
+			        setTextNodeValue(node, '');
+			    },
+			    unhideTextInstance(node, text) {
+			        setTextNodeValue(node, text);
+			    },
+			    getPublicInstance: instance => instance,
+			    hideInstance(node) {
+			        node.yogaNode?.setDisplay(Yoga.DISPLAY_NONE);
+			    },
+			    unhideInstance(node) {
+			        node.yogaNode?.setDisplay(Yoga.DISPLAY_FLEX);
+			    },
+			    appendInitialChild: appendChildNode,
+			    appendChild: appendChildNode,
+			    insertBefore: insertBeforeNode,
+			    finalizeInitialChildren() {
+			        return false;
+			    },
+			    isPrimaryRenderer: true,
+			    supportsMutation: true,
+			    supportsPersistence: false,
+			    supportsHydration: false,
+			    scheduleTimeout: setTimeout,
+			    cancelTimeout: clearTimeout,
+			    noTimeout: -1,
+			    beforeActiveInstanceBlur() {},
+			    afterActiveInstanceBlur() {},
+			    detachDeletedInstance() {},
+			    getInstanceFromNode: () => null,
+			    prepareScopeUpdate() {},
+			    getInstanceFromScope: () => null,
+			    appendChildToContainer: appendChildNode,
+			    insertInContainerBefore: insertBeforeNode,
+			    removeChildFromContainer(node, removeNode) {
+			        removeChildNode(node, removeNode);
+			        cleanupYogaNode(removeNode.yogaNode);
+			    },
+			    commitUpdate(node, _type, oldProps, newProps) {
+			        if (currentRootNode && node.internal_static) {
+			            currentRootNode.isStaticDirty = true;
+			        }
+			
+			        const props = diff(oldProps, newProps);
+			
+			        const style = diff(
+			            oldProps['style'] as Styles,
+			            newProps['style'] as Styles,
+			        );
+			
+			        if (!props && !style) {
+			            return;
+			        }
+			
+			        if (props) {
+			            for (const [key, value] of Object.entries(props)) {
+			                if (key === 'style') {
+			                    setStyle(node, value as Styles);
+			                    continue;
+			                }
+			
+			                if (key === 'internal_transform') {
+			                    node.internal_transform = value as OutputTransformer;
+			                    continue;
+			                }
+			
+			                if (key === 'sticky') {
+			                    node.internal_sticky = Boolean(value);
+			                    continue;
+			                }
 
-			setAttribute(node, key, value as DOMNodeAttribute);
-		}
+			                if (key === 'internal_sticky_alternate') {
+			                    node.internal_sticky_alternate = Boolean(value);
+			                    continue;
+			                }
+			
+			                if (key === 'internal_static') {
+			                    node.internal_static = true;
+			                    continue;
+			                }
 
-		return node;
-	},
-	createTextInstance(text, _root, hostContext) {
-		if (!hostContext.isInsideText) {
-			throw new Error(
-				`Text string "${text}" must be rendered inside <Text> component`,
-			);
-		}
-
-		return createTextNode(text);
-	},
-	resetTextContent() {},
-	hideTextInstance(node) {
-		setTextNodeValue(node, '');
-	},
-	unhideTextInstance(node, text) {
-		setTextNodeValue(node, text);
-	},
-	getPublicInstance: instance => instance,
-	hideInstance(node) {
-		node.yogaNode?.setDisplay(Yoga.DISPLAY_NONE);
-	},
-	unhideInstance(node) {
-		node.yogaNode?.setDisplay(Yoga.DISPLAY_FLEX);
-	},
-	appendInitialChild: appendChildNode,
-	appendChild: appendChildNode,
-	insertBefore: insertBeforeNode,
-	finalizeInitialChildren() {
-		return false;
-	},
-	isPrimaryRenderer: true,
-	supportsMutation: true,
-	supportsPersistence: false,
-	supportsHydration: false,
-	scheduleTimeout: setTimeout,
-	cancelTimeout: clearTimeout,
-	noTimeout: -1,
-	beforeActiveInstanceBlur() {},
-	afterActiveInstanceBlur() {},
-	detachDeletedInstance() {},
-	getInstanceFromNode: () => null,
-	prepareScopeUpdate() {},
-	getInstanceFromScope: () => null,
-	appendChildToContainer: appendChildNode,
-	insertInContainerBefore: insertBeforeNode,
-	removeChildFromContainer(node, removeNode) {
-		removeChildNode(node, removeNode);
-		cleanupYogaNode(removeNode.yogaNode);
-	},
-	commitUpdate(node, _type, oldProps, newProps) {
-		if (currentRootNode && node.internal_static) {
-			currentRootNode.isStaticDirty = true;
-		}
-
-		const props = diff(oldProps, newProps);
-
-		const style = diff(
-			oldProps['style'] as Styles,
-			newProps['style'] as Styles,
-		);
-
-		if (!props && !style) {
-			return;
-		}
-
-		if (props) {
-			for (const [key, value] of Object.entries(props)) {
-				if (key === 'style') {
-					setStyle(node, value as Styles);
-					continue;
-				}
-
-				if (key === 'internal_transform') {
-					node.internal_transform = value as OutputTransformer;
-					continue;
-				}
-
-				if (key === 'internal_static') {
-					node.internal_static = true;
-					continue;
-				}
-
-				setAttribute(node, key, value as DOMNodeAttribute);
+			                if (key === 'opaque') {
+			                	node.internal_opaque = Boolean(value);
+			                	continue;
+			                }
+							setAttribute(node, key, value as DOMNodeAttribute);
 			}
 		}
 
