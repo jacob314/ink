@@ -21,6 +21,9 @@ declare namespace Ink {
 		ref?: LegacyRef<DOMElement>;
 		style?: Except<Styles, 'textWrap'>;
 		internal_accessibility?: DOMElement['internal_accessibility'];
+		sticky?: boolean;
+		internal_sticky_alternate?: boolean;
+		opaque?: boolean;
 	};
 
 	type Text = {

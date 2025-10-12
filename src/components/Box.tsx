@@ -1,4 +1,9 @@
-import React, {forwardRef, useContext, type PropsWithChildren} from 'react';
+import React, {
+	forwardRef,
+	useContext,
+	type PropsWithChildren,
+	type ReactNode,
+} from 'react';
 import {type Except} from 'type-fest';
 import {type Styles} from '../styles.js';
 import {type DOMElement} from '../dom.js';
@@ -53,20 +58,38 @@ export type Props = Except<Styles, 'textWrap'> & {
 		readonly required?: boolean;
 		readonly selected?: boolean;
 	};
+
+	/**
+	 * Make the element opaque by clearing the background.
+	 */
+	readonly opaque?: boolean;
+
+	/**
+	 * Make the element sticky.
+	 */
+	readonly sticky?: boolean;
+
+	/**
+	 * Content to render when the element is sticky.
+	 */
+	readonly stickyChildren?: ReactNode;
 };
 
 /**
-`<Box>` is an essential Ink component to build your layout. It's like `<div style="display: flex">` in the browser.
-*/
+ * `<Box>` is an essential Ink component to build your layout. It's like `<div style="display: flex">` in the browser.
+ */
 const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 	(
 		{
 			children,
+			stickyChildren,
 			backgroundColor,
 			'aria-label': ariaLabel,
 			'aria-hidden': ariaHidden,
 			'aria-role': role,
 			'aria-state': ariaState,
+			sticky,
+			opaque,
 			...style
 		},
 		ref,
@@ -94,8 +117,24 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 					role,
 					state: ariaState,
 				}}
+				sticky={sticky}
+				opaque={opaque}
 			>
 				{isScreenReaderEnabled && label ? label : children}
+				{sticky && stickyChildren && !isScreenReaderEnabled && (
+					<ink-box
+						internal_sticky_alternate
+						style={{
+							position: 'absolute',
+							top: 0,
+							left: 0,
+							width: '100%',
+							flexDirection: style.flexDirection,
+						}}
+					>
+						{stickyChildren}
+					</ink-box>
+				)}
 			</ink-box>
 		);
 
