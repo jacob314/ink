@@ -19,9 +19,9 @@ import {
 
 type ScrollMode = 'vertical' | 'horizontal' | 'both' | 'hidden';
 
-const items = Array.from({length: 100}).map((_, i) => ({
+const items = Array.from({length: 200}).map((_, i) => ({
 	id: i,
-	text: `Line ${i} ${'-'.repeat(i)}`,
+	text: `Line ${i} - ${'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat((i*5) % 6)}`,
 }));
 
 export function useTerminalSize(): {columns: number; rows: number} {
@@ -119,7 +119,7 @@ function ScrollableContent() {
 			getNewValue: (current: number) => number,
 		) => {
 			let frame = 0;
-			const frames = 10;
+			const frames = 1;
 			scrollIntervalReference.current = setInterval(() => {
 				if (frame < frames) {
 					setter(s => getNewValue(s));
@@ -174,7 +174,7 @@ function ScrollableContent() {
 	return (
 		<Box flexDirection="column" height={rows - 2} width={columns}>
 			<Box flexDirection="column" flexShrink={0} overflow="hidden">
-				<Text>This is a demo showing a scrollable box.</Text>
+				<Text>This is a demo showing a scrollable box with sticky headers.</Text>
 				<Text>Press up/down arrow to scroll vertically.</Text>
 				<Text>Press left/right arrow to scroll horizontally.</Text>
 				<Text>
@@ -197,21 +197,91 @@ function ScrollableContent() {
 				flexDirection="column"
 				overflowX={overflowX}
 				overflowY={overflowY}
-				paddingRight={1}
+				paddingRight={0}
 				scrollTop={scrollTop}
 				scrollLeft={scrollLeft}
 			>
 				<Box
 					flexDirection="column"
 					flexShrink={0}
-					paddingLeft={1}
 					width={
 						scrollMode === 'horizontal' || scrollMode === 'both' ? 120 : 'auto'
 					}
 				>
-					{items.map(item => (
-						<Text key={item.id}>{item.text}</Text>
-					))}
+					{(() => {
+						const elements = [];
+						for (let i = 0; i < items.length; i += 20) {
+							const headerIndex = i;
+							const headerId = headerIndex / 20;
+							const headerText = `Header ${headerId}`;
+							const stickyHeaderText = `Header ${headerId} (sticky)`;
+
+							const itemsInGroup = items.slice(headerIndex, headerIndex + 10);
+							const nextItems = items.slice(
+								headerIndex + 10,
+								headerIndex + 20,
+							);
+
+							elements.push(
+								<Box
+									key={`group-${headerId}`}
+									flexDirection="column"
+									paddingTop={headerIndex === 0 ? 0 : 1}
+								>
+									<Box
+										width="100%"
+										sticky
+										stickyChildren={
+											<Box
+												flexDirection="column"
+												width="100%"
+												paddingLeft={1}
+												borderStyle="round"
+												borderColor="#000000"
+												paddingX={0}
+												borderTop={false}
+												borderLeft={false}
+												borderRight={false}
+												borderBottom={true}
+												opaque
+											>
+												<Text>{stickyHeaderText}</Text>
+											</Box>
+										}
+									>
+										<Box
+											flexDirection="column"
+											width="100%"
+											paddingLeft={1}
+											paddingX={0}
+										>
+											<Text>{headerText}</Text>
+										</Box>
+									</Box>
+									{itemsInGroup.map(item => (
+										<Box key={item.id} paddingLeft={1}>
+											<Text color="#999999">{item.text}</Text>
+										</Box>
+									))}
+									<Box paddingLeft={1}>
+										<Text>last element matching header</Text>
+									</Box>
+								</Box>,
+							);
+
+							elements.push(
+								...nextItems.map(item => (
+									<Box key={item.id} flexDirection="column" paddingLeft={1}>
+										<Text key={item.id} color="#999999">
+											{item.text}
+										</Text>
+									</Box>
+								)),
+							);
+						}
+
+						return elements;
+					})()}
 					<Text key="last-line" color="yellow">
 						This is the last line.
 					</Text>

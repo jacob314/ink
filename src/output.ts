@@ -38,6 +38,7 @@ type WriteOperation = {
 	y: number;
 	text: string;
 	transformers: OutputTransformer[];
+	preserveBackgroundColor?: boolean;
 };
 
 type ClipOperation = {
@@ -73,9 +74,12 @@ export default class Output {
 		x: number,
 		y: number,
 		text: string,
-		options: {transformers: OutputTransformer[]},
+		options: {
+			transformers: OutputTransformer[];
+			preserveBackgroundColor?: boolean;
+		},
 	): void {
-		const {transformers} = options;
+		const {transformers, preserveBackgroundColor} = options;
 
 		if (!text) {
 			return;
@@ -87,6 +91,7 @@ export default class Output {
 			y,
 			text,
 			transformers,
+			preserveBackgroundColor,
 		});
 	}
 
@@ -339,6 +344,16 @@ export default class Output {
 			let offsetX = x;
 
 			for (const character of combinedCharacters) {
+				if (operation.preserveBackgroundColor) {
+					const existingCharacter = currentLine[offsetX];
+					if (existingCharacter) {
+											const existingBackgroundStyles = existingCharacter.styles.filter(
+												style => style.endCode === '\u001b[49m',
+											);
+						character.styles.push(...existingBackgroundStyles);
+					}
+				}
+
 				currentLine[offsetX] = character;
 
 				// Determine printed width using string-width to align with measurement
