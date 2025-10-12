@@ -64,6 +64,10 @@ export const renderNodeToScreenReaderOutput = (
 		return '';
 	}
 
+	if (node.internalStickyAlternate) {
+		return '';
+	}
+
 	if (node.yogaNode?.getDisplay() === Yoga.DISPLAY_NONE) {
 		return '';
 	}
@@ -129,16 +133,27 @@ const renderNodeToOutput = (
 		offsetY?: number;
 		transformers?: OutputTransformer[];
 		skipStaticElements: boolean;
+		nodeToSkip?: DOMElement;
+		isStickyRender?: boolean;
 	},
 ) => {
+	if (options.nodeToSkip === node) {
+		return;
+	}
+
 	const {
 		offsetX = 0,
 		offsetY = 0,
 		transformers = [],
 		skipStaticElements,
+		isStickyRender = false,
 	} = options;
 
 	if (skipStaticElements && node.internal_static) {
+		return;
+	}
+
+	if (node.internalStickyAlternate && !isStickyRender) {
 		return;
 	}
 
@@ -231,6 +246,8 @@ const renderNodeToOutput = (
 		let verticallyScrollable = false;
 		let horizontallyScrollable = false;
 		let isVerticalScrollbarVisible = false;
+		let activeStickyNode: DOMElement | undefined;
+		let nextStickyNode: DOMElement | undefined;
 
 		if (node.nodeName === 'ink-box') {
 			renderBackground(x, y, node, output);
@@ -246,6 +263,39 @@ const renderNodeToOutput = (
 			if (verticallyScrollable) {
 				calculateVerticalScroll(node);
 				childrenOffsetY -= node.internal_scrollTop ?? 0;
+
+				const stickyNodes = getStickyDescendants(node);
+
+				if (stickyNodes.length > 0) {
+					const scrollTop =
+						(node.internal_scrollTop ?? 0) +
+						yogaNode.getComputedBorder(Yoga.EDGE_TOP);
+					let activeStickyNodeIndex = -1;
+
+					for (const [index, stickyNode] of stickyNodes.entries()) {
+						if (stickyNode.yogaNode) {
+							const stickyNodeTop = getRelativeTop(stickyNode, node);
+							if (stickyNodeTop < scrollTop) {
+								const parent = stickyNode.parentNode!;
+								if (parent?.yogaNode) {
+									const parentTop = getRelativeTop(parent, node);
+									const parentHeight = parent.yogaNode.getComputedHeight();
+									if (parentTop + parentHeight > scrollTop) {
+										activeStickyNode = stickyNode;
+										activeStickyNodeIndex = index;
+									}
+								}
+							}
+						}
+					}
+
+					if (
+						activeStickyNodeIndex !== -1 &&
+						activeStickyNodeIndex + 1 < stickyNodes.length
+					) {
+						nextStickyNode = stickyNodes[activeStickyNodeIndex + 1];
+					}
+				}
 			}
 
 			if (horizontallyScrollable) {
@@ -293,6 +343,72 @@ const renderNodeToOutput = (
 					offsetY: childrenOffsetY,
 					transformers: newTransformers,
 					skipStaticElements,
+					nodeToSkip: activeStickyNode,
+					isStickyRender,
+				});
+			}
+
+			if (activeStickyNode?.yogaNode) {
+				const alternateStickyNode = activeStickyNode.childNodes.find(
+					childNode => (childNode as DOMElement).internalStickyAlternate,
+				) as DOMElement | undefined;
+
+				const nodeToRender = alternateStickyNode ?? activeStickyNode;
+				const nodeToRenderYogaNode = nodeToRender.yogaNode;
+
+				if (!nodeToRenderYogaNode) {
+					return;
+				}
+
+				const stickyYogaNode = activeStickyNode.yogaNode;
+				const borderTop = yogaNode.getComputedBorder(Yoga.EDGE_TOP);
+				const scrollTop = node.internal_scrollTop ?? 0;
+
+				const parent = activeStickyNode.parentNode!;
+				const parentYogaNode = parent.yogaNode!;
+				const parentTop = getRelativeTop(parent, node);
+				const parentHeight = parentYogaNode.getComputedHeight();
+				const parentBottom = parentTop + parentHeight;
+				const stickyNodeHeight = nodeToRenderYogaNode.getComputedHeight();
+				const maxStickyTop = y - scrollTop + parentBottom - stickyNodeHeight;
+
+				const naturalStickyY =
+					y - scrollTop + getRelativeTop(activeStickyNode, node);
+				const stuckStickyY = y + borderTop;
+
+				let finalStickyY = Math.min(
+					Math.max(stuckStickyY, naturalStickyY),
+					maxStickyTop,
+				);
+
+				if (nextStickyNode?.yogaNode) {
+					const nextStickyNodeTop = getRelativeTop(nextStickyNode, node);
+					const nextStickyNodeTopInViewport = y - scrollTop + nextStickyNodeTop;
+					if (nextStickyNodeTopInViewport < finalStickyY + stickyNodeHeight) {
+						finalStickyY = nextStickyNodeTopInViewport - stickyNodeHeight;
+					}
+				}
+
+				let offsetX: number;
+				let offsetY: number;
+
+				if (nodeToRender === alternateStickyNode) {
+					const parentAbsoluteX = x + getRelativeLeft(parent, node);
+					const stickyNodeAbsoluteX =
+						parentAbsoluteX + stickyYogaNode.getComputedLeft();
+					offsetX = stickyNodeAbsoluteX;
+					offsetY = finalStickyY;
+				} else {
+					const parentAbsoluteX = x + getRelativeLeft(parent, node);
+					offsetX = parentAbsoluteX;
+					offsetY = finalStickyY - stickyYogaNode.getComputedTop();
+				}
+				renderNodeToOutput(nodeToRender, output, {
+					offsetX,
+					offsetY,
+					transformers: newTransformers,
+					skipStaticElements,
+					isStickyRender: true,
 				});
 			}
 
@@ -314,6 +430,97 @@ const renderNodeToOutput = (
 		}
 	}
 };
+
+function getStickyDescendants(node: DOMElement): DOMElement[] {
+	const stickyDescendants: DOMElement[] = [];
+
+	for (const child of node.childNodes) {
+		if (child.nodeName === '#text') {
+			continue;
+		}
+
+		const domChild = child;
+
+		if (domChild.internalStickyAlternate) {
+			continue;
+		}
+
+		if (domChild.internalSticky) {
+			stickyDescendants.push(domChild);
+		} else {
+			const overflow = domChild.style.overflow ?? 'visible';
+			const overflowX = domChild.style.overflowX ?? overflow;
+			const overflowY = domChild.style.overflowY ?? overflow;
+			const isScrollable = overflowX === 'scroll' || overflowY === 'scroll';
+
+			if (!isScrollable && domChild.childNodes) {
+				stickyDescendants.push(...getStickyDescendants(domChild));
+			}
+		}
+	}
+
+	return stickyDescendants;
+}
+
+function getRelativeTop(node: DOMElement, ancestor: DOMElement): number {
+	if (!node.yogaNode) {
+		return 0;
+	}
+
+	let top = node.yogaNode.getComputedTop();
+	let parent = node.parentNode;
+
+	while (parent && parent !== ancestor) {
+		if (parent.yogaNode) {
+			top += parent.yogaNode.getComputedTop();
+
+			if (parent.nodeName === 'ink-box') {
+				const overflow = parent.style.overflow ?? 'visible';
+				const overflowY = parent.style.overflowY ?? overflow;
+
+				if (overflowY === 'scroll') {
+					// It would be good if we could avoid this recalculation but it is cheap.
+					calculateVerticalScroll(parent);
+					top -= parent.internal_scrollTop ?? 0;
+				}
+			}
+		}
+
+		parent = parent.parentNode;
+	}
+
+	return top;
+}
+
+function getRelativeLeft(node: DOMElement, ancestor: DOMElement): number {
+	if (!node.yogaNode) {
+		return 0;
+	}
+
+	let left = node.yogaNode.getComputedLeft();
+	let parent = node.parentNode;
+
+	while (parent && parent !== ancestor) {
+		if (parent.yogaNode) {
+			left += parent.yogaNode.getComputedLeft();
+
+			if (parent.nodeName === 'ink-box') {
+				const overflow = parent.style.overflow ?? 'visible';
+				const overflowX = parent.style.overflowX ?? overflow;
+
+				if (overflowX === 'scroll') {
+					// It would be good if we could avoid this recalculation but it is cheap.
+					calculateHorizontalScroll(parent);
+					left -= parent.internal_scrollLeft ?? 0;
+				}
+			}
+		}
+
+		parent = parent.parentNode;
+	}
+
+	return left;
+}
 
 function calculateVerticalScroll(node: DOMElement) {
 	const {yogaNode} = node;
@@ -473,16 +680,10 @@ function renderScrollbar(
 			const outputX = axis === 'vertical' ? scrollbarX : scrollbarX + index;
 			const outputY = axis === 'vertical' ? scrollbarY + index : scrollbarY;
 
-			output.write(
-				outputX,
-				outputY,
-				colorize(
-					colorize(char, thumbColor, 'foreground'),
-					node.style.backgroundColor,
-					'background',
-				),
-				{transformers: []},
-			);
+			output.write(outputX, outputY, colorize(char, thumbColor, 'foreground'), {
+				transformers: [],
+				preserveBackgroundColor: true,
+			});
 		}
 	}
 }

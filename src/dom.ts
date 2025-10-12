@@ -77,6 +77,9 @@ export type DOMElement = {
 	internal_scrollLeft?: number;
 	internal_scrollWidth?: number;
 	internal_clientWidth?: number;
+	internalSticky?: boolean;
+	internalStickyAlternate?: boolean;
+	internal_opaque?: boolean;
 } & InkNode;
 
 export type TextNode = {
@@ -106,6 +109,8 @@ export const createNode = (nodeName: ElementNames): DOMElement => {
 		yogaNode: nodeName === 'ink-virtual-text' ? undefined : Yoga.Node.create(),
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		internal_accessibility: {},
+		internalSticky: false,
+		internalStickyAlternate: false,
 	};
 
 	if (nodeName === 'ink-text') {
