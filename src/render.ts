@@ -64,6 +64,13 @@ export type RenderOptions = {
 	 * string as input and return its visual width.
 	 */
 	stringWidth?: (text: string) => number;
+
+	/**
+	 * Render the app in an alternate screen buffer.
+	 * This is useful for fullscreen applications.
+	 * @default false
+	 */
+	alternateBuffer?: boolean;
 };
 
 export type Instance = {
@@ -102,6 +109,7 @@ const render = (
 		exitOnCtrlC: true,
 		patchConsole: true,
 		maxFps: 30,
+		alternateBuffer: false,
 		...getOptions(options),
 	};
 
