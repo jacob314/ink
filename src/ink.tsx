@@ -32,6 +32,7 @@ export type Options = {
 	waitUntilExit?: () => Promise<void>;
 	maxFps?: number;
 	stringWidth?: (text: string) => number;
+	alternateBuffer?: boolean;
 };
 
 export default class Ink {
@@ -57,6 +58,10 @@ export default class Ink {
 		autoBind(this);
 
 		this.options = options;
+
+		if (options.alternateBuffer) {
+			options.stdout.write(ansiEscapes.enterAlternativeScreen);
+		}
 
 		if (options.stringWidth) {
 			setStringWidthFunction(options.stringWidth);
@@ -179,6 +184,28 @@ export default class Ink {
 
 		// If <Static> output isn't empty, it means new children have been added to it
 		const hasStaticOutput = staticOutput && staticOutput !== '\n';
+
+		if (this.options.alternateBuffer) {
+			if (hasStaticOutput) {
+				this.fullStaticOutput += staticOutput;
+			}
+
+			const isIterm = process.env['TERM_PROGRAM'] === 'iTerm.app';
+
+			let finalOutput =
+				ansiEscapes.cursorTo(0, 0) +
+				ansiEscapes.eraseScreen +
+				this.fullStaticOutput +
+				output;
+
+			if (isIterm) {
+				finalOutput = `\x1b[?2026h${finalOutput}\x1b[?2026l`;
+			}
+
+			this.options.stdout.write(finalOutput);
+			this.lastOutput = output;
+			return;
+		}
 
 		if (this.options.debug) {
 			if (hasStaticOutput) {
@@ -360,6 +387,10 @@ export default class Ink {
 			this.options.stdout.write(this.lastOutput + '\n');
 		} else if (!this.options.debug) {
 			this.log.done();
+		}
+
+		if (this.options.alternateBuffer) {
+			this.options.stdout.write(ansiEscapes.exitAlternativeScreen);
 		}
 
 		this.isUnmounted = true;

@@ -1922,4 +1922,5 @@ const stringWidth = createStringWidth(() => app.rerender(<Emojis />));
 
 app = render(<Emojis />, {
 	stringWidth,
+  alternateBuffer: true,
 });
