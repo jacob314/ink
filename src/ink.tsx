@@ -20,6 +20,9 @@ import {accessibilityContext as AccessibilityContext} from './components/Accessi
 
 const noop = () => {};
 
+const ENTER_SYNCHRONIZED_OUTPUT = '\u001B[?2026h';
+const EXIT_SYNCHRONIZED_OUTPUT = '\u001B[?2026l';
+
 export type Options = {
 	stdout: NodeJS.WriteStream;
 	stdin: NodeJS.ReadStream;
@@ -30,6 +33,7 @@ export type Options = {
 	isScreenReaderEnabled?: boolean;
 	waitUntilExit?: () => Promise<void>;
 	maxFps?: number;
+	alternateBuffer?: boolean;
 };
 
 export default class Ink {
@@ -55,6 +59,11 @@ export default class Ink {
 		autoBind(this);
 
 		this.options = options;
+
+		if (options.alternateBuffer) {
+			options.stdout.write(ansiEscapes.enterAlternativeScreen);
+		}
+
 		this.rootNode = dom.createNode('ink-root');
 		this.rootNode.onComputeLayout = this.calculateLayout;
 
@@ -191,6 +200,37 @@ export default class Ink {
 
 			this.lastOutput = output;
 			this.lastOutputHeight = outputHeight;
+			return;
+		}
+
+		if (this.options.alternateBuffer) {
+			// Static output should be avoided when using the
+			// alternate buffer as there is no performance benefit and clients
+			// using the alternate buffer should be performing their own custom
+			// scrolling which is not feasible with static output.
+			// In alternate buffer mode we render the full visible alternate
+			// buffer each frame using robust techniques feasible only in
+			// that mode.
+			// ENTER_SYNCHRONIZED_OUTPUT, EXIT_SYNCHRONIZED_OUTPUT, an we
+			// can be confident there will be no flicker. When using the
+			// alternate buffer moving to cursor
+			// position 0,0 is guaranteed to be the top left of the screen.
+			// We could be less confident about the true cursor position of
+			// content after the static content due to possible line wrapping.
+			if (hasStaticOutput) {
+				this.fullStaticOutput += staticOutput;
+			}
+
+			let finalOutput =
+				ENTER_SYNCHRONIZED_OUTPUT +
+				ansiEscapes.cursorTo(0, 0) +
+				ansiEscapes.eraseScreen +
+				this.fullStaticOutput +
+				output +
+				EXIT_SYNCHRONIZED_OUTPUT;
+
+			this.options.stdout.write(finalOutput);
+			this.lastOutput = output;
 			return;
 		}
 
@@ -355,6 +395,10 @@ export default class Ink {
 			this.options.stdout.write(this.lastOutput + '\n');
 		} else if (!this.options.debug) {
 			this.log.done();
+		}
+
+		if (this.options.alternateBuffer) {
+			this.options.stdout.write(ansiEscapes.exitAlternativeScreen);
 		}
 
 		this.isUnmounted = true;
