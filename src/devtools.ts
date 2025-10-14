@@ -8,6 +8,12 @@ import './devtools-window-polyfill.js';
 import devtools from 'react-devtools-core';
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-(devtools as any).initialize();
+if ((devtools as any).initialize) {
 // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-(devtools as any).connectToDevTools();
+    (devtools as any).initialize();
+}
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+if ((devtools as any).connectToDevTools) {
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    (devtools as any).connectToDevTools();
+}
