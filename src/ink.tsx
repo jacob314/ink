@@ -190,17 +190,13 @@ export default class Ink {
 				this.fullStaticOutput += staticOutput;
 			}
 
-			const isIterm = process.env['TERM_PROGRAM'] === 'iTerm.app';
-
 			let finalOutput =
 				ansiEscapes.cursorTo(0, 0) +
 				ansiEscapes.eraseScreen +
 				this.fullStaticOutput +
 				output;
 
-			if (isIterm) {
-				finalOutput = `\x1b[?2026h${finalOutput}\x1b[?2026l`;
-			}
+			finalOutput = `\x1b[?2026h${finalOutput}\x1b[?2026l`;
 
 			this.options.stdout.write(finalOutput);
 			this.lastOutput = output;
