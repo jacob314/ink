@@ -3,11 +3,11 @@
 	"version": "6.3.1",
 	"description": "React for CLI",
 	"license": "MIT",
-	"repository": "vadimdemedes/ink",
+	"repository": "jacob314/ink",
 	"author": {
 		"name": "Vadim Demedes",
-		"email": "vadimdemedes@hey.com",
-		"url": "https://github.com/vadimdemedes"
+		"email": "jacobr@google.com",
+		"url": "https://github.com/jacob314/ink"
 	},
 	"type": "module",
 	"exports": {
