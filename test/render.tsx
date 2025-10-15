@@ -273,3 +273,35 @@ test.serial('throttle renders to maxFps', t => {
 		clock.uninstall();
 	}
 });
+
+test.serial('outputs renderTime when onRender is passed', t => {
+	const clock = FakeTimers.install(); // Controls timers + Date.now()
+	let lastRenderTime = -1;
+
+	const onRender = (renderTime: number) => {
+		lastRenderTime = renderTime;
+	};
+
+	function Test() {
+		return (
+			<Box borderStyle="round">
+				<Text>Test</Text>
+			</Box>
+		);
+	}
+
+	const {unmount, rerender} = render(<Test />, {
+		debug: true,
+		onRender,
+	});
+
+	t.is(lastRenderTime, 0);
+
+	rerender(<Test />);
+
+	t.is(lastRenderTime, 0);
+
+	unmount();
+
+	clock.uninstall();
+});

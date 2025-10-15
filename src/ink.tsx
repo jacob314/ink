@@ -27,6 +27,7 @@ export type Options = {
 	debug: boolean;
 	exitOnCtrlC: boolean;
 	patchConsole: boolean;
+	onRender?: (renderTime: number) => void;
 	isScreenReaderEnabled?: boolean;
 	waitUntilExit?: () => Promise<void>;
 	maxFps?: number;
@@ -165,10 +166,15 @@ export default class Ink {
 			return;
 		}
 
+		const start = Date.now();
 		const {output, outputHeight, staticOutput} = render(
 			this.rootNode,
 			this.isScreenReaderEnabled,
 		);
+		if (this.options.onRender) {
+			const end = Date.now();
+			this.options.onRender(end - start);
+		}
 
 		// If <Static> output isn't empty, it means new children have been added to it
 		const hasStaticOutput = staticOutput && staticOutput !== '\n';
