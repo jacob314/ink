@@ -4,7 +4,7 @@ import * as path from 'node:path';
 import {createRequire} from 'node:module';
 import FakeTimers from '@sinonjs/fake-timers';
 import test from 'ava';
-import React from 'react';
+import React, {useEffect} from 'react';
 import ansiEscapes from 'ansi-escapes';
 import stripAnsi from 'strip-ansi';
 import boxen from 'boxen';
@@ -277,12 +277,17 @@ test.serial('throttle renders to maxFps', t => {
 test.serial('outputs renderTime when onRender is passed', t => {
 	const clock = FakeTimers.install(); // Controls timers + Date.now()
 	let lastRenderTime = -1;
+	let tickTime = 100;
 
 	const onRender = (renderTime: number) => {
 		lastRenderTime = renderTime;
 	};
 
 	function Test() {
+		useEffect(() => {
+			clock.tick(tickTime);
+		});
+
 		return (
 			<Box borderStyle="round">
 				<Text>Test</Text>
@@ -295,11 +300,12 @@ test.serial('outputs renderTime when onRender is passed', t => {
 		onRender,
 	});
 
-	t.is(lastRenderTime, 0);
+	t.is(lastRenderTime, 100);
 
+	tickTime = 200;
 	rerender(<Test />);
 
-	t.is(lastRenderTime, 0);
+	t.is(lastRenderTime, 200);
 
 	unmount();
 
