@@ -311,6 +311,7 @@ test.serial('outputs renderTime when onRender is passed', t => {
 	tickTime = 200;
 	rerender(<Test />);
 
+	// Component props haven't changed for Nested so it doesn't trigger tick
 	t.is(lastRenderTime, 200);
 
 	unmount();
