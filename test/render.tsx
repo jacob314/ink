@@ -283,14 +283,20 @@ test.serial('outputs renderTime when onRender is passed', t => {
 		lastRenderTime = renderTime;
 	};
 
+	function Nested() {
+		clock.tick(tickTime);
+		return <Text>Nested</Text>;
+	}
+
 	function Test() {
 		useEffect(() => {
 			clock.tick(tickTime);
-		});
+		}, []);
 
 		return (
 			<Box borderStyle="round">
 				<Text>Test</Text>
+				<Nested />
 			</Box>
 		);
 	}
@@ -300,7 +306,7 @@ test.serial('outputs renderTime when onRender is passed', t => {
 		onRender,
 	});
 
-	t.is(lastRenderTime, 100);
+	t.is(lastRenderTime, 200);
 
 	tickTime = 200;
 	rerender(<Test />);
