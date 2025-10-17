@@ -48,7 +48,15 @@ const create = (
 			let alternateBufferOutput = output;
 			const rows = getRows() ?? 0;
 			if (rows > 0) {
-				const lineCount = str.split('\n').length;
+				const lines = str.split('\n');
+				const lineCount = lines.length;
+				// Only write the last `rows` lines as the alternate buffer
+				// will not scroll so all we accomplish by writing more
+				// content is risking flicker and confusing the terminal about
+				// the cursor position.
+				if (lineCount > rows) {
+					alternateBufferOutput = lines.slice(-rows).join('\n');
+				}
 				// Only write the last `rows` lines as the alternate buffer
 				// will not scroll so all we accomplish by writing more
 				// content is risking flicker and confusing the terminal about
