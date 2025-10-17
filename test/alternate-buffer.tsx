@@ -36,7 +36,6 @@ for (const {name, env, eraseOperation} of scenarios) {
 			env,
 		});
 
-		console.log(JSON.stringify(output, null, 2));
 		t.true(
 			output.includes(ansiEscapes.enterAlternativeScreen),
 			'Should enter alternate screen',

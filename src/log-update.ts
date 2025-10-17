@@ -57,6 +57,7 @@ const create = (
 				if (lineCount > rows) {
 					alternateBufferOutput = lines.slice(-rows).join('\n');
 				}
+
 				// Only write the last `rows` lines as the alternate buffer
 				// will not scroll so all we accomplish by writing more
 				// content is risking flicker and confusing the terminal about
@@ -65,10 +66,10 @@ const create = (
 					alternateBufferOutput = str.split('\n').slice(-rows).join('\n');
 				}
 			}
+
 			// In alternate buffer mode we need to re-render based on whether content
 			// visible within the clipped alternate output buffer has changed even
 			// if the entire output string has not changed.
-
 			if (alternateBufferOutput !== previousOutputAlternateBuffer) {
 				// Unfortunately, eraseScreen does not work correctly in iTerm2 so we
 				// have to use clearTerminal instead.
