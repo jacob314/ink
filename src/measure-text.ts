@@ -59,6 +59,7 @@ export function toStyledCharacters(text: string): StyledChar[] {
 		}
 
 		let {value} = character;
+		let isCombined = false;
 		const firstCodePoint = value.codePointAt(0);
 
 		// 1. Regional Indicators (Flags)
@@ -142,6 +143,7 @@ export function toStyledCharacters(text: string): StyledChar[] {
 			// Merge with previous character
 			value += nextCharacter.value;
 			i++; // Consume next character.
+			isCombined = true;
 
 			// If it was a ZWJ, also consume the character after it.
 			if (isZeroWidthJoiner && i + 1 < characters.length) {
@@ -154,7 +156,11 @@ export function toStyledCharacters(text: string): StyledChar[] {
 			}
 		}
 
-		combinedCharacters.push({...character, value});
+		if (isCombined) {
+			combinedCharacters.push({...character, value});
+		} else {
+			combinedCharacters.push(character);
+		}
 	}
 
 	toStyledCharactersCache.set(text, combinedCharacters);

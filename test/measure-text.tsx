@@ -49,3 +49,42 @@ test('measure variation selectors', t => {
 	const {width} = measureText('❤️'); // Heavy black heart + VS16
 	t.is(width, 2);
 });
+
+test('do not combine regular characters', t => {
+	const chars = toStyledCharacters('ab');
+	t.is(chars.length, 2);
+	t.is(chars[0]?.value, 'a');
+	t.is(chars[1]?.value, 'b');
+});
+
+test('combine emoji ZWJ sequence into single styled char', t => {
+	const chars = toStyledCharacters('👨‍👩‍👧‍👦');
+	t.is(chars.length, 1);
+	t.is(chars[0]?.value, '👨‍👩‍👧‍👦');
+});
+
+test('combine flag sequence into single styled char', t => {
+	const chars = toStyledCharacters('🇺🇸');
+	t.is(chars.length, 1);
+	t.is(chars[0]?.value, '🇺🇸');
+});
+
+test('handle tabs by expanding to 4 spaces', t => {
+	const chars = toStyledCharacters('a\tb');
+	// 'a' (1) + tab (4 spaces) + 'b' (1) = 6 chars
+	t.is(chars.length, 6);
+	t.is(chars[0]?.value, 'a');
+	t.is(chars[1]?.value, ' ');
+	t.is(chars[2]?.value, ' ');
+	t.is(chars[3]?.value, ' ');
+	t.is(chars[4]?.value, ' ');
+	t.is(chars[5]?.value, 'b');
+});
+
+test('ignore backspaces', t => {
+	const chars = toStyledCharacters('a\bb');
+	// 'a' (1) + \b (skipped) + 'b' (1) = 2 chars
+	t.is(chars.length, 2);
+	t.is(chars[0]?.value, 'a');
+	t.is(chars[1]?.value, 'b');
+});
