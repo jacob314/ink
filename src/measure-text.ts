@@ -27,103 +27,6 @@ export function clearStringWidthCache() {
 	widthCache.clear();
 }
 
-function _combineChars(
-	character: StyledChar,
-	characters: StyledChar[],
-	i: number,
-): [string, number] {
-	let {value} = character;
-	while (i + 1 < characters.length) {
-		const nextCharacter = characters[i + 1];
-
-		if (!nextCharacter) {
-			break;
-		}
-
-		const codePoints = [...nextCharacter.value].map(char =>
-			char.codePointAt(0),
-		);
-
-		const firstCodePoint = codePoints[0];
-
-		// Variation selectors
-		const isVariationSelector =
-			firstCodePoint! >= 0xfe_00 && firstCodePoint! <= 0xfe_0f;
-
-		// Skin tone modifiers
-		const isSkinToneModifier =
-			firstCodePoint! >= 0x1_f3_fb && firstCodePoint! <= 0x1_f3_ff;
-
-		const isZeroWidthJoiner = firstCodePoint === 0x20_0d;
-		const isKeycap = firstCodePoint === 0x20_e3;
-
-		// Tags block (U+E0000 - U+E007F)
-		const isTagsBlock =
-			firstCodePoint! >= 0xe_00_00 && firstCodePoint! <= 0xe_00_7f;
-
-		// Combining Diacritical Marks
-		const isCombiningMark =
-			firstCodePoint! >= 0x03_00 && firstCodePoint! <= 0x03_6f;
-
-		const isCombining =
-			isVariationSelector ||
-			isSkinToneModifier ||
-			isZeroWidthJoiner ||
-			isKeycap ||
-			isTagsBlock ||
-			isCombiningMark;
-
-		if (!isCombining) {
-			break;
-		}
-
-		// Merge with previous character
-		value += nextCharacter.value;
-		i++; // Consume next character.
-
-		// If it was a ZWJ, also consume the character after it.
-		if (isZeroWidthJoiner && i + 1 < characters.length) {
-			const characterAfterZwj = characters[i + 1];
-
-			if (characterAfterZwj) {
-				value += characterAfterZwj.value;
-				i++; // Consume character after ZWJ.
-			}
-		}
-	}
-
-	return [value, i];
-}
-
-function _combineRegionalIndicators(
-	character: StyledChar,
-	characters: StyledChar[],
-	i: number,
-): [string, number] | undefined {
-	const firstCodePoint = character.value.codePointAt(0);
-
-	if (
-		firstCodePoint! >= 0x1_f1_e6 &&
-		firstCodePoint! <= 0x1_f1_ff &&
-		i + 1 < characters.length
-	) {
-		const nextCharacter = characters[i + 1];
-
-		if (nextCharacter) {
-			const nextFirstCodePoint = nextCharacter.value.codePointAt(0);
-
-			if (
-				nextFirstCodePoint! >= 0x1_f1_e6 &&
-				nextFirstCodePoint! <= 0x1_f1_ff
-			) {
-				return [character.value + nextCharacter.value, i + 1];
-			}
-		}
-	}
-
-	return undefined;
-}
-
 export function toStyledCharacters(text: string): StyledChar[] {
 	if (toStyledCharactersCache.has(text)) {
 		return toStyledCharactersCache.get(text)!;
@@ -155,37 +58,103 @@ export function toStyledCharacters(text: string): StyledChar[] {
 			continue;
 		}
 
-		// Regional indicator characters are composed of two characters, so we need to combine them.
+		let {value} = character;
+		const firstCodePoint = value.codePointAt(0);
+
+		// 1. Regional Indicators (Flags)
+		// These combine in pairs.
 		// See: https://en.wikipedia.org/wiki/Regional_indicator_symbol
-		const regionalResult = _combineRegionalIndicators(character, characters, i);
-		if (regionalResult) {
-			const [value, newI] = regionalResult;
-			combinedCharacters.push({
-				...character,
-				value,
-			});
-			i = newI;
-			continue;
-		}
+		if (
+			firstCodePoint &&
+			firstCodePoint >= 0x1_f1_e6 &&
+			firstCodePoint <= 0x1_f1_ff &&
+			i + 1 < characters.length
+		) {
+			const nextCharacter = characters[i + 1];
 
-		let modified = false;
-		let value: string;
-		// Look ahead for combining characters.
-		// See: https://en.wikipedia.org/wiki/Combining_character
-		if (i + 1 < characters.length) {
-			const [newValue, newI] = _combineChars(character, characters, i);
-			if (i === newI) {
-				value = character.value;
-			} else {
-				modified = true;
-				i = newI;
-				value = newValue;
+			if (nextCharacter) {
+				const nextFirstCodePoint = nextCharacter.value.codePointAt(0);
+
+				if (
+					nextFirstCodePoint &&
+					nextFirstCodePoint >= 0x1_f1_e6 &&
+					nextFirstCodePoint <= 0x1_f1_ff
+				) {
+					value += nextCharacter.value;
+					i++;
+
+					combinedCharacters.push({...character, value});
+					continue;
+				}
 			}
-		} else {
-			value = character.value;
 		}
 
-		combinedCharacters.push(modified ? {...character, value} : character);
+		// 2. Other combining characters
+		// See: https://en.wikipedia.org/wiki/Combining_character
+		while (i + 1 < characters.length) {
+			const nextCharacter = characters[i + 1];
+
+			if (!nextCharacter) {
+				break;
+			}
+
+			const codePoints = [...nextCharacter.value].map(char =>
+				char.codePointAt(0),
+			);
+
+			const nextFirstCodePoint = codePoints[0];
+
+			if (!nextFirstCodePoint) {
+				break;
+			}
+
+			// Variation selectors
+			const isVariationSelector =
+				nextFirstCodePoint >= 0xfe_00 && nextFirstCodePoint <= 0xfe_0f;
+
+			// Skin tone modifiers
+			const isSkinToneModifier =
+				nextFirstCodePoint >= 0x1_f3_fb && nextFirstCodePoint <= 0x1_f3_ff;
+
+			const isZeroWidthJoiner = nextFirstCodePoint === 0x20_0d;
+			const isKeycap = nextFirstCodePoint === 0x20_e3;
+
+			// Tags block (U+E0000 - U+E007F)
+			const isTagsBlock =
+				nextFirstCodePoint >= 0xe_00_00 && nextFirstCodePoint <= 0xe_00_7f;
+
+			// Combining Diacritical Marks
+			const isCombiningMark =
+				nextFirstCodePoint >= 0x03_00 && nextFirstCodePoint <= 0x03_6f;
+
+			const isCombining =
+				isVariationSelector ||
+				isSkinToneModifier ||
+				isZeroWidthJoiner ||
+				isKeycap ||
+				isTagsBlock ||
+				isCombiningMark;
+
+			if (!isCombining) {
+				break;
+			}
+
+			// Merge with previous character
+			value += nextCharacter.value;
+			i++; // Consume next character.
+
+			// If it was a ZWJ, also consume the character after it.
+			if (isZeroWidthJoiner && i + 1 < characters.length) {
+				const characterAfterZwj = characters[i + 1];
+
+				if (characterAfterZwj) {
+					value += characterAfterZwj.value;
+					i++; // Consume character after ZWJ.
+				}
+			}
+		}
+
+		combinedCharacters.push({...character, value});
 	}
 
 	toStyledCharactersCache.set(text, combinedCharacters);
