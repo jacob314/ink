@@ -64,7 +64,7 @@ export const renderNodeToScreenReaderOutput = (
 		return '';
 	}
 
-	if (node.internal_sticky_alternate) {
+	if (node.internalStickyAlternate) {
 		return '';
 	}
 
@@ -153,7 +153,7 @@ const renderNodeToOutput = (
 		return;
 	}
 
-	if (node.internal_sticky_alternate && !isStickyRender) {
+	if (node.internalStickyAlternate && !isStickyRender) {
 		return;
 	}
 
@@ -274,7 +274,7 @@ const renderNodeToOutput = (
 						if (stickyNode.yogaNode) {
 							const stickyNodeTop = getRelativeTop(stickyNode, node);
 							if (stickyNodeTop <= scrollTop) {
-								const parent = stickyNode.parentNode as DOMElement;
+								const parent = stickyNode.parentNode!;
 								if (parent?.yogaNode) {
 									const parentTop = getRelativeTop(parent, node);
 									const parentHeight = parent.yogaNode.getComputedHeight();
@@ -348,7 +348,7 @@ const renderNodeToOutput = (
 
 			if (activeStickyNode?.yogaNode) {
 				const alternateStickyNode = activeStickyNode.childNodes.find(
-					childNode => (childNode as DOMElement).internal_sticky_alternate,
+					childNode => (childNode as DOMElement).internalStickyAlternate,
 				) as DOMElement | undefined;
 
 				const nodeToRender = alternateStickyNode ?? activeStickyNode;
@@ -358,78 +358,75 @@ const renderNodeToOutput = (
 					return;
 				}
 
-								                                const stickyYogaNode = activeStickyNode.yogaNode;
-								                                const borderTop = yogaNode.getComputedBorder(Yoga.EDGE_TOP);
-								                                const scrollTop = node.internal_scrollTop ?? 0;
-								
-								                                const parent = activeStickyNode.parentNode as DOMElement;
-								                                const parentYogaNode = parent.yogaNode!;
-								                                const parentTop = getRelativeTop(parent, node);
-								                                const parentHeight = parentYogaNode.getComputedHeight();
-								                                const parentBottom = parentTop + parentHeight;
-								                                const stickyNodeHeight = activeStickyNode.yogaNode.getComputedHeight();
-								                                const maxStickyYFromParent =
-								                                    y - scrollTop + parentBottom - stickyNodeHeight;
-								
-								                                const naturalStickyY =
-								                                    y - scrollTop + getRelativeTop(activeStickyNode, node);
-								                                const stuckStickyY = y + borderTop;
-								                                let finalStickyY = Math.min(
-								                                    Math.max(stuckStickyY, naturalStickyY),
-								                                    maxStickyYFromParent,
-								                                );
-								
-								                                if (nextStickyNode?.yogaNode) {
-								                                    const nextStickyNodeTop = getRelativeTop(nextStickyNode, node);
-								                                    const nextStickyNodeTopInViewport =
-								                                        y - scrollTop + nextStickyNodeTop;
-								                                    if (nextStickyNodeTopInViewport < finalStickyY + stickyNodeHeight) {
-								                                        finalStickyY = nextStickyNodeTopInViewport - stickyNodeHeight;
-								                                    }
-								                                }
-								
-								                                let offsetX: number;
-								                                let offsetY: number;
-								
-								                                if (nodeToRender === alternateStickyNode) {
-								                                    const parentAbsoluteX = x + getRelativeLeft(parent, node);
-								                                    const stickyNodeAbsoluteX =
-								                                        parentAbsoluteX + stickyYogaNode.getComputedLeft();
-								                                    offsetX = stickyNodeAbsoluteX;
-								                                    offsetY = finalStickyY;
-								                                } else {
-								                                    const parentAbsoluteX = x + getRelativeLeft(parent, node);
-								                                    offsetX = parentAbsoluteX;
-								                                    offsetY = finalStickyY - stickyYogaNode.getComputedTop();
-								                                }
-								
-								                                const parentAbsoluteX = x + getRelativeLeft(parent, node);
-								                                const parentAbsoluteY = y - scrollTop + getRelativeTop(parent, node);
-								                                output.clip({
-								                                    x1: parentAbsoluteX,
-								                                    x2: parentAbsoluteX + parentYogaNode.getComputedWidth(),
-								                                    y1: parentAbsoluteY,
-								                                    y2: parentAbsoluteY + parentYogaNode.getComputedHeight(),
-								                                });
-								
-								                                let renderOffsetY = offsetY;
-								                                const isStuck =
-								                                    Math.max(stuckStickyY, naturalStickyY) <= maxStickyYFromParent;
-								
-								                                if (isStuck) {
-								                                    const scrollAmount = naturalStickyY - finalStickyY;
-								                                    renderOffsetY += scrollAmount;
-								                                }
-								
-								                                renderNodeToOutput(nodeToRender, output, {
-								                                    offsetX,
-								                                    offsetY: renderOffsetY,
-								                                    transformers: newTransformers,
-								                                    skipStaticElements,
-								                                    isStickyRender: true,
-								                                });
-								
-								                                output.unclip();
+				const stickyYogaNode = activeStickyNode.yogaNode;
+				const borderTop = yogaNode.getComputedBorder(Yoga.EDGE_TOP);
+				const scrollTop = node.internal_scrollTop ?? 0;
+
+				const parent = activeStickyNode.parentNode!;
+				const parentYogaNode = parent.yogaNode!;
+				const parentTop = getRelativeTop(parent, node);
+				const parentHeight = parentYogaNode.getComputedHeight();
+				const parentBottom = parentTop + parentHeight;
+				const stickyNodeHeight = activeStickyNode.yogaNode.getComputedHeight();
+				const maxStickyTop = y - scrollTop + parentBottom - stickyNodeHeight;
+
+				const naturalStickyY =
+					y - scrollTop + getRelativeTop(activeStickyNode, node);
+				const stuckStickyY = y + borderTop;
+				let finalStickyY = Math.min(
+					Math.max(stuckStickyY, naturalStickyY),
+					maxStickyTop,
+				);
+
+				if (nextStickyNode?.yogaNode) {
+					const nextStickyNodeTop = getRelativeTop(nextStickyNode, node);
+					const nextStickyNodeTopInViewport = y - scrollTop + nextStickyNodeTop;
+					if (nextStickyNodeTopInViewport < finalStickyY + stickyNodeHeight) {
+						finalStickyY = nextStickyNodeTopInViewport - stickyNodeHeight;
+					}
+				}
+
+				let offsetX: number;
+				let offsetY: number;
+
+				if (nodeToRender === alternateStickyNode) {
+					const parentAbsoluteX = x + getRelativeLeft(parent, node);
+					const stickyNodeAbsoluteX =
+						parentAbsoluteX + stickyYogaNode.getComputedLeft();
+					offsetX = stickyNodeAbsoluteX;
+					offsetY = finalStickyY;
+				} else {
+					const parentAbsoluteX = x + getRelativeLeft(parent, node);
+					offsetX = parentAbsoluteX;
+					offsetY = finalStickyY - stickyYogaNode.getComputedTop();
+				}
+
+				const parentAbsoluteX = x + getRelativeLeft(parent, node);
+				const parentAbsoluteY = y - scrollTop + getRelativeTop(parent, node);
+				output.clip({
+					x1: parentAbsoluteX,
+					x2: parentAbsoluteX + parentYogaNode.getComputedWidth(),
+					y1: parentAbsoluteY,
+					y2: parentAbsoluteY + parentYogaNode.getComputedHeight(),
+				});
+
+				let renderOffsetY = offsetY;
+				const isStuck = Math.max(stuckStickyY, naturalStickyY) <= maxStickyTop;
+
+				if (isStuck) {
+					const scrollAmount = naturalStickyY - finalStickyY;
+					renderOffsetY += scrollAmount;
+				}
+
+				renderNodeToOutput(nodeToRender, output, {
+					offsetX,
+					offsetY: renderOffsetY,
+					transformers: newTransformers,
+					skipStaticElements,
+					isStickyRender: true,
+				});
+
+				output.unclip();
 				renderNodeToOutput(nodeToRender, output, {
 					offsetX,
 					offsetY,
@@ -468,13 +465,13 @@ function getStickyDescendants(node: DOMElement): DOMElement[] {
 			continue;
 		}
 
-		const domChild = child as DOMElement;
+		const domChild = child;
 
-		if (domChild.internal_sticky_alternate) {
+		if (domChild.internalStickyAlternate) {
 			continue;
 		}
 
-		if (domChild.internal_sticky) {
+		if (domChild.internalSticky) {
 			stickyDescendants.push(domChild);
 		} else {
 			const overflow = domChild.style.overflow ?? 'visible';
@@ -687,12 +684,11 @@ function renderScrollbar(
 			const outputX = axis === 'vertical' ? scrollbarX : scrollbarX + index;
 			const outputY = axis === 'vertical' ? scrollbarY + index : scrollbarY;
 
-			output.write(
-				outputX,
-				outputY,
-				colorize(char, thumbColor, 'foreground'),
-				{transformers: [], preserveBackgroundColor: true},
-			);		}
+			output.write(outputX, outputY, colorize(char, thumbColor, 'foreground'), {
+				transformers: [],
+				preserveBackgroundColor: true,
+			});
+		}
 	}
 }
 

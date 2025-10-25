@@ -72,7 +72,7 @@ export default class Output {
 		items: string | StyledChar[],
 		options: {
 			transformers: OutputTransformer[];
-			lineIndex?: number
+			lineIndex?: number;
 			preserveBackgroundColor?: boolean;
 		},
 	): void {

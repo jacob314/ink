@@ -21,7 +21,7 @@ type ScrollMode = 'vertical' | 'horizontal' | 'both' | 'hidden';
 
 const items = Array.from({length: 1000}).map((_, i) => ({
 	id: i,
-	text: `Line ${i} - ${'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat((i*5) % 6)}`,
+	text: `Line ${i} - ${'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat((i * 5) % 6)}`,
 }));
 
 export function useTerminalSize(): {columns: number; rows: number} {
@@ -174,7 +174,9 @@ function ScrollableContent() {
 	return (
 		<Box flexDirection="column" height={rows - 2} width={columns}>
 			<Box flexDirection="column" flexShrink={0} overflow="hidden">
-				<Text>This is a demo showing a scrollable box with sticky headers.</Text>
+				<Text>
+					This is a demo showing a scrollable box with sticky headers.
+				</Text>
 				<Text>Press up/down arrow to scroll vertically.</Text>
 				<Text>Press left/right arrow to scroll horizontally.</Text>
 				<Text>
@@ -217,10 +219,7 @@ function ScrollableContent() {
 							const stickyHeaderText = `Header ${headerId} (sticky)`;
 
 							const itemsInGroup = items.slice(headerIndex, headerIndex + 10);
-							const nextItems = items.slice(
-								headerIndex + 10,
-								headerIndex + 20,
-							);
+							const nextItems = items.slice(headerIndex + 10, headerIndex + 20);
 
 							elements.push(
 								<Box
@@ -229,10 +228,12 @@ function ScrollableContent() {
 									paddingTop={headerIndex === 0 ? 0 : 1}
 								>
 									<Box
-										width="100%"
 										sticky
+										width="100%"
 										stickyChildren={
 											<Box
+												opaque
+												borderBottom
 												flexDirection="column"
 												width="100%"
 												paddingLeft={1}
@@ -242,8 +243,6 @@ function ScrollableContent() {
 												borderTop={false}
 												borderLeft={false}
 												borderRight={false}
-												borderBottom={true}
-												opaque
 											>
 												<Text>{stickyHeaderText}</Text>
 											</Box>
@@ -267,9 +266,6 @@ function ScrollableContent() {
 										<Text>last element matching header</Text>
 									</Box>
 								</Box>,
-							);
-
-							elements.push(
 								...nextItems.map(item => (
 									<Box key={item.id} flexDirection="column" paddingLeft={1}>
 										<Text key={item.id} color="#999999">
