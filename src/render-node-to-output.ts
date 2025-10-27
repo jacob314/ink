@@ -6,7 +6,6 @@ import squashTextNodes from './squash-text-nodes.js';
 import renderBorder from './render-border.js';
 import renderBackground from './render-background.js';
 import {type DOMElement} from './dom.js';
-import {getScrollHeight, getScrollWidth} from './measure-element.js';
 import type Output from './output.js';
 import colorize from './colorize.js';
 import {
@@ -261,14 +260,13 @@ const renderNodeToOutput = (
 			horizontallyScrollable = overflowX === 'scroll';
 
 			if (verticallyScrollable) {
-				calculateVerticalScroll(node);
-				childrenOffsetY -= node.internal_scrollTop ?? 0;
+				childrenOffsetY -= node.internal_scrollState?.scrollTop ?? 0;
 
 				const stickyNodes = getStickyDescendants(node);
 
 				if (stickyNodes.length > 0) {
 					const scrollTop =
-						(node.internal_scrollTop ?? 0) +
+						(node.internal_scrollState?.scrollTop ?? 0) +
 						yogaNode.getComputedBorder(Yoga.EDGE_TOP);
 					let activeStickyNodeIndex = -1;
 
@@ -299,13 +297,13 @@ const renderNodeToOutput = (
 			}
 
 			if (horizontallyScrollable) {
-				calculateHorizontalScroll(node);
-				childrenOffsetX -= node.internal_scrollLeft ?? 0;
+				childrenOffsetX -= node.internal_scrollState?.scrollLeft ?? 0;
 			}
 
 			isVerticalScrollbarVisible =
 				verticallyScrollable &&
-				(node.internal_scrollHeight ?? 0) > (node.internal_clientHeight ?? 0);
+				(node.internal_scrollState?.scrollHeight ?? 0) >
+					(node.internal_scrollState?.clientHeight ?? 0);
 
 			const clipHorizontally = overflowX === 'hidden' || overflowX === 'scroll';
 			const clipVertically = overflowY === 'hidden' || overflowY === 'scroll';
@@ -362,7 +360,7 @@ const renderNodeToOutput = (
 
 				const stickyYogaNode = activeStickyNode.yogaNode;
 				const borderTop = yogaNode.getComputedBorder(Yoga.EDGE_TOP);
-				const scrollTop = node.internal_scrollTop ?? 0;
+				const scrollTop = node.internal_scrollState?.scrollTop ?? 0;
 
 				const parent = activeStickyNode.parentNode!;
 				const parentYogaNode = parent.yogaNode!;
@@ -403,6 +401,7 @@ const renderNodeToOutput = (
 					offsetX = parentAbsoluteX;
 					offsetY = finalStickyY - stickyYogaNode.getComputedTop();
 				}
+
 				renderNodeToOutput(nodeToRender, output, {
 					offsetX,
 					offsetY,
@@ -479,9 +478,7 @@ function getRelativeTop(node: DOMElement, ancestor: DOMElement): number {
 				const overflowY = parent.style.overflowY ?? overflow;
 
 				if (overflowY === 'scroll') {
-					// It would be good if we could avoid this recalculation but it is cheap.
-					calculateVerticalScroll(parent);
-					top -= parent.internal_scrollTop ?? 0;
+					top -= parent.internal_scrollState?.scrollTop ?? 0;
 				}
 			}
 		}
@@ -509,9 +506,7 @@ function getRelativeLeft(node: DOMElement, ancestor: DOMElement): number {
 				const overflowX = parent.style.overflowX ?? overflow;
 
 				if (overflowX === 'scroll') {
-					// It would be good if we could avoid this recalculation but it is cheap.
-					calculateHorizontalScroll(parent);
-					left -= parent.internal_scrollLeft ?? 0;
+					left -= parent.internal_scrollState?.scrollLeft ?? 0;
 				}
 			}
 		}
@@ -520,48 +515,6 @@ function getRelativeLeft(node: DOMElement, ancestor: DOMElement): number {
 	}
 
 	return left;
-}
-
-function calculateVerticalScroll(node: DOMElement) {
-	const {yogaNode} = node;
-	if (!yogaNode) {
-		return;
-	}
-
-	const clientHeight =
-		yogaNode.getComputedHeight() -
-		yogaNode.getComputedBorder(Yoga.EDGE_TOP) -
-		yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM);
-
-	const scrollHeight = getScrollHeight(node);
-	const scrollTop = Math.max(
-		0,
-		Math.min(node.style.scrollTop ?? 0, scrollHeight - clientHeight),
-	);
-
-	node.internal_scrollTop = scrollTop;
-	node.internal_scrollHeight = scrollHeight;
-	node.internal_clientHeight = clientHeight;
-}
-
-function calculateHorizontalScroll(node: DOMElement) {
-	const {yogaNode} = node;
-	if (!yogaNode) {
-		return;
-	}
-
-	const clientWidth =
-		yogaNode.getComputedWidth() -
-		yogaNode.getComputedBorder(Yoga.EDGE_LEFT) -
-		yogaNode.getComputedBorder(Yoga.EDGE_RIGHT);
-
-	const scrollWidth = getScrollWidth(node);
-	let scrollLeft = node.style.scrollLeft ?? 0;
-	scrollLeft = Math.max(0, Math.min(scrollLeft, scrollWidth - clientWidth));
-
-	node.internal_scrollLeft = scrollLeft;
-	node.internal_scrollWidth = scrollWidth;
-	node.internal_clientWidth = clientWidth;
 }
 
 function renderScrollbar(
@@ -582,18 +535,18 @@ function renderScrollbar(
 
 	const clientDimension =
 		axis === 'vertical'
-			? (node.internal_clientHeight ?? 0)
-			: (node.internal_clientWidth ?? 0);
+			? (node.internal_scrollState?.clientHeight ?? 0)
+			: (node.internal_scrollState?.clientWidth ?? 0);
 
 	const scrollDimension =
 		axis === 'vertical'
-			? (node.internal_scrollHeight ?? 0)
-			: (node.internal_scrollWidth ?? 0);
+			? (node.internal_scrollState?.scrollHeight ?? 0)
+			: (node.internal_scrollState?.scrollWidth ?? 0);
 
 	const scrollPosition =
 		axis === 'vertical'
-			? (node.internal_scrollTop ?? 0)
-			: (node.internal_scrollLeft ?? 0);
+			? (node.internal_scrollState?.scrollTop ?? 0)
+			: (node.internal_scrollState?.scrollLeft ?? 0);
 
 	if (scrollDimension <= clientDimension) {
 		return;
