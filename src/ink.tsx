@@ -17,6 +17,7 @@ import logUpdate, {type LogUpdate} from './log-update.js';
 import instances from './instances.js';
 import App from './components/App.js';
 import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
+import {calculateScroll} from './scroll.js';
 
 const noop = () => {};
 
@@ -41,6 +42,7 @@ export type Options = {
 	isScreenReaderEnabled?: boolean;
 	waitUntilExit?: () => Promise<void>;
 	maxFps?: number;
+	alternateBuffer?: boolean;
 };
 
 export default class Ink {
@@ -66,6 +68,7 @@ export default class Ink {
 		autoBind(this);
 
 		this.options = options;
+
 		this.rootNode = dom.createNode('ink-root');
 		this.rootNode.onComputeLayout = this.calculateLayout;
 
@@ -86,7 +89,10 @@ export default class Ink {
 				});
 
 		this.rootNode.onImmediateRender = this.onRender;
-		this.log = logUpdate.create(options.stdout);
+		this.log = logUpdate.create(options.stdout, {
+			alternateBuffer: options.alternateBuffer,
+			getRows: () => options.stdout.rows,
+		});
 		this.throttledLog = unthrottled
 			? this.log
 			: (throttle(this.log, undefined, {
@@ -167,7 +173,30 @@ export default class Ink {
 			undefined,
 			Yoga.DIRECTION_LTR,
 		);
+
+		this.recalculateScroll(this.rootNode);
 	};
+
+	recalculateScroll(node: dom.DOMElement) {
+		if (node.nodeName === 'ink-box') {
+			const {style} = node;
+			const overflow = style.overflow ?? 'visible';
+			const overflowX = style.overflowX ?? overflow;
+			const overflowY = style.overflowY ?? overflow;
+
+			if (overflowX === 'scroll' || overflowY === 'scroll') {
+				calculateScroll(node);
+			} else if (node.internal_scrollState) {
+				delete node.internal_scrollState;
+			}
+		}
+
+		for (const child of node.childNodes) {
+			if (child.nodeName !== '#text') {
+				this.recalculateScroll(child);
+			}
+		}
+	}
 
 	onRender: () => void = () => {
 		if (this.isUnmounted) {
@@ -201,6 +230,16 @@ export default class Ink {
 
 			this.lastOutput = output;
 			this.lastOutputHeight = outputHeight;
+			return;
+		}
+
+		if (this.options.alternateBuffer) {
+			if (hasStaticOutput) {
+				this.fullStaticOutput += staticOutput;
+			}
+
+			this.log(this.fullStaticOutput + output);
+			this.lastOutput = output;
 			return;
 		}
 
@@ -272,6 +311,12 @@ export default class Ink {
 		this.lastOutput = output;
 		this.lastOutputHeight = outputHeight;
 	};
+
+	recalculateLayout(): void {
+		this.markAllTextNodesDirty(this.rootNode);
+		this.calculateLayout();
+		this.onRender();
+	}
 
 	render(node: ReactNode): void {
 		const tree = (
@@ -417,5 +462,17 @@ export default class Ink {
 				}
 			}
 		});
+	}
+
+	private markAllTextNodesDirty(node: dom.DOMElement) {
+		if (node.nodeName === 'ink-text' && node.yogaNode) {
+			node.yogaNode.markDirty();
+		}
+
+		for (const child of node.childNodes) {
+			if (child.nodeName !== '#text') {
+				this.markAllTextNodesDirty(child);
+			}
+		}
 	}
 }

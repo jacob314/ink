@@ -1,5 +1,6 @@
 export type {RenderOptions, Instance} from './render.js';
 export {default as render} from './render.js';
+
 export type {Props as BoxProps} from './components/Box.js';
 export {default as Box} from './components/Box.js';
 export type {Props as TextProps} from './components/Text.js';
@@ -24,5 +25,12 @@ export {default as useStderr} from './hooks/use-stderr.js';
 export {default as useFocus} from './hooks/use-focus.js';
 export {default as useFocusManager} from './hooks/use-focus-manager.js';
 export {default as useIsScreenReaderEnabled} from './hooks/use-is-screen-reader-enabled.js';
-export {default as measureElement} from './measure-element.js';
+export {
+	default as measureElement,
+	getBoundingBox,
+	getInnerWidth,
+	getInnerHeight,
+} from './measure-element.js';
+export {getScrollHeight, getScrollWidth} from './scroll.js';
+export {clearStringWidthCache, setStringWidthFunction} from './measure-text.js';
 export type {DOMElement} from './dom.js';

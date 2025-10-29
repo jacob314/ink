@@ -1,5 +1,13 @@
 name: test
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+      - upstream_master
+  pull_request:
+    branches:
+      - master
+      - upstream_master
 jobs:
   test:
     name: Node.js ${{ matrix.node_version }}

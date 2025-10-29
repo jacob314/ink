@@ -1,7 +1,11 @@
 import Yoga, {type Node as YogaNode} from 'yoga-layout';
-import measureText from './measure-text.js';
+import {
+	measureStyledChars,
+	toStyledCharacters,
+	widestLineFromStyledChars,
+} from './measure-text.js';
 import {type Styles} from './styles.js';
-import wrapText from './wrap-text.js';
+import {wrapStyledChars, truncateStyledChars} from './wrap-text.js';
 import squashTextNodes from './squash-text-nodes.js';
 import {type OutputTransformer} from './render-node-to-output.js';
 
@@ -67,7 +71,20 @@ export type DOMElement = {
 	onComputeLayout?: () => void;
 	onRender?: () => void;
 	onImmediateRender?: () => void;
+	internal_scrollState?: ScrollState;
+	internalSticky?: boolean;
+	internalStickyAlternate?: boolean;
+	internal_opaque?: boolean;
 } & InkNode;
+
+export type ScrollState = {
+	scrollTop: number;
+	scrollLeft: number;
+	scrollHeight: number;
+	scrollWidth: number;
+	clientHeight: number;
+	clientWidth: number;
+};
 
 export type TextNode = {
 	nodeName: TextName;
@@ -96,6 +113,8 @@ export const createNode = (nodeName: ElementNames): DOMElement => {
 		yogaNode: nodeName === 'ink-virtual-text' ? undefined : Yoga.Node.create(),
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		internal_accessibility: {},
+		internalSticky: false,
+		internalStickyAlternate: false,
 	};
 
 	if (nodeName === 'ink-text') {
@@ -218,10 +237,11 @@ const measureTextNode = function (
 	node: DOMNode,
 	width: number,
 ): {width: number; height: number} {
-	const text =
-		node.nodeName === '#text' ? node.nodeValue : squashTextNodes(node);
+	const styledChars = toStyledCharacters(
+		node.nodeName === '#text' ? node.nodeValue : squashTextNodes(node),
+	);
 
-	const dimensions = measureText(text);
+	const dimensions = measureStyledChars(styledChars);
 
 	// Text fits into container, no need to wrap
 	if (dimensions.width <= width) {
@@ -235,9 +255,28 @@ const measureTextNode = function (
 	}
 
 	const textWrap = node.style?.textWrap ?? 'wrap';
-	const wrappedText = wrapText(text, width, textWrap);
 
-	return measureText(wrappedText);
+	if (textWrap.startsWith('truncate')) {
+		let position: 'start' | 'middle' | 'end' = 'end';
+		if (textWrap === 'truncate-middle') {
+			position = 'middle';
+		} else if (textWrap === 'truncate-start') {
+			position = 'start';
+		}
+
+		const truncatedChars = truncateStyledChars(styledChars, width, {
+			position,
+		});
+		return measureStyledChars(truncatedChars);
+	}
+
+	if (textWrap === 'wrap') {
+		const wrappedLines = wrapStyledChars(styledChars, width);
+		const newWidth = widestLineFromStyledChars(wrappedLines);
+		return {width: newWidth, height: wrappedLines.length};
+	}
+
+	return dimensions;
 };
 
 const findClosestYogaNode = (node?: DOMNode): YogaNode | undefined => {

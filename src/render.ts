@@ -66,6 +66,13 @@ export type RenderOptions = {
 	@default 30
 	*/
 	maxFps?: number;
+
+	/**
+	 * Render the app in an alternate screen buffer.
+	 * This is useful for fullscreen applications.
+	 * @default false
+	 */
+	alternateBuffer?: boolean;
 };
 
 export type Instance = {
@@ -90,6 +97,11 @@ export type Instance = {
 	Clear output.
 	*/
 	clear: () => void;
+
+	/**
+	 * Manually recalculate layout.
+	 */
+	recalculateLayout: Ink['recalculateLayout'];
 };
 
 /**
@@ -107,6 +119,7 @@ const render = (
 		exitOnCtrlC: true,
 		patchConsole: true,
 		maxFps: 30,
+		alternateBuffer: false,
 		...getOptions(options),
 	};
 
@@ -125,6 +138,7 @@ const render = (
 		waitUntilExit: instance.waitUntilExit,
 		cleanup: () => instances.delete(inkOptions.stdout),
 		clear: instance.clear,
+		recalculateLayout: instance.recalculateLayout,
 	};
 };
 
