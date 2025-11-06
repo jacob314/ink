@@ -61,8 +61,8 @@ function TextWrap() {
 				overflow="hidden"
 			>
 				{tsExample.split('\n').map((line, i) => {
-					const leadingSpaces = line.match(/^\s*/)?.[0] ?? '';
-					const trimmedLine = line.substring(leadingSpaces.length);
+					const leadingSpaces = /^\s*/.exec(line)?.[0] ?? '';
+					const trimmedLine = line.slice(leadingSpaces.length);
 
 					return (
 						// eslint-disable-next-line react/no-array-index-key
