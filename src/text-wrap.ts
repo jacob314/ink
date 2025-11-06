@@ -115,14 +115,7 @@ export const wrapStyledChars = (
 	let currentWord: StyledChar[] = [];
 
 	for (const char of styledChars) {
-		if (char.value === '\n') {
-			if (currentWord.length > 0) {
-				words.push(currentWord);
-			}
-
-			currentWord = [];
-			words.push([char]);
-		} else if (char.value === ' ') {
+		if (char.value === '\n' || char.value === ' ') {
 			if (currentWord.length > 0) {
 				words.push(currentWord);
 			}
