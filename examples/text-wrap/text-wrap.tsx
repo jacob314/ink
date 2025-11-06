@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, {useState, useEffect} from 'react';
-import {render, Box, Text, useStdout} from '../../src/index.js';
+import React, {useState} from 'react';
+import {render, Box, Text, useInput} from '../../src/index.js';
 
 const tsExample = `import React, {useState, useEffect} from 'react';
 import {render, Box, Text, useInput} from 'ink';
@@ -37,53 +37,52 @@ function Counter() {
 render(<Counter />);`;
 
 function TextWrap() {
-	const {stdout} = useStdout();
-	const [size, setSize] = useState({
-		columns: stdout.columns,
-		rows: stdout.rows,
+	const [width, setWidth] = useState(60);
+
+	useInput((input, key) => {
+		if (key.leftArrow) {
+			setWidth(w => Math.max(1, w - 1));
+		}
+
+		if (key.rightArrow) {
+			setWidth(w => w + 1);
+		}
 	});
-	const [counter, setCounter] = useState(0);
-
-	useEffect(() => {
-		const timer = setInterval(() => {
-			setCounter(prev => prev + 1);
-		}, 100);
-
-		return () => {
-			clearInterval(timer);
-		};
-	}, []);
-
-	useEffect(() => {
-		const onResize = () => {
-			setSize({
-				columns: stdout.columns,
-				rows: stdout.rows,
-			});
-		};
-
-		stdout.on('resize', onResize);
-		return () => {
-			stdout.off('resize', onResize);
-		};
-	}, [stdout]);
 
 	return (
 		<Box flexDirection="column">
-			<Box width={size.columns} borderStyle="single" marginBottom={1}>
+			<Box width={width} borderStyle="single" marginBottom={1}>
 				<Text>{tsExample}</Text>
 			</Box>
-			<Box width={size.columns} flexDirection="column" borderStyle="single">
-				{tsExample.split('\n').map((line, i) => (
-					<Box key={i} flexDirection="row">
-						<Box width={3} flexShrink={0} flexGrow={0}>
-							<Text>{i + 1}</Text>
+			<Box
+				width={width}
+				flexDirection="column"
+				borderStyle="single"
+				overflow="hidden"
+			>
+				{tsExample.split('\n').map((line, i) => {
+					const leadingSpaces = line.match(/^\s*/)?.[0] ?? '';
+					const trimmedLine = line.substring(leadingSpaces.length);
+
+					return (
+						// eslint-disable-next-line react/no-array-index-key
+						<Box key={i} flexDirection="row">
+							<Box width={3 + leadingSpaces.length} flexShrink={0} flexGrow={0}>
+								<Text>{i + 1}</Text>
+							</Box>
+							<Text>{trimmedLine}</Text>
 						</Box>
-						<Text>{line}</Text>
-					</Box>
-				))}
+					);
+				})}
 			</Box>
-			<Text>Running for {counter * 100}ms</Text>
+			<Box marginTop={1}>
+				<Text>
+					Width: <Text color="green">{width}</Text> | Press{' '}
+					<Text color="cyan">Left Arrow</Text> to shrink,{' '}
+					<Text color="cyan">Right Arrow</Text> to increase. Press{' '}
+					<Text color="red">Ctrl+C</Text> to exit.
+				</Text>
+			</Box>
 		</Box>
 	);
 }
