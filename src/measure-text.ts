@@ -18,15 +18,6 @@ let currentStringWidth: StringWidth = defaultStringWidth;
 // characters.
 const widthCache = new Map<string, number>();
 
-// This cache can persist for the lifetime of the application.
-// The keys for this cache can be very large so we need to limit the size
-// of the data cached as well as the number of keys cached to prevent
-// memory issues.
-const toStyledCharactersCache = new DataLimitedLruMap<StyledChar[]>(
-	1_000_000,
-	100_000_000,
-);
-
 export function setStringWidthFunction(fn: StringWidth) {
 	currentStringWidth = fn;
 	// Clear the width cache to avoid stale values.
@@ -38,11 +29,6 @@ export function clearStringWidthCache() {
 }
 
 export function toStyledCharacters(text: string): StyledChar[] {
-	const cached = toStyledCharactersCache.get(text);
-	if (cached !== undefined) {
-		return cached;
-	}
-
 	const tokens = tokenize(text);
 	const characters = styledCharsFromTokens(tokens);
 	const combinedCharacters: StyledChar[] = [];
@@ -173,8 +159,6 @@ export function toStyledCharacters(text: string): StyledChar[] {
 			combinedCharacters.push(character);
 		}
 	}
-
-	toStyledCharactersCache.set(text, combinedCharacters);
 
 	return combinedCharacters;
 }
