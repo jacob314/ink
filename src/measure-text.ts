@@ -23,8 +23,8 @@ const widthCache = new Map<string, number>();
 // of the data cached as well as the number of keys cached to prevent
 // memory issues.
 const toStyledCharactersCache = new DataLimitedLruMap<StyledChar[]>(
+	10_000,
 	1_000_000,
-	100_000_000,
 );
 
 export function setStringWidthFunction(fn: StringWidth) {
