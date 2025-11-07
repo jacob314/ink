@@ -4,19 +4,12 @@ import {
 	styledCharsFromTokens,
 	type StyledChar,
 } from '@alcalzone/ansi-tokenize';
-import {DataLimitedLruMap} from './data-limited-lru-map.js';
 
 export type StringWidth = (text: string) => number;
 
 const defaultStringWidth: StringWidth = stringWidth;
 
 let currentStringWidth: StringWidth = defaultStringWidth;
-
-// This cache must be cleared each time the string width function is changed.
-// The strings passed as input are single characters so there is no need to
-// limit the size of the cache as there are only a limited number of valid
-// characters.
-const widthCache = new Map<string, number>();
 
 export function setStringWidthFunction(fn: StringWidth) {
 	currentStringWidth = fn;
@@ -25,7 +18,6 @@ export function setStringWidthFunction(fn: StringWidth) {
 }
 
 export function clearStringWidthCache() {
-	widthCache.clear();
 }
 
 export function toStyledCharacters(text: string): StyledChar[] {
@@ -173,14 +165,7 @@ export function styledCharsWidth(styledChars: StyledChar[]): number {
 }
 
 export function inkCharacterWidth(text: string): number {
-	const width = widthCache.get(text);
-	if (width !== undefined) {
-		return width;
-	}
-
-	const calculatedWidth = currentStringWidth(text);
-	widthCache.set(text, calculatedWidth);
-	return calculatedWidth;
+	return currentStringWidth(text);
 }
 
 export function splitStyledCharsByNewline(
