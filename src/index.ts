@@ -30,6 +30,9 @@ export {
 	getBoundingBox,
 	getInnerWidth,
 	getInnerHeight,
+	getVerticalScrollbarBoundingBox,
+	getHorizontalScrollbarBoundingBox,
+	type ScrollbarBoundingBox,
 } from './measure-element.js';
 export {getScrollHeight, getScrollWidth} from './scroll.js';
 export {clearStringWidthCache, setStringWidthFunction} from './measure-text.js';

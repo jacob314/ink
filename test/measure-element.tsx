@@ -10,6 +10,8 @@ import {
 	getInnerHeight,
 	getScrollHeight,
 	getScrollWidth,
+	getVerticalScrollbarBoundingBox,
+	getHorizontalScrollbarBoundingBox,
 	Text,
 	type DOMElement,
 } from '../src/index.js';
@@ -193,7 +195,7 @@ test('get scroll height and width', t => {
 
 		return (
 			<Box ref={ref} width={10} height={10} overflow="scroll">
-				<Box width={20} height={20} />
+				<Box width={20} height={20} flexShrink={0} />
 			</Box>
 		);
 	}
@@ -205,7 +207,7 @@ test('get scroll height and width', t => {
 
 	t.true(onLayout.calledOnce);
 	t.like(onLayout.firstCall.args[0], {
-		scrollWidth: 10,
+		scrollWidth: 20,
 		scrollHeight: 20,
 	});
 });
@@ -231,7 +233,14 @@ test('get bounding box with scroll position', t => {
 				scrollTop={5}
 				scrollLeft={5}
 			>
-				<Box ref={ref} marginTop={2} marginLeft={5} width={10} height={10} />
+				<Box
+					ref={ref}
+					marginTop={2}
+					marginLeft={5}
+					width={10}
+					height={10}
+					flexShrink={0}
+				/>
 			</Box>
 		);
 	}
@@ -243,9 +252,381 @@ test('get bounding box with scroll position', t => {
 
 	t.true(onLayout.calledOnce);
 	t.like(onLayout.firstCall.args[0], {
-		x: 5,
+		x: 0,
 		y: 0,
-		width: 5,
+		width: 10,
 		height: 10,
 	});
+});
+
+test('get vertical scrollbar bounding box', t => {
+	const onLayout = spy();
+
+	function Test() {
+		const ref = useRef<DOMElement>(null);
+
+		useLayoutEffect(() => {
+			if (ref.current) {
+				const layout = getVerticalScrollbarBoundingBox(ref.current);
+				onLayout(layout);
+			}
+		});
+
+		return (
+			<Box ref={ref} width={10} height={10} overflowY="scroll">
+				<Box height={20} />
+			</Box>
+		);
+	}
+
+	render(<Test />, {
+		stdout: createStdout(),
+		debug: true,
+	});
+
+	t.true(onLayout.calledOnce);
+	t.deepEqual(onLayout.firstCall.args[0], {
+		x: 9,
+		y: 0,
+		width: 1,
+		height: 10,
+		thumb: {
+			x: 9,
+			y: 0,
+			width: 1,
+			height: 5,
+			start: 0,
+			end: 5,
+			startHalf: 0,
+			endHalf: 10,
+		},
+	});
+});
+
+test('get vertical scrollbar bounding box with border', t => {
+	const onLayout = spy();
+
+	function Test() {
+		const ref = useRef<DOMElement>(null);
+
+		useLayoutEffect(() => {
+			if (ref.current) {
+				const layout = getVerticalScrollbarBoundingBox(ref.current);
+				onLayout(layout);
+			}
+		});
+
+		return (
+			<Box
+				ref={ref}
+				width={10}
+				height={10}
+				overflowY="scroll"
+				borderStyle="single"
+			>
+				<Box height={20} />
+			</Box>
+		);
+	}
+
+	render(<Test />, {
+		stdout: createStdout(),
+		debug: true,
+	});
+
+	t.true(onLayout.calledOnce);
+	t.deepEqual(onLayout.firstCall.args[0], {
+		x: 8,
+		y: 1,
+		width: 1,
+		height: 8,
+		thumb: {
+			x: 8,
+			y: 1,
+			width: 1,
+			height: 3,
+			start: 0,
+			end: 3,
+			startHalf: 0,
+			endHalf: 6,
+		},
+	});
+});
+
+test('get vertical scrollbar bounding box scrolled', t => {
+	const onLayout = spy();
+
+	function Test() {
+		const ref = useRef<DOMElement>(null);
+
+		useLayoutEffect(() => {
+			if (ref.current) {
+				const layout = getVerticalScrollbarBoundingBox(ref.current);
+				onLayout(layout);
+			}
+		});
+
+		return (
+			<Box ref={ref} width={10} height={10} overflowY="scroll" scrollTop={5}>
+				<Box height={20} />
+			</Box>
+		);
+	}
+
+	render(<Test />, {
+		stdout: createStdout(),
+		debug: true,
+	});
+
+	t.true(onLayout.calledOnce);
+	t.deepEqual(onLayout.firstCall.args[0], {
+		x: 9,
+		y: 0,
+		width: 1,
+		height: 10,
+		thumb: {
+			x: 9,
+			y: 2,
+			width: 1,
+			height: 6,
+			start: 2,
+			end: 8,
+			startHalf: 5,
+			endHalf: 15,
+		},
+	});
+});
+
+test('get horizontal scrollbar bounding box', t => {
+	const onLayout = spy();
+
+	function Test() {
+		const ref = useRef<DOMElement>(null);
+
+		useLayoutEffect(() => {
+			if (ref.current) {
+				const layout = getHorizontalScrollbarBoundingBox(ref.current);
+				onLayout(layout);
+			}
+		});
+
+		return (
+			<Box ref={ref} width={10} height={10} overflowX="scroll">
+				<Box width={20} flexShrink={0} />
+			</Box>
+		);
+	}
+
+	render(<Test />, {
+		stdout: createStdout(),
+		debug: true,
+	});
+
+	t.true(onLayout.calledOnce);
+	t.deepEqual(onLayout.firstCall.args[0], {
+		x: 0,
+		y: 9,
+		width: 10,
+		height: 1,
+		thumb: {
+			x: 0,
+			y: 9,
+			width: 5,
+			height: 1,
+			start: 0,
+			end: 5,
+			startHalf: 0,
+			endHalf: 10,
+		},
+	});
+});
+
+test('get horizontal scrollbar bounding box scrolled', t => {
+	const onLayout = spy();
+
+	function Test() {
+		const ref = useRef<DOMElement>(null);
+
+		useLayoutEffect(() => {
+			if (ref.current) {
+				const layout = getHorizontalScrollbarBoundingBox(ref.current);
+				onLayout(layout);
+			}
+		});
+
+		return (
+			<Box ref={ref} width={10} height={10} overflowX="scroll" scrollLeft={5}>
+				<Box width={20} flexShrink={0} />
+			</Box>
+		);
+	}
+
+	render(<Test />, {
+		stdout: createStdout(),
+		debug: true,
+	});
+
+	t.true(onLayout.calledOnce);
+	t.deepEqual(onLayout.firstCall.args[0], {
+		x: 0,
+		y: 9,
+		width: 10,
+		height: 1,
+		thumb: {
+			x: 2,
+			y: 9,
+			width: 6,
+			height: 1,
+			start: 2,
+			end: 8,
+			startHalf: 5,
+			endHalf: 15,
+		},
+	});
+});
+
+test('get horizontal scrollbar bounding box with border', t => {
+	const onLayout = spy();
+
+	function Test() {
+		const ref = useRef<DOMElement>(null);
+
+		useLayoutEffect(() => {
+			if (ref.current) {
+				const layout = getHorizontalScrollbarBoundingBox(ref.current);
+				onLayout(layout);
+			}
+		});
+
+		return (
+			<Box
+				ref={ref}
+				width={10}
+				height={10}
+				overflowX="scroll"
+				borderStyle="single"
+			>
+				<Box width={20} flexShrink={0} />
+			</Box>
+		);
+	}
+
+	render(<Test />, {
+		stdout: createStdout(),
+		debug: true,
+	});
+
+	t.true(onLayout.calledOnce);
+	t.deepEqual(onLayout.firstCall.args[0], {
+		x: 1,
+		y: 8,
+		width: 8,
+		height: 1,
+		thumb: {
+			x: 1,
+			y: 8,
+			width: 3,
+			height: 1,
+			start: 0,
+			end: 3,
+			startHalf: 0,
+			endHalf: 6,
+		},
+	});
+});
+
+test('get both scrollbars bounding box', t => {
+	const onVerticalLayout = spy();
+	const onHorizontalLayout = spy();
+
+	function Test() {
+		const ref = useRef<DOMElement>(null);
+
+		useLayoutEffect(() => {
+			if (ref.current) {
+				onVerticalLayout(getVerticalScrollbarBoundingBox(ref.current));
+				onHorizontalLayout(getHorizontalScrollbarBoundingBox(ref.current));
+			}
+		});
+
+		return (
+			<Box ref={ref} width={10} height={10} overflow="scroll">
+				<Box width={20} height={20} flexShrink={0} />
+			</Box>
+		);
+	}
+
+	render(<Test />, {
+		stdout: createStdout(),
+		debug: true,
+	});
+
+	t.true(onVerticalLayout.calledOnce);
+	t.deepEqual(onVerticalLayout.firstCall.args[0], {
+		x: 9,
+		y: 0,
+		width: 1,
+		height: 10,
+		thumb: {
+			x: 9,
+			y: 0,
+			width: 1,
+			height: 5,
+			start: 0,
+			end: 5,
+			startHalf: 0,
+			endHalf: 10,
+		},
+	});
+
+	t.true(onHorizontalLayout.calledOnce);
+	t.deepEqual(onHorizontalLayout.firstCall.args[0], {
+		x: 0,
+		y: 9,
+		width: 9,
+		height: 1,
+		thumb: {
+			x: 0,
+			y: 9,
+			width: 5,
+			height: 1,
+			start: 0,
+			end: 5,
+			startHalf: 0,
+			endHalf: 9,
+		},
+	});
+});
+
+test('get scrollbar bounding box when not scrollable', t => {
+	const onVerticalLayout = spy();
+	const onHorizontalLayout = spy();
+
+	function Test() {
+		const ref = useRef<DOMElement>(null);
+
+		useLayoutEffect(() => {
+			if (ref.current) {
+				onVerticalLayout(getVerticalScrollbarBoundingBox(ref.current));
+				onHorizontalLayout(getHorizontalScrollbarBoundingBox(ref.current));
+			}
+		});
+
+		return (
+			<Box ref={ref} width={10} height={10} overflow="scroll">
+				<Box width={5} height={5} />
+			</Box>
+		);
+	}
+
+	render(<Test />, {
+		stdout: createStdout(),
+		debug: true,
+	});
+
+	t.true(onVerticalLayout.calledOnce);
+	t.is(onVerticalLayout.firstCall.args[0], undefined);
+
+	t.true(onHorizontalLayout.calledOnce);
+	t.is(onHorizontalLayout.firstCall.args[0], undefined);
 });
