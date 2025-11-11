@@ -199,3 +199,34 @@ test('incremental rendering - render to empty string (full clear vs early exit)'
 	render('');
 	t.is((stdout.write as any).callCount, 2); // No additional write
 });
+
+test('incremental rendering - alternate buffer', t => {
+	const stdout = createStdout();
+	let rows = 10;
+	const render = logUpdate.create(stdout, {
+		incremental: true,
+		alternateBuffer: true,
+		getRows: () => rows,
+	});
+
+	render('Line 1\nLine 2');
+	t.is((stdout.write as any).callCount, 2); // enterAlternativeScreen + render
+	const firstRender = (stdout.write as any).secondCall.args[0] as string;
+	t.true(firstRender.includes('Line 1\nLine 2'));
+
+	render('Line 1\nUpdated');
+	t.is((stdout.write as any).callCount, 3);
+	const secondRender = (stdout.write as any).thirdCall.args[0] as string;
+	t.true(secondRender.includes(ansiEscapes.cursorNextLine)); // Skips Line 1
+	t.true(secondRender.includes('Updated'));
+	t.false(secondRender.includes('Line 1')); // Should not rewrite Line 1
+
+	// Change rows to trigger full redraw
+	rows = 5;
+	render('Line 1\nUpdated Again');
+	t.is((stdout.write as any).callCount, 4);
+	const thirdRender = (stdout.write as any).lastCall.args[0] as string;
+	// Should be a full redraw, so it should contain Line 1
+	t.true(thirdRender.includes('Line 1'));
+	t.true(thirdRender.includes('Updated Again'));
+});

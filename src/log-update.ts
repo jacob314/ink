@@ -93,6 +93,10 @@ const createStandard = (
 			return;
 		}
 
+		if (output === previousOutput) {
+			return;
+		}
+
 		previousOutput = output;
 		stream.write(ansiEscapes.eraseLines(previousLineCount) + output);
 		previousLineCount = output.split('\n').length;
@@ -150,11 +154,25 @@ const createStandard = (
 
 const createIncremental = (
 	stream: Writable,
-	{showCursor = false} = {},
+	{
+		showCursor = false,
+		alternateBuffer = false,
+		getRows = () => 0,
+	}: {
+		showCursor?: boolean;
+		alternateBuffer?: boolean;
+		getRows?: () => number;
+	} = {},
 ): LogUpdate => {
 	let previousLines: string[] = [];
 	let previousOutput = '';
+	let previousOutputAlternateBuffer = '';
+	let previousRows = 0;
 	let hasHiddenCursor = false;
+
+	if (alternateBuffer) {
+		stream.write(ansiEscapes.enterAlternativeScreen);
+	}
 
 	const render = (str: string) => {
 		if (!showCursor && !hasHiddenCursor) {
@@ -163,6 +181,80 @@ const createIncremental = (
 		}
 
 		const output = str + '\n';
+
+		if (alternateBuffer) {
+			let alternateBufferOutput = output;
+			const rows = getRows() ?? 0;
+			if (rows > 0) {
+				const lines = str.split('\n');
+				const lineCount = lines.length;
+				// Only write the last `rows` lines as the alternate buffer
+				// will not scroll so all we accomplish by writing more
+				// content is risking flicker and confusing the terminal about
+				// the cursor position.
+				if (lineCount > rows) {
+					alternateBufferOutput = lines.slice(-rows).join('\n');
+				}
+			}
+
+			// In alternate buffer mode we need to re-render based on whether content
+			// visible within the clipped alternate output buffer has changed even
+			// if the entire output string has not changed.
+			if (alternateBufferOutput !== previousOutputAlternateBuffer) {
+				const nextLines = alternateBufferOutput.split('\n');
+
+				if (rows !== previousRows) {
+					// Unfortunately, eraseScreen does not work correctly in iTerm2 so we
+					// have to use clearTerminal instead.
+					const eraseOperation =
+						process.env['TERM_PROGRAM'] === 'iTerm.app'
+							? ansiEscapes.clearTerminal
+							: ansiEscapes.eraseScreen;
+					stream.write(
+						enterSynchronizedOutput +
+							ansiEscapes.cursorTo(0, 0) +
+							eraseOperation +
+							alternateBufferOutput +
+							exitSynchronizedOutput,
+					);
+					previousRows = rows;
+				} else {
+					const buffer: string[] = [];
+					buffer.push(enterSynchronizedOutput);
+					buffer.push(ansiEscapes.cursorTo(0, 0));
+
+					for (let i = 0; i < nextLines.length; i++) {
+						if (nextLines[i] !== previousLines[i]) {
+							buffer.push(ansiEscapes.eraseLine + nextLines[i]);
+						} else {
+							buffer.push(ansiEscapes.cursorNextLine);
+							continue;
+						}
+
+						if (i < nextLines.length - 1) {
+							buffer.push('\n');
+						}
+					}
+
+					if (previousLines.length > nextLines.length) {
+						const linesToClear = previousLines.length - nextLines.length;
+						for (let i = 0; i < linesToClear; i++) {
+							buffer.push(ansiEscapes.eraseLine + ansiEscapes.cursorNextLine);
+						}
+					}
+
+					buffer.push(exitSynchronizedOutput);
+					stream.write(buffer.join(''));
+				}
+
+				previousOutputAlternateBuffer = alternateBufferOutput;
+				previousLines = nextLines;
+			}
+
+			previousOutput = output;
+			return;
+		}
+
 		if (output === previousOutput) {
 			return;
 		}
@@ -211,12 +303,23 @@ const createIncremental = (
 	};
 
 	render.clear = () => {
+		if (alternateBuffer) {
+			const eraseOperation =
+				process.env['TERM_PROGRAM'] === 'iTerm.app'
+					? ansiEscapes.clearTerminal
+					: ansiEscapes.eraseScreen;
+			stream.write(eraseOperation);
+			previousOutput = '';
+			return;
+		}
+
 		stream.write(ansiEscapes.eraseLines(previousLines.length));
 		previousOutput = '';
 		previousLines = [];
 	};
 
 	render.done = () => {
+		const lastFrame = previousOutput;
 		previousOutput = '';
 		previousLines = [];
 
@@ -224,9 +327,23 @@ const createIncremental = (
 			cliCursor.show();
 			hasHiddenCursor = false;
 		}
+
+		if (alternateBuffer) {
+			stream.write(ansiEscapes.exitAlternativeScreen);
+			// The last frame was rendered to the alternate buffer.
+			// We need to render it again to the main buffer. If apps do not
+			// want this behavior, they can make sure the last frame is empty
+			// before unmounting.
+			stream.write(lastFrame);
+		}
 	};
 
 	render.sync = (str: string) => {
+		if (alternateBuffer) {
+			previousOutput = str;
+			return;
+		}
+
 		const output = str + '\n';
 		previousOutput = output;
 		previousLines = output.split('\n');
@@ -237,13 +354,23 @@ const createIncremental = (
 
 const create = (
 	stream: Writable,
-	{showCursor = false, incremental = false} = {},
+	{
+		showCursor = false,
+		alternateBuffer = false,
+		incremental = false,
+		getRows,
+	}: {
+		showCursor?: boolean;
+		alternateBuffer?: boolean;
+		incremental?: boolean;
+		getRows?: () => number;
+	} = {},
 ): LogUpdate => {
 	if (incremental) {
-		return createIncremental(stream, {showCursor});
+		return createIncremental(stream, {showCursor, alternateBuffer, getRows});
 	}
 
-	return createStandard(stream, {showCursor});
+	return createStandard(stream, {showCursor, alternateBuffer, getRows});
 };
 
 const logUpdate = {create};
