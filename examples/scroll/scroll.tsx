@@ -14,7 +14,9 @@ import {
 	getInnerWidth,
 	getScrollHeight,
 	getScrollWidth,
+	getVerticalScrollbarBoundingBox,
 	type DOMElement,
+	type ScrollbarBoundingBox,
 } from '../../src/index.js';
 
 type ScrollMode = 'vertical' | 'horizontal' | 'both' | 'hidden';
@@ -54,6 +56,9 @@ function ScrollableContent() {
 	const [scrollMode, setScrollMode] = useState<ScrollMode>('vertical');
 	const [scrollTop, setScrollTop] = useState(0);
 	const [scrollLeft, setScrollLeft] = useState(0);
+	const [verticalScrollbar, setVerticalScrollbar] = useState<
+		ScrollbarBoundingBox | undefined
+	>(undefined);
 	const reference = useRef<DOMElement>(null);
 	const {columns, rows} = useTerminalSize();
 	const [size, setSize] = useState({
@@ -84,6 +89,9 @@ function ScrollableContent() {
 			const innerWidth = getInnerWidth(reference.current);
 			const scrollHeight = getScrollHeight(reference.current);
 			const scrollWidth = getScrollWidth(reference.current);
+			const currentVerticalScrollbar = getVerticalScrollbarBoundingBox(
+				reference.current,
+			);
 
 			if (
 				size.innerHeight !== innerHeight ||
@@ -92,6 +100,13 @@ function ScrollableContent() {
 				size.scrollWidth !== scrollWidth
 			) {
 				setSize({innerHeight, scrollHeight, innerWidth, scrollWidth});
+			}
+
+			if (
+				JSON.stringify(currentVerticalScrollbar) !==
+				JSON.stringify(verticalScrollbar)
+			) {
+				setVerticalScrollbar(currentVerticalScrollbar);
 			}
 		}
 	});
@@ -188,6 +203,13 @@ function ScrollableContent() {
 				<Text>
 					Inner scrollable size: {size.scrollWidth}x{size.scrollHeight}
 				</Text>
+				{verticalScrollbar && (
+					<Text>
+						VScroll: x={verticalScrollbar.x}, y={verticalScrollbar.y}, h=
+						{verticalScrollbar.height}, thumb=[{verticalScrollbar.thumb.start},{' '}
+						{verticalScrollbar.thumb.end}]
+					</Text>
+				)}
 			</Box>
 			<Box
 				ref={reference}

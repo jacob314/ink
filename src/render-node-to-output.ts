@@ -9,6 +9,11 @@ import {type DOMElement} from './dom.js';
 import type Output from './output.js';
 import colorize from './colorize.js';
 import {
+	getVerticalScrollbarBoundingBox,
+	getHorizontalScrollbarBoundingBox,
+	type ScrollbarBoundingBox,
+} from './measure-element.js';
+import {
 	measureStyledChars,
 	splitStyledCharsByNewline,
 	toStyledCharacters,
@@ -244,7 +249,6 @@ const renderNodeToOutput = (
 		let childrenOffsetX = x;
 		let verticallyScrollable = false;
 		let horizontallyScrollable = false;
-		let isVerticalScrollbarVisible = false;
 		let activeStickyNode: DOMElement | undefined;
 		let nextStickyNode: DOMElement | undefined;
 
@@ -299,11 +303,6 @@ const renderNodeToOutput = (
 			if (horizontallyScrollable) {
 				childrenOffsetX -= node.internal_scrollState?.scrollLeft ?? 0;
 			}
-
-			isVerticalScrollbarVisible =
-				verticallyScrollable &&
-				(node.internal_scrollState?.scrollHeight ?? 0) >
-					(node.internal_scrollState?.clientHeight ?? 0);
 
 			const clipHorizontally = overflowX === 'hidden' || overflowX === 'scroll';
 			const clipVertically = overflowY === 'hidden' || overflowY === 'scroll';
@@ -421,9 +420,7 @@ const renderNodeToOutput = (
 				}
 
 				if (horizontallyScrollable) {
-					renderHorizontalScrollbar(node, x, y, output, {
-						verticallyScrollable: isVerticalScrollbarVisible,
-					});
+					renderHorizontalScrollbar(node, x, y, output);
 				}
 			}
 		}
@@ -520,97 +517,18 @@ function getRelativeLeft(node: DOMElement, ancestor: DOMElement): number {
 function renderScrollbar(
 	node: DOMElement,
 	output: Output,
-	options: {
-		x: number;
-		y: number;
-		axis: 'vertical' | 'horizontal';
-		verticallyScrollable?: boolean;
-	},
+	layout: ScrollbarBoundingBox,
+	axis: 'vertical' | 'horizontal',
 ) {
-	const {x, y, axis} = options;
-	const {yogaNode} = node;
-	if (!yogaNode) {
-		return;
-	}
-
-	const clientDimension =
-		axis === 'vertical'
-			? (node.internal_scrollState?.clientHeight ?? 0)
-			: (node.internal_scrollState?.clientWidth ?? 0);
-
-	const scrollDimension =
-		axis === 'vertical'
-			? (node.internal_scrollState?.scrollHeight ?? 0)
-			: (node.internal_scrollState?.scrollWidth ?? 0);
-
-	const scrollPosition =
-		axis === 'vertical'
-			? (node.internal_scrollState?.scrollTop ?? 0)
-			: (node.internal_scrollState?.scrollLeft ?? 0);
-
-	if (scrollDimension <= clientDimension) {
-		return;
-	}
-
-	const scrollbarX =
-		axis === 'vertical'
-			? x +
-				yogaNode.getComputedWidth() -
-				1 -
-				yogaNode.getComputedBorder(Yoga.EDGE_RIGHT)
-			: x + yogaNode.getComputedBorder(Yoga.EDGE_LEFT);
-
-	const scrollbarY =
-		axis === 'vertical'
-			? y + yogaNode.getComputedBorder(Yoga.EDGE_TOP)
-			: y +
-				yogaNode.getComputedHeight() -
-				1 -
-				yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM);
-
-	const scrollbarDimension =
-		axis === 'vertical'
-			? yogaNode.getComputedHeight() -
-				yogaNode.getComputedBorder(Yoga.EDGE_TOP) -
-				yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM)
-			: yogaNode.getComputedWidth() -
-				yogaNode.getComputedBorder(Yoga.EDGE_LEFT) -
-				yogaNode.getComputedBorder(Yoga.EDGE_RIGHT) -
-				(options.verticallyScrollable ? 1 : 0);
-
-	if (scrollbarDimension <= 0) {
-		return;
-	}
-
-	const scrollbarDimensionHalves = scrollbarDimension * 2;
-
-	const thumbDimensionHalves = Math.max(
-		axis === 'vertical' ? 2 : 1,
-		Math.round((clientDimension / scrollDimension) * scrollbarDimensionHalves),
-	);
-
-	const maxScrollPosition = scrollDimension - clientDimension;
-	const maxThumbPosition = scrollbarDimensionHalves - thumbDimensionHalves;
-
-	const thumbPosition =
-		maxScrollPosition > 0
-			? Math.round((scrollPosition / maxScrollPosition) * maxThumbPosition)
-			: 0;
-
+	const {thumb} = layout;
 	const thumbColor = node.style.scrollbarThumbColor;
 
-	const thumbStartHalf = thumbPosition;
-	const thumbEndHalf = thumbPosition + thumbDimensionHalves;
-
-	const startIndex = Math.floor(thumbStartHalf / 2);
-	const endIndex = Math.min(scrollbarDimension, Math.ceil(thumbEndHalf / 2));
-
-	for (let index = startIndex; index < endIndex; index++) {
+	for (let index = thumb.start; index < thumb.end; index++) {
 		const cellStartHalf = index * 2;
 		const cellEndHalf = (index + 1) * 2;
 
-		const start = Math.max(cellStartHalf, thumbStartHalf);
-		const end = Math.min(cellEndHalf, thumbEndHalf);
+		const start = Math.max(cellStartHalf, thumb.startHalf);
+		const end = Math.min(cellEndHalf, thumb.endHalf);
 
 		const fill = end - start;
 
@@ -630,8 +548,8 @@ function renderScrollbar(
 							? '▌' // Left half of the cell is filled
 							: '▐'; // Right half of the cell is filled
 
-			const outputX = axis === 'vertical' ? scrollbarX : scrollbarX + index;
-			const outputY = axis === 'vertical' ? scrollbarY + index : scrollbarY;
+			const outputX = axis === 'vertical' ? layout.x : layout.x + index;
+			const outputY = axis === 'vertical' ? layout.y + index : layout.y;
 
 			output.write(outputX, outputY, colorize(char, thumbColor, 'foreground'), {
 				transformers: [],
@@ -647,23 +565,24 @@ function renderVerticalScrollbar(
 	y: number,
 	output: Output,
 ) {
-	renderScrollbar(node, output, {x, y, axis: 'vertical'});
+	const layout = getVerticalScrollbarBoundingBox(node, {x, y});
+
+	if (layout) {
+		renderScrollbar(node, output, layout, 'vertical');
+	}
 }
 
-// eslint-disable-next-line max-params
 function renderHorizontalScrollbar(
 	node: DOMElement,
 	x: number,
 	y: number,
 	output: Output,
-	{verticallyScrollable}: {verticallyScrollable: boolean},
 ) {
-	renderScrollbar(node, output, {
-		x,
-		y,
-		axis: 'horizontal',
-		verticallyScrollable,
-	});
+	const layout = getHorizontalScrollbarBoundingBox(node, {x, y});
+
+	if (layout) {
+		renderScrollbar(node, output, layout, 'horizontal');
+	}
 }
 
 export default renderNodeToOutput;
