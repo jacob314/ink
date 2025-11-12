@@ -1,5 +1,5 @@
-import Yoga from 'yoga-layout';
 import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import Yoga from 'yoga-layout';
 import {truncateStyledChars, wrapStyledChars} from './text-wrap.js';
 import getMaxWidth from './get-max-width.js';
 import squashTextNodes from './squash-text-nodes.js';

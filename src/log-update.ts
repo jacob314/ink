@@ -2,6 +2,11 @@ import {type Writable} from 'node:stream';
 import process from 'node:process';
 import ansiEscapes from 'ansi-escapes';
 import cliCursor from 'cli-cursor';
+import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import colorize from './colorize.js';
+
+// Debugging option to simulate flicker if for terminals that do not support enableSynchronizedOutput.
+const enableSynchronizedOutput = true;
 
 const enterSynchronizedOutput = '\u001B[?2026h';
 const exitSynchronizedOutput = '\u001B[?2026l';
@@ -10,7 +15,7 @@ export type LogUpdate = {
 	clear: () => void;
 	done: () => void;
 	sync: (str: string) => void;
-	(str: string): void;
+	(str: string, styledOutput: StyledChar[][], debugRainbowColor?: string): void;
 };
 
 const createStandard = (
@@ -20,11 +25,13 @@ const createStandard = (
 		alternateBuffer = false,
 		alternateBufferAlreadyActive = false,
 		getRows = () => 0,
+		getColumns = () => 0,
 	}: {
 		showCursor?: boolean;
 		alternateBuffer?: boolean;
 		alternateBufferAlreadyActive?: boolean;
 		getRows?: () => number;
+		getColumns?: () => number;
 	} = {},
 ): LogUpdate => {
 	let previousLineCount = 0;
@@ -32,13 +39,23 @@ const createStandard = (
 	// Keep track of the actual previous output rendered to the alternate buffer
 	// which may be truncated to the terminal height.
 	let previousOutputAlternateBuffer = '';
+	let previousRows = 0;
+	let previousColumns = 0;
 	let hasHiddenCursor = false;
 
-	if (alternateBuffer && !alternateBufferAlreadyActive) {
-		stream.write(ansiEscapes.enterAlternativeScreen);
+	if (alternateBuffer) {
+		if (!alternateBufferAlreadyActive) {
+			stream.write(ansiEscapes.enterAlternativeScreen);
+		}
+
+		stream.write('\u001B[?7l');
 	}
 
-	const render = (str: string) => {
+	const render = (
+		str: string,
+		_styledOutput: StyledChar[][],
+		debugRainbowColor?: string,
+	) => {
 		if (!showCursor && !hasHiddenCursor) {
 			cliCursor.hide();
 			hasHiddenCursor = true;
@@ -49,44 +66,50 @@ const createStandard = (
 		if (alternateBuffer) {
 			let alternateBufferOutput = output;
 			const rows = getRows() ?? 0;
+			const columns = getColumns() ?? 0;
+
 			if (rows > 0) {
 				const lines = str.split('\n');
 				const lineCount = lines.length;
-				// Only write the last `rows` lines as the alternate buffer
+				// Only write the first	`rows` lines as the alternate buffer
 				// will not scroll so all we accomplish by writing more
 				// content is risking flicker and confusing the terminal about
 				// the cursor position.
 				if (lineCount > rows) {
-					alternateBufferOutput = lines.slice(-rows).join('\n');
-				}
-
-				// Only write the last `rows` lines as the alternate buffer
-				// will not scroll so all we accomplish by writing more
-				// content is risking flicker and confusing the terminal about
-				// the cursor position.
-				if (lineCount > rows) {
-					alternateBufferOutput = str.split('\n').slice(-rows).join('\n');
+					alternateBufferOutput = lines.slice(0, rows).join('\n');
 				}
 			}
 
 			// In alternate buffer mode we need to re-render based on whether content
 			// visible within the clipped alternate output buffer has changed even
 			// if the entire output string has not changed.
-			if (alternateBufferOutput !== previousOutputAlternateBuffer) {
+			if (
+				alternateBufferOutput !== previousOutputAlternateBuffer ||
+				rows !== previousRows ||
+				columns !== previousColumns
+			) {
 				// Unfortunately, eraseScreen does not work correctly in iTerm2 so we
 				// have to use clearTerminal instead.
 				const eraseOperation =
 					process.env['TERM_PROGRAM'] === 'iTerm.app'
 						? ansiEscapes.clearTerminal
 						: ansiEscapes.eraseScreen;
+
+				let outputToWrite = alternateBufferOutput;
+				outputToWrite = debugRainbowColor
+					? colorize(outputToWrite, debugRainbowColor, 'background')
+					: outputToWrite;
+
 				stream.write(
-					enterSynchronizedOutput +
+					(enableSynchronizedOutput ? enterSynchronizedOutput : '') +
 						ansiEscapes.cursorTo(0, 0) +
 						eraseOperation +
-						alternateBufferOutput +
-						exitSynchronizedOutput,
+						outputToWrite +
+						(enableSynchronizedOutput ? exitSynchronizedOutput : ''),
 				);
 				previousOutputAlternateBuffer = alternateBufferOutput;
+				previousRows = rows;
+				previousColumns = columns;
 			}
 
 			previousOutput = output;
@@ -98,7 +121,13 @@ const createStandard = (
 		}
 
 		previousOutput = output;
-		stream.write(ansiEscapes.eraseLines(previousLineCount) + output);
+		let outputToWrite = output;
+
+		outputToWrite = debugRainbowColor
+			? colorize(outputToWrite, debugRainbowColor, 'background')
+			: outputToWrite;
+
+		stream.write(ansiEscapes.eraseLines(previousLineCount) + outputToWrite);
 		previousLineCount = output.split('\n').length;
 	};
 
@@ -129,6 +158,7 @@ const createStandard = (
 		}
 
 		if (alternateBuffer) {
+			stream.write('\u001B[?7h');
 			stream.write(ansiEscapes.exitAlternativeScreen);
 			// The last frame was rendered to the alternate buffer.
 			// We need to render it again to the main buffer. If apps do not
@@ -157,24 +187,38 @@ const createIncremental = (
 	{
 		showCursor = false,
 		alternateBuffer = false,
+		alternateBufferAlreadyActive = false,
 		getRows = () => 0,
+		getColumns = () => 0,
 	}: {
 		showCursor?: boolean;
 		alternateBuffer?: boolean;
+		alternateBufferAlreadyActive?: boolean;
 		getRows?: () => number;
+		getColumns?: () => number;
 	} = {},
 ): LogUpdate => {
 	let previousLines: string[] = [];
 	let previousOutput = '';
 	let previousOutputAlternateBuffer = '';
 	let previousRows = 0;
+	let previousColumns = 0;
 	let hasHiddenCursor = false;
+	let alternateBufferStyledOutput: StyledChar[][] = [];
 
 	if (alternateBuffer) {
-		stream.write(ansiEscapes.enterAlternativeScreen);
+		if (!alternateBufferAlreadyActive) {
+			stream.write(ansiEscapes.enterAlternativeScreen);
+		}
+
+		stream.write('\u001B[?7l');
 	}
 
-	const render = (str: string) => {
+	const render = (
+		str: string,
+		styledOutput: StyledChar[][],
+		debugRainbowColor?: string,
+	) => {
 		if (!showCursor && !hasHiddenCursor) {
 			cliCursor.hide();
 			hasHiddenCursor = true;
@@ -185,50 +229,76 @@ const createIncremental = (
 		if (alternateBuffer) {
 			let alternateBufferOutput = output;
 			const rows = getRows() ?? 0;
+			const columns = getColumns() ?? 0;
+
 			if (rows > 0) {
 				const lines = str.split('\n');
 				const lineCount = lines.length;
-				// Only write the last `rows` lines as the alternate buffer
+				// Only write the first `rows` lines as the alternate buffer
 				// will not scroll so all we accomplish by writing more
-				// content is risking flicker and confusing the terminal about
+				// content is risking flicker and confusion about the terminal about
 				// the cursor position.
 				if (lineCount > rows) {
-					alternateBufferOutput = lines.slice(-rows).join('\n');
+					alternateBufferOutput = lines.slice(0, rows).join('\n');
+					alternateBufferStyledOutput = styledOutput.slice(0, rows);
+				} else {
+					alternateBufferOutput = lines.join('\n');
+					alternateBufferStyledOutput = styledOutput;
 				}
 			}
 
 			// In alternate buffer mode we need to re-render based on whether content
 			// visible within the clipped alternate output buffer has changed even
 			// if the entire output string has not changed.
-			if (alternateBufferOutput !== previousOutputAlternateBuffer) {
+			if (
+				alternateBufferOutput !== previousOutputAlternateBuffer ||
+				rows !== previousRows ||
+				columns !== previousColumns
+			) {
 				const nextLines = alternateBufferOutput.split('\n');
 
-				if (rows !== previousRows) {
-					// Unfortunately, eraseScreen does not work correctly in iTerm2 so we
-					// have to use clearTerminal instead.
-					const eraseOperation =
-						process.env['TERM_PROGRAM'] === 'iTerm.app'
-							? ansiEscapes.clearTerminal
-							: ansiEscapes.eraseScreen;
-					stream.write(
-						enterSynchronizedOutput +
-							ansiEscapes.cursorTo(0, 0) +
-							eraseOperation +
-							alternateBufferOutput +
-							exitSynchronizedOutput,
-					);
-					previousRows = rows;
-				} else {
+				if (rows === previousRows && columns === previousColumns) {
 					const buffer: string[] = [];
-					buffer.push(enterSynchronizedOutput);
+					if (enableSynchronizedOutput) {
+						buffer.push(enterSynchronizedOutput);
+					}
+
 					buffer.push(ansiEscapes.cursorTo(0, 0));
 
 					for (let i = 0; i < nextLines.length; i++) {
-						if (nextLines[i] !== previousLines[i]) {
-							buffer.push(ansiEscapes.eraseLine + nextLines[i]);
-						} else {
+						if (nextLines[i] === previousLines[i]) {
 							buffer.push(ansiEscapes.cursorNextLine);
 							continue;
+						}
+
+						let lineToWrite = nextLines[i] ?? '';
+
+						let lineLength = 0;
+						const styledOutput = alternateBufferStyledOutput[i];
+
+						if (styledOutput !== undefined) {
+							for (let j = styledOutput.length - 1; j >= 0; j--) {
+								const char = styledOutput[j];
+								if (char === undefined) continue;
+								if (char.value !== ' ' && char.value !== '') {
+									lineLength = j + (char.fullWidth ? 2 : 1);
+									break;
+								}
+							}
+						}
+
+						lineToWrite = debugRainbowColor
+							? colorize(lineToWrite, debugRainbowColor, 'background')
+							: lineToWrite;
+
+						buffer.push(lineToWrite);
+						if (columns > lineLength) {
+							// Clear the rest of the line without introducing flicker.
+							// We could optimize this further by only writing spaces up to the last line length
+							// but this is safer.
+							// The one failure mode for this is that if we add too many spaces and there was a
+							// non space character at the very end of the line
+							buffer.push(' '.repeat(columns - lineLength));
 						}
 
 						if (i < nextLines.length - 1) {
@@ -243,8 +313,34 @@ const createIncremental = (
 						}
 					}
 
-					buffer.push(exitSynchronizedOutput);
+					if (enableSynchronizedOutput) {
+						buffer.push(exitSynchronizedOutput);
+					}
+
 					stream.write(buffer.join(''));
+				} else {
+					// Unfortunately, eraseScreen does not work correctly in iTerm2 so we
+					// have to use clearTerminal instead.
+					const eraseOperation =
+						process.env['TERM_PROGRAM'] === 'iTerm.app'
+							? ansiEscapes.clearTerminal
+							: ansiEscapes.eraseScreen;
+
+					let outputToWrite = alternateBufferOutput;
+
+					outputToWrite = debugRainbowColor
+						? colorize(outputToWrite, debugRainbowColor, 'background')
+						: outputToWrite;
+
+					stream.write(
+						enterSynchronizedOutput +
+							ansiEscapes.cursorTo(0, 0) +
+							eraseOperation +
+							outputToWrite +
+							exitSynchronizedOutput,
+					);
+					previousRows = rows;
+					previousColumns = columns;
 				}
 
 				previousOutputAlternateBuffer = alternateBufferOutput;
@@ -265,7 +361,13 @@ const createIncremental = (
 		const visibleCount = nextCount - 1;
 
 		if (output === '\n' || previousOutput.length === 0) {
-			stream.write(ansiEscapes.eraseLines(previousCount) + output);
+			let outputToWrite = output;
+
+			outputToWrite = debugRainbowColor
+				? colorize(outputToWrite, debugRainbowColor, 'background')
+				: outputToWrite;
+
+			stream.write(ansiEscapes.eraseLines(previousCount) + outputToWrite);
 			previousOutput = output;
 			previousLines = nextLines;
 			return;
@@ -293,7 +395,13 @@ const createIncremental = (
 				continue;
 			}
 
-			buffer.push(ansiEscapes.eraseLine + nextLines[i] + '\n');
+			let lineToWrite = nextLines[i] ?? '';
+
+			lineToWrite = debugRainbowColor
+				? colorize(lineToWrite, debugRainbowColor, 'background')
+				: lineToWrite;
+
+			buffer.push(ansiEscapes.eraseLine + lineToWrite + '\n');
 		}
 
 		stream.write(buffer.join(''));
@@ -329,6 +437,7 @@ const createIncremental = (
 		}
 
 		if (alternateBuffer) {
+			stream.write('\u001B[?7h');
 			stream.write(ansiEscapes.exitAlternativeScreen);
 			// The last frame was rendered to the alternate buffer.
 			// We need to render it again to the main buffer. If apps do not
@@ -357,20 +466,36 @@ const create = (
 	{
 		showCursor = false,
 		alternateBuffer = false,
+		alternateBufferAlreadyActive = false,
 		incremental = false,
 		getRows,
+		getColumns,
 	}: {
 		showCursor?: boolean;
 		alternateBuffer?: boolean;
+		alternateBufferAlreadyActive?: boolean;
 		incremental?: boolean;
 		getRows?: () => number;
+		getColumns?: () => number;
 	} = {},
 ): LogUpdate => {
 	if (incremental) {
-		return createIncremental(stream, {showCursor, alternateBuffer, getRows});
+		return createIncremental(stream, {
+			showCursor,
+			alternateBuffer,
+			alternateBufferAlreadyActive,
+			getRows,
+			getColumns,
+		});
 	}
 
-	return createStandard(stream, {showCursor, alternateBuffer, getRows});
+	return createStandard(stream, {
+		showCursor,
+		alternateBuffer,
+		alternateBufferAlreadyActive,
+		getRows,
+		getColumns,
+	});
 };
 
 const logUpdate = {create};

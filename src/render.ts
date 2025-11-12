@@ -88,6 +88,15 @@ export type RenderOptions = {
 	@default false
 	*/
 	incrementalRendering?: boolean;
+
+	/**
+	If true, all content for the current frame will be rendered with background colors that alternate through a rainbow of options.
+	This is useful for debugging to see what content was actually updated on each frame.
+	Only content that was re-rendered gets a new rainbow color.
+
+	@default false
+	*/
+	debugRainbow?: boolean;
 };
 
 export type Instance = {

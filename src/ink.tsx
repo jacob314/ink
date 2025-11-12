@@ -47,7 +47,26 @@ export type Options = {
 	alternateBuffer?: boolean;
 	alternateBufferAlreadyActive?: boolean;
 	incrementalRendering?: boolean;
+	debugRainbow?: boolean;
 };
+
+const rainbowColors = [
+	'red',
+	'green',
+	'yellow',
+	'blue',
+	'magenta',
+	'cyan',
+	'white',
+	'blackBright',
+	'redBright',
+	'greenBright',
+	'yellowBright',
+	'blueBright',
+	'magentaBright',
+	'cyanBright',
+	'whiteBright',
+];
 
 export default class Ink {
 	private readonly options: Options;
@@ -67,6 +86,7 @@ export default class Ink {
 	private exitPromise?: Promise<void>;
 	private restoreConsole?: () => void;
 	private readonly unsubscribeResize?: () => void;
+	private frameIndex = 0;
 
 	constructor(options: Options) {
 		autoBind(this);
@@ -97,6 +117,7 @@ export default class Ink {
 			alternateBuffer: options.alternateBuffer,
 			alternateBufferAlreadyActive: options.alternateBufferAlreadyActive,
 			getRows: () => options.stdout.rows,
+			getColumns: () => options.stdout.columns,
 			incremental: options.incrementalRendering,
 		});
 		this.throttledLog = unthrottled
@@ -242,7 +263,14 @@ export default class Ink {
 		}
 
 		const startTime = performance.now();
-		const {output, outputHeight, staticOutput} = render(
+
+		let debugRainbowColor: string | undefined;
+		if (this.options.debugRainbow) {
+			debugRainbowColor = rainbowColors[this.frameIndex % rainbowColors.length];
+			this.frameIndex++;
+		}
+
+		const {output, outputHeight, staticOutput, styledOutput} = render(
 			this.rootNode,
 			this.isScreenReaderEnabled,
 		);
@@ -276,7 +304,7 @@ export default class Ink {
 				this.fullStaticOutput += staticOutput;
 			}
 
-			this.log(this.fullStaticOutput + output);
+			this.log(this.fullStaticOutput + output, styledOutput, debugRainbowColor);
 			this.lastOutput = output;
 			return;
 		}
@@ -339,11 +367,11 @@ export default class Ink {
 		if (hasStaticOutput) {
 			this.log.clear();
 			this.options.stdout.write(staticOutput);
-			this.log(output);
+			this.log(output, styledOutput, debugRainbowColor);
 		}
 
 		if (!hasStaticOutput && output !== this.lastOutput) {
-			this.throttledLog(output);
+			this.throttledLog(output, styledOutput, debugRainbowColor);
 		}
 
 		this.lastOutput = output;
@@ -400,7 +428,7 @@ export default class Ink {
 
 		this.log.clear();
 		this.options.stdout.write(data);
-		this.log(this.lastOutput);
+		this.log(this.lastOutput, []);
 	}
 
 	writeToStderr(data: string): void {
@@ -421,7 +449,7 @@ export default class Ink {
 
 		this.log.clear();
 		this.options.stderr.write(data);
-		this.log(this.lastOutput);
+		this.log(this.lastOutput, []);
 	}
 
 	// eslint-disable-next-line @typescript-eslint/ban-types
