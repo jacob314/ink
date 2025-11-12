@@ -107,6 +107,21 @@ test('incremental rendering - single write call with multiple surgical updates',
 	t.is((stdout.write as any).callCount, 2); // Only 2 writes total (initial + update)
 });
 
+test('incremental rendering - skips multiple lines with cursorDown', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {incremental: true});
+
+	render('Line 1\nLine 2\nLine 3\nLine 4');
+	render('Line 1\nLine 2\nUpdated\nLine 4');
+
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	// Line 1 and Line 2 are skipped. skippedLines = 2.
+	t.true(secondCall.includes(ansiEscapes.cursorDown(2)));
+	t.true(secondCall.includes('Updated'));
+	t.false(secondCall.includes('Line 1'));
+	t.false(secondCall.includes('Line 2'));
+});
+
 test('incremental rendering - shrinking output keeps screen tight', t => {
 	const stdout = createStdout();
 	const render = logUpdate.create(stdout, {incremental: true});

@@ -18,6 +18,65 @@ export type LogUpdate = {
 	(str: string, styledOutput: StyledChar[][], debugRainbowColor?: string): void;
 };
 
+const enterAlternateBuffer = (
+	stream: Writable,
+	alreadyActive: boolean,
+): void => {
+	if (!alreadyActive) {
+		stream.write(ansiEscapes.enterAlternativeScreen);
+	}
+
+	stream.write('\u001B[?7l');
+};
+
+const exitAlternateBuffer = (stream: Writable, lastFrame: string): void => {
+	stream.write('\u001B[?7h');
+	stream.write(ansiEscapes.exitAlternativeScreen);
+	// The last frame was rendered to the alternate buffer.
+	// We need to render it again to the main buffer. If apps do not
+	// want this behavior, they can make sure the last frame is empty
+	// before unmounting.
+	stream.write(lastFrame);
+};
+
+const clearAlternateBuffer = (stream: Writable): void => {
+	const eraseOperation =
+		process.env['TERM_PROGRAM'] === 'iTerm.app'
+			? ansiEscapes.clearTerminal
+			: ansiEscapes.eraseScreen;
+	stream.write(eraseOperation);
+};
+
+const ensureCursorHidden = (
+	showCursor: boolean,
+	hasHiddenCursor: boolean,
+): boolean => {
+	if (!showCursor && !hasHiddenCursor) {
+		cliCursor.hide();
+		return true;
+	}
+
+	return hasHiddenCursor;
+};
+
+const ensureCursorShown = (showCursor: boolean): void => {
+	if (!showCursor) {
+		cliCursor.show();
+	}
+};
+
+const moveCursorDown = (buffer: string[], skippedLines: number): number => {
+	if (skippedLines > 0) {
+		if (skippedLines === 1) {
+			buffer.push(ansiEscapes.cursorNextLine);
+		} else {
+			buffer.push(ansiEscapes.cursorDown(skippedLines));
+		}
+	}
+
+	return 0;
+};
+
 const createStandard = (
 	stream: Writable,
 	{
@@ -44,11 +103,7 @@ const createStandard = (
 	let hasHiddenCursor = false;
 
 	if (alternateBuffer) {
-		if (!alternateBufferAlreadyActive) {
-			stream.write(ansiEscapes.enterAlternativeScreen);
-		}
-
-		stream.write('\u001B[?7l');
+		enterAlternateBuffer(stream, alternateBufferAlreadyActive);
 	}
 
 	const render = (
@@ -56,10 +111,7 @@ const createStandard = (
 		_styledOutput: StyledChar[][],
 		debugRainbowColor?: string,
 	) => {
-		if (!showCursor && !hasHiddenCursor) {
-			cliCursor.hide();
-			hasHiddenCursor = true;
-		}
+		hasHiddenCursor = ensureCursorHidden(showCursor, hasHiddenCursor);
 
 		const output = str + '\n';
 
@@ -133,11 +185,7 @@ const createStandard = (
 
 	render.clear = () => {
 		if (alternateBuffer) {
-			const eraseOperation =
-				process.env['TERM_PROGRAM'] === 'iTerm.app'
-					? ansiEscapes.clearTerminal
-					: ansiEscapes.eraseScreen;
-			stream.write(eraseOperation);
+			clearAlternateBuffer(stream);
 			previousOutput = '';
 			return;
 		}
@@ -152,19 +200,11 @@ const createStandard = (
 		previousOutput = '';
 		previousLineCount = 0;
 
-		if (!showCursor) {
-			cliCursor.show();
-			hasHiddenCursor = false;
-		}
+		ensureCursorShown(showCursor);
+		hasHiddenCursor = false;
 
 		if (alternateBuffer) {
-			stream.write('\u001B[?7h');
-			stream.write(ansiEscapes.exitAlternativeScreen);
-			// The last frame was rendered to the alternate buffer.
-			// We need to render it again to the main buffer. If apps do not
-			// want this behavior, they can make sure the last frame is empty
-			// before unmounting.
-			stream.write(lastFrame);
+			exitAlternateBuffer(stream, lastFrame);
 		}
 	};
 
@@ -207,11 +247,7 @@ const createIncremental = (
 	let alternateBufferStyledOutput: StyledChar[][] = [];
 
 	if (alternateBuffer) {
-		if (!alternateBufferAlreadyActive) {
-			stream.write(ansiEscapes.enterAlternativeScreen);
-		}
-
-		stream.write('\u001B[?7l');
+		enterAlternateBuffer(stream, alternateBufferAlreadyActive);
 	}
 
 	const render = (
@@ -219,10 +255,7 @@ const createIncremental = (
 		styledOutput: StyledChar[][],
 		debugRainbowColor?: string,
 	) => {
-		if (!showCursor && !hasHiddenCursor) {
-			cliCursor.hide();
-			hasHiddenCursor = true;
-		}
+		hasHiddenCursor = ensureCursorHidden(showCursor, hasHiddenCursor);
 
 		const output = str + '\n';
 
@@ -265,11 +298,14 @@ const createIncremental = (
 
 					buffer.push(ansiEscapes.cursorTo(0, 0));
 
+					let skippedLines = 0;
 					for (let i = 0; i < nextLines.length; i++) {
 						if (nextLines[i] === previousLines[i]) {
-							buffer.push(ansiEscapes.cursorNextLine);
+							skippedLines++;
 							continue;
 						}
+
+						skippedLines = moveCursorDown(buffer, skippedLines);
 
 						let lineToWrite = nextLines[i] ?? '';
 
@@ -305,6 +341,8 @@ const createIncremental = (
 							buffer.push('\n');
 						}
 					}
+
+					skippedLines = moveCursorDown(buffer, skippedLines);
 
 					if (previousLines.length > nextLines.length) {
 						const linesToClear = previousLines.length - nextLines.length;
@@ -388,12 +426,15 @@ const createIncremental = (
 			buffer.push(ansiEscapes.cursorUp(previousCount - 1));
 		}
 
+		let skippedLines = 0;
 		for (let i = 0; i < visibleCount; i++) {
 			// We do not write lines if the contents are the same. This prevents flickering during renders.
 			if (nextLines[i] === previousLines[i]) {
-				buffer.push(ansiEscapes.cursorNextLine);
+				skippedLines++;
 				continue;
 			}
+
+			skippedLines = moveCursorDown(buffer, skippedLines);
 
 			let lineToWrite = nextLines[i] ?? '';
 
@@ -404,6 +445,8 @@ const createIncremental = (
 			buffer.push(ansiEscapes.eraseLine + lineToWrite + '\n');
 		}
 
+		skippedLines = moveCursorDown(buffer, skippedLines);
+
 		stream.write(buffer.join(''));
 
 		previousOutput = output;
@@ -412,11 +455,7 @@ const createIncremental = (
 
 	render.clear = () => {
 		if (alternateBuffer) {
-			const eraseOperation =
-				process.env['TERM_PROGRAM'] === 'iTerm.app'
-					? ansiEscapes.clearTerminal
-					: ansiEscapes.eraseScreen;
-			stream.write(eraseOperation);
+			clearAlternateBuffer(stream);
 			previousOutput = '';
 			return;
 		}
@@ -431,19 +470,11 @@ const createIncremental = (
 		previousOutput = '';
 		previousLines = [];
 
-		if (!showCursor) {
-			cliCursor.show();
-			hasHiddenCursor = false;
-		}
+		ensureCursorShown(showCursor);
+		hasHiddenCursor = false;
 
 		if (alternateBuffer) {
-			stream.write('\u001B[?7h');
-			stream.write(ansiEscapes.exitAlternativeScreen);
-			// The last frame was rendered to the alternate buffer.
-			// We need to render it again to the main buffer. If apps do not
-			// want this behavior, they can make sure the last frame is empty
-			// before unmounting.
-			stream.write(lastFrame);
+			exitAlternateBuffer(stream, lastFrame);
 		}
 	};
 
