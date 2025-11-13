@@ -81,6 +81,22 @@ export type RenderOptions = {
 	 * @default false
 	 */
 	alternateBufferAlreadyActive?: boolean;
+	/**
+	Enable incremental rendering mode which only updates changed lines instead of redrawing the entire output.
+	This can reduce flickering and improve performance for frequently updating UIs.
+
+	@default false
+	*/
+	incrementalRendering?: boolean;
+
+	/**
+	If true, all content for the current frame will be rendered with background colors that alternate through a rainbow of options.
+	This is useful for debugging to see what content was actually updated on each frame.
+	Only content that was re-rendered gets a new rainbow color.
+
+	@default false
+	*/
+	debugRainbow?: boolean;
 };
 
 export type Instance = {
@@ -129,6 +145,7 @@ const render = (
 		maxFps: 30,
 		alternateBuffer: false,
 		alternateBufferAlreadyActive: false,
+		incrementalRendering: false,
 		...getOptions(options),
 	};
 

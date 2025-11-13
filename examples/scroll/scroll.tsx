@@ -134,7 +134,7 @@ function ScrollableContent() {
 			getNewValue: (current: number) => number,
 		) => {
 			let frame = 0;
-			const frames = 1000;
+			const frames = 5;
 			scrollIntervalReference.current = setInterval(() => {
 				if (frame < frames) {
 					setter(s => getNewValue(s));
@@ -213,9 +213,8 @@ function ScrollableContent() {
 			</Box>
 			<Box
 				ref={reference}
-				borderStyle="round"
 				flexShrink={1}
-				width="80%"
+				width="100%"
 				flexDirection="column"
 				overflowX={overflowX}
 				overflowY={overflowY}
@@ -226,14 +225,20 @@ function ScrollableContent() {
 				<Box
 					flexDirection="column"
 					flexShrink={0}
-					paddingLeft={1}
 					width={
 						scrollMode === 'horizontal' || scrollMode === 'both' ? 120 : 'auto'
 					}
 				>
-					{items.map(item => (
-						<Text key={item.id}>{item.text}</Text>
-					))}
+					{items.map(item =>
+						item.id % 4 === 0 ? (
+							<Text key={item.id}>
+								<Text color={item.id % 2 === 0 ? 'red' : undefined}>* </Text>
+								{item.text}
+							</Text>
+						) : (
+							<Text key={item.id}>Placeholder</Text>
+						),
+					)}
 					<Text key="last-line" color="yellow">
 						This is the last line.
 					</Text>

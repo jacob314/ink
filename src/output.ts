@@ -143,7 +143,7 @@ export default class Output {
 		this.clips.pop();
 	}
 
-	get(): {output: string; height: number} {
+	get(): {output: string; height: number; styledOutput: StyledChar[][]} {
 		// Initialize output array with a specific set of rows, so that margin/padding at the bottom is preserved
 		const output: StyledChar[][] = [];
 
@@ -225,6 +225,7 @@ export default class Output {
 		return {
 			output: generatedOutput,
 			height: output.length,
+			styledOutput: output,
 		};
 	}
 

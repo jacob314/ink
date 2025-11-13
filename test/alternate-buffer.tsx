@@ -89,7 +89,7 @@ for (const {name, env} of scenarios) {
 			.split(/\r?\n/)
 			.filter(line => line.trim());
 
-		t.deepEqual(alternateBufferLines, ['Line 3', 'Line 4', 'Line 5']);
+		t.deepEqual(alternateBufferLines, ['Line 1', 'Line 2', 'Line 3']);
 
 		const outputAfterExit: string = stripAnsi(
 			output.slice(output.indexOf(ansiEscapes.exitAlternativeScreen)),

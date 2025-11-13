@@ -1,3 +1,4 @@
+import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import renderNodeToOutput, {
 	renderNodeToScreenReaderOutput,
 } from './render-node-to-output.js';
@@ -8,6 +9,7 @@ type Result = {
 	output: string;
 	outputHeight: number;
 	staticOutput: string;
+	styledOutput: StyledChar[][];
 };
 
 const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
@@ -31,6 +33,7 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 				output,
 				outputHeight,
 				staticOutput: staticOutput ? `${staticOutput}\n` : '',
+				styledOutput: [],
 			};
 		}
 
@@ -56,7 +59,11 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 			});
 		}
 
-		const {output: generatedOutput, height: outputHeight} = output.get();
+		const {
+			output: generatedOutput,
+			height: outputHeight,
+			styledOutput,
+		} = output.get();
 
 		return {
 			output: generatedOutput,
@@ -64,6 +71,7 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 			// Newline at the end is needed, because static output doesn't have one, so
 			// interactive output will override last line of static output
 			staticOutput: staticOutput ? `${staticOutput.get().output}\n` : '',
+			styledOutput,
 		};
 	}
 
@@ -71,6 +79,7 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 		output: '',
 		outputHeight: 0,
 		staticOutput: '',
+		styledOutput: [],
 	};
 };
 
