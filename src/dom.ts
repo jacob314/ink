@@ -304,3 +304,35 @@ export const setTextNodeValue = (node: TextNode, text: string): void => {
 	node.nodeValue = text;
 	markNodeAsDirty(node);
 };
+
+export const getPathToRoot = (node: DOMNode): DOMNode[] => {
+	const path: DOMNode[] = [];
+	let current: DOMNode | undefined = node;
+
+	while (current) {
+		path.unshift(current);
+		current = current.parentNode;
+	}
+
+	return path;
+};
+
+export const isNodeSelectable = (node: DOMElement): boolean => {
+	let current: DOMElement | undefined = node;
+
+	while (current) {
+		const {userSelect} = current.style;
+
+		if (userSelect === 'none') {
+			return false;
+		}
+
+		if (userSelect === 'text' || userSelect === 'all') {
+			return true;
+		}
+
+		current = current.parentNode;
+	}
+
+	return true;
+};

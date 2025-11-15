@@ -325,6 +325,15 @@ export type Styles = {
 	 Color of the scrollbar thumb.
 	 */
 	readonly scrollbarThumbColor?: LiteralUnion<ForegroundColorName, string>;
+
+	/**
+	Determines whether the user can select text.
+	- `auto`: The user can select text.
+	- `none`: The user cannot select text.
+	- `text`: The user can select text.
+	- `all`: The user can select all text.
+	*/
+	readonly userSelect?: 'auto' | 'none' | 'text' | 'all';
 };
 
 const applyPositionStyles = (node: YogaNode, style: Styles): void => {

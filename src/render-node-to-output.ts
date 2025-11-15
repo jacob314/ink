@@ -5,7 +5,7 @@ import getMaxWidth from './get-max-width.js';
 import squashTextNodes from './squash-text-nodes.js';
 import renderBorder from './render-border.js';
 import renderBackground from './render-background.js';
-import {type DOMElement} from './dom.js';
+import {type DOMElement, type DOMNode} from './dom.js';
 import type Output from './output.js';
 import colorize from './colorize.js';
 import {
@@ -139,6 +139,8 @@ const renderNodeToOutput = (
 		skipStaticElements: boolean;
 		nodeToSkip?: DOMElement;
 		isStickyRender?: boolean;
+		selectionMap?: Map<DOMNode, {start: number; end: number}>;
+		selectionStyle?: (char: StyledChar) => StyledChar;
 	},
 ) => {
 	if (options.nodeToSkip === node) {
@@ -151,6 +153,8 @@ const renderNodeToOutput = (
 		transformers = [],
 		skipStaticElements,
 		isStickyRender = false,
+		selectionMap,
+		selectionStyle,
 	} = options;
 
 	if (skipStaticElements && node.internal_static) {
@@ -206,7 +210,30 @@ const renderNodeToOutput = (
 		}
 
 		if (node.nodeName === 'ink-text') {
-			const styledChars = toStyledCharacters(squashTextNodes(node));
+			let styledChars = toStyledCharacters(squashTextNodes(node));
+			let selectionState:
+				| {
+						range: {start: number; end: number};
+						currentOffset: number;
+				  }
+				| undefined;
+
+			const selectionRange = selectionMap?.get(node);
+
+			if (selectionRange) {
+				selectionState = {
+					range: selectionRange,
+					currentOffset: 0,
+				};
+			}
+
+			if (selectionState) {
+				styledChars = applySelectionToStyledChars(
+					styledChars,
+					selectionState,
+					selectionStyle,
+				);
+			}
 
 			if (styledChars.length > 0) {
 				let lines: StyledChar[][] = [];
@@ -342,6 +369,8 @@ const renderNodeToOutput = (
 					skipStaticElements,
 					nodeToSkip: activeStickyNode,
 					isStickyRender,
+					selectionMap,
+					selectionStyle,
 				});
 			}
 
@@ -407,6 +436,8 @@ const renderNodeToOutput = (
 					transformers: newTransformers,
 					skipStaticElements,
 					isStickyRender: true,
+					selectionMap,
+					selectionStyle,
 				});
 			}
 
@@ -584,5 +615,49 @@ function renderHorizontalScrollbar(
 		renderScrollbar(node, output, layout, 'horizontal');
 	}
 }
+
+const applySelectionToStyledChars = (
+	styledChars: StyledChar[],
+	selectionState: {range: {start: number; end: number}; currentOffset: number},
+	selectionStyle?: (char: StyledChar) => StyledChar,
+): StyledChar[] => {
+	const {range, currentOffset} = selectionState;
+	const {start, end} = range;
+	let charCodeUnitOffset = 0;
+	const newStyledChars: StyledChar[] = [];
+
+	for (const char of styledChars) {
+		const charLength = char.value.length;
+		const globalOffset = currentOffset + charCodeUnitOffset;
+
+		if (globalOffset >= start && globalOffset < end) {
+			if (selectionStyle) {
+				newStyledChars.push(selectionStyle(char));
+			} else {
+				// 7 is the ANSI code for inverse (reverse video)
+				const newChar = {
+					...char,
+					styles: [...char.styles],
+				};
+
+				newChar.styles.push({
+					type: 'ansi',
+					code: '\u001B[7m',
+					endCode: '\u001B[27m',
+				});
+
+				newStyledChars.push(newChar);
+			}
+		} else {
+			newStyledChars.push(char);
+		}
+
+		charCodeUnitOffset += charLength;
+	}
+
+	selectionState.currentOffset += charCodeUnitOffset;
+
+	return newStyledChars;
+};
 
 export default renderNodeToOutput;

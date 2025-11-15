@@ -1,4 +1,5 @@
 import {createContext} from 'react';
+import {type Selection} from '../selection.js';
 
 export type Props = {
 	/**
@@ -10,6 +11,7 @@ export type Props = {
 	Force a full rerender of the app, clearing the screen.
 	*/
 	readonly rerender: () => void;
+	readonly selection?: Selection;
 };
 
 /**

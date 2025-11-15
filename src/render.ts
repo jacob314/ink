@@ -1,8 +1,10 @@
 import {Stream} from 'node:stream';
 import process from 'node:process';
 import type {ReactNode} from 'react';
+import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import Ink, {type Options as InkOptions, type RenderMetrics} from './ink.js';
 import instances from './instances.js';
+import {type Selection} from './selection.js';
 
 export type RenderOptions = {
 	/**
@@ -97,6 +99,11 @@ export type RenderOptions = {
 	@default false
 	*/
 	debugRainbow?: boolean;
+
+	/**
+	 * Function to transform selected text characters.
+	 */
+	selectionStyle?: (char: StyledChar) => StyledChar;
 };
 
 export type Instance = {
@@ -126,6 +133,11 @@ export type Instance = {
 	 * Manually recalculate layout.
 	 */
 	recalculateLayout: Ink['recalculateLayout'];
+
+	/**
+	 * Get the selection object.
+	 */
+	getSelection: () => Selection;
 };
 
 /**
@@ -165,6 +177,7 @@ const render = (
 		cleanup: () => instances.delete(inkOptions.stdout),
 		clear: instance.clear,
 		recalculateLayout: instance.recalculateLayout,
+		getSelection: instance.getSelection,
 	};
 };
 
