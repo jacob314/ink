@@ -51,6 +51,7 @@ export type Options = {
 	incrementalRendering?: boolean;
 	debugRainbow?: boolean;
 	selectionStyle?: (char: StyledChar) => StyledChar;
+	standardReactLayoutTiming?: boolean;
 };
 
 const rainbowColors = [
@@ -118,11 +119,16 @@ export default class Ink {
 					leading: true,
 					trailing: true,
 				});
+		const renderMethod = options.standardReactLayoutTiming
+			? () => {
+					queueMicrotask(onRender);
+				}
+			: onRender;
 
-		this.rootNode.onRender = onRender;
-		this.unsubscribeSelection = this.selection.onChange(onRender);
+		this.rootNode.onRender = renderMethod;
+		this.unsubscribeSelection = this.selection.onChange(renderMethod);
 
-		this.rootNode.onImmediateRender = this.onRender;
+		this.rootNode.onImmediateRender = renderMethod;
 		this.log = logUpdate.create(options.stdout, {
 			alternateBuffer: options.alternateBuffer,
 			alternateBufferAlreadyActive: options.alternateBufferAlreadyActive,
