@@ -197,7 +197,7 @@ export default class App extends PureComponent<Props, State> {
 	handleInput = (input: string): void => {
 		// Exit on Ctrl+C
 		// eslint-disable-next-line unicorn/no-hex-escape
-		if (input === '\x03' && this.props.exitOnCtrlC) {
+		if (input.includes('\x03') && this.props.exitOnCtrlC) {
 			this.handleExit();
 		}
 
