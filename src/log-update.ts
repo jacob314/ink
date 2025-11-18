@@ -50,18 +50,19 @@ const clearAlternateBuffer = (stream: Writable): void => {
 const ensureCursorHidden = (
 	showCursor: boolean,
 	hasHiddenCursor: boolean,
+	stream: Writable,
 ): boolean => {
 	if (!showCursor && !hasHiddenCursor) {
-		cliCursor.hide();
+		cliCursor.hide(stream);
 		return true;
 	}
 
 	return hasHiddenCursor;
 };
 
-const ensureCursorShown = (showCursor: boolean): void => {
+const ensureCursorShown = (showCursor: boolean, stream: Writable): void => {
 	if (!showCursor) {
-		cliCursor.show();
+		cliCursor.show(stream);
 	}
 };
 
@@ -111,7 +112,7 @@ const createStandard = (
 		_styledOutput: StyledChar[][],
 		debugRainbowColor?: string,
 	) => {
-		hasHiddenCursor = ensureCursorHidden(showCursor, hasHiddenCursor);
+		hasHiddenCursor = ensureCursorHidden(showCursor, hasHiddenCursor, stream);
 
 		const output = str + '\n';
 
@@ -187,6 +188,7 @@ const createStandard = (
 		if (alternateBuffer) {
 			clearAlternateBuffer(stream);
 			previousOutput = '';
+			previousOutputAlternateBuffer = '';
 			return;
 		}
 
@@ -200,7 +202,7 @@ const createStandard = (
 		previousOutput = '';
 		previousLineCount = 0;
 
-		ensureCursorShown(showCursor);
+		ensureCursorShown(showCursor, stream);
 		hasHiddenCursor = false;
 
 		if (alternateBuffer) {
@@ -255,7 +257,7 @@ const createIncremental = (
 		styledOutput: StyledChar[][],
 		debugRainbowColor?: string,
 	) => {
-		hasHiddenCursor = ensureCursorHidden(showCursor, hasHiddenCursor);
+		hasHiddenCursor = ensureCursorHidden(showCursor, hasHiddenCursor, stream);
 
 		const output = str + '\n';
 
@@ -457,6 +459,7 @@ const createIncremental = (
 		if (alternateBuffer) {
 			clearAlternateBuffer(stream);
 			previousOutput = '';
+			previousOutputAlternateBuffer = '';
 			return;
 		}
 
@@ -470,7 +473,7 @@ const createIncremental = (
 		previousOutput = '';
 		previousLines = [];
 
-		ensureCursorShown(showCursor);
+		ensureCursorShown(showCursor, stream);
 		hasHiddenCursor = false;
 
 		if (alternateBuffer) {

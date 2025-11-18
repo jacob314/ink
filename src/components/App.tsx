@@ -22,6 +22,7 @@ type Props = {
 	readonly writeToStderr: (data: string) => void;
 	readonly exitOnCtrlC: boolean;
 	readonly onExit: (error?: Error) => void;
+	readonly onRerender: () => void;
 };
 
 type State = {
@@ -70,6 +71,7 @@ export default class App extends PureComponent<Props, State> {
 				// eslint-disable-next-line react/jsx-no-constructed-context-values
 				value={{
 					exit: this.handleExit,
+					rerender: this.props.onRerender,
 				}}
 			>
 				<StdinContext.Provider
