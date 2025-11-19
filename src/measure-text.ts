@@ -139,13 +139,21 @@ export function toStyledCharacters(text: string): StyledChar[] {
 			const isCombiningMark =
 				nextFirstCodePoint >= 0x03_00 && nextFirstCodePoint <= 0x03_6f;
 
+			// Thai combining characters (vowels and tone marks)
+			// U+0E31-0E3A: Thai vowels above/below
+			// U+0E47-0E4E: Thai tone marks and other combining marks
+			const isThaiCombining =
+				(nextFirstCodePoint >= 0x0e_31 && nextFirstCodePoint <= 0x0e_3a) ||
+				(nextFirstCodePoint >= 0x0e_47 && nextFirstCodePoint <= 0x0e_4e);
+
 			const isCombining =
 				isVariationSelector ||
 				isSkinToneModifier ||
 				isZeroWidthJoiner ||
 				isKeycap ||
 				isTagsBlock ||
-				isCombiningMark;
+				isCombiningMark ||
+				isThaiCombining;
 
 			if (!isCombining) {
 				break;
