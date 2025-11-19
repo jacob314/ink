@@ -120,40 +120,27 @@ export function toStyledCharacters(text: string): StyledChar[] {
 				break;
 			}
 
-			// Variation selectors
-			const isVariationSelector =
-				nextFirstCodePoint >= 0xfe_00 && nextFirstCodePoint <= 0xfe_0f;
+			// Unicode Mark category includes:
+			// - Combining Diacritical Marks (U+0300-036F)
+			// - Thai combining characters (U+0E31-0E3A, U+0E47-0E4E)
+			// - Variation selectors (U+FE00-FE0F)
+			// - Combining enclosing keycap (U+20E3)
+			// - And many other combining marks across Unicode
+			const isUnicodeMark = /\p{Mark}/u.test(nextCharacter.value);
 
-			// Skin tone modifiers
+			// Skin tone modifiers (emoji modifiers, not in Mark category)
 			const isSkinToneModifier =
 				nextFirstCodePoint >= 0x1_f3_fb && nextFirstCodePoint <= 0x1_f3_ff;
 
+			// Zero-width joiner (used in emoji sequences)
 			const isZeroWidthJoiner = nextFirstCodePoint === 0x20_0d;
-			const isKeycap = nextFirstCodePoint === 0x20_e3;
 
-			// Tags block (U+E0000 - U+E007F)
+			// Tags block (U+E0000 - U+E007F, used for flag emoji)
 			const isTagsBlock =
 				nextFirstCodePoint >= 0xe_00_00 && nextFirstCodePoint <= 0xe_00_7f;
 
-			// Combining Diacritical Marks
-			const isCombiningMark =
-				nextFirstCodePoint >= 0x03_00 && nextFirstCodePoint <= 0x03_6f;
-
-			// Thai combining characters (vowels and tone marks)
-			// U+0E31-0E3A: Thai vowels above/below
-			// U+0E47-0E4E: Thai tone marks and other combining marks
-			const isThaiCombining =
-				(nextFirstCodePoint >= 0x0e_31 && nextFirstCodePoint <= 0x0e_3a) ||
-				(nextFirstCodePoint >= 0x0e_47 && nextFirstCodePoint <= 0x0e_4e);
-
 			const isCombining =
-				isVariationSelector ||
-				isSkinToneModifier ||
-				isZeroWidthJoiner ||
-				isKeycap ||
-				isTagsBlock ||
-				isCombiningMark ||
-				isThaiCombining;
+				isUnicodeMark || isSkinToneModifier || isZeroWidthJoiner || isTagsBlock;
 
 			if (!isCombining) {
 				break;
