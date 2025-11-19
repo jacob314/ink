@@ -1,0 +1,79 @@
+description="Reviews a pull request based on issue number."
+prompt = """
+Please provide a detailed pull request review on GitHub issue: {{args}}.
+
+Follow these steps:
+
+1. Use `gh pr view {{args}}` to pull the information of the PR.
+2. Use `gh pr diff {{args}}` to view the diff of the PR.
+3. Understand the intent of the PR using the PR description.
+4. If PR description is not detailed enough to understand the intent of the PR,
+   make sure to note it in your review.
+5. Make sure the PR title follows Conventional Commits, here are the last five
+   commits to the repo as examples: !{git log --pretty=format:"%s" -n 5}
+6. Search the codebase if required. The following output contains the complete source code of the library (`src/`), a comprehensive test file (`test/scroll.tsx`), and a detailed example that illustrates how to use the scroll functionality which is a new addition to Ink (`examples/scroll/scroll.tsx`). **Pay extremely close attention to these files.** They define the project's core architecture, component patterns, and testing standards. You must align your review with the conventions demonstrated here:
+   !{find src -type f \\( -name "*.ts" -o -name "*.tsx" \\) -exec echo "--- {} ---" \\; -exec cat {} \\; && echo "--- test/scroll.tsx ---" && cat test/scroll.tsx && echo "--- examples/scroll/scroll.tsx ---" && cat examples/scroll/scroll.tsx}
+   Review other examples or tests as needed to understand the existing style.
+7. Write a concise review of the PR, keeping in mind to encourage strong code
+   quality and best practices. Pay particular attention to the Gemini MD file
+   in the repo.
+8. **CRITICAL: Avoid Duplicate Code.**
+   - Scrutinize the PR for any duplicated logic, styles, or code blocks.
+   - If new utility functions are added, check if similar utilities already exist in the codebase.
+   - If code is copied and pasted, strongly suggest refactoring into a shared component, hook, or utility.
+   - Ensure that new features reuse existing patterns and components where possible.
+   - Look for opportunities to use parameterized tests to reduce duplication in test files.
+9. Consider ways the code may not be consistent with existing code in the repo.
+   In particular it is critical that the react code uses patterns consistent
+   with existing code in the repo.
+10. Evaluate all tests on the PR and make sure that they are doing the following:
+   * Using `toMatchSnapshot` to verify that rendering works as expected rather
+     than matching against the raw content of the output.
+   * If snapshots were changed as part of the pull request, review the snapshots
+     changes to ensure they are intentional and comment if any look at all
+     suspicious.
+   * Ensure the test cases are using parameterized tests where that might reduce
+     the number of duplicated lines significantly.
+   * NEVER use fixed waits (e.g. 'await delay(100)'). Always use 'waitFor' with
+     a predicate to ensure tests are stable and fast.
+   * Ensure mocks are properly managed:
+     * Critical dependencies (fs, os, child_process) should only be mocked at
+       the top of the file. Ideally avoid mocking these dependencies altogether.
+     * Check to see if there are existing mocks or fakes that can be used rather
+       than creating new ones for the new tests added.
+     * `vi.restoreAllMocks()` should be called in `afterEach` to prevent test
+       pollution.
+     * Avoid using `any` in tests; prefer proper types or `unknown` with
+       narrowing.
+11. Evaluate all react logic carefully keeping in mind that the author of the PR
+    is not likely an expert on React. Key areas to audit carefully are:
+    * Whether `setState` calls trigger side effects from within the body of the
+      `setState` callback. If so, you *must* propose an alternate design using
+      reducers or other ways the code might be modified to not have to modify
+      state from within a `setState`.
+    * Whether code might introduce an infinite rendering loop in React.
+    * Ensure code does not use `console.log`, `console.warn`, or `console.error`
+      as these indicate debug logging that was accidentally left in the code.
+    * Avoid synchronous file I/O in React components as it will hang the UI.
+    * Ensure state initialization is explicit.
+    * Carefully manage 'useEffect' dependencies. Prefer to use a reducer
+      whenever practical to resolve the issues.
+    * NEVER disable 'react-hooks/exhaustive-deps'. Fix the code to correctly
+      declare dependencies.
+    * Avoid making types nullable unless strictly necessary, as it hurts
+      readability.
+    * Do not introduce excessive property drilling. Use Context API if appropriate.
+12. TypeScript Best Practices:
+    * Use 'checkExhaustive' in the 'default' clause of 'switch' statements to
+      ensure all cases are handled.
+    * Avoid using the non-null assertion operator ('!') unless absolutely
+      necessary and you are confident the value is not null.
+13. Discuss with me before making any comments on the issue. I will clarify
+    which possible issues you identified are problems, which ones you need to
+    investigate further, and which ones I do not care about.
+14. If I request you to add comments to the issue, use
+    `gh pr comment {{args}} --body {{review}}` to post the review to the PR.
+
+Remember to use the GitHub CLI (`gh`) with the Shell tool for all
+GitHub-related tasks.
+"""
