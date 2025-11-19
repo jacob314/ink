@@ -1,11 +1,11 @@
 description="Injects context of all relevant Ink files"
 prompt = """
 The following output contains the complete
-source code of the library (`src/`), a comprehensive test file
+source code of the library (`src/`), a representative test file
 (`test/scroll.tsx`), and a detailed example that illustrates how to use the
 scroll functionality which is a new addition to Ink (`examples/scroll/scroll.tsx`).
 **Pay extremely close attention to these files.** They define the project's
-core architecture, component patterns, and testing standards.
+core architecture, component patterns, example, and testing standards.
 !{find src -type f \\( -name "*.ts" -o -name "*.tsx" \\) -exec echo "--- {} ---" \\; -exec cat {} \\; && echo "--- test/scroll.tsx ---" && cat test/scroll.tsx && echo "--- examples/scroll/scroll.tsx ---" && cat examples/scroll/scroll.tsx}
 
 {{args}}.
