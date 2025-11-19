@@ -384,6 +384,16 @@ export default class Ink {
 		this.onRender();
 	}
 
+	onRerender = () => {
+		if (this.isUnmounted) {
+			return;
+		}
+
+		this.log.clear();
+		this.lastOutput = '';
+		this.onRender();
+	};
+
 	render(node: ReactNode): void {
 		const tree = (
 			<AccessibilityContext.Provider
@@ -397,6 +407,7 @@ export default class Ink {
 					writeToStderr={this.writeToStderr}
 					exitOnCtrlC={this.options.exitOnCtrlC}
 					onExit={this.unmount}
+					onRerender={this.onRerender}
 				>
 					{node}
 				</App>
