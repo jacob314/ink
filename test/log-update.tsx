@@ -1,8 +1,10 @@
-import test from 'ava';
+import test, {type ExecutionContext} from 'ava';
 import ansiEscapes from 'ansi-escapes';
 import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import logUpdate from '../src/log-update.js';
 import createStdout from './helpers/create-stdout.js';
+
+type Stdout = ReturnType<typeof createStdout>;
 
 test('standard rendering - renders and updates output', t => {
 	const stdout = createStdout();
@@ -140,18 +142,38 @@ test('incremental rendering - shrinking output keeps screen tight', t => {
 	);
 });
 
-test('incremental rendering - clear() fully resets incremental state', t => {
-	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {incremental: true});
+const bufferModes = [
+	{
+		name: 'regular buffer',
+		options: {incremental: true},
+		check(t: ExecutionContext, stdout: Stdout) {
+			const afterClear = stdout.get();
+			t.is(afterClear, ansiEscapes.eraseLines(0) + 'Line 1\n');
+		},
+	},
+	{
+		name: 'alternate buffer',
+		options: {incremental: true, alternateBuffer: true},
+		check(t: ExecutionContext, stdout: Stdout) {
+			const lastCall = stdout.get();
+			t.true(lastCall.includes('Line 1'));
+			t.true(lastCall.includes(ansiEscapes.cursorTo(0, 0)));
+		},
+	},
+];
 
-	render('Line 1\nLine 2\nLine 3');
-	render.clear();
-	render('Line 1');
+for (const mode of bufferModes) {
+	test(`incremental rendering - ${mode.name} - clear() fully resets incremental state`, t => {
+		const stdout = createStdout();
+		const render = logUpdate.create(stdout, mode.options);
 
-	const afterClear = stdout.get();
+		render('Line 1\nLine 2\nLine 3', [] as StyledChar[][]);
+		render.clear();
+		render('Line 1', [] as StyledChar[][]);
 
-	t.is(afterClear, ansiEscapes.eraseLines(0) + 'Line 1\n'); // Should do a fresh write
-});
+		mode.check(t, stdout);
+	});
+}
 
 test('incremental rendering - done() resets before next render', t => {
 	const stdout = createStdout();
