@@ -14,7 +14,7 @@ test('Latin text with combining diacritics', t => {
 });
 
 test('Thai text with combining vowels', t => {
-	// สวัสดี contains combining vowels (U+0E31, U+0E35 are Thai marks)
+	// สวัสดี contains combining vowels (e.g., U+0E31 is a Thai combining mark)
 	const thaiText = 'สวัสดี';
 	const output = renderToString(<Text>{thaiText}</Text>);
 	t.is(output, thaiText);
