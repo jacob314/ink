@@ -44,6 +44,11 @@ const testCases = [
 		text: 'Hello café สวัสดี مرحبا',
 		expectedWidth: 21,
 	},
+	{
+		name: 'Thai text with sara am',
+		text: 'น้ำตาลนำน้ำมาทำงาน',
+		expectedWidth: 16,
+	},
 ];
 
 for (const {name, text, expectedWidth} of testCases) {
