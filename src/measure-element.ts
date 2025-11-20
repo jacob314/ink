@@ -7,7 +7,7 @@ import {
 	inkCharacterWidth,
 	styledCharsToString,
 } from './measure-text.js';
-import {wrapStyledChars, truncateStyledChars} from './text-wrap.js';
+import {wrapOrTruncateStyledChars} from './text-wrap.js';
 import getMaxWidth from './get-max-width.js';
 
 type Output = {
@@ -530,19 +530,8 @@ export const getText = (node: DOMNode): string => {
 
 		if (textWrap.startsWith('truncate')) {
 			const maxWidth = getMaxWidth(node.yogaNode!);
-			let position: 'start' | 'middle' | 'end' = 'end';
-
-			if (textWrap === 'truncate-middle') {
-				position = 'middle';
-			} else if (textWrap === 'truncate-start') {
-				position = 'start';
-			}
-
-			const truncatedChars = truncateStyledChars(styledChars, maxWidth, {
-				position,
-			});
-
-			return styledCharsToString(truncatedChars);
+			const lines = wrapOrTruncateStyledChars(styledChars, maxWidth, textWrap);
+			return styledCharsToString(lines[0]!);
 		}
 
 		return plainText;
@@ -768,20 +757,7 @@ const getTextOffsetForTextNode = (
 	const maxWidth = getMaxWidth(node.yogaNode!);
 	const textWrap = node.style.textWrap ?? 'wrap';
 
-	let lines: ReturnType<typeof wrapStyledChars>;
-
-	if (textWrap.startsWith('truncate')) {
-		let position: 'start' | 'middle' | 'end' = 'end';
-		if (textWrap === 'truncate-middle') {
-			position = 'middle';
-		} else if (textWrap === 'truncate-start') {
-			position = 'start';
-		}
-
-		lines = [truncateStyledChars(styledChars, maxWidth, {position})];
-	} else {
-		lines = wrapStyledChars(styledChars, maxWidth);
-	}
+	const lines = wrapOrTruncateStyledChars(styledChars, maxWidth, textWrap);
 
 	let currentY = 0;
 	for (const line of lines) {

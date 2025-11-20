@@ -52,18 +52,28 @@ test('getTextOffset behavior', t => {
 	t.is(getTextOffset(node, 0, 0, {snapToChar: 'end'}), 1);
 
 	// Test 2: Click right of 'A' (2, 0)
-	t.log(
-		'2, 0 start:',
+	t.is(
 		getTextOffset(node, 2, 0, {snapToChar: 'start', snapToGap: 'end'}),
+		1,
+		'Clicking right of A should return end of A (1)',
 	);
-	t.log(
-		'2, 0 end:',
+	t.is(
 		getTextOffset(node, 2, 0, {snapToChar: 'end', snapToGap: 'end'}),
+		1,
+		'Clicking right of A should return end of A (1)',
 	);
 
 	// Test 3: Click in vertical gap (0, 1)
-	t.log('0, 1 gap end:', getTextOffset(node, 0, 1, {snapToGap: 'end'}));
-	t.log('0, 1 gap start:', getTextOffset(node, 0, 1, {snapToGap: 'start'}));
+	t.is(
+		getTextOffset(node, 0, 1, {snapToGap: 'end'}),
+		3,
+		'Clicking in gap with snapToGap: end should return start of B (3)',
+	);
+	t.is(
+		getTextOffset(node, 0, 1, {snapToGap: 'start'}),
+		1,
+		'Clicking in gap with snapToGap: start should return end of A (1)',
+	);
 });
 
 test('getTextOffset handles wrapping and coordinates before start of line', t => {

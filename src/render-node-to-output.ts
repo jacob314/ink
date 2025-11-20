@@ -1,6 +1,6 @@
 import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import Yoga from 'yoga-layout';
-import {truncateStyledChars, wrapStyledChars} from './text-wrap.js';
+import {wrapOrTruncateStyledChars} from './text-wrap.js';
 import getMaxWidth from './get-max-width.js';
 import squashTextNodes from './squash-text-nodes.js';
 import renderBorder from './render-border.js';
@@ -242,18 +242,7 @@ const renderNodeToOutput = (
 
 				if (currentWidth > maxWidth) {
 					const textWrap = node.style.textWrap ?? 'wrap';
-					if (textWrap.startsWith('truncate')) {
-						let position: 'start' | 'middle' | 'end' = 'end';
-						if (textWrap === 'truncate-middle') {
-							position = 'middle';
-						} else if (textWrap === 'truncate-start') {
-							position = 'start';
-						}
-
-						lines = [truncateStyledChars(styledChars, maxWidth, {position})];
-					} else {
-						lines = wrapStyledChars(styledChars, maxWidth);
-					}
+					lines = wrapOrTruncateStyledChars(styledChars, maxWidth, textWrap);
 				} else {
 					lines = splitStyledCharsByNewline(styledChars);
 				}

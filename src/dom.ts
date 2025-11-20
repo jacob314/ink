@@ -5,7 +5,7 @@ import {
 	widestLineFromStyledChars,
 } from './measure-text.js';
 import {type Styles} from './styles.js';
-import {wrapStyledChars, truncateStyledChars} from './text-wrap.js';
+import {wrapOrTruncateStyledChars} from './text-wrap.js';
 import squashTextNodes from './squash-text-nodes.js';
 import {type OutputTransformer} from './render-node-to-output.js';
 import type ResizeObserver from './resize-observer.js';
@@ -258,28 +258,13 @@ const measureTextNode = function (
 	}
 
 	const textWrap = node.style?.textWrap ?? 'wrap';
+	const wrappedLines =
+		textWrap === 'wrap' || textWrap.startsWith('truncate')
+			? wrapOrTruncateStyledChars(styledChars, width, textWrap)
+			: [styledChars];
 
-	if (textWrap.startsWith('truncate')) {
-		let position: 'start' | 'middle' | 'end' = 'end';
-		if (textWrap === 'truncate-middle') {
-			position = 'middle';
-		} else if (textWrap === 'truncate-start') {
-			position = 'start';
-		}
-
-		const truncatedChars = truncateStyledChars(styledChars, width, {
-			position,
-		});
-		return measureStyledChars(truncatedChars);
-	}
-
-	if (textWrap === 'wrap') {
-		const wrappedLines = wrapStyledChars(styledChars, width);
-		const newWidth = widestLineFromStyledChars(wrappedLines);
-		return {width: newWidth, height: wrappedLines.length};
-	}
-
-	return dimensions;
+	const newWidth = widestLineFromStyledChars(wrappedLines);
+	return {width: newWidth, height: wrappedLines.length};
 };
 
 const findClosestYogaNode = (node?: DOMNode): YogaNode | undefined => {
