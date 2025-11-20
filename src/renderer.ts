@@ -31,7 +31,7 @@ const calculateSelectionMap = (
 
 	const visit = (node: DOMNode) => {
 		if (node.nodeName === 'ink-text') {
-			if (!isNodeSelectable(node as DOMElement)) {
+			if (!isNodeSelectable(node)) {
 				return;
 			}
 
@@ -57,22 +57,22 @@ const calculateSelectionMap = (
 
 					localLength += length;
 				} else {
-					const childNodes = (n as DOMElement).childNodes;
+					const {childNodes} = n;
 					if (childNodes) {
-						for (let i = 0; i < childNodes.length; i++) {
-							const child = childNodes[i];
-
-							if (n === startContainer && i === startOffset) {
+						for (const child of childNodes) {
+							if (n === startContainer) {
 								foundStartInNode = true;
 								nodeStartIndex = localLength;
 							}
 
-							if (n === endContainer && i === endOffset) {
+							if (n === endContainer) {
 								foundEndInNode = true;
 								nodeEndIndex = localLength;
 							}
 
-							visitChildren(child);
+							if (child) {
+								visitChildren(child);
+							}
 						}
 
 						if (n === startContainer && startOffset === childNodes.length) {
@@ -88,22 +88,22 @@ const calculateSelectionMap = (
 				}
 			};
 
-			const childNodes = (node as DOMElement).childNodes;
+			const {childNodes} = node;
 			if (childNodes) {
-				for (let i = 0; i < childNodes.length; i++) {
-					const child = childNodes[i];
-
-					if (node === startContainer && i === startOffset) {
+				for (const child of childNodes) {
+					if (node === startContainer) {
 						foundStartInNode = true;
 						nodeStartIndex = localLength;
 					}
 
-					if (node === endContainer && i === endOffset) {
+					if (node === endContainer) {
 						foundEndInNode = true;
 						nodeEndIndex = localLength;
 					}
 
-					visitChildren(child);
+					if (child) {
+						visitChildren(child);
+					}
 				}
 
 				if (node === startContainer && startOffset === childNodes.length) {
@@ -117,14 +117,15 @@ const calculateSelectionMap = (
 				}
 			}
 
-			if (hasFoundStart || foundStartInNode) {
-				if (!hasFoundEnd || foundEndInNode) {
-					const start = foundStartInNode ? nodeStartIndex : 0;
-					const end = foundEndInNode ? nodeEndIndex : localLength;
+			if (
+				(hasFoundStart || foundStartInNode) &&
+				(!hasFoundEnd || foundEndInNode)
+			) {
+				const start = foundStartInNode ? nodeStartIndex : 0;
+				const end = foundEndInNode ? nodeEndIndex : localLength;
 
-					if (start !== -1 && end !== -1 && start < end) {
-						map.set(node, {start, end});
-					}
+				if (start !== -1 && end !== -1 && start < end) {
+					map.set(node, {start, end});
 				}
 			}
 
@@ -136,20 +137,20 @@ const calculateSelectionMap = (
 				hasFoundEnd = true;
 			}
 		} else {
-			const childNodes = (node as DOMElement).childNodes;
+			const {childNodes} = node as DOMElement;
 			if (childNodes) {
-				for (let i = 0; i < childNodes.length; i++) {
-					const child = childNodes[i];
-
-					if (node === startContainer && i === startOffset) {
+				for (const child of childNodes) {
+					if (node === startContainer) {
 						hasFoundStart = true;
 					}
 
-					if (node === endContainer && i === endOffset) {
+					if (node === endContainer) {
 						hasFoundEnd = true;
 					}
 
-					visit(child);
+					if (child) {
+						visit(child);
+					}
 				}
 
 				if (node === startContainer && startOffset === childNodes.length) {
