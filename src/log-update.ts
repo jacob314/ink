@@ -185,6 +185,8 @@ const createStandard = (
 	};
 
 	render.clear = () => {
+		hasHiddenCursor = false;
+
 		if (alternateBuffer) {
 			clearAlternateBuffer(stream);
 			previousOutput = '';
@@ -456,10 +458,13 @@ const createIncremental = (
 	};
 
 	render.clear = () => {
+		hasHiddenCursor = false;
+
 		if (alternateBuffer) {
 			clearAlternateBuffer(stream);
 			previousOutput = '';
 			previousOutputAlternateBuffer = '';
+			previousLines = [];
 			return;
 		}
 
