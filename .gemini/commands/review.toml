@@ -11,7 +11,15 @@ Follow these steps:
    make sure to note it in your review.
 5. Make sure the PR title follows Conventional Commits, here are the last five
    commits to the repo as examples: !{git log --pretty=format:"%s" -n 5}
-6. Search the codebase if required. The following output contains the complete source code of the library (`src/`), a comprehensive test file (`test/scroll.tsx`), and a detailed example that illustrates how to use the scroll functionality which is a new addition to Ink (`examples/scroll/scroll.tsx`). **Pay extremely close attention to these files.** They define the project's core architecture, component patterns, and testing standards. You must align your review with the conventions demonstrated here:
+6. Search the codebase if required. The following output contains the complete
+   source code of the library (`src/`), a representative test file (`test/scroll.tsx`),
+   and a detailed example that illustrates how to use the scroll functionality which
+   is a new addition to Ink (`examples/scroll/scroll.tsx`).
+   **Pay extremely close attention to these files.**
+   They define the project's core architecture, component patterns, best practices
+   writing examples, and testing standards. You must align your review with the
+   conventions demonstrated here. These files typically illustrate the state of
+   the repo after the PR request we are reviewing was applied.
    !{find src -type f \\( -name "*.ts" -o -name "*.tsx" \\) -exec echo "--- {} ---" \\; -exec cat {} \\; && echo "--- test/scroll.tsx ---" && cat test/scroll.tsx && echo "--- examples/scroll/scroll.tsx ---" && cat examples/scroll/scroll.tsx}
    Review other examples or tests as needed to understand the existing style.
 7. Write a concise review of the PR, keeping in mind to encourage strong code
@@ -70,9 +78,11 @@ Follow these steps:
       necessary and you are confident the value is not null.
 13. Discuss with me before making any comments on the issue. I will clarify
     which possible issues you identified are problems, which ones you need to
-    investigate further, and which ones I do not care about.
+    investigate further, and which ones I do not care about. I may want you
+    make changes locally rather than submitting comments.
 14. If I request you to add comments to the issue, use
     `gh pr comment {{args}} --body {{review}}` to post the review to the PR.
+    **never** do this unless specifically instructed to add comments.
 
 Remember to use the GitHub CLI (`gh`) with the Shell tool for all
 GitHub-related tasks.
