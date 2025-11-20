@@ -1,45 +1,61 @@
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import React from 'react';
 import test from 'ava';
 import {Box, Text} from '../src/index.js';
+import {measureStyledChars, toStyledCharacters} from '../src/measure-text.js';
 import {renderToString} from './helpers/render-to-string.js';
 
 // Test Unicode Mark category (\p{Mark}) support across different scripts
 // This ensures combining characters are properly preserved in text rendering
 
-test('Latin text with combining diacritics', t => {
-	// Café with combining acute accent (U+0301)
-	const latinText = 'cafe\u0301';
-	const output = renderToString(<Text>{latinText}</Text>);
-	t.is(output, latinText);
-});
+const testCases = [
+	{
+		name: 'Latin text with combining diacritics',
+		text: 'cafe\u0301',
+		expectedWidth: 4,
+	},
+	{
+		name: 'Thai text with combining vowels',
+		text: 'สวัสดี',
+		expectedWidth: 4,
+	},
+	{
+		name: 'Thai text with tone marks',
+		text: 'ก่า ก้า ก๊า ก๋า',
+		expectedWidth: 11,
+	},
+	{
+		name: 'Arabic text with combining marks',
+		text: 'مَرْحَبًا',
+		expectedWidth: 5,
+	},
+	{
+		name: 'Hebrew text with combining marks',
+		text: 'שָׁלוֹם',
+		expectedWidth: 4,
+	},
+	{
+		name: 'mixed scripts with combining marks',
+		text: 'Hello café สวัสดี مرحبا',
+		expectedWidth: 21,
+	},
+];
 
-test('Thai text with combining vowels', t => {
-	// สวัสดี contains combining vowels (e.g., U+0E31 is a Thai combining mark)
-	const thaiText = 'สวัสดี';
-	const output = renderToString(<Text>{thaiText}</Text>);
-	t.is(output, thaiText);
-});
+for (const {name, text, expectedWidth} of testCases) {
+	test(name, t => {
+		const output = renderToString(<Text>{text}</Text>);
+		t.is(output, text);
 
-test('Thai text with tone marks', t => {
-	// ก่า ก้า ก๊า ก๋า contains all four Thai tone marks
-	const thaiText = 'ก่า ก้า ก๊า ก๋า';
-	const output = renderToString(<Text>{thaiText}</Text>);
-	t.is(output, thaiText);
-});
-
-test('Arabic text with combining marks', t => {
-	// Arabic text with diacritics (combining marks)
-	const arabicText = 'مَرْحَبًا';
-	const output = renderToString(<Text>{arabicText}</Text>);
-	t.is(output, arabicText);
-});
-
-test('Hebrew text with combining marks', t => {
-	// Hebrew with niqqud (vowel points) - combining marks
-	const hebrewText = 'שָׁלוֹם';
-	const output = renderToString(<Text>{hebrewText}</Text>);
-	t.is(output, hebrewText);
-});
+		// Verify that the measured width is correct
+		const {width} = measureStyledChars(toStyledCharacters(text));
+		t.is(width, expectedWidth);
+	});
+}
 
 test('Unicode marks in bordered box', t => {
 	const textWithMarks = 'café สวัสดี';
@@ -49,6 +65,10 @@ test('Unicode marks in bordered box', t => {
 		</Box>,
 	);
 	t.true(output.includes(textWithMarks));
+
+	// Verify that the measured width is correct
+	const {width} = measureStyledChars(toStyledCharacters(textWithMarks));
+	t.is(width, 9);
 });
 
 test('Unicode marks wrapping in narrow box', t => {
@@ -61,10 +81,8 @@ test('Unicode marks wrapping in narrow box', t => {
 	);
 	// All combining marks should be preserved
 	t.true(output.includes('é'));
-});
 
-test('mixed scripts with combining marks', t => {
-	const mixedText = 'Hello café สวัสดี مرحبا';
-	const output = renderToString(<Text>{mixedText}</Text>);
-	t.is(output, mixedText);
+	// Verify that the measured width is correct
+	const {width} = measureStyledChars(toStyledCharacters(textWithMarks));
+	t.is(width, 23);
 });
