@@ -9,6 +9,7 @@ import {
 } from './measure-text.js';
 import {wrapOrTruncateStyledChars} from './text-wrap.js';
 import getMaxWidth from './get-max-width.js';
+import {processLayout} from './layout.js';
 
 type Output = {
 	/**
@@ -478,44 +479,6 @@ export const collectSortedFragments = (
 	return {fragments, removedVertical: v, removedHorizontal: h};
 };
 
-const processFragmentForText = (
-	fragment: TextFragment,
-	state: {
-		result: string;
-		currentX: number;
-		lineBottom: number;
-	},
-): void => {
-	if (fragment.y >= state.lineBottom) {
-		const gap = fragment.y - state.lineBottom;
-		const newlines = state.result.length > 0 ? 1 + gap : gap;
-
-		if (newlines > 0) {
-			state.result += '\n'.repeat(newlines);
-			state.currentX = 0;
-			state.lineBottom = fragment.y;
-		}
-	}
-
-	if (fragment.x > state.currentX) {
-		state.result += ' '.repeat(fragment.x - state.currentX);
-		state.currentX = fragment.x;
-	}
-
-	state.result += fragment.text;
-
-	const newlines = (fragment.text.match(/\n/g) ?? []).length;
-
-	if (newlines > 0) {
-		const lastNewlineIndex = fragment.text.lastIndexOf('\n');
-		state.currentX = fragment.text.length - lastNewlineIndex - 1;
-	} else {
-		state.currentX += fragment.text.length;
-	}
-
-	state.lineBottom = Math.max(state.lineBottom, fragment.y + fragment.height);
-};
-
 export const getText = (node: DOMNode): string => {
 	if (node.nodeName === '#text') {
 		return node.nodeValue;
@@ -542,23 +505,26 @@ export const getText = (node: DOMNode): string => {
 			return '';
 		}
 
-		const {fragments, removedVertical} = collectSortedFragments(node);
-		const state = {
-			result: '',
-			currentX: 0,
-			lineBottom: 0,
-		};
-
-		for (const fragment of fragments) {
-			processFragmentForText(fragment, state);
-		}
+		const {state, lineBottom} = processLayout(node, {
+			initialState: (): {result: string} => ({result: ''}),
+			onNewline(count, state) {
+				state.result += '\n'.repeat(count);
+			},
+			onSpace(count, state) {
+				state.result += ' '.repeat(count);
+			},
+			onText(fragment, state) {
+				state.result += fragment.text;
+			},
+		});
 
 		// Trailing newlines
+		const {removedVertical} = collectSortedFragments(node);
 		const height = node.yogaNode?.getComputedHeight() ?? 0;
 		const innerHeight = height - removedVertical;
 
-		if (innerHeight > state.lineBottom) {
-			state.result += '\n'.repeat(innerHeight - state.lineBottom);
+		if (innerHeight > lineBottom) {
+			state.result += '\n'.repeat(innerHeight - lineBottom);
 		}
 
 		return state.result;

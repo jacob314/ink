@@ -1,7 +1,13 @@
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import {type DOMNode, type DOMElement, getPathToRoot} from './dom.js';
 import {toStyledCharacters} from './measure-text.js';
-import {collectSortedFragments} from './measure-element.js';
+import {processLayout} from './layout.js';
 
 type PlainTextResultWithMap = {
 	styledChars: StyledChar[];
@@ -65,73 +71,51 @@ const getPlainTextFromDomNode = (node: DOMNode): PlainTextResultWithMap => {
 		return result;
 	}
 
-	const {fragments} = collectSortedFragments(node);
-
-	const state = {
-		currentX: 0,
-		lineBottom: 0,
-	};
-
-	for (const fragment of fragments) {
-		if (fragment.y >= state.lineBottom) {
-			const gap = fragment.y - state.lineBottom;
-			const newlines = result.styledChars.length > 0 ? 1 + gap : gap;
-
-			if (newlines > 0) {
-				for (let i = 0; i < newlines; i++) {
-					result.styledChars.push({
-						type: 'char',
-						value: '\n',
-						fullWidth: false,
-						styles: [],
-					});
-				}
-
-				state.currentX = 0;
+	const {state} = processLayout(node, {
+		initialState: (): PlainTextResultWithMap => ({
+			styledChars: [],
+			charOffsetMap: new Map<DOMNode, {start: number; end: number}>(),
+		}),
+		onNewline(count, state) {
+			for (let i = 0; i < count; i++) {
+				state.styledChars.push({
+					type: 'char',
+					value: '\n',
+					fullWidth: false,
+					styles: [],
+				});
 			}
-
-			state.lineBottom = fragment.y;
-		}
-
-		if (fragment.x > state.currentX) {
-			const spaces = fragment.x - state.currentX;
-			for (let i = 0; i < spaces; i++) {
-				result.styledChars.push({
+		},
+		onSpace(count, state) {
+			for (let i = 0; i < count; i++) {
+				state.styledChars.push({
 					type: 'char',
 					value: ' ',
 					fullWidth: false,
 					styles: [],
 				});
 			}
+		},
+		onText(fragment, state) {
+			const styledChars = toStyledCharacters(fragment.text);
+			const fragmentStartOffset = state.styledChars.length;
+			state.styledChars.push(...styledChars);
 
-			state.currentX = fragment.x;
-		}
+			const map = new Map<DOMNode, {start: number; end: number}>();
+			const offsetRef = {current: 0};
+			squashNodesWithMap(fragment.node, map, offsetRef);
 
-		const styledChars = toStyledCharacters(fragment.text);
-		const fragmentStartOffset = result.styledChars.length;
-		result.styledChars.push(...styledChars);
+			for (const [n, span] of map) {
+				state.charOffsetMap.set(n, {
+					start: fragmentStartOffset + span.start,
+					end: fragmentStartOffset + span.end,
+				});
+			}
+		},
+	});
 
-		const newlinesInText = (fragment.text.match(/\n/g) ?? []).length;
-		if (newlinesInText > 0) {
-			const lastNewlineIndex = fragment.text.lastIndexOf('\n');
-			state.currentX = fragment.text.length - lastNewlineIndex - 1;
-		} else {
-			state.currentX += fragment.text.length;
-		}
-
-		state.lineBottom = Math.max(state.lineBottom, fragment.y + fragment.height);
-
-		const map = new Map<DOMNode, {start: number; end: number}>();
-		const offsetRef = {current: 0};
-		squashNodesWithMap(fragment.node, map, offsetRef);
-
-		for (const [n, span] of map) {
-			result.charOffsetMap.set(n, {
-				start: fragmentStartOffset + span.start,
-				end: fragmentStartOffset + span.end,
-			});
-		}
-	}
+	result.styledChars = state.styledChars;
+	result.charOffsetMap = state.charOffsetMap;
 
 	result.charOffsetMap.set(node, {start: 0, end: result.styledChars.length});
 

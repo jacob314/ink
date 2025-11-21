@@ -1,3 +1,9 @@
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import React from 'react';
 import test from 'ava';
 import {Box, Text, getText, render, type DOMElement} from '../src/index.js';
