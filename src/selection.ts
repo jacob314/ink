@@ -23,12 +23,13 @@ const squashNodesWithMap = (
 
 	for (const childNode of node.childNodes) {
 		let nodeText = '';
+		const startOffset = offsetRef.current;
 
 		if (childNode.nodeName === '#text') {
 			nodeText = childNode.nodeValue;
 			map.set(childNode, {
-				start: offsetRef.current,
-				end: offsetRef.current + nodeText.length,
+				start: startOffset,
+				end: startOffset + nodeText.length,
 			});
 			offsetRef.current += nodeText.length;
 		} else if (
@@ -36,6 +37,10 @@ const squashNodesWithMap = (
 			childNode.nodeName === 'ink-virtual-text'
 		) {
 			nodeText = squashNodesWithMap(childNode, map, offsetRef);
+			map.set(childNode, {
+				start: startOffset,
+				end: offsetRef.current,
+			});
 		}
 
 		if (
@@ -104,6 +109,12 @@ const getPlainTextFromDomNode = (node: DOMNode): PlainTextResultWithMap => {
 			const map = new Map<DOMNode, {start: number; end: number}>();
 			const offsetRef = {current: 0};
 			squashNodesWithMap(fragment.node, map, offsetRef);
+
+			// Add the fragment node itself to the map, as it covers the entire text
+			state.charOffsetMap.set(fragment.node, {
+				start: fragmentStartOffset,
+				end: fragmentStartOffset + offsetRef.current,
+			});
 
 			for (const [n, span] of map) {
 				state.charOffsetMap.set(n, {
@@ -176,19 +187,52 @@ const getRangeCharacterOffsets = (
 		return undefined;
 	}
 
-	const startContainerOffsets = charOffsetMap.get(range.startContainer);
-	const endContainerOffsets = charOffsetMap.get(range.endContainer);
+	const getOffset = (node: DOMNode, offset: number): number | undefined => {
+		const nodeRange = charOffsetMap.get(node);
 
-	if (!startContainerOffsets || !endContainerOffsets) {
+		if (!nodeRange) {
+			return undefined;
+		}
+
+		if (node.nodeName === '#text') {
+			return nodeRange.start + offset;
+		}
+
+		const element = node;
+
+		if (offset >= element.childNodes.length) {
+			return nodeRange.end;
+		}
+
+		const child = element.childNodes[offset];
+		const childRange = charOffsetMap.get(child!);
+
+		if (childRange) {
+			return childRange.start;
+		}
+
+		for (let i = offset - 1; i >= 0; i--) {
+			const sibling = element.childNodes[i];
+			const siblingRange = charOffsetMap.get(sibling!);
+
+			if (siblingRange) {
+				return siblingRange.end;
+			}
+		}
+
+		return nodeRange.start;
+	};
+
+	const start = getOffset(range.startContainer, range.startOffset);
+	const end = getOffset(range.endContainer, range.endOffset);
+
+	if (start === undefined || end === undefined) {
 		return undefined;
 	}
 
-	const startIndex = startContainerOffsets.start + range.startOffset;
-	const endIndex = endContainerOffsets.start + range.endOffset;
-
 	return {
-		start: startIndex,
-		end: endIndex,
+		start,
+		end,
 	};
 };
 

@@ -283,7 +283,7 @@ test('Range: selectNodeContents', t => {
 });
 
 test('Range: selectNode', t => {
-	const parent = createNode('ink-box');
+	const parent = createNode('ink-text');
 	const child = createTextNode('Hello');
 	appendChildNode(parent, child);
 
@@ -294,6 +294,7 @@ test('Range: selectNode', t => {
 	t.is(range.startOffset, 0);
 	t.is(range.endContainer, parent);
 	t.is(range.endOffset, 1);
+	t.is(range.toString(), 'Hello');
 });
 
 test('Selection: addRange and removeRange', t => {
@@ -378,4 +379,30 @@ test('Selection: containsNode', t => {
 		selection.containsNode(child3, true),
 		'Should not contain unrelated node',
 	);
+});
+
+test('Range: across multiple ink-text nodes', t => {
+	const parent = createNode('ink-box');
+	const childA = createNode('ink-text');
+	const textA = createTextNode('Hello');
+	appendChildNode(childA, textA);
+	appendChildNode(parent, childA);
+
+	const childB = createNode('ink-text');
+	const textB = createTextNode('World');
+	appendChildNode(childB, textB);
+	appendChildNode(parent, childB);
+
+	const range = new Range();
+	// Start at beginning of A
+	range.setStart(childA, 0);
+	// End at end of B
+	range.setEnd(childB, 1);
+
+	// CommonAncestor is parent.
+	// getPlainTextFromDomNode(parent)
+	// A and B are NOT in map.
+	// getOffset(childA, 0) -> fails.
+
+	t.is(range.toString(), 'HelloWorld');
 });

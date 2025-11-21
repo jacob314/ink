@@ -23,7 +23,10 @@ export const processLayout = <T extends LayoutState>(
 	const {initialState, onNewline, onSpace, onText} = callbacks;
 
 	if (
-		(node.nodeName !== 'ink-box' && node.nodeName !== 'ink-root') ||
+		(node.nodeName !== 'ink-box' &&
+			node.nodeName !== 'ink-root' &&
+			node.nodeName !== 'ink-text' &&
+			node.nodeName !== 'ink-virtual-text') ||
 		!node.yogaNode
 	) {
 		return {state: initialState(), lineBottom: 0};
