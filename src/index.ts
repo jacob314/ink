@@ -32,12 +32,18 @@ export {
 	getInnerHeight,
 	getVerticalScrollbarBoundingBox,
 	getHorizontalScrollbarBoundingBox,
+	getText,
+	getTextOffset,
+	hitTest,
+	findNodeAtOffset,
 	type ScrollbarBoundingBox,
 } from './measure-element.js';
 export {getScrollHeight, getScrollWidth} from './scroll.js';
 export {clearStringWidthCache, setStringWidthFunction} from './measure-text.js';
-export type {DOMElement} from './dom.js';
+export {type DOMElement, type DOMNode, getPathToRoot} from './dom.js';
+export type {StyledChar} from '@alcalzone/ansi-tokenize';
 export {
 	default as ResizeObserver,
 	ResizeObserverEntry,
 } from './resize-observer.js';
+export {Selection, Range, comparePoints} from './selection.js';

@@ -2,6 +2,8 @@
 
 This repository contains the source code for **Ink**, a library for building command-line interfaces using React.
 
+**Do not edit package.json unless specifically instructed to that file.**
+
 ## Repository Structure
 
 - **`src/`**: Contains the core logic of the library.
@@ -49,6 +51,7 @@ npm test
 
 ### Linting and Formatting
 - The project uses `xo` for linting.
+- **Important:** the repository uses tabs not spaces so be sure to use tabs instead of spaces for indentation.
 - **Important:** There are existing lint warnings in the codebase. **Do not fix them.** Fixing these warnings can make merging changes from the upstream `ink` repository more difficult.
 - **Specific Warnings to Ignore:**
   - `@typescript-eslint/promise-function-async`: Found in `test/components.tsx` and `src/components/Static.tsx`. Fixing these often introduces subtle bugs or changes behavior unexpectedly.

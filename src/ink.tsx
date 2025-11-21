@@ -1,6 +1,7 @@
 import process from 'node:process';
 import React, {type ReactNode} from 'react';
 import {throttle} from 'es-toolkit/compat';
+import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import ansiEscapes from 'ansi-escapes';
 import isInCi from 'is-in-ci';
 import autoBind from 'auto-bind';
@@ -20,6 +21,7 @@ import {accessibilityContext as AccessibilityContext} from './components/Accessi
 import {calculateScroll} from './scroll.js';
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
 import ResizeObserver, {ResizeObserverEntry} from './resize-observer.js';
+import {Selection} from './selection.js';
 
 const noop = () => {};
 
@@ -48,6 +50,7 @@ export type Options = {
 	alternateBufferAlreadyActive?: boolean;
 	incrementalRendering?: boolean;
 	debugRainbow?: boolean;
+	selectionStyle?: (char: StyledChar) => StyledChar;
 };
 
 const rainbowColors = [
@@ -73,6 +76,7 @@ export default class Ink {
 	private readonly log: LogUpdate;
 	private readonly throttledLog: LogUpdate;
 	private readonly isScreenReaderEnabled: boolean;
+	private readonly selection: Selection;
 
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	private isUnmounted: boolean;
@@ -86,6 +90,7 @@ export default class Ink {
 	private exitPromise?: Promise<void>;
 	private restoreConsole?: () => void;
 	private readonly unsubscribeResize?: () => void;
+	private readonly unsubscribeSelection?: () => void;
 	private frameIndex = 0;
 
 	constructor(options: Options) {
@@ -100,17 +105,22 @@ export default class Ink {
 			options.isScreenReaderEnabled ??
 			process.env['INK_SCREEN_READER'] === 'true';
 
+		this.selection = new Selection();
+
 		const unthrottled = options.debug || this.isScreenReaderEnabled;
 		const maxFps = options.maxFps ?? 30;
 		const renderThrottleMs =
 			maxFps > 0 ? Math.max(1, Math.ceil(1000 / maxFps)) : 0;
 
-		this.rootNode.onRender = unthrottled
+		const onRender = unthrottled
 			? this.onRender
 			: throttle(this.onRender, renderThrottleMs, {
 					leading: true,
 					trailing: true,
 				});
+
+		this.rootNode.onRender = onRender;
+		this.unsubscribeSelection = this.selection.onChange(onRender);
 
 		this.rootNode.onImmediateRender = this.onRender;
 		this.log = logUpdate.create(options.stdout, {
@@ -183,6 +193,10 @@ export default class Ink {
 		this.calculateLayout();
 		this.onRender();
 	};
+
+	getSelection(): Selection {
+		return this.selection;
+	}
 
 	resolveExitPromise: () => void = () => {};
 	rejectExitPromise: (reason?: Error) => void = () => {};
@@ -273,6 +287,8 @@ export default class Ink {
 		const {output, outputHeight, staticOutput, styledOutput} = render(
 			this.rootNode,
 			this.isScreenReaderEnabled,
+			this.selection,
+			this.options.selectionStyle,
 		);
 
 		this.options.onRender?.({renderTime: performance.now() - startTime});
@@ -406,6 +422,7 @@ export default class Ink {
 					writeToStdout={this.writeToStdout}
 					writeToStderr={this.writeToStderr}
 					exitOnCtrlC={this.options.exitOnCtrlC}
+					selection={this.selection}
 					onExit={this.unmount}
 					onRerender={this.onRerender}
 				>
@@ -479,6 +496,10 @@ export default class Ink {
 
 		if (typeof this.unsubscribeResize === 'function') {
 			this.unsubscribeResize();
+		}
+
+		if (typeof this.unsubscribeSelection === 'function') {
+			this.unsubscribeSelection();
 		}
 
 		// CIs don't handle erasing ansi escapes well, so it's better to

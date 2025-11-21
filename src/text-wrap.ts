@@ -186,3 +186,22 @@ export const wrapStyledChars = (
 
 	return rows;
 };
+
+export const wrapOrTruncateStyledChars = (
+	styledChars: StyledChar[],
+	maxWidth: number,
+	textWrap = 'wrap',
+): StyledChar[][] => {
+	if (textWrap.startsWith('truncate')) {
+		let position: 'start' | 'middle' | 'end' = 'end';
+		if (textWrap === 'truncate-middle') {
+			position = 'middle';
+		} else if (textWrap === 'truncate-start') {
+			position = 'start';
+		}
+
+		return [truncateStyledChars(styledChars, maxWidth, {position})];
+	}
+
+	return wrapStyledChars(styledChars, maxWidth);
+};

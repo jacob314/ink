@@ -2,6 +2,7 @@ import {EventEmitter} from 'node:events';
 import process from 'node:process';
 import React, {PureComponent, type ReactNode} from 'react';
 import cliCursor from 'cli-cursor';
+import {type Selection} from '../selection.js';
 import AppContext from './AppContext.js';
 import StdinContext from './StdinContext.js';
 import StdoutContext from './StdoutContext.js';
@@ -23,6 +24,7 @@ type Props = {
 	readonly exitOnCtrlC: boolean;
 	readonly onExit: (error?: Error) => void;
 	readonly onRerender: () => void;
+	readonly selection?: Selection;
 };
 
 type State = {
@@ -72,6 +74,7 @@ export default class App extends PureComponent<Props, State> {
 				value={{
 					exit: this.handleExit,
 					rerender: this.props.onRerender,
+					selection: this.props.selection,
 				}}
 			>
 				<StdinContext.Provider
