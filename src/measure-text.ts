@@ -189,7 +189,18 @@ export function inkCharacterWidth(text: string): number {
 		return width;
 	}
 
-	const calculatedWidth = currentStringWidth(text);
+	let calculatedWidth: number;
+	try {
+		calculatedWidth = currentStringWidth(text);
+	} catch {
+		// Ignore errors and use default width of 1.
+		// We catch this result to avoid throwing exceptions repeatedly.
+		calculatedWidth = 1;
+		console.warn(
+			`Failed to calculate string width for ${JSON.stringify(text)}`,
+		);
+	}
+
 	widthCache.set(text, calculatedWidth);
 	return calculatedWidth;
 }

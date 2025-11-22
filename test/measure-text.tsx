@@ -1,5 +1,11 @@
 import test from 'ava';
-import {measureStyledChars, toStyledCharacters} from '../src/measure-text.js';
+import {stub} from 'sinon';
+import stringWidth from 'string-width';
+import {
+	measureStyledChars,
+	toStyledCharacters,
+	setStringWidthFunction,
+} from '../src/measure-text.js';
 
 const measureText = (text: string) =>
 	measureStyledChars(toStyledCharacters(text));
@@ -87,4 +93,31 @@ test('ignore backspaces', t => {
 	t.is(chars.length, 2);
 	t.is(chars[0]?.value, 'a');
 	t.is(chars[1]?.value, 'b');
+});
+
+test.serial('handle string width function that throws', t => {
+	const warn = stub(console, 'warn');
+	const throwingFn = (_text: string) => {
+		throw new Error('Test error');
+	};
+
+	setStringWidthFunction(throwingFn);
+
+	try {
+		const {width} = measureText('🍕');
+		t.is(width, 1);
+		t.true(warn.calledOnce);
+		t.true(
+			(warn.firstCall.args[0] as string).includes(
+				'Failed to calculate string width',
+			),
+		);
+
+		const {width: width2} = measureText('🍕');
+		t.is(width2, 1);
+		t.true(warn.calledOnce);
+	} finally {
+		setStringWidthFunction(stringWidth);
+		warn.restore();
+	}
 });
