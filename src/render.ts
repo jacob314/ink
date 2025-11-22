@@ -104,6 +104,16 @@ export type RenderOptions = {
 	 * Function to transform selected text characters.
 	 */
 	selectionStyle?: (char: StyledChar) => StyledChar;
+
+	/*
+	 * If true, Ink will wait for `useLayoutEffect` hooks to run before rendering a frame.
+	 * This is useful for components that need to measure DOM elements or sync state with layout.
+	 *
+	 * **WARNING**: This option is incompatible with the `<Static>` component.
+	 *
+	 * @default false
+	 */
+	standardReactLayoutTiming?: boolean;
 };
 
 export type Instance = {
@@ -158,6 +168,7 @@ const render = (
 		alternateBuffer: false,
 		alternateBufferAlreadyActive: false,
 		incrementalRendering: false,
+		standardReactLayoutTiming: false,
 		...getOptions(options),
 	};
 
