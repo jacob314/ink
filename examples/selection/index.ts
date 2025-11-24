@@ -10,5 +10,9 @@ import Selection, {selectionStyle} from './selection.js';
 
 render(React.createElement(Selection), {
 	exitOnCtrlC: true,
+	renderProcess: true,
+	terminalBuffer: true,
+	alternateBuffer: false,
+	standardReactLayoutTiming: true,
 	selectionStyle,
 });

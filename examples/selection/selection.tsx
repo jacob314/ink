@@ -17,6 +17,7 @@ import {
 	Range,
 	measureElement,
 	getPathToRoot,
+	StaticRender,
 	type DOMElement,
 	type StyledChar,
 	type DOMNode,
@@ -104,6 +105,7 @@ type State = {
 	lineNumbersSelectable: boolean;
 	hasInitialized: boolean;
 	insertedLines: string[];
+	useStaticRender: boolean;
 };
 
 type Action =
@@ -127,7 +129,8 @@ type Action =
 			anchorPoint?: Point;
 			focusPoint?: Point;
 	  }
-	| {type: 'CLEAR_POINTS'};
+	| {type: 'CLEAR_POINTS'}
+	| {type: 'TOGGLE_STATIC_RENDER'};
 
 const initialState: State = {
 	cursor: {x: 0, y: 0},
@@ -139,6 +142,7 @@ const initialState: State = {
 	lineNumbersSelectable: false,
 	hasInitialized: false,
 	insertedLines: [],
+	useStaticRender: false,
 };
 
 const reducer = (state: State, action: Action): State => {
@@ -215,6 +219,13 @@ const reducer = (state: State, action: Action): State => {
 			};
 		}
 
+		case 'TOGGLE_STATIC_RENDER': {
+			return {
+				...state,
+				useStaticRender: !state.useStaticRender,
+			};
+		}
+
 		case 'CLEAR_POINTS': {
 			return {
 				...state,
@@ -251,6 +262,11 @@ const Selection = forwardRef<SelectionReference>((_, reference) => {
 			return;
 		}
 
+		if (input === 'm') {
+			dispatch({type: 'TOGGLE_STATIC_RENDER'});
+			return;
+		}
+
 		if (input === 't') {
 			dispatch({type: 'TOGGLE_SELECTION_VISIBILITY'});
 			return;
@@ -266,8 +282,15 @@ const Selection = forwardRef<SelectionReference>((_, reference) => {
 			const node = boxReference.current;
 			const hit = hitTest(node, state.cursor.x, state.cursor.y);
 
-			if (hit && hit.node.nodeName === '#text') {
-				const {length} = hit.node.nodeValue;
+			if (
+				hit &&
+				(hit.node.nodeName === '#text' ||
+					hit.node.nodeName === 'ink-static-render')
+			) {
+				const length =
+					hit.node.nodeName === '#text'
+						? hit.node.nodeValue.length
+						: (hit.node.cachedRender?.selectableText?.length ?? 0);
 				// If we're at the end of the node, select the previous character
 				if (hit.offset === length && length > 0) {
 					dispatch({
@@ -307,10 +330,12 @@ const Selection = forwardRef<SelectionReference>((_, reference) => {
 
 			let newAnchorPoint: Point | undefined;
 
-			if (newPoint && state.anchorPoint === undefined) {
-				const oldPoint = hitTest(node, oldCursor.x, oldCursor.y);
-				if (oldPoint) {
-					newAnchorPoint = oldPoint;
+			if (newPoint) {
+				if (key.shift) {
+					newAnchorPoint =
+						state.anchorPoint ?? hitTest(node, oldCursor.x, oldCursor.y);
+				} else {
+					newAnchorPoint = undefined;
 				}
 			}
 
@@ -404,8 +429,14 @@ const Selection = forwardRef<SelectionReference>((_, reference) => {
 		}
 	});
 
-	const {cursor, fullText, selectedText, lineNumbersSelectable, insertedLines} =
-		state;
+	const {
+		cursor,
+		fullText,
+		selectedText,
+		lineNumbersSelectable,
+		insertedLines,
+		useStaticRender,
+	} = state;
 
 	return (
 		<Box flexDirection="column">
@@ -415,43 +446,89 @@ const Selection = forwardRef<SelectionReference>((_, reference) => {
 				width={30}
 				flexDirection="column"
 			>
-				<Text>
-					<Text color="red">Hello</Text> <Text color="blue">World</Text>
-				</Text>
-				<Box borderStyle="single">
-					<Text>
-						This is a <Text color="green">test</Text>
-					</Text>
-				</Box>
-				<Box flexDirection="row">
-					<Text>
-						<Text color="red">Row</Text> <Text color="blue">A</Text>
-					</Text>
-					<Text>
-						<Text color="red">Row</Text> <Text color="green">B</Text>
-					</Text>
-				</Box>
-				<Text>{longText}</Text>
-				{insertedLines.map(line => (
-					<Text key={line}>{line}</Text>
-				))}
-				<Box flexDirection="column" marginTop={1} borderStyle="single">
-					{codeExample.map((line, i) => (
-						<Box key={line.id} flexDirection="row">
-							<Box
-								width={3}
-								flexShrink={0}
-								userSelect={lineNumbersSelectable ? undefined : 'none'}
-							>
-								<Text dimColor>{i + 1}</Text>
-							</Box>
+				{useStaticRender ? (
+					<StaticRender width={28}>
+						<Box flexDirection="column" width="100%">
 							<Text>
-								{' '.repeat(line.indent)}
-								{line.content}
+								<Text color="red">Hello</Text> <Text color="blue">World</Text>
+							</Text>
+							<Box borderStyle="single">
+								<Text>
+									This is a <Text color="green">test</Text>
+								</Text>
+							</Box>
+							<Box flexDirection="row">
+								<Text>
+									<Text color="red">Row</Text> <Text color="blue">A</Text>
+								</Text>
+								<Text>
+									<Text color="red">Row</Text> <Text color="green">B</Text>
+								</Text>
+							</Box>
+							<Text>{longText}</Text>
+							{insertedLines.map(line => (
+								<Text key={line}>{line}</Text>
+							))}
+							<Box flexDirection="column" marginTop={1} borderStyle="single">
+								{codeExample.map((line, i) => (
+									<Box key={line.id} flexDirection="row">
+										<Box
+											width={3}
+											flexShrink={0}
+											userSelect={lineNumbersSelectable ? undefined : 'none'}
+										>
+											<Text dimColor>{i + 1}</Text>
+										</Box>
+										<Text>
+											{' '.repeat(line.indent)}
+											{line.content}
+										</Text>
+									</Box>
+								))}
+							</Box>
+						</Box>
+					</StaticRender>
+				) : (
+					<Box flexDirection="column" width="100%">
+						<Text>
+							<Text color="red">Hello</Text> <Text color="blue">World</Text>
+						</Text>
+						<Box borderStyle="single">
+							<Text>
+								This is a <Text color="green">test</Text>
 							</Text>
 						</Box>
-					))}
-				</Box>
+						<Box flexDirection="row">
+							<Text>
+								<Text color="red">Row</Text> <Text color="blue">A</Text>
+							</Text>
+							<Text>
+								<Text color="red">Row</Text> <Text color="green">B</Text>
+							</Text>
+						</Box>
+						<Text>{longText}</Text>
+						{insertedLines.map(line => (
+							<Text key={line}>{line}</Text>
+						))}
+						<Box flexDirection="column" marginTop={1} borderStyle="single">
+							{codeExample.map((line, i) => (
+								<Box key={line.id} flexDirection="row">
+									<Box
+										width={3}
+										flexShrink={0}
+										userSelect={lineNumbersSelectable ? undefined : 'none'}
+									>
+										<Text dimColor>{i + 1}</Text>
+									</Box>
+									<Text>
+										{' '.repeat(line.indent)}
+										{line.content}
+									</Text>
+								</Box>
+							))}
+						</Box>
+					</Box>
+				)}
 			</Box>
 			<Box marginTop={1}>
 				<Text>
@@ -486,6 +563,10 @@ const Selection = forwardRef<SelectionReference>((_, reference) => {
 			</Box>
 			<Box marginTop={1} flexDirection="column">
 				<Text dimColor>Press 't' to toggle selection visibility.</Text>
+				<Text dimColor>
+					Press 'm' to toggle StaticRender (current:{' '}
+					{useStaticRender ? 'ON' : 'OFF'}).
+				</Text>
 				<Text dimColor>Press 'space' to toggle line number selection.</Text>
 				<Text dimColor>Press 's' to select character under cursor.</Text>
 				<Text dimColor>
