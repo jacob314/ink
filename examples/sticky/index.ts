@@ -8,4 +8,13 @@ import React from 'react';
 import {render} from '../../src/index.js';
 import ScrollableContent from './sticky.js';
 
-render(React.createElement(ScrollableContent));
+render(React.createElement(ScrollableContent), {
+	renderProcess: true,
+	terminalBuffer: true,
+	alternateBuffer: false,
+	standardReactLayoutTiming: true,
+	debugRainbow: true,
+	incrementalRendering: true,
+	animatedScroll: true,
+	maxFps: 10_000,
+});

@@ -1,6 +1,12 @@
 import {createContext} from 'react';
 import {type Selection} from '../selection.js';
 
+export type InkOptions = {
+	readonly isAlternateBufferEnabled?: boolean;
+	readonly stickyHeadersInBackbuffer?: boolean;
+	readonly animatedScroll?: boolean;
+};
+
 export type Props = {
 	/**
 	Exit (unmount) the whole Ink app.
@@ -12,17 +18,21 @@ export type Props = {
 	*/
 	readonly rerender: () => void;
 	readonly selection?: Selection;
+	readonly options: InkOptions;
+	readonly setOptions: (options: Partial<InkOptions>) => void;
 };
 
 /**
 `AppContext` is a React context that exposes a method to manually exit the app (unmount).
 */
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const AppContext = createContext<Props>({
+export const AppContext = createContext<Props>({
 	exit() {},
 	rerender() {},
+	options: {},
+	setOptions() {},
 });
 
-AppContext.displayName = 'InternalAppContext';
+AppContext.displayName = 'AppContext';
 
 export default AppContext;

@@ -305,6 +305,26 @@ export type Styles = {
 	readonly overflowY?: 'visible' | 'hidden' | 'scroll';
 
 	/**
+	If true, content that is scrolled out of the top of the box (when overflowY is 'scroll')
+	will be added to the terminal's scrollback history.
+
+	Results are undefined if more than one scrollable region in the app has
+	overflowToBackbuffer enabled.
+	
+	@default false
+	*/
+	readonly overflowToBackbuffer?: boolean;
+
+	/**
+	If true, and `overflowToBackbuffer` is also enabled, the `scrollHeight` of the box
+	will never decrease as long as the existing history remains valid.
+	This prevents the terminal's scrollback from being corrupted when content shrinks.
+	
+	@default false
+	*/
+	readonly stableScrollback?: boolean;
+
+	/**
 	Background color for the element.
 	
 	Accepts the same values as `color` in the `<Text>` component.
