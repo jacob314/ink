@@ -19,23 +19,6 @@ type Options = {
 	height: number;
 };
 
-type Operation = WriteOperation | ClipOperation | UnclipOperation;
-
-type WriteOperation = {
-	type: 'write';
-	x: number;
-	y: number;
-	items: string | StyledChar[];
-	transformers: OutputTransformer[];
-	lineIndex?: number;
-	preserveBackgroundColor?: boolean;
-};
-
-type ClipOperation = {
-	type: 'clip';
-	clip: Clip;
-};
-
 type Clip = {
 	x1: number | undefined;
 	x2: number | undefined;
@@ -43,16 +26,80 @@ type Clip = {
 	y2: number | undefined;
 };
 
-type UnclipOperation = {
-	type: 'unclip';
+export type StickyHeader = {
+	nodeId: number;
+	lines: StyledChar[][];
+	x: number;
+	y: number; // Absolute Y position relative to the Region's top-left
+	startRow: number;
+	endRow: number;
+	scrollContainerId: number;
+};
+
+export type Region = {
+	id: number | string;
+	x: number; // Absolute screen X
+	y: number; // Absolute screen Y
+	width: number;
+	height: number;
+
+	// Content buffer for this region.
+	// Coordinates in `lines` are relative to (0,0) of this region.
+	lines: StyledChar[][];
+
+	isScrollable: boolean;
+
+	// Scroll state (if scrollable)
+	scrollTop?: number;
+	scrollLeft?: number;
+	scrollHeight?: number;
+	scrollWidth?: number;
+
+	scrollbarVisible?: boolean;
+	overflowToBackbuffer?: boolean;
+
+	stickyHeaders: StickyHeader[];
+	children: Region[];
+};
+
+export type RegionNode = {
+	id: string | number;
+	children: RegionNode[];
+};
+
+export type RegionUpdate = {
+	id: string | number;
+	x?: number;
+	y?: number;
+	width?: number;
+	height?: number;
+	scrollTop?: number;
+	scrollLeft?: number;
+	scrollHeight?: number;
+	scrollWidth?: number;
+	isScrollable?: boolean;
+	scrollbarVisible?: boolean;
+	overflowToBackbuffer?: boolean;
+	stickyHeaders?: StickyHeader[];
+	lines?: {
+		updates: Array<{
+			start: number;
+			end: number;
+			data: Uint8Array;
+			source?: Uint8Array;
+		}>;
+		totalLength: number;
+	};
 };
 
 export default class Output {
 	width: number;
 	height: number;
 
-	private readonly operations: Operation[] = [];
+	// The root region represents the main screen area (non-scrollable background)
+	root: Region;
 
+	private readonly activeRegionStack: Region[] = [];
 	private readonly clips: Clip[] = [];
 
 	constructor(options: Options) {
@@ -60,10 +107,100 @@ export default class Output {
 
 		this.width = width;
 		this.height = height;
+
+		this.root = {
+			id: 'root',
+			x: 0,
+			y: 0,
+			width,
+			height,
+			lines: [],
+			isScrollable: false,
+			stickyHeaders: [],
+			children: [],
+		};
+
+		this.initLines(this.root, width, height);
+		this.activeRegionStack.push(this.root);
 	}
 
 	getCurrentClip(): Clip | undefined {
 		return this.clips.at(-1);
+	}
+
+	getActiveRegion(): Region {
+		return this.activeRegionStack.at(-1)!;
+	}
+
+	startChildRegion(options: {
+		id: number | string;
+		x: number;
+		y: number;
+		width: number;
+		height: number;
+		isScrollable: boolean;
+		scrollState?: {
+			scrollTop: number;
+			scrollLeft: number;
+			scrollHeight: number;
+			scrollWidth: number;
+		};
+		scrollbarVisible?: boolean;
+		overflowToBackbuffer?: boolean;
+	}) {
+		const {
+			id,
+			x,
+			y,
+			width,
+			height,
+			isScrollable,
+			scrollState,
+			scrollbarVisible,
+			overflowToBackbuffer,
+		} = options;
+
+		// Create new region
+		// The buffer size should match scrollDimensions if scrollable, or bounds if not.
+		// If scrollable, we want to capture the FULL content.
+		const bufferWidth = scrollState?.scrollWidth ?? width;
+		const bufferHeight = scrollState?.scrollHeight ?? height;
+
+		const region: Region = {
+			id,
+			x,
+			y,
+			width,
+			height,
+			lines: [],
+			isScrollable,
+			scrollTop: scrollState?.scrollTop,
+			scrollLeft: scrollState?.scrollLeft,
+			scrollHeight: scrollState?.scrollHeight,
+			scrollWidth: scrollState?.scrollWidth,
+			scrollbarVisible,
+			overflowToBackbuffer,
+			stickyHeaders: [],
+			children: [],
+		};
+
+		this.initLines(region, bufferWidth, bufferHeight);
+
+		// Add to current active region's children
+		this.getActiveRegion().children.push(region);
+
+		// Push to stack
+		this.activeRegionStack.push(region);
+	}
+
+	endChildRegion() {
+		if (this.activeRegionStack.length > 1) {
+			this.activeRegionStack.pop();
+		}
+	}
+
+	addStickyHeader(header: StickyHeader) {
+		this.getActiveRegion().stickyHeaders.push(header);
 	}
 
 	write(
@@ -76,29 +213,27 @@ export default class Output {
 			preserveBackgroundColor?: boolean;
 		},
 	): void {
-		const {transformers, lineIndex, preserveBackgroundColor} = options;
+		const {
+			transformers = [],
+			lineIndex = 0,
+			preserveBackgroundColor = false,
+		} = options;
 
 		if (items.length === 0) {
 			return;
 		}
 
-		this.operations.push({
-			type: 'write',
+		this.applyWrite(
 			x,
 			y,
 			items,
 			transformers,
 			lineIndex,
 			preserveBackgroundColor,
-		});
+		);
 	}
 
 	clip(clip: Clip) {
-		this.operations.push({
-			type: 'clip',
-			clip,
-		});
-
 		const previousClip = this.clips.at(-1);
 		const nextClip = {...clip};
 
@@ -136,21 +271,17 @@ export default class Output {
 	}
 
 	unclip() {
-		this.operations.push({
-			type: 'unclip',
-		});
-
 		this.clips.pop();
 	}
 
-	get(): {output: string; height: number; styledOutput: StyledChar[][]} {
-		// Initialize output array with a specific set of rows, so that margin/padding at the bottom is preserved
-		const output: StyledChar[][] = [];
+	get(): Region {
+		return this.root;
+	}
 
-		for (let y = 0; y < this.height; y++) {
+	private initLines(region: Region, width: number, height: number) {
+		for (let y = 0; y < height; y++) {
 			const row: StyledChar[] = [];
-
-			for (let x = 0; x < this.width; x++) {
+			for (let x = 0; x < width; x++) {
 				row.push({
 					type: 'char',
 					value: ' ',
@@ -158,107 +289,28 @@ export default class Output {
 					styles: [],
 				});
 			}
-
-			output.push(row);
-		}
-
-		const clips: Clip[] = [];
-
-		for (const operation of this.operations) {
-			if (operation.type === 'clip') {
-				const previousClip = clips.at(-1);
-				const nextClip = {...operation.clip};
-
-				if (previousClip) {
-					nextClip.x1 =
-						previousClip.x1 === undefined
-							? nextClip.x1
-							: nextClip.x1 === undefined
-								? previousClip.x1
-								: Math.max(previousClip.x1, nextClip.x1);
-
-					nextClip.x2 =
-						previousClip.x2 === undefined
-							? nextClip.x2
-							: nextClip.x2 === undefined
-								? previousClip.x2
-								: Math.min(previousClip.x2, nextClip.x2);
-
-					nextClip.y1 =
-						previousClip.y1 === undefined
-							? nextClip.y1
-							: nextClip.y1 === undefined
-								? previousClip.y1
-								: Math.max(previousClip.y1, nextClip.y1);
-
-					nextClip.y2 =
-						previousClip.y2 === undefined
-							? nextClip.y2
-							: nextClip.y2 === undefined
-								? previousClip.y2
-								: Math.min(previousClip.y2, nextClip.y2);
-				}
-
-				clips.push(nextClip);
-				continue;
-			}
-
-			if (operation.type === 'unclip') {
-				clips.pop();
-				continue;
-			}
-
-			if (operation.type === 'write') {
-				this.applyWriteOperation(output, clips, operation);
-			}
-		}
-
-		const generatedOutput = output
-			.map(line => {
-				// See https://github.com/vadimdemedes/ink/pull/564#issuecomment-1637022742
-				const lineWithoutEmptyItems = line.filter(item => item !== undefined);
-
-				return styledCharsToString(lineWithoutEmptyItems).trimEnd();
-			})
-			.join('\n');
-
-		return {
-			output: generatedOutput,
-			height: output.length,
-			styledOutput: output,
-		};
-	}
-
-	private clearRange(
-		currentLine: StyledChar[],
-		range: {start: number; end: number},
-		styles: StyledChar['styles'],
-		value = ' ',
-	) {
-		for (let offset = range.start; offset < range.end; offset++) {
-			if (offset >= 0 && offset < this.width) {
-				currentLine[offset] = {
-					type: 'char',
-					value,
-					fullWidth: false,
-					styles,
-				};
-			}
+			region.lines.push(row);
 		}
 	}
 
-	private applyWriteOperation(
-		output: StyledChar[][],
-		clips: Clip[],
-		operation: WriteOperation,
+	// Helper to apply write immediately
+	// eslint-disable-next-line max-params
+	private applyWrite(
+		x: number,
+		y: number,
+		items: string | StyledChar[],
+		transformers: OutputTransformer[],
+		lineIndex: number,
+		_preserveBackgroundColor: boolean,
 	) {
-		const {transformers, lineIndex = 0} = operation;
-		let {x, y, items} = operation;
+		const region = this.getActiveRegion();
+		const {lines} = region;
+		const bufferWidth = lines[0]?.length ?? 0;
 
 		let chars: StyledChar[] =
 			typeof items === 'string' ? toStyledCharacters(items) : items;
 
-		const clip = clips.at(-1);
+		const clip = this.getCurrentClip();
 		let fromX: number | undefined;
 		let toX: number | undefined;
 
@@ -269,16 +321,11 @@ export default class Output {
 				return;
 			}
 
-			chars = clipResult.chars;
-			x = clipResult.x;
-			y = clipResult.y;
-			fromX = clipResult.fromX;
-			toX = clipResult.toX;
+			({chars, x, y, fromX, toX} = clipResult);
 		}
 
-		const currentLine = output[y];
+		const currentLine = lines[y];
 
-		// Line can be missing if `text` is taller than height of pre-initialized `this.output`
 		if (!currentLine) {
 			return;
 		}
@@ -303,7 +350,7 @@ export default class Output {
 			}
 
 			if (fromX === undefined || relativeX >= fromX) {
-				if (offsetX >= this.width) {
+				if (offsetX >= bufferWidth) {
 					break;
 				}
 
@@ -315,6 +362,7 @@ export default class Output {
 						{start: offsetX + 1, end: offsetX + characterWidth},
 						character.styles,
 						'',
+						bufferWidth,
 					);
 				}
 
@@ -331,6 +379,7 @@ export default class Output {
 					{start: offsetX, end: offsetX + clearLength},
 					character.styles,
 					' ',
+					bufferWidth,
 				);
 
 				offsetX += clearLength;
@@ -342,7 +391,33 @@ export default class Output {
 		if (toX !== undefined) {
 			const absoluteToX = x - (fromX ?? 0) + toX;
 
-			this.clearRange(currentLine, {start: offsetX, end: absoluteToX}, [], ' ');
+			this.clearRange(
+				currentLine,
+				{start: offsetX, end: absoluteToX},
+				[],
+				' ',
+				bufferWidth,
+			);
+		}
+	}
+
+	// eslint-disable-next-line max-params
+	private clearRange(
+		currentLine: StyledChar[],
+		range: {start: number; end: number},
+		styles: StyledChar['styles'],
+		value: string,
+		maxWidth: number,
+	) {
+		for (let offset = range.start; offset < range.end; offset++) {
+			if (offset >= 0 && offset < maxWidth) {
+				currentLine[offset] = {
+					type: 'char',
+					value,
+					fullWidth: false,
+					styles,
+				};
+			}
 		}
 	}
 

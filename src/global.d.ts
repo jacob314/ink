@@ -1,5 +1,6 @@
 import {type ReactNode, type Key, type LegacyRef} from 'react';
 import {type Except} from 'type-fest';
+import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import {type DOMElement} from './dom.js';
 import {type Styles} from './styles.js';
 
@@ -9,6 +10,7 @@ declare module 'react' {
 		interface IntrinsicElements {
 			'ink-box': Ink.Box;
 			'ink-text': Ink.Text;
+			'ink-static-render': Ink.StaticRender;
 		}
 	}
 }
@@ -24,6 +26,18 @@ declare namespace Ink {
 		sticky?: boolean;
 		internalStickyAlternate?: boolean;
 		opaque?: boolean;
+		scrollbar?: boolean;
+	};
+
+	type StaticRender = {
+		children?: ReactNode;
+		style?: Styles;
+		ref?: LegacyRef<DOMElement>;
+		cachedRender?: {
+			output: StyledChar[][];
+			width: number;
+			height: number;
+		};
 	};
 
 	type Text = {
