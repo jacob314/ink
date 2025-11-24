@@ -67,12 +67,18 @@ export type Props = Except<Styles, 'textWrap'> & {
 	/**
 	 * Make the element sticky.
 	 */
-	readonly sticky?: boolean;
+	readonly sticky?: boolean | 'top' | 'bottom';
 
 	/**
 	 * Content to render when the element is sticky.
 	 */
 	readonly stickyChildren?: ReactNode;
+
+	/**
+	 * Whether to render scrollbars if the element is scrollable.
+	 * @default true
+	 */
+	readonly scrollbar?: boolean;
 };
 
 /**
@@ -90,6 +96,7 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 			'aria-state': ariaState,
 			sticky,
 			opaque,
+			scrollbar = true,
 			...style
 		},
 		ref,
@@ -119,6 +126,7 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 				}}
 				sticky={sticky}
 				opaque={opaque}
+				scrollbar={scrollbar}
 			>
 				{isScreenReaderEnabled && label ? label : children}
 				{sticky && stickyChildren && !isScreenReaderEnabled && (

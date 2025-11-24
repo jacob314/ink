@@ -90,7 +90,8 @@ function ScrollableContent() {
 							const headerIndex = i;
 							const headerId = headerIndex / 20;
 							const headerText = `Header ${headerId}`;
-							const stickyHeaderText = `Header ${headerId} (sticky)`;
+							const stickyHeaderText = `Header ${headerId} (sticky top)`;
+							const stickyFooterText = `Footer ${headerId} (sticky bottom)`;
 
 							const itemsInGroup = items.slice(headerIndex, headerIndex + 10);
 							const nextItems = items.slice(headerIndex + 10, headerIndex + 20);
@@ -132,8 +133,30 @@ function ScrollableContent() {
 											<Text color="#999999">{item.text}</Text>
 										</Box>
 									))}
-									<Box paddingLeft={1}>
-										<Text>last element matching header</Text>
+									<Box
+										sticky="bottom"
+										width="100%"
+										stickyChildren={
+											<Box
+												opaque
+												borderTop
+												flexDirection="column"
+												width="100%"
+												paddingLeft={1}
+												borderStyle="round"
+												borderColor="#000000"
+												paddingX={0}
+												borderBottom={false}
+												borderLeft={false}
+												borderRight={false}
+											>
+												<Text>{stickyFooterText}</Text>
+											</Box>
+										}
+									>
+										<Box paddingLeft={1}>
+											<Text>last element matching header (footer naturally here)</Text>
+										</Box>
 									</Box>
 								</Box>,
 								...nextItems.map(item => (

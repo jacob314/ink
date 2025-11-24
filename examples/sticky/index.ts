@@ -8,4 +8,9 @@ import React from 'react';
 import {render} from '../../src/index.js';
 import ScrollableContent from './sticky.js';
 
-render(React.createElement(ScrollableContent));
+render(React.createElement(ScrollableContent), {
+    standardReactLayoutTiming: true,
+	renderProcess: true,
+	terminalBuffer: true,
+    exitOnCtrlC: true,
+});
