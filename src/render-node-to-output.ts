@@ -5,14 +5,13 @@ import getMaxWidth from './get-max-width.js';
 import squashTextNodes from './squash-text-nodes.js';
 import renderBorder from './render-border.js';
 import renderBackground from './render-background.js';
-import {type DOMElement, type DOMNode} from './dom.js';
-import type Output from './output.js';
-import colorize from './colorize.js';
 import {
-	getVerticalScrollbarBoundingBox,
-	getHorizontalScrollbarBoundingBox,
-	type ScrollbarBoundingBox,
-} from './measure-element.js';
+	type DOMElement,
+	type DOMNode,
+	setCachedRender,
+	type StickyHeader,
+} from './dom.js';
+import Output from './output.js';
 import {
 	measureStyledChars,
 	splitStyledCharsByNewline,
@@ -53,6 +52,50 @@ const applyPaddingToStyledChars = (
 	}
 
 	return lines;
+};
+
+const applySelectionToStyledChars = (
+	styledChars: StyledChar[],
+	selectionState: {range: {start: number; end: number}; currentOffset: number},
+	selectionStyle?: (char: StyledChar) => StyledChar,
+): StyledChar[] => {
+	const {range, currentOffset} = selectionState;
+	const {start, end} = range;
+	let charCodeUnitOffset = 0;
+	const newStyledChars: StyledChar[] = [];
+
+	for (const char of styledChars) {
+		const charLength = char.value.length;
+		const globalOffset = currentOffset + charCodeUnitOffset;
+
+		if (globalOffset >= start && globalOffset < end) {
+			if (selectionStyle) {
+				newStyledChars.push(selectionStyle(char));
+			} else {
+				// 7 is the ANSI code for inverse (reverse video)
+				const newChar = {
+					...char,
+					styles: [...char.styles],
+				};
+
+				newChar.styles.push({
+					type: 'ansi',
+					code: '\u001B[7m',
+					endCode: '\u001B[27m',
+				});
+
+				newStyledChars.push(newChar);
+			}
+		} else {
+			newStyledChars.push(char);
+		}
+
+		charCodeUnitOffset += charLength;
+	}
+
+	selectionState.currentOffset += charCodeUnitOffset;
+
+	return newStyledChars;
 };
 
 export type OutputTransformer = (s: string, index: number) => string;
@@ -128,31 +171,153 @@ export const renderNodeToScreenReaderOutput = (
 	return output;
 };
 
+export const renderToStatic = (
+	node: DOMElement,
+	options: {
+		calculateLayout?: boolean;
+		skipStaticElements?: boolean;
+		isStickyRender?: boolean;
+		selectionMap?: Map<DOMNode, {start: number; end: number}>;
+		selectionStyle?: (char: StyledChar) => StyledChar;
+	} = {},
+) => {
+	if (options.calculateLayout && node.yogaNode) {
+		node.yogaNode.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
+	}
+
+	const width = node.yogaNode?.getComputedWidth() ?? 0;
+	const height = node.yogaNode?.getComputedHeight() ?? 0;
+
+	const stickyNodes = getStickyDescendants(node);
+	const cachedStickyHeaders: StickyHeader[] = [];
+
+	for (const {node: stickyNode} of stickyNodes) {
+		const alternateStickyNode = stickyNode.childNodes.find(
+			childNode => (childNode as DOMElement).internalStickyAlternate,
+		) as DOMElement | undefined;
+
+		const naturalHeight = stickyNode.yogaNode!.getComputedHeight();
+		const stuckHeight = alternateStickyNode?.yogaNode?.getComputedHeight() ?? 0;
+		const maxHeaderHeight = Math.max(naturalHeight, stuckHeight);
+
+		const renderHeader = (isSticky: boolean) => {
+			const stickyOutput = new Output({
+				width: stickyNode.yogaNode!.getComputedWidth(),
+				height: maxHeaderHeight,
+			});
+
+			renderNodeToOutput(stickyNode, stickyOutput, {
+				offsetX: -stickyNode.yogaNode!.getComputedLeft(),
+				offsetY: -stickyNode.yogaNode!.getComputedTop(),
+				transformers: undefined,
+				skipStaticElements: options.skipStaticElements ?? false,
+				nodesToSkip: undefined,
+				isStickyRender: isSticky,
+				selectionMap: options.selectionMap,
+				selectionStyle: options.selectionStyle,
+			});
+
+			return stickyOutput.get().lines;
+		};
+
+		const naturalLines = renderHeader(false);
+		const stuckLines = alternateStickyNode ? renderHeader(true) : undefined;
+		const parent = stickyNode.parentNode;
+		const parentYogaNode = parent?.yogaNode;
+		const naturalRow = getRelativeTop(stickyNode, node);
+
+		const headerObj = {
+			nodeId: stickyNode.internal_id,
+			lines: naturalLines,
+			stuckLines,
+			styledOutput: stuckLines ?? naturalLines,
+			x: getRelativeLeft(stickyNode, node),
+			y: getRelativeTop(stickyNode, node),
+			naturalRow,
+			startRow: naturalRow,
+			endRow: naturalRow + naturalHeight,
+			scrollContainerId: -1,
+			isStuckOnly: true,
+
+			relativeX: getRelativeLeft(stickyNode, node),
+			relativeY: getRelativeTop(stickyNode, node),
+			height: maxHeaderHeight,
+			// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+			type: (stickyNode.internalSticky === 'bottom' ? 'bottom' : 'top') as
+				| 'top'
+				| 'bottom',
+			parentRelativeTop: parent ? getRelativeTop(parent, node) : 0,
+			parentHeight: parentYogaNode
+				? parentYogaNode.getComputedHeight()
+				: 1_000_000,
+			node: stickyNode,
+		};
+
+		cachedStickyHeaders.push(headerObj);
+	}
+
+	const staticOutput = new Output({
+		width,
+		height,
+	});
+
+	for (const childNode of node.childNodes) {
+		renderNodeToOutput(childNode as DOMElement, staticOutput, {
+			offsetX: 0,
+			offsetY: 0,
+			transformers: undefined,
+			skipStaticElements: options.skipStaticElements ?? false,
+			nodesToSkip: undefined,
+			isStickyRender: options.isStickyRender,
+			selectionMap: options.selectionMap,
+			selectionStyle: options.selectionStyle,
+		});
+	}
+
+	const rootRegion = staticOutput.get();
+	const {lines: styledOutput} = rootRegion;
+
+	setCachedRender(node, {
+		output: styledOutput,
+		width,
+		height,
+		stickyHeaders: cachedStickyHeaders,
+		root: rootRegion,
+	});
+};
+
 // After nodes are laid out, render each to output object, which later gets rendered to terminal
-const renderNodeToOutput = (
+function renderNodeToOutput(
 	node: DOMElement,
 	output: Output,
 	options: {
 		offsetX?: number;
 		offsetY?: number;
+		absoluteOffsetX?: number;
+		absoluteOffsetY?: number;
 		transformers?: OutputTransformer[];
 		skipStaticElements: boolean;
-		nodeToSkip?: DOMElement;
+		nodesToSkip?: DOMElement[];
 		isStickyRender?: boolean;
+		skipStickyHeaders?: boolean;
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
 		selectionStyle?: (char: StyledChar) => StyledChar;
 	},
-) => {
-	if (options.nodeToSkip === node) {
+) {
+	if (options.nodesToSkip?.includes(node)) {
 		return;
 	}
 
 	const {
 		offsetX = 0,
 		offsetY = 0,
+		absoluteOffsetX = 0,
+		absoluteOffsetY = 0,
 		transformers = [],
 		skipStaticElements,
+		nodesToSkip,
 		isStickyRender = false,
+		skipStickyHeaders = false,
 		selectionMap,
 		selectionStyle,
 	} = options;
@@ -176,26 +341,32 @@ const renderNodeToOutput = (
 		const x = offsetX + yogaNode.getComputedLeft();
 		const y = offsetY + yogaNode.getComputedTop();
 
+		// Absolute screen coordinates (for clipping/visibility check)
+		const absX = absoluteOffsetX + yogaNode.getComputedLeft();
+		const absY = absoluteOffsetY + yogaNode.getComputedTop();
+
 		const width = yogaNode.getComputedWidth();
 		const height = yogaNode.getComputedHeight();
 		const clip = output.getCurrentClip();
 
 		if (clip) {
-			const nodeLeft = x;
-			const nodeRight = x + width;
-			const nodeTop = y;
-			const nodeBottom = y + height;
+			const absoluteNodeLeft = absX;
+			const absoluteNodeRight = absoluteNodeLeft + width;
+			const absoluteNodeTop = absY;
+			const absoluteNodeBottom = absoluteNodeTop + height;
 
 			const clipLeft = clip.x1 ?? -Infinity;
 			const clipRight = clip.x2 ?? Infinity;
-			const clipTop = clip.y1 ?? -Infinity;
+			const clipTop = output.getActiveRegion().overflowToBackbuffer
+				? -Infinity
+				: (clip.y1 ?? -Infinity);
 			const clipBottom = clip.y2 ?? Infinity;
 
 			const isVisible =
-				nodeRight > clipLeft &&
-				nodeLeft < clipRight &&
-				nodeBottom > clipTop &&
-				nodeTop < clipBottom;
+				absoluteNodeRight > clipLeft &&
+				absoluteNodeLeft < clipRight &&
+				absoluteNodeBottom > clipTop &&
+				absoluteNodeTop < clipBottom;
 
 			if (!isVisible) {
 				return;
@@ -207,6 +378,40 @@ const renderNodeToOutput = (
 		let newTransformers = transformers;
 		if (typeof node.internal_transform === 'function') {
 			newTransformers = [node.internal_transform, ...transformers];
+		}
+
+		if (node.nodeName === 'ink-static-render' && !node.cachedRender) {
+			return;
+		}
+
+		if (node.cachedRender) {
+			if (node.cachedRender.root) {
+				output.addRegionTree(node.cachedRender.root, x, y);
+			} else {
+				let index = 0;
+				let endIndex = node.cachedRender.output.length;
+
+				if (clip) {
+					const clipY1 = clip.y1 ?? -Infinity;
+					const clipY2 = clip.y2 ?? Infinity;
+
+					index = Math.max(0, Math.ceil(clipY1 - y));
+					endIndex = Math.min(endIndex, Math.ceil(clipY2 - y));
+				}
+
+				for (; index < endIndex; index++) {
+					const line = node.cachedRender.output[index];
+
+					if (line) {
+						output.write(x, y + index, line, {
+							transformers: newTransformers,
+							lineIndex: index,
+						});
+					}
+				}
+			}
+
+			return;
 		}
 
 		if (node.nodeName === 'ink-text') {
@@ -292,10 +497,17 @@ const renderNodeToOutput = (
 		let clipped = false;
 		let childrenOffsetY = y;
 		let childrenOffsetX = x;
+		const activeStickyNodes: Array<{
+			stickyNode: DOMElement;
+			type: 'top' | 'bottom';
+			nextStickyNode?: DOMElement;
+			nextStickyNodeInfo?: StickyNodeInfo;
+			cached?: StickyHeader;
+			anchor?: DOMElement;
+		}> = [];
+
 		let verticallyScrollable = false;
 		let horizontallyScrollable = false;
-		let activeStickyNode: DOMElement | undefined;
-		let nextStickyNode: DOMElement | undefined;
 
 		if (node.nodeName === 'ink-box') {
 			renderBackground(x, y, node, output);
@@ -317,30 +529,115 @@ const renderNodeToOutput = (
 					const scrollTop =
 						(node.internal_scrollState?.scrollTop ?? 0) +
 						yogaNode.getComputedBorder(Yoga.EDGE_TOP);
-					let activeStickyNodeIndex = -1;
+					const clientHeight = node.internal_scrollState?.clientHeight ?? 0;
+					const viewportBottom = scrollTop + clientHeight;
 
-					for (const [index, stickyNode] of stickyNodes.entries()) {
-						if (stickyNode.yogaNode) {
-							const stickyNodeTop = getRelativeTop(stickyNode, node);
-							if (stickyNodeTop < scrollTop) {
-								const parent = stickyNode.parentNode!;
-								if (parent?.yogaNode) {
-									const parentTop = getRelativeTop(parent, node);
-									const parentHeight = parent.yogaNode.getComputedHeight();
-									if (parentTop + parentHeight > scrollTop) {
-										activeStickyNode = stickyNode;
-										activeStickyNodeIndex = index;
-									}
-								}
+					let activeTopStickyNodeIndex = -1;
+					let activeTopStickyNode: StickyNodeInfo | undefined;
+					let activeBottomStickyNodeIndex = -1;
+					let activeBottomStickyNode: StickyNodeInfo | undefined;
+
+					for (const [index, stickyNodeInfo] of stickyNodes.entries()) {
+						const {
+							node: stickyNode,
+							type: stickyType,
+							cached,
+							anchor,
+						} = stickyNodeInfo;
+
+						let stickyNodeTop: number;
+						let stickyNodeHeight: number;
+						let parentTop: number;
+						let parentHeight: number;
+
+						if (cached && anchor) {
+							const staticRenderPos = getRelativeTop(anchor, node);
+							stickyNodeTop = staticRenderPos + cached.relativeY!;
+							stickyNodeHeight = cached.height!;
+							parentTop = staticRenderPos + cached.parentRelativeTop!;
+							parentHeight = cached.parentHeight!;
+						} else {
+							if (!stickyNode.yogaNode) continue;
+							stickyNodeTop = getRelativeTop(stickyNode, node);
+							stickyNodeHeight = stickyNode.yogaNode.getComputedHeight();
+
+							const parent = stickyNode.parentNode!;
+							if (parent?.yogaNode) {
+								parentTop = getRelativeTop(parent, node);
+								parentHeight = parent.yogaNode.getComputedHeight();
+							} else {
+								parentTop = 0;
+								parentHeight = 1_000_000;
 							}
+						}
+
+						const stickyNodeBottom = stickyNodeTop + stickyNodeHeight;
+
+						if (
+							stickyType === 'top' &&
+							stickyNodeTop < scrollTop &&
+							parentTop + parentHeight > scrollTop
+						) {
+							activeTopStickyNode = stickyNodeInfo;
+							activeTopStickyNodeIndex = index;
+						}
+
+						if (
+							stickyType === 'bottom' &&
+							Math.floor(stickyNodeBottom) > Math.floor(viewportBottom) + 1 &&
+							parentTop < viewportBottom
+						) {
+							activeBottomStickyNode = stickyNodeInfo;
+							activeBottomStickyNodeIndex = index;
 						}
 					}
 
-					if (
-						activeStickyNodeIndex !== -1 &&
-						activeStickyNodeIndex + 1 < stickyNodes.length
-					) {
-						nextStickyNode = stickyNodes[activeStickyNodeIndex + 1];
+					if (activeTopStickyNode) {
+						let nextStickyNode: DOMElement | undefined;
+						let nextStickyNodeInfo: StickyNodeInfo | undefined;
+						for (
+							let i = activeTopStickyNodeIndex + 1;
+							i < stickyNodes.length;
+							i++
+						) {
+							const info = stickyNodes[i]!;
+							if (info.type !== 'bottom') {
+								nextStickyNode = info.node;
+								nextStickyNodeInfo = info;
+								break;
+							}
+						}
+
+						activeStickyNodes.push({
+							stickyNode: activeTopStickyNode.node,
+							type: 'top',
+							nextStickyNode,
+							nextStickyNodeInfo,
+							cached: activeTopStickyNode.cached,
+							anchor: activeTopStickyNode.anchor,
+						});
+					}
+
+					if (activeBottomStickyNode) {
+						let nextStickyNode: DOMElement | undefined;
+						let nextStickyNodeInfo: StickyNodeInfo | undefined;
+						for (let i = activeBottomStickyNodeIndex - 1; i >= 0; i--) {
+							const info = stickyNodes[i]!;
+							if (info.type === 'bottom') {
+								nextStickyNode = info.node;
+								nextStickyNodeInfo = info;
+								break;
+							}
+						}
+
+						activeStickyNodes.push({
+							stickyNode: activeBottomStickyNode.node,
+							type: 'bottom',
+							nextStickyNode,
+							nextStickyNodeInfo,
+							cached: activeBottomStickyNode.cached,
+							anchor: activeBottomStickyNode.anchor,
+						});
 					}
 				}
 			}
@@ -353,128 +650,375 @@ const renderNodeToOutput = (
 			const clipVertically = overflowY === 'hidden' || overflowY === 'scroll';
 
 			if (clipHorizontally || clipVertically) {
+				const regionOffset = output.getRegionAbsoluteOffset();
 				const x1 = clipHorizontally
-					? x + yogaNode.getComputedBorder(Yoga.EDGE_LEFT)
+					? regionOffset.x + x + yogaNode.getComputedBorder(Yoga.EDGE_LEFT)
 					: undefined;
 
 				const x2 = clipHorizontally
-					? x +
+					? regionOffset.x +
+						x +
 						yogaNode.getComputedWidth() -
 						yogaNode.getComputedBorder(Yoga.EDGE_RIGHT)
 					: undefined;
 
 				const y1 = clipVertically
-					? y + yogaNode.getComputedBorder(Yoga.EDGE_TOP)
+					? regionOffset.y + y + yogaNode.getComputedBorder(Yoga.EDGE_TOP)
 					: undefined;
 
 				const y2 = clipVertically
-					? y +
+					? regionOffset.y +
+						y +
 						yogaNode.getComputedHeight() -
 						yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM)
 					: undefined;
+
+				if (verticallyScrollable || horizontallyScrollable) {
+					const scrollHeight = node.internal_scrollState?.scrollHeight ?? 0;
+					const scrollWidth = node.internal_scrollState?.scrollWidth ?? 0;
+					const scrollTop = node.internal_scrollState?.scrollTop ?? 0;
+					const scrollLeft = node.internal_scrollState?.scrollLeft ?? 0;
+
+					const borderLeft = yogaNode.getComputedBorder(Yoga.EDGE_LEFT);
+					const borderTop = yogaNode.getComputedBorder(Yoga.EDGE_TOP);
+
+					let marginRight = 0;
+					let marginBottom = 0;
+
+					if (!clipHorizontally) {
+						marginRight = yogaNode.getComputedBorder(Yoga.EDGE_RIGHT);
+					}
+
+					if (!clipVertically) {
+						marginBottom = yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM);
+					}
+
+					output.startChildRegion({
+						id: node.internal_id,
+						x: x + borderLeft,
+						y: y + borderTop,
+						width:
+							(x2 ?? regionOffset.x + x + width) -
+							(x1 ?? regionOffset.x + x + borderLeft),
+						height:
+							(y2 ?? regionOffset.y + y + height) -
+							(y1 ?? regionOffset.y + y + borderTop),
+						isScrollable: true,
+						isVerticallyScrollable: verticallyScrollable,
+						isHorizontallyScrollable: horizontallyScrollable,
+						scrollState: {
+							scrollTop,
+							scrollLeft,
+							scrollHeight,
+							scrollWidth,
+						},
+						scrollbarVisible: node.internal_scrollbar ?? true,
+						overflowToBackbuffer: node.style.overflowToBackbuffer,
+						marginRight,
+						marginBottom,
+						scrollbarThumbColor: node.style.scrollbarThumbColor,
+						nodeId: node.internal_id,
+						stableScrollback: node.style.stableScrollback,
+					});
+
+					const childOffsetX = -borderLeft;
+					const childOffsetY = -borderTop;
+
+					const allNodesToSkip = [
+						...(nodesToSkip ?? []),
+						...activeStickyNodes.map(a => a.stickyNode),
+					];
+
+					for (const childNode of node.childNodes) {
+						renderNodeToOutput(childNode as DOMElement, output, {
+							offsetX: childOffsetX,
+							offsetY: childOffsetY,
+							absoluteOffsetX: absX + borderLeft - scrollLeft,
+							absoluteOffsetY: absY + borderTop - scrollTop,
+							transformers: newTransformers,
+							skipStaticElements,
+							nodesToSkip: allNodesToSkip,
+							isStickyRender,
+							skipStickyHeaders: true,
+							selectionMap,
+							selectionStyle,
+						});
+					}
+
+					for (const {
+						stickyNode,
+
+						type,
+
+						nextStickyNodeInfo,
+
+						cached,
+
+						anchor,
+					} of activeStickyNodes) {
+						let stickyNodeHeight: number;
+
+						let stickyNodeTop: number;
+
+						let parentTop: number;
+
+						let parentHeight: number;
+
+						let stickyOffsetX: number;
+
+						let stickyNodeId: number;
+
+						const currentBorderTop = yogaNode.getComputedBorder(Yoga.EDGE_TOP);
+						const currentBorderLeft = yogaNode.getComputedBorder(
+							Yoga.EDGE_LEFT,
+						);
+
+						if (cached && anchor) {
+							const staticRenderPosTop = getRelativeTop(anchor, node);
+
+							const staticRenderPosLeft = getRelativeLeft(anchor, node);
+
+							stickyNodeTop = staticRenderPosTop + cached.relativeY!;
+
+							stickyNodeHeight = cached.height!;
+
+							parentTop = staticRenderPosTop + cached.parentRelativeTop!;
+
+							parentHeight = cached.parentHeight!;
+
+							stickyOffsetX =
+								x + currentBorderLeft + staticRenderPosLeft + cached.relativeX!;
+
+							stickyNodeId = cached.nodeId;
+						} else {
+							stickyNodeTop = getRelativeTop(stickyNode, node);
+
+							stickyNodeHeight = stickyNode.yogaNode!.getComputedHeight();
+
+							const parent = stickyNode.parentNode!;
+
+							if (parent?.yogaNode) {
+								parentTop = getRelativeTop(parent, node);
+
+								parentHeight = parent.yogaNode.getComputedHeight();
+							} else {
+								parentTop = 0;
+
+								parentHeight = 1_000_000;
+							}
+
+							stickyOffsetX =
+								x + currentBorderLeft + getRelativeLeft(stickyNode, node);
+
+							stickyNodeId = stickyNode.internal_id;
+						}
+
+						const currentScrollTop = node.internal_scrollState?.scrollTop ?? 0;
+						const currentClientHeight =
+							node.internal_scrollState?.clientHeight ?? 0;
+
+						const parentBottom = parentTop + parentHeight;
+
+						let finalStickyY = 0;
+
+						if (type === 'top') {
+							const maxStickyTop =
+								y +
+								currentBorderTop -
+								currentScrollTop +
+								parentBottom -
+								stickyNodeHeight;
+							const naturalStickyY =
+								y + currentBorderTop - currentScrollTop + stickyNodeTop;
+							const stuckStickyY = y + currentBorderTop;
+
+							finalStickyY = Math.min(
+								Math.max(stuckStickyY, naturalStickyY),
+								maxStickyTop,
+							);
+
+							if (nextStickyNodeInfo) {
+								let nextNodeTop: number | undefined;
+
+								if (nextStickyNodeInfo.cached && nextStickyNodeInfo.anchor) {
+									const staticRenderPosTop = getRelativeTop(
+										nextStickyNodeInfo.anchor,
+										node,
+									);
+									nextNodeTop =
+										staticRenderPosTop + nextStickyNodeInfo.cached.relativeY!;
+								} else if (nextStickyNodeInfo.node?.yogaNode) {
+									nextNodeTop = getRelativeTop(nextStickyNodeInfo.node, node);
+								}
+
+								if (nextNodeTop !== undefined) {
+									const nextNodeTopInViewport =
+										y + currentBorderTop - currentScrollTop + nextNodeTop;
+									if (nextNodeTopInViewport < finalStickyY + stickyNodeHeight) {
+										finalStickyY = nextNodeTopInViewport - stickyNodeHeight;
+									}
+								}
+							}
+						} else {
+							// Bottom sticky
+							const minStickyTop =
+								y + currentBorderTop - currentScrollTop + parentTop;
+							const naturalStickyY =
+								y + currentBorderTop - currentScrollTop + stickyNodeTop;
+							const stuckStickyY =
+								y + currentBorderTop + currentClientHeight - stickyNodeHeight;
+
+							finalStickyY = Math.max(
+								Math.min(stuckStickyY, naturalStickyY),
+								minStickyTop,
+							);
+
+							if (nextStickyNodeInfo) {
+								let nextNodeHeight: number | undefined;
+								let nextNodeTop: number | undefined;
+
+								if (nextStickyNodeInfo.cached && nextStickyNodeInfo.anchor) {
+									nextNodeHeight = nextStickyNodeInfo.cached.height;
+									const staticRenderPosTop = getRelativeTop(
+										nextStickyNodeInfo.anchor,
+										node,
+									);
+									nextNodeTop =
+										staticRenderPosTop + nextStickyNodeInfo.cached.relativeY!;
+								} else if (nextStickyNodeInfo.node?.yogaNode) {
+									nextNodeHeight =
+										nextStickyNodeInfo.node.yogaNode.getComputedHeight();
+									nextNodeTop = getRelativeTop(nextStickyNodeInfo.node, node);
+								}
+
+								if (nextNodeTop !== undefined && nextNodeHeight !== undefined) {
+									const nextNodeBottomInViewport =
+										y +
+										currentBorderTop -
+										currentScrollTop +
+										nextNodeTop +
+										nextNodeHeight;
+									if (nextNodeBottomInViewport > finalStickyY) {
+										finalStickyY = nextNodeBottomInViewport;
+									}
+								}
+							}
+						}
+
+						const stickyOffsetY = finalStickyY;
+
+						let naturalLines: StyledChar[][];
+						let stuckLines: StyledChar[][] | undefined;
+						let naturalHeight: number;
+
+						if (cached) {
+							naturalLines = cached.lines;
+							stuckLines = cached.stuckLines;
+							naturalHeight = cached.endRow - cached.startRow;
+						} else {
+							naturalHeight = stickyNode.yogaNode!.getComputedHeight();
+							const alternateStickyNode = stickyNode.childNodes.find(
+								childNode => (childNode as DOMElement).internalStickyAlternate,
+							) as DOMElement | undefined;
+							const stuckHeight =
+								alternateStickyNode?.yogaNode?.getComputedHeight() ?? 0;
+							const maxHeaderHeight = Math.max(naturalHeight, stuckHeight);
+
+							const renderHeader = (isSticky: boolean) => {
+								const stickyOutput = new Output({
+									width: stickyNode.yogaNode!.getComputedWidth(),
+									height: maxHeaderHeight,
+								});
+
+								renderNodeToOutput(stickyNode, stickyOutput, {
+									offsetX: -stickyNode.yogaNode!.getComputedLeft(),
+									offsetY: -stickyNode.yogaNode!.getComputedTop(),
+									transformers: newTransformers,
+									skipStaticElements,
+									nodesToSkip: undefined,
+									isStickyRender: isSticky,
+									selectionMap,
+									selectionStyle,
+								});
+
+								return stickyOutput.get().lines;
+							};
+
+							naturalLines = renderHeader(false);
+							stuckLines = alternateStickyNode ? renderHeader(true) : undefined;
+						}
+
+						const naturalRow = stickyNodeTop;
+
+						const headerObj = {
+							nodeId: stickyNodeId,
+
+							lines: naturalLines,
+
+							stuckLines,
+
+							styledOutput: stuckLines ?? naturalLines,
+
+							x: stickyOffsetX - (x + currentBorderLeft),
+
+							y: stickyOffsetY - (y + currentBorderTop),
+
+							naturalRow,
+
+							startRow: naturalRow, // Relative to content start
+
+							endRow: naturalRow + naturalHeight,
+
+							scrollContainerId: node.internal_id,
+
+							isStuckOnly: false,
+
+							type,
+						};
+
+						output.addStickyHeader(headerObj);
+					}
+
+					output.endChildRegion();
+				}
 
 				output.clip({x1, x2, y1, y2});
 				clipped = true;
 			}
 		}
 
-		if (node.nodeName === 'ink-root' || node.nodeName === 'ink-box') {
-			for (const childNode of node.childNodes) {
-				renderNodeToOutput(childNode as DOMElement, output, {
-					offsetX: childrenOffsetX,
-					offsetY: childrenOffsetY,
-					transformers: newTransformers,
-					skipStaticElements,
-					nodeToSkip: activeStickyNode,
-					isStickyRender,
-					selectionMap,
-					selectionStyle,
-				});
-			}
-
-			if (activeStickyNode?.yogaNode) {
-				const alternateStickyNode = activeStickyNode.childNodes.find(
-					childNode => (childNode as DOMElement).internalStickyAlternate,
-				) as DOMElement | undefined;
-
-				const nodeToRender = alternateStickyNode ?? activeStickyNode;
-				const nodeToRenderYogaNode = nodeToRender.yogaNode;
-
-				if (!nodeToRenderYogaNode) {
-					return;
+		if (
+			(node.nodeName as string) === 'ink-root' ||
+			(node.nodeName as string) === 'ink-box'
+		) {
+			if (!(verticallyScrollable || horizontallyScrollable)) {
+				const allNodesToSkip = [
+					...(nodesToSkip ?? []),
+					...activeStickyNodes.map(a => a.stickyNode),
+				];
+				for (const childNode of node.childNodes) {
+					renderNodeToOutput(childNode as DOMElement, output, {
+						offsetX: childrenOffsetX,
+						offsetY: childrenOffsetY,
+						absoluteOffsetX: absX,
+						absoluteOffsetY: absY,
+						transformers: newTransformers,
+						skipStaticElements,
+						nodesToSkip: allNodesToSkip,
+						isStickyRender,
+						skipStickyHeaders,
+						selectionMap,
+						selectionStyle,
+					});
 				}
-
-				const stickyYogaNode = activeStickyNode.yogaNode;
-				const borderTop = yogaNode.getComputedBorder(Yoga.EDGE_TOP);
-				const scrollTop = node.internal_scrollState?.scrollTop ?? 0;
-
-				const parent = activeStickyNode.parentNode!;
-				const parentYogaNode = parent.yogaNode!;
-				const parentTop = getRelativeTop(parent, node);
-				const parentHeight = parentYogaNode.getComputedHeight();
-				const parentBottom = parentTop + parentHeight;
-				const stickyNodeHeight = nodeToRenderYogaNode.getComputedHeight();
-				const maxStickyTop = y - scrollTop + parentBottom - stickyNodeHeight;
-
-				const naturalStickyY =
-					y - scrollTop + getRelativeTop(activeStickyNode, node);
-				const stuckStickyY = y + borderTop;
-
-				let finalStickyY = Math.min(
-					Math.max(stuckStickyY, naturalStickyY),
-					maxStickyTop,
-				);
-
-				if (nextStickyNode?.yogaNode) {
-					const nextStickyNodeTop = getRelativeTop(nextStickyNode, node);
-					const nextStickyNodeTopInViewport = y - scrollTop + nextStickyNodeTop;
-					if (nextStickyNodeTopInViewport < finalStickyY + stickyNodeHeight) {
-						finalStickyY = nextStickyNodeTopInViewport - stickyNodeHeight;
-					}
-				}
-
-				let offsetX: number;
-				let offsetY: number;
-
-				if (nodeToRender === alternateStickyNode) {
-					const parentAbsoluteX = x + getRelativeLeft(parent, node);
-					const stickyNodeAbsoluteX =
-						parentAbsoluteX + stickyYogaNode.getComputedLeft();
-					offsetX = stickyNodeAbsoluteX;
-					offsetY = finalStickyY;
-				} else {
-					const parentAbsoluteX = x + getRelativeLeft(parent, node);
-					offsetX = parentAbsoluteX;
-					offsetY = finalStickyY - stickyYogaNode.getComputedTop();
-				}
-
-				renderNodeToOutput(nodeToRender, output, {
-					offsetX,
-					offsetY,
-					transformers: newTransformers,
-					skipStaticElements,
-					isStickyRender: true,
-					selectionMap,
-					selectionStyle,
-				});
 			}
 
 			if (clipped) {
 				output.unclip();
 			}
-
-			if (node.nodeName === 'ink-box') {
-				if (verticallyScrollable) {
-					renderVerticalScrollbar(node, x, y, output);
-				}
-
-				if (horizontallyScrollable) {
-					renderHorizontalScrollbar(node, x, y, output);
-				}
-			}
 		}
 	}
-};
+}
 
 const calculateWrappedCursorPosition = (
 	lines: StyledChar[][],
@@ -545,8 +1089,15 @@ const calculateWrappedCursorPosition = (
 	return {cursorLineIndex, relativeCursorPosition};
 };
 
-function getStickyDescendants(node: DOMElement): DOMElement[] {
-	const stickyDescendants: DOMElement[] = [];
+export type StickyNodeInfo = {
+	node: DOMElement;
+	type: 'top' | 'bottom';
+	cached?: StickyHeader;
+	anchor?: DOMElement;
+};
+
+function getStickyDescendants(node: DOMElement): StickyNodeInfo[] {
+	const stickyDescendants: StickyNodeInfo[] = [];
 
 	for (const child of node.childNodes) {
 		if (child.nodeName === '#text') {
@@ -560,7 +1111,24 @@ function getStickyDescendants(node: DOMElement): DOMElement[] {
 		}
 
 		if (domChild.internalSticky) {
-			stickyDescendants.push(domChild);
+			stickyDescendants.push({
+				node: domChild,
+				type: domChild.internalSticky === 'bottom' ? 'bottom' : 'top',
+			});
+		} else if (
+			domChild.nodeName === 'ink-static-render' &&
+			domChild.cachedRender?.stickyHeaders
+		) {
+			for (const header of domChild.cachedRender.stickyHeaders) {
+				if (header.node) {
+					stickyDescendants.push({
+						node: header.node,
+						type: header.node.internalSticky === 'bottom' ? 'bottom' : 'top',
+						cached: header,
+						anchor: domChild,
+					});
+				}
+			}
 		} else {
 			const overflow = domChild.style.overflow ?? 'visible';
 			const overflowX = domChild.style.overflowX ?? overflow;
@@ -577,7 +1145,7 @@ function getStickyDescendants(node: DOMElement): DOMElement[] {
 }
 
 function getRelativeTop(node: DOMElement, ancestor: DOMElement): number {
-	if (!node.yogaNode) {
+	if (!node.yogaNode || node === ancestor) {
 		return 0;
 	}
 
@@ -587,15 +1155,6 @@ function getRelativeTop(node: DOMElement, ancestor: DOMElement): number {
 	while (parent && parent !== ancestor) {
 		if (parent.yogaNode) {
 			top += parent.yogaNode.getComputedTop();
-
-			if (parent.nodeName === 'ink-box') {
-				const overflow = parent.style.overflow ?? 'visible';
-				const overflowY = parent.style.overflowY ?? overflow;
-
-				if (overflowY === 'scroll') {
-					top -= parent.internal_scrollState?.scrollTop ?? 0;
-				}
-			}
 		}
 
 		parent = parent.parentNode;
@@ -605,7 +1164,7 @@ function getRelativeTop(node: DOMElement, ancestor: DOMElement): number {
 }
 
 function getRelativeLeft(node: DOMElement, ancestor: DOMElement): number {
-	if (!node.yogaNode) {
+	if (!node.yogaNode || node === ancestor) {
 		return 0;
 	}
 
@@ -615,15 +1174,6 @@ function getRelativeLeft(node: DOMElement, ancestor: DOMElement): number {
 	while (parent && parent !== ancestor) {
 		if (parent.yogaNode) {
 			left += parent.yogaNode.getComputedLeft();
-
-			if (parent.nodeName === 'ink-box') {
-				const overflow = parent.style.overflow ?? 'visible';
-				const overflowX = parent.style.overflowX ?? overflow;
-
-				if (overflowX === 'scroll') {
-					left -= parent.internal_scrollState?.scrollLeft ?? 0;
-				}
-			}
 		}
 
 		parent = parent.parentNode;
@@ -631,120 +1181,5 @@ function getRelativeLeft(node: DOMElement, ancestor: DOMElement): number {
 
 	return left;
 }
-
-function renderScrollbar(
-	node: DOMElement,
-	output: Output,
-	layout: ScrollbarBoundingBox,
-	axis: 'vertical' | 'horizontal',
-) {
-	const {thumb} = layout;
-	const thumbColor = node.style.scrollbarThumbColor;
-
-	for (let index = thumb.start; index < thumb.end; index++) {
-		const cellStartHalf = index * 2;
-		const cellEndHalf = (index + 1) * 2;
-
-		const start = Math.max(cellStartHalf, thumb.startHalf);
-		const end = Math.min(cellEndHalf, thumb.endHalf);
-
-		const fill = end - start;
-
-		if (fill > 0) {
-			const char =
-				axis === 'vertical'
-					? fill === 2
-						? '█'
-						: // Fill === 1
-							start % 2 === 0
-							? '▀' // Top half of the cell is filled
-							: '▄' // Bottom half of the cell is filled
-					: fill === 2
-						? '█'
-						: // Fill === 1
-							start % 2 === 0
-							? '▌' // Left half of the cell is filled
-							: '▐'; // Right half of the cell is filled
-
-			const outputX = axis === 'vertical' ? layout.x : layout.x + index;
-			const outputY = axis === 'vertical' ? layout.y + index : layout.y;
-
-			output.write(outputX, outputY, colorize(char, thumbColor, 'foreground'), {
-				transformers: [],
-				preserveBackgroundColor: true,
-			});
-		}
-	}
-}
-
-function renderVerticalScrollbar(
-	node: DOMElement,
-	x: number,
-	y: number,
-	output: Output,
-) {
-	const layout = getVerticalScrollbarBoundingBox(node, {x, y});
-
-	if (layout) {
-		renderScrollbar(node, output, layout, 'vertical');
-	}
-}
-
-function renderHorizontalScrollbar(
-	node: DOMElement,
-	x: number,
-	y: number,
-	output: Output,
-) {
-	const layout = getHorizontalScrollbarBoundingBox(node, {x, y});
-
-	if (layout) {
-		renderScrollbar(node, output, layout, 'horizontal');
-	}
-}
-
-const applySelectionToStyledChars = (
-	styledChars: StyledChar[],
-	selectionState: {range: {start: number; end: number}; currentOffset: number},
-	selectionStyle?: (char: StyledChar) => StyledChar,
-): StyledChar[] => {
-	const {range, currentOffset} = selectionState;
-	const {start, end} = range;
-	let charCodeUnitOffset = 0;
-	const newStyledChars: StyledChar[] = [];
-
-	for (const char of styledChars) {
-		const charLength = char.value.length;
-		const globalOffset = currentOffset + charCodeUnitOffset;
-
-		if (globalOffset >= start && globalOffset < end) {
-			if (selectionStyle) {
-				newStyledChars.push(selectionStyle(char));
-			} else {
-				// 7 is the ANSI code for inverse (reverse video)
-				const newChar = {
-					...char,
-					styles: [...char.styles],
-				};
-
-				newChar.styles.push({
-					type: 'ansi',
-					code: '\u001B[7m',
-					endCode: '\u001B[27m',
-				});
-
-				newStyledChars.push(newChar);
-			}
-		} else {
-			newStyledChars.push(char);
-		}
-
-		charCodeUnitOffset += charLength;
-	}
-
-	selectionState.currentOffset += charCodeUnitOffset;
-
-	return newStyledChars;
-};
 
 export default renderNodeToOutput;

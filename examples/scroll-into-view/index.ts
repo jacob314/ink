@@ -11,5 +11,6 @@ import ScrollIntoView from './scroll-into-view.js';
 render(React.createElement(ScrollIntoView), {
 	alternateBuffer: true,
 	standardReactLayoutTiming: true,
-	exitOnCtrlC: true,
+	incrementalRendering: true,
+	maxFps: 10_000,
 });

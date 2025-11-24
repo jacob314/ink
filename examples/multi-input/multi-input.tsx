@@ -353,6 +353,7 @@ function ChatApp() {
 }
 
 render(<ChatApp />, {
-	alternateBuffer: true,
+	renderProcess: true,
+	terminalBuffer: true,
 	incrementalRendering: true,
 });

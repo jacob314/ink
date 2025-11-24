@@ -27,7 +27,7 @@ export const run: Run = async (fixture, props) => {
 
 	return new Promise<string>((resolve, reject) => {
 		const term = spawn(
-			'node',
+			process.execPath,
 			[
 				'--loader=ts-node/esm',
 				path.join(__dirname, `/../fixtures/${fixture}.tsx`),
