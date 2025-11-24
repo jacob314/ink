@@ -22,6 +22,7 @@ import {calculateScroll} from './scroll.js';
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
 import ResizeObserver, {ResizeObserverEntry} from './resize-observer.js';
 import {Selection} from './selection.js';
+import TerminalBuffer from './terminal-buffer.js';
 
 const noop = () => {};
 
@@ -52,6 +53,8 @@ export type Options = {
 	debugRainbow?: boolean;
 	selectionStyle?: (char: StyledChar) => StyledChar;
 	standardReactLayoutTiming?: boolean;
+	renderProcess?: boolean;
+	terminalBuffer?: boolean;
 };
 
 const rainbowColors = [
@@ -78,6 +81,7 @@ export default class Ink {
 	private readonly throttledLog: LogUpdate;
 	private readonly isScreenReaderEnabled: boolean;
 	private readonly selection: Selection;
+	private readonly terminalBuffer?: TerminalBuffer;
 
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	private isUnmounted: boolean;
@@ -137,6 +141,20 @@ export default class Ink {
 		this.rootNode.onImmediateRender = options.standardReactLayoutTiming
 			? renderMethod
 			: this.onRender; // Original unthrottled method
+		this.rootNode.onImmediateRender = renderMethod;
+
+		if (options.renderProcess || options.terminalBuffer) {
+			this.terminalBuffer = new TerminalBuffer(
+				options.stdout.columns || 80,
+				options.stdout.rows || 24,
+				{
+					debugRainbowEnabled: options.debugRainbow,
+					renderInProcess: !options.renderProcess && options.terminalBuffer,
+					stdout: options.stdout,
+				},
+			);
+		}
+
 		this.log = logUpdate.create(options.stdout, {
 			alternateBuffer: options.alternateBuffer,
 			alternateBufferAlreadyActive: options.alternateBufferAlreadyActive,
@@ -298,15 +316,34 @@ export default class Ink {
 			this.frameIndex++;
 		}
 
-		const {output, outputHeight, staticOutput, styledOutput, cursorPosition} =
-			render(
-				this.rootNode,
-				this.isScreenReaderEnabled,
-				this.selection,
-				this.options.selectionStyle,
-			);
+		const {
+			output,
+			outputHeight,
+			staticOutput,
+			styledOutput,
+			cursorPosition,
+			root,
+		} = render(
+			this.rootNode,
+			this.isScreenReaderEnabled,
+			this.selection,
+			this.options.selectionStyle,
+		);
 
 		this.options.onRender?.({renderTime: performance.now() - startTime});
+
+		if (this.terminalBuffer && root) {
+			const appliedChanges = this.terminalBuffer.update(
+				0,
+				Number.MAX_SAFE_INTEGER,
+				root,
+				cursorPosition,
+			);
+			if (appliedChanges) {
+				void this.terminalBuffer.render();
+			}
+			return;
+		}
 
 		// If <Static> output isn't empty, it means new children have been added to it
 		const hasStaticOutput = staticOutput && staticOutput !== '\n';
