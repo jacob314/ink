@@ -65,6 +65,7 @@
 		"type-fest": "^4.27.0",
 		"wrap-ansi": "^9.0.0",
 		"ws": "^8.18.0",
+		"yargs": "^17.7.2",
 		"yoga-layout": "~3.2.1"
 	},
 	"devDependencies": {
@@ -79,6 +80,7 @@
 		"@types/sinon": "^17.0.3",
 		"@types/stack-utils": "^2.0.2",
 		"@types/ws": "^8.18.1",
+		"@types/yargs": "^17.0.35",
 		"@vdemedes/prettier-config": "^2.0.1",
 		"@xterm/headless": "^5.5.0",
 		"ava": "^5.1.1",

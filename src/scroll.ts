@@ -65,12 +65,34 @@ export function calculateScroll(node: DOMElement): void {
 		return;
 	}
 
-	const {scrollHeight, scrollWidth} = calculateScrollDimensions(node);
+	const {scrollHeight: actualScrollHeight, scrollWidth} =
+		calculateScrollDimensions(node);
+	let scrollHeight = actualScrollHeight;
 
 	const clientHeight =
 		yogaNode.getComputedHeight() -
 		yogaNode.getComputedBorder(Yoga.EDGE_TOP) -
 		yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM);
+
+	if (node.style.stableScrollback && node.style.overflowToBackbuffer) {
+		const actualMaxScrollTop = Math.max(0, actualScrollHeight - clientHeight);
+
+		if (node.internalIsScrollbackDirty) {
+			node.internalMaxScrollTop = actualMaxScrollTop;
+			node.internalIsScrollbackDirty = false;
+		} else {
+			node.internalMaxScrollTop = Math.max(
+				node.internalMaxScrollTop ?? 0,
+				actualMaxScrollTop,
+			);
+		}
+
+		// Ensure we have enough scrollHeight to accommodate internalMaxScrollTop
+		scrollHeight = Math.max(
+			actualScrollHeight,
+			node.internalMaxScrollTop + clientHeight,
+		);
+	}
 
 	const scrollTop = Math.max(
 		0,
@@ -87,6 +109,7 @@ export function calculateScroll(node: DOMElement): void {
 
 	node.internal_scrollState = {
 		scrollHeight,
+		actualScrollHeight,
 		scrollWidth,
 		scrollTop,
 		scrollLeft,
