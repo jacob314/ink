@@ -1,3 +1,4 @@
+import stringWidth from 'string-width';
 import {type StyledChar, styledCharsToString} from '@alcalzone/ansi-tokenize';
 import {type OutputTransformer} from './render-node-to-output.js';
 import {
@@ -169,7 +170,7 @@ export default class Output {
 		this.clips.pop();
 	}
 
-	get(): {output: string; height: number; styledOutput: StyledChar[][]; cursorPosition?: {row: number; col: number} | null} {
+	get(): {output: string; height: number; styledOutput: StyledChar[][]; cursorPosition?: {row: number; col: number}} {
 		// Initialize output array with a specific set of rows, so that margin/padding at the bottom is preserved
 		const output: StyledChar[][] = [];
 
@@ -240,7 +241,7 @@ export default class Output {
 		}
 
 		// Calculate cursor position from cursor target (if exists)
-		let cursorPosition: {row: number; col: number} | null = null;
+		let cursorPosition: {row: number; col: number} | undefined;
 		if (this.cursorFocusInfo) {
 			const {x, y, text, originalText, terminalCursorPosition: charIndex} = this.cursorFocusInfo;
 

@@ -11,7 +11,7 @@ type Result = {
 	outputHeight: number;
 	staticOutput: string;
 	styledOutput: StyledChar[][];
-	cursorPosition?: {row: number; col: number} | null;
+	cursorPosition?: {row: number; col: number};
 };
 
 const calculateSelectionMap = (
