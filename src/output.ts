@@ -6,6 +6,14 @@ import {
 	styledCharsWidth,
 } from './measure-text.js';
 
+type TermCursorFocusInfo = {
+	x: number;
+	y: number;
+	text: string;
+	originalText: string;
+	terminalCursorPosition?: number;
+};
+
 /**
 "Virtual" output class
 
@@ -52,6 +60,7 @@ export default class Output {
 	height: number;
 
 	private readonly operations: Operation[] = [];
+	private cursorFocusInfo: TermCursorFocusInfo | null = null;
 
 	private readonly clips: Clip[] = [];
 
@@ -74,9 +83,26 @@ export default class Output {
 			transformers: OutputTransformer[];
 			lineIndex?: number;
 			preserveBackgroundColor?: boolean;
+			isTerminalCursorFocused?: boolean;
+			terminalCursorPosition?: number;
+			originalText?: string;
 		},
 	): void {
-		const {transformers, lineIndex, preserveBackgroundColor} = options;
+		const {transformers, lineIndex, preserveBackgroundColor, isTerminalCursorFocused, terminalCursorPosition, originalText} = options;
+
+		// Track cursor target position for terminal cursor synchronization
+		// This should be set even for empty text (e.g., empty input field with prefix in separate Text)
+		if (isTerminalCursorFocused) {
+			const text = typeof items === 'string' ? items : '';
+			this.cursorFocusInfo = {
+				x,
+				y,
+				text: text || '',
+				// Use originalText for cursor calculation (before applyPaddingToText)
+				originalText: originalText || text || '',
+				terminalCursorPosition: terminalCursorPosition
+			};
+		}
 
 		if (items.length === 0) {
 			return;
@@ -143,7 +169,7 @@ export default class Output {
 		this.clips.pop();
 	}
 
-	get(): {output: string; height: number; styledOutput: StyledChar[][]} {
+	get(): {output: string; height: number; styledOutput: StyledChar[][]; cursorPosition?: {row: number; col: number} | null} {
 		// Initialize output array with a specific set of rows, so that margin/padding at the bottom is preserved
 		const output: StyledChar[][] = [];
 
@@ -213,6 +239,46 @@ export default class Output {
 			}
 		}
 
+		// Calculate cursor position from cursor target (if exists)
+		let cursorPosition: {row: number; col: number} | null = null;
+		if (this.cursorFocusInfo) {
+			const {x, y, text, originalText, terminalCursorPosition: charIndex} = this.cursorFocusInfo;
+
+			if (charIndex !== undefined) {
+				// Use character index to calculate cursor position
+				// Use originalText (before applyPaddingToText) for correct index calculation
+				const clampedIndex = Math.min(charIndex, originalText.length);
+				const textBeforeCursor = originalText.slice(0, clampedIndex);
+				const lines = textBeforeCursor.split('\n');
+				const lineIndex = lines.length - 1;
+				const currentLine = lines[lineIndex] || '';
+
+				const cursorRow = y + lineIndex;
+				// For multi-line text, all lines start at x position (due to indentString in applyPaddingToText)
+				const expectedCol = x + stringWidth(currentLine);
+
+				cursorPosition = {
+					row: cursorRow,
+					col: expectedCol,
+				};
+			} else {
+				// Use text end (backward compatible)
+				const textLines = text.split('\n');
+				const lastLineIndex = textLines.length - 1;
+				const lastLine = textLines[lastLineIndex] || '';
+
+				const cursorRow = y + lastLineIndex;
+				const expectedCol = lastLineIndex === 0
+					? x + stringWidth(lastLine)
+					: stringWidth(lastLine);
+
+				cursorPosition = {
+					row: cursorRow,
+					col: expectedCol,
+				};
+			}
+		}
+
 		const generatedOutput = output
 			.map(line => {
 				// See https://github.com/vadimdemedes/ink/pull/564#issuecomment-1637022742
@@ -222,10 +288,22 @@ export default class Output {
 			})
 			.join('\n');
 
+		// Adjust cursor position based on actual output (after trimEnd)
+		if (cursorPosition) {
+			const lines = generatedOutput.split('\n');
+			const cursorLine = lines[cursorPosition.row];
+			if (cursorLine !== undefined) {
+				const actualLineWidth = stringWidth(cursorLine);
+				// Cursor should not go beyond the actual trimmed line width
+				cursorPosition.col = Math.min(cursorPosition.col, actualLineWidth);
+			}
+		}
+
 		return {
 			output: generatedOutput,
 			height: output.length,
 			styledOutput: output,
+			cursorPosition,
 		};
 	}
 
