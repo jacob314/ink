@@ -88,3 +88,28 @@ test('DataLimitedLruMap correctly updates size when overwriting existing key', t
 	t.is(map.currentDataSizeValue, 1);
 	t.deepEqual(map.get('a'), {foo: 'baz'});
 });
+
+test('DataLimitedLruMap prevents infinite loop if internal state is inconsistent', t => {
+	const map = new DataLimitedLruMap<number>(10, 100);
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+	const internalMap = (map as any).map;
+
+	map.set('a', 1);
+	map.set('b', 2);
+
+	// Mock delete to return false for 'a', simulating a "ghost" key that is in the tail but not deletable
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+	const originalDelete = internalMap.delete.bind(internalMap);
+	internalMap.delete = (key: string) => {
+		if (key === 'a') return false;
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
+		return originalDelete(key);
+	};
+
+	// Trigger eviction by adding a large key
+	// This would cause an infinite loop if the delete failure wasn't handled
+	const largeKey = 'x'.repeat(200);
+	map.set(largeKey, 999);
+
+	t.pass();
+});
