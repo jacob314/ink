@@ -210,7 +210,9 @@ const renderNodeToOutput = (
 		}
 
 		if (node.nodeName === 'ink-text') {
-			let styledChars = toStyledCharacters(squashTextNodes(node));
+			let text = squashTextNodes(node);
+			const originalText = text; // Save original text before any transformations
+			let styledChars = toStyledCharacters(text);
 			let selectionState:
 				| {
 						range: {start: number; end: number};
@@ -253,8 +255,19 @@ const renderNodeToOutput = (
 					output.write(x, y + index, line, {
 						transformers: newTransformers,
 						lineIndex: index,
+						isTerminalCursorFocused: node.internal_terminalCursorFocus && index === lines.length - 1,
+						terminalCursorPosition: node.internal_terminalCursorPosition,
+						originalText: originalText,
 					});
 				}
+			} else if (node.internal_terminalCursorFocus) {
+				// Even for empty text, we need to call write() to set cursor position
+				output.write(x, y, '', {
+					transformers: newTransformers,
+					isTerminalCursorFocused: true,
+					terminalCursorPosition: node.internal_terminalCursorPosition,
+					originalText: '',
+				});
 			}
 
 			return;

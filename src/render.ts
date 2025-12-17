@@ -104,6 +104,14 @@ export type RenderOptions = {
 	 * Function to transform selected text characters.
 	 */
 	selectionStyle?: (char: StyledChar) => StyledChar;
+
+	/**
+	Enable IME (Input Method Editor) cursor support for CJK input.
+	When enabled, the terminal cursor will be visible and synchronized with the input field position.
+
+	@default false
+	*/
+	enableImeCursor?: boolean;
 };
 
 export type Instance = {
