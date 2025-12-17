@@ -22,6 +22,7 @@ import {calculateScroll} from './scroll.js';
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
 import ResizeObserver, {ResizeObserverEntry} from './resize-observer.js';
 import {Selection} from './selection.js';
+import TerminalBuffer from './terminal-buffer.js';
 
 const noop = () => {};
 
@@ -51,6 +52,9 @@ export type Options = {
 	incrementalRendering?: boolean;
 	debugRainbow?: boolean;
 	selectionStyle?: (char: StyledChar) => StyledChar;
+	standardReactLayoutTiming?: boolean;
+	renderProcess?: boolean;
+	terminalBuffer?: boolean;
 };
 
 const rainbowColors = [
@@ -77,6 +81,7 @@ export default class Ink {
 	private readonly throttledLog: LogUpdate;
 	private readonly isScreenReaderEnabled: boolean;
 	private readonly selection: Selection;
+	private readonly terminalBuffer?: TerminalBuffer;
 
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	private isUnmounted: boolean;
@@ -118,11 +123,30 @@ export default class Ink {
 					leading: true,
 					trailing: true,
 				});
+		const renderMethod = options.standardReactLayoutTiming
+			? () => {
+					queueMicrotask(onRender);
+				}
+			: onRender;
 
-		this.rootNode.onRender = onRender;
-		this.unsubscribeSelection = this.selection.onChange(onRender);
+		this.rootNode.onRender = renderMethod;
+		this.unsubscribeSelection = this.selection.onChange(renderMethod);
 
-		this.rootNode.onImmediateRender = this.onRender;
+		this.rootNode.onImmediateRender = renderMethod;
+
+		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+		if (options.renderProcess || options.terminalBuffer) {
+			this.terminalBuffer = new TerminalBuffer(
+				options.stdout.columns || 80,
+				options.stdout.rows || 24,
+				{
+					debugRainbowEnabled: options.debugRainbow,
+					renderInProcess: !options.renderProcess && options.terminalBuffer,
+					stdout: options.stdout,
+				},
+			);
+		}
+
 		this.log = logUpdate.create(options.stdout, {
 			alternateBuffer: options.alternateBuffer,
 			alternateBufferAlreadyActive: options.alternateBufferAlreadyActive,
@@ -284,7 +308,13 @@ export default class Ink {
 			this.frameIndex++;
 		}
 
-		const {output, outputHeight, staticOutput, styledOutput} = render(
+		const {
+			output,
+			outputHeight,
+			staticOutput,
+			styledOutput,
+			root,
+		} = render(
 			this.rootNode,
 			this.isScreenReaderEnabled,
 			this.selection,
@@ -292,6 +322,18 @@ export default class Ink {
 		);
 
 		this.options.onRender?.({renderTime: performance.now() - startTime});
+
+		if (this.terminalBuffer && root) {
+			const appliedChanges = this.terminalBuffer.update(
+				0,
+				Number.MAX_SAFE_INTEGER,
+				root
+			);
+			if (appliedChanges) {
+				this.terminalBuffer.render();
+			}
+			return;
+		}
 
 		// If <Static> output isn't empty, it means new children have been added to it
 		const hasStaticOutput = staticOutput && staticOutput !== '\n';

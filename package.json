@@ -80,6 +80,7 @@
 		"@types/stack-utils": "^2.0.2",
 		"@types/ws": "^8.18.1",
 		"@vdemedes/prettier-config": "^2.0.1",
+		"@xterm/headless": "^5.5.0",
 		"ava": "^5.1.1",
 		"boxen": "^8.0.1",
 		"delay": "^6.0.0",

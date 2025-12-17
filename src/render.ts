@@ -104,6 +104,32 @@ export type RenderOptions = {
 	 * Function to transform selected text characters.
 	 */
 	selectionStyle?: (char: StyledChar) => StyledChar;
+
+	/*
+	 * If true, Ink will wait for `useLayoutEffect` hooks to run before rendering a frame.
+	 * This is useful for components that need to measure DOM elements or sync state with layout.
+	 *
+	 * **WARNING**: This option is incompatible with the `<Static>` component.
+	 *
+	 * @default false
+	 */
+	standardReactLayoutTiming?: boolean;
+	/**
+	 * Use a separate process-based rendering mode so that render updates are
+	 * not blocked by the main thread
+	 *
+	 * @default false
+	 */
+	renderProcess?: boolean;
+
+	/**
+	 * Use the terminal buffer logic (backbuffer tracking) for rendering.
+	 * If `renderProcess` is also true, this is implied.
+	 * If `renderProcess` is false and this is true, the terminal buffer logic runs in the main process.
+	 *
+	 * @default false
+	 */
+	terminalBuffer?: boolean;
 };
 
 export type Instance = {
@@ -158,6 +184,9 @@ const render = (
 		alternateBuffer: false,
 		alternateBufferAlreadyActive: false,
 		incrementalRendering: false,
+		standardReactLayoutTiming: false,
+		renderProcess: false,
+		terminalBuffer: false,
 		...getOptions(options),
 	};
 

@@ -8,4 +8,12 @@ import React from 'react';
 import {render} from '../../src/index.js';
 import ScrollIntoView from './scroll-into-view.js';
 
-render(React.createElement(ScrollIntoView));
+render(React.createElement(ScrollIntoView), {
+//	renderProcess: true,
+//	terminalBuffer: true,
+	alternateBuffer: true,
+	standardReactLayoutTiming: true,
+///	debugRainbow: true,
+	incrementalRendering: true,
+	maxFps: 10000,
+});
