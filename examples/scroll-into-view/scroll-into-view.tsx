@@ -36,7 +36,6 @@ type Rect = {
 
 function ScrollIntoView() {
 	const [selected, setSelected] = useState(10);
-	const [log, setLog] = useState<Array<{id: string; text: string}>>([]);
 	const [scrollTop, setScrollTop] = useState(10);
 	const [container, setContainer] = useState<DOMElement | undefined>(null);
 	const [selectedItemNode, setSelectedItemNode] = useState<
@@ -62,16 +61,6 @@ function ScrollIntoView() {
 			setSelected(previous => Math.min(items.length - 1, previous + 1));
 		}
 	});
-
-	useEffect(() => {
-		setLog(previousLog => [
-			...previousLog,
-			{
-				id: String(previousLog.length + 1),
-				text: `Selected item is ${selected}`,
-			},
-		]);
-	}, [selected]);
 
 	useLayoutEffect(() => {
 		if (!container || !selectedItemNode || !innerReference.current) {
@@ -103,14 +92,6 @@ function ScrollIntoView() {
 	// useLayoutEffect and static rendering.
 	return (
 		<Box flexDirection="column">
-			<Static items={log}>
-				{item => (
-					<Box key={item.id}>
-						<Text>{item.text}</Text>
-					</Box>
-				)}
-			</Static>
-
 			<Box flexDirection="column" padding={1}>
 				<Text>Use up/down arrows to scroll. Selected: {selected}</Text>
 				<Box
