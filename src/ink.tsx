@@ -119,16 +119,23 @@ export default class Ink {
 					leading: true,
 					trailing: true,
 				});
+		let isRenderScheduled = false;
 		const renderMethod = options.standardReactLayoutTiming
 			? () => {
-					queueMicrotask(onRender);
+					if (isRenderScheduled) return;
+					isRenderScheduled = true;
+					queueMicrotask(() => {
+						isRenderScheduled = false;
+						onRender();
+					});
 				}
 			: onRender;
-
 		this.rootNode.onRender = renderMethod;
 		this.unsubscribeSelection = this.selection.onChange(renderMethod);
 
-		this.rootNode.onImmediateRender = renderMethod;
+		this.rootNode.onImmediateRender = options.standardReactLayoutTiming
+			? renderMethod
+			: this.onRender; // Original unthrottled method
 		this.log = logUpdate.create(options.stdout, {
 			alternateBuffer: options.alternateBuffer,
 			alternateBufferAlreadyActive: options.alternateBufferAlreadyActive,
