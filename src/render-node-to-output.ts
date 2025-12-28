@@ -283,6 +283,15 @@ const renderNodeToOutput = (
 						terminalCursorPosition: node.internal_terminalCursorPosition,
 					});
 				}
+			} else if (node.internal_terminalCursorFocus) {
+				// Empty text but has cursor focus - set cursor position for IME support
+				// This is needed for CJK input where IME candidate window needs cursor position
+				// even before any text is entered
+				output.write(x, y, [], {
+					transformers: newTransformers,
+					isTerminalCursorFocused: true,
+					terminalCursorPosition: 0,
+				});
 			}
 
 			return;

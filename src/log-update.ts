@@ -238,14 +238,16 @@ const createStandard = (
 			// Hide cursor at start of frame rendering
 			buffer += ansiEscapes.cursorHide;
 
+			// Move cursor to end of previous output before erasing (only if we have previous cursor position)
 			if (!isFirstRender && previousCursorPosition) {
 				const moveDown = previousLineCount - 1 - previousCursorPosition.row;
 				if (moveDown > 0) {
 					buffer += ansiEscapes.cursorDown(moveDown);
 				}
-
-				buffer += ansiEscapes.eraseLines(previousLineCount);
 			}
+
+			// Always erase previous lines
+			buffer += ansiEscapes.eraseLines(previousLineCount);
 
 			buffer += output;
 			isFirstRender = false;
