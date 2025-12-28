@@ -16,11 +16,39 @@ export type CursorPosition = {
 	col: number;
 };
 
+/**
+ * Build cursor movement sequence to move from currentRow to targetRow and targetCol.
+ * Uses safe pattern: go to line start → move rows → set column
+ * This avoids issues with intermediate lines being shorter than cursor position.
+ */
+function buildCursorMovement(
+	currentRow: number,
+	targetRow: number,
+	targetCol: number,
+): string {
+	let buffer = '';
+	buffer += ansiEscapes.cursorTo(0);
+	const rowDiff = targetRow - currentRow;
+	if (rowDiff > 0) {
+		buffer += ansiEscapes.cursorDown(rowDiff);
+	} else if (rowDiff < 0) {
+		buffer += ansiEscapes.cursorUp(-rowDiff);
+	}
+
+	buffer += ansiEscapes.cursorTo(targetCol);
+	return buffer;
+}
+
 export type LogUpdate = {
 	clear: () => void;
 	done: () => void;
 	sync: (str: string, cursorPosition?: CursorPosition) => void;
-	(str: string, styledOutput: StyledChar[][], debugRainbowColor?: string, cursorPosition?: CursorPosition): void;
+	(
+		str: string,
+		styledOutput: StyledChar[][],
+		debugRainbowColor?: string,
+		cursorPosition?: CursorPosition,
+	): void;
 };
 
 const enterAlternateBuffer = (
@@ -116,11 +144,6 @@ const createStandard = (
 		enterAlternateBuffer(stream, alternateBufferAlreadyActive);
 	}
 
-	// IME cursor mode: Show terminal cursor once during initialization
-	if (enableImeCursor) {
-		cliCursor.show(stream);
-	}
-
 	const render = (
 		str: string,
 		_styledOutput: StyledChar[][],
@@ -186,31 +209,25 @@ const createStandard = (
 			return;
 		}
 
-		const cursorChanged = enableImeCursor && cursorPosition && previousCursorPosition &&
-			(cursorPosition.row !== previousCursorPosition.row || cursorPosition.col !== previousCursorPosition.col);
+		const cursorChanged =
+			enableImeCursor &&
+			cursorPosition &&
+			previousCursorPosition &&
+			(cursorPosition.row !== previousCursorPosition.row ||
+				cursorPosition.col !== previousCursorPosition.col);
 
 		if (output === previousOutput) {
 			// Output is the same, but cursor position may have changed
 			if (cursorChanged) {
-				let buffer = '';
-
-				const colDiff = cursorPosition!.col - previousCursorPosition!.col;
-				if (colDiff > 0) {
-					buffer += ansiEscapes.cursorForward(colDiff);
-				} else if (colDiff < 0) {
-					buffer += ansiEscapes.cursorBackward(-colDiff);
-				}
-
-				const rowDiff = cursorPosition!.row - previousCursorPosition!.row;
-				if (rowDiff > 0) {
-					buffer += ansiEscapes.cursorDown(rowDiff);
-				} else if (rowDiff < 0) {
-					buffer += ansiEscapes.cursorUp(-rowDiff);
-				}
-
+				const buffer = buildCursorMovement(
+					previousCursorPosition!.row,
+					cursorPosition.row,
+					cursorPosition.col,
+				);
 				previousCursorPosition = cursorPosition;
 				stream.write(buffer);
 			}
+
 			return;
 		}
 
@@ -218,20 +235,23 @@ const createStandard = (
 		let buffer = '';
 
 		if (enableImeCursor && cursorPosition) {
+			// Hide cursor at start of frame rendering
+			buffer += ansiEscapes.cursorHide;
+
 			if (!isFirstRender && previousCursorPosition) {
 				const moveDown = previousLineCount - 1 - previousCursorPosition.row;
 				if (moveDown > 0) {
 					buffer += ansiEscapes.cursorDown(moveDown);
 				}
+
 				buffer += ansiEscapes.eraseLines(previousLineCount);
 			}
 
-			buffer += ansiEscapes.cursorShow;
 			buffer += output;
 			isFirstRender = false;
 
 			// Calculate relative distance within output, regardless of scroll
-			const moveUp = (lineCount - 1) - cursorPosition.row;
+			const moveUp = lineCount - 1 - cursorPosition.row;
 
 			if (moveUp > 0) {
 				buffer += ansiEscapes.cursorUp(moveUp);
@@ -249,8 +269,9 @@ const createStandard = (
 		previousLineCount = lineCount;
 		let outputToWrite = buffer;
 
-		if (debugRainbowColor && !enableImeCursor) {
-			outputToWrite = ansiEscapes.eraseLines(previousLineCount) +
+		if (debugRainbowColor) {
+			outputToWrite =
+				ansiEscapes.eraseLines(previousLineCount) +
 				colorize(output, debugRainbowColor, 'background');
 		}
 
@@ -329,11 +350,6 @@ const createIncremental = (
 
 	if (alternateBuffer) {
 		enterAlternateBuffer(stream, alternateBufferAlreadyActive);
-	}
-
-	// IME cursor mode: Show terminal cursor once during initialization
-	if (enableImeCursor) {
-		cliCursor.show(stream);
 	}
 
 	const render = (
@@ -518,9 +534,11 @@ const createIncremental = (
 			}
 
 			// Move cursor to specified position
-			const moveUp = visibleCount - cursorPosition.row;
-			buffer += (moveUp > 0 ? ansiEscapes.cursorUp(moveUp) : '');
-			buffer += ansiEscapes.cursorTo(cursorPosition.col);
+			buffer += buildCursorMovement(
+				visibleCount,
+				cursorPosition.row,
+				cursorPosition.col,
+			);
 
 			stream.write(buffer);
 			previousOutput = output;

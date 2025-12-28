@@ -210,8 +210,7 @@ const renderNodeToOutput = (
 		}
 
 		if (node.nodeName === 'ink-text') {
-			let text = squashTextNodes(node);
-			const originalText = text; // Save original text before any transformations
+			const text = squashTextNodes(node);
 			let styledChars = toStyledCharacters(text);
 			let selectionState:
 				| {
@@ -251,23 +250,39 @@ const renderNodeToOutput = (
 
 				lines = applyPaddingToStyledChars(node, lines);
 
+				// Calculate cursor line index for terminal cursor positioning
+				let cursorLineIndex = lines.length - 1; // Default to last line
+				if (
+					node.internal_terminalCursorFocus &&
+					node.internal_terminalCursorPosition !== undefined
+				) {
+					let charCount = 0;
+					cursorLineIndex = 0;
+					for (const char of styledChars) {
+						if (charCount >= node.internal_terminalCursorPosition) {
+							break;
+						}
+
+						if (char.value === '\n') {
+							cursorLineIndex++;
+						}
+
+						charCount++;
+					}
+
+					// Clamp to valid range
+					cursorLineIndex = Math.min(cursorLineIndex, lines.length - 1);
+				}
+
 				for (const [index, line] of lines.entries()) {
 					output.write(x, y + index, line, {
 						transformers: newTransformers,
 						lineIndex: index,
-						isTerminalCursorFocused: node.internal_terminalCursorFocus && index === lines.length - 1,
+						isTerminalCursorFocused:
+							node.internal_terminalCursorFocus && index === cursorLineIndex,
 						terminalCursorPosition: node.internal_terminalCursorPosition,
-						originalText: originalText,
 					});
 				}
-			} else if (node.internal_terminalCursorFocus) {
-				// Even for empty text, we need to call write() to set cursor position
-				output.write(x, y, '', {
-					transformers: newTransformers,
-					isTerminalCursorFocused: true,
-					terminalCursorPosition: node.internal_terminalCursorPosition,
-					originalText: '',
-				});
 			}
 
 			return;

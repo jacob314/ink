@@ -8,12 +8,12 @@ import createStdout from './helpers/create-stdout.js';
 // Output class - cursorFocusInfo tests
 // =============================================================================
 
-test('Output.get() returns null cursorPosition when no focus', t => {
+test('Output.get() returns undefined cursorPosition when no focus', t => {
 	const output = new Output({width: 20, height: 5});
 	output.write(0, 0, 'Hello', {transformers: []});
 
 	const result = output.get();
-	t.is(result.cursorPosition, null);
+	t.is(result.cursorPosition, undefined);
 });
 
 test('Output.get() returns cursor at text end when terminalCursorPosition is undefined', t => {
@@ -187,21 +187,6 @@ test('Output.get() handles emoji at middle of string', t => {
 	const result = output.get();
 	// "Hi" = 2 cols, "😀" = 2 cols, total = 4 cols
 	t.deepEqual(result.cursorPosition, {row: 0, col: 4});
-});
-
-test('Output.get() uses originalText for cursor calculation', t => {
-	const output = new Output({width: 20, height: 5});
-	// Simulate applyPaddingToText: original "abc" becomes "  abc" (with 2 space indent)
-	output.write(0, 0, '  abc', {
-		transformers: [],
-		isTerminalCursorFocused: true,
-		terminalCursorPosition: 2, // Position 2 in original "abc"
-		originalText: 'abc',
-	});
-
-	const result = output.get();
-	// Position 2 in "abc" = after "ab", which is col 2 (not affected by padding in text)
-	t.deepEqual(result.cursorPosition, {row: 0, col: 2});
 });
 
 test('Output.get() handles x offset', t => {

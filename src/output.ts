@@ -1,17 +1,16 @@
-import stringWidth from 'string-width';
 import {type StyledChar, styledCharsToString} from '@alcalzone/ansi-tokenize';
 import {type OutputTransformer} from './render-node-to-output.js';
 import {
 	toStyledCharacters,
 	inkCharacterWidth,
 	styledCharsWidth,
+	splitStyledCharsByNewline,
 } from './measure-text.js';
 
 type TermCursorFocusInfo = {
 	x: number;
 	y: number;
-	text: string;
-	originalText: string;
+	styledChars: StyledChar[];
 	terminalCursorPosition?: number;
 };
 
@@ -61,7 +60,7 @@ export default class Output {
 	height: number;
 
 	private readonly operations: Operation[] = [];
-	private cursorFocusInfo: TermCursorFocusInfo | null = null;
+	private cursorFocusInfo: TermCursorFocusInfo | undefined = undefined;
 
 	private readonly clips: Clip[] = [];
 
@@ -86,22 +85,25 @@ export default class Output {
 			preserveBackgroundColor?: boolean;
 			isTerminalCursorFocused?: boolean;
 			terminalCursorPosition?: number;
-			originalText?: string;
 		},
 	): void {
-		const {transformers, lineIndex, preserveBackgroundColor, isTerminalCursorFocused, terminalCursorPosition, originalText} = options;
+		const {
+			transformers,
+			lineIndex,
+			preserveBackgroundColor,
+			isTerminalCursorFocused,
+			terminalCursorPosition,
+		} = options;
 
 		// Track cursor target position for terminal cursor synchronization
-		// This should be set even for empty text (e.g., empty input field with prefix in separate Text)
 		if (isTerminalCursorFocused) {
-			const text = typeof items === 'string' ? items : '';
+			const styledChars =
+				typeof items === 'string' ? toStyledCharacters(items) : items;
 			this.cursorFocusInfo = {
 				x,
 				y,
-				text: text || '',
-				// Use originalText for cursor calculation (before applyPaddingToText)
-				originalText: originalText || text || '',
-				terminalCursorPosition: terminalCursorPosition
+				styledChars,
+				terminalCursorPosition,
 			};
 		}
 
@@ -170,7 +172,12 @@ export default class Output {
 		this.clips.pop();
 	}
 
-	get(): {output: string; height: number; styledOutput: StyledChar[][]; cursorPosition?: {row: number; col: number}} {
+	get(): {
+		output: string;
+		height: number;
+		styledOutput: StyledChar[][];
+		cursorPosition?: {row: number; col: number};
+	} {
 		// Initialize output array with a specific set of rows, so that margin/padding at the bottom is preserved
 		const output: StyledChar[][] = [];
 
@@ -243,39 +250,50 @@ export default class Output {
 		// Calculate cursor position from cursor target (if exists)
 		let cursorPosition: {row: number; col: number} | undefined;
 		if (this.cursorFocusInfo) {
-			const {x, y, text, originalText, terminalCursorPosition: charIndex} = this.cursorFocusInfo;
+			const {
+				x,
+				y,
+				styledChars,
+				terminalCursorPosition: charIndex,
+			} = this.cursorFocusInfo;
 
-			if (charIndex !== undefined) {
-				// Use character index to calculate cursor position
-				// Use originalText (before applyPaddingToText) for correct index calculation
-				const clampedIndex = Math.min(charIndex, originalText.length);
-				const textBeforeCursor = originalText.slice(0, clampedIndex);
-				const lines = textBeforeCursor.split('\n');
-				const lineIndex = lines.length - 1;
-				const currentLine = lines[lineIndex] || '';
-
-				const cursorRow = y + lineIndex;
-				// For multi-line text, all lines start at x position (due to indentString in applyPaddingToText)
-				const expectedCol = x + stringWidth(currentLine);
+			if (charIndex === undefined) {
+				// Use text end (backward compatible)
+				const lines = splitStyledCharsByNewline(styledChars);
+				const lastLineIndex = lines.length - 1;
+				const lastLine = lines[lastLineIndex] ?? [];
 
 				cursorPosition = {
-					row: cursorRow,
-					col: expectedCol,
+					row: y + lastLineIndex,
+					col:
+						lastLineIndex === 0
+							? x + styledCharsWidth(lastLine)
+							: styledCharsWidth(lastLine),
 				};
 			} else {
-				// Use text end (backward compatible)
-				const textLines = text.split('\n');
-				const lastLineIndex = textLines.length - 1;
-				const lastLine = textLines[lastLineIndex] || '';
+				// Use character index to calculate cursor position using StyledChar[]
+				let currentRow = 0;
+				let currentCol = 0;
+				let charCount = 0;
 
-				const cursorRow = y + lastLineIndex;
-				const expectedCol = lastLineIndex === 0
-					? x + stringWidth(lastLine)
-					: stringWidth(lastLine);
+				for (const char of styledChars) {
+					if (charCount >= charIndex) {
+						break;
+					}
+
+					if (char.value === '\n') {
+						currentRow++;
+						currentCol = 0;
+					} else {
+						currentCol += inkCharacterWidth(char.value);
+					}
+
+					charCount++;
+				}
 
 				cursorPosition = {
-					row: cursorRow,
-					col: expectedCol,
+					row: y + currentRow,
+					col: x + currentCol,
 				};
 			}
 		}
@@ -294,7 +312,9 @@ export default class Output {
 			const lines = generatedOutput.split('\n');
 			const cursorLine = lines[cursorPosition.row];
 			if (cursorLine !== undefined) {
-				const actualLineWidth = stringWidth(cursorLine);
+				const actualLineWidth = styledCharsWidth(
+					toStyledCharacters(cursorLine),
+				);
 				// Cursor should not go beyond the actual trimmed line width
 				cursorPosition.col = Math.min(cursorPosition.col, actualLineWidth);
 			}

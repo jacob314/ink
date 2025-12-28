@@ -109,8 +109,7 @@ export default class Ink {
 
 		this.selection = new Selection();
 
-		const unthrottled =
-			options.debug || this.isScreenReaderEnabled || options.enableImeCursor;
+		const unthrottled = options.debug || this.isScreenReaderEnabled;
 		const maxFps = options.maxFps ?? 30;
 		const renderThrottleMs =
 			maxFps > 0 ? Math.max(1, Math.ceil(1000 / maxFps)) : 0;
@@ -288,12 +287,13 @@ export default class Ink {
 			this.frameIndex++;
 		}
 
-		const {output, outputHeight, staticOutput, styledOutput, cursorPosition} = render(
-			this.rootNode,
-			this.isScreenReaderEnabled,
-			this.selection,
-			this.options.selectionStyle,
-		);
+		const {output, outputHeight, staticOutput, styledOutput, cursorPosition} =
+			render(
+				this.rootNode,
+				this.isScreenReaderEnabled,
+				this.selection,
+				this.options.selectionStyle,
+			);
 
 		this.options.onRender?.({renderTime: performance.now() - startTime});
 
@@ -324,7 +324,12 @@ export default class Ink {
 				this.fullStaticOutput += staticOutput;
 			}
 
-			this.log(this.fullStaticOutput + output, styledOutput, debugRainbowColor, cursorPosition ?? undefined);
+			this.log(
+				this.fullStaticOutput + output,
+				styledOutput,
+				debugRainbowColor,
+				cursorPosition,
+			);
 			this.lastOutput = output;
 			return;
 		}
@@ -374,9 +379,15 @@ export default class Ink {
 		}
 
 		if (this.lastOutputHeight >= this.options.stdout.rows) {
-			this.options.stdout.write(
-				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
-			);
+			// Build a single buffer for all operations
+			let buffer = '';
+
+			// Hide cursor at start if IME cursor mode is enabled
+			if (this.options.enableImeCursor) {
+				buffer += ansiEscapes.cursorHide;
+			}
+
+			buffer += ansiEscapes.clearTerminal + this.fullStaticOutput + output;
 
 			// EnableImeCursor mode: position cursor after screen clear
 			if (this.options.enableImeCursor && cursorPosition) {
@@ -384,17 +395,19 @@ export default class Ink {
 				const moveUp = lineCount - 1 - cursorPosition.row;
 
 				if (moveUp > 0) {
-					this.options.stdout.write(ansiEscapes.cursorUp(moveUp));
+					buffer += ansiEscapes.cursorUp(moveUp);
 				}
 
-				this.options.stdout.write(ansiEscapes.cursorTo(cursorPosition.col));
-				this.options.stdout.write(ansiEscapes.cursorShow);
+				buffer += ansiEscapes.cursorTo(cursorPosition.col);
+				buffer += ansiEscapes.cursorShow;
 			}
+
+			this.options.stdout.write(buffer);
 
 			this.lastOutput = output;
 			this.lastOutputHeight = outputHeight;
 			this.lastCursorPosition = cursorPosition;
-			this.log.sync(output, cursorPosition ?? undefined);
+			this.log.sync(output, cursorPosition);
 			return;
 		}
 
@@ -402,7 +415,7 @@ export default class Ink {
 		if (hasStaticOutput) {
 			this.log.clear();
 			this.options.stdout.write(staticOutput);
-			this.log(output, styledOutput, debugRainbowColor, cursorPosition ?? undefined);
+			this.log(output, styledOutput, debugRainbowColor, cursorPosition);
 		}
 
 		const outputChanged = output !== this.lastOutput;
@@ -414,7 +427,12 @@ export default class Ink {
 				cursorPosition.col !== this.lastCursorPosition.col);
 
 		if (!hasStaticOutput && (outputChanged || cursorChanged)) {
-			this.throttledLog(output, styledOutput, debugRainbowColor, cursorPosition ?? undefined);
+			this.throttledLog(
+				output,
+				styledOutput,
+				debugRainbowColor,
+				cursorPosition,
+			);
 		}
 
 		this.lastOutput = output;
@@ -451,9 +469,9 @@ export default class Ink {
 					writeToStderr={this.writeToStderr}
 					exitOnCtrlC={this.options.exitOnCtrlC}
 					selection={this.selection}
+					enableImeCursor={this.options.enableImeCursor}
 					onExit={this.unmount}
 					onRerender={this.onRerender}
-					enableImeCursor={this.options.enableImeCursor}
 				>
 					{node}
 				</App>

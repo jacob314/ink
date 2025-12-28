@@ -1,5 +1,4 @@
-import React, {useState, useRef, useEffect, useReducer} from 'react';
-import stringWidth from 'string-width';
+import React, {useState, useRef, useEffect} from 'react';
 import {render, Text, Box, useInput} from '../../src/index.js';
 
 let messageId = 0;
@@ -10,7 +9,6 @@ function ChatApp() {
 	const [activeField, setActiveField] = useState<'input' | 'name'>('input');
 	const [inputCursor, setInputCursor] = useState(0);
 	const [nameCursor, setNameCursor] = useState(0);
-	const [, forceUpdate] = useReducer(x => x + 1, 0);
 
 	const [messages, setMessages] = useState<
 		Array<{
@@ -83,7 +81,6 @@ function ChatApp() {
 				newPos += newCol;
 				setCursor(newPos);
 				cursorReference.current = newPos;
-				forceUpdate();
 			}
 
 			// At first line, do nothing (keep cursor position)
@@ -109,7 +106,6 @@ function ChatApp() {
 				newPos += newCol;
 				setCursor(newPos);
 				cursorReference.current = newPos;
-				forceUpdate();
 			}
 
 			// At last line, do nothing (keep cursor position)
@@ -121,7 +117,6 @@ function ChatApp() {
 			const newPos = Math.max(0, currentCursor - 1);
 			setCursor(newPos);
 			cursorReference.current = newPos;
-			forceUpdate();
 			return;
 		}
 
@@ -130,7 +125,6 @@ function ChatApp() {
 			const newPos = Math.min(currentText.length, currentCursor + 1);
 			setCursor(newPos);
 			cursorReference.current = newPos;
-			forceUpdate();
 			return;
 		}
 
@@ -138,7 +132,6 @@ function ChatApp() {
 		if (key.home || (key.ctrl && character === 'a')) {
 			setCursor(0);
 			cursorReference.current = 0;
-			forceUpdate();
 			return;
 		}
 
@@ -147,7 +140,6 @@ function ChatApp() {
 			const newPos = currentText.length;
 			setCursor(newPos);
 			cursorReference.current = newPos;
-			forceUpdate();
 			return;
 		}
 
@@ -181,13 +173,11 @@ function ChatApp() {
 		// Backspace - Delete character before cursor
 		if (key.backspace) {
 			if (currentCursor > 0) {
-				setText(previous => {
-					const newText =
-						previous.slice(0, currentCursor - 1) +
-						previous.slice(currentCursor);
-					textReference.current = newText;
-					return newText;
-				});
+				const newText =
+					currentText.slice(0, currentCursor - 1) +
+					currentText.slice(currentCursor);
+				setText(newText);
+				textReference.current = newText;
 				const newPos = currentCursor - 1;
 				setCursor(newPos);
 				cursorReference.current = newPos;
@@ -200,13 +190,11 @@ function ChatApp() {
 		// So we treat delete as backspace (delete character before cursor)
 		if (key.delete) {
 			if (currentCursor > 0) {
-				setText(previous => {
-					const newText =
-						previous.slice(0, currentCursor - 1) +
-						previous.slice(currentCursor);
-					textReference.current = newText;
-					return newText;
-				});
+				const newText =
+					currentText.slice(0, currentCursor - 1) +
+					currentText.slice(currentCursor);
+				setText(newText);
+				textReference.current = newText;
 				const newPos = currentCursor - 1;
 				setCursor(newPos);
 				cursorReference.current = newPos;
@@ -217,14 +205,12 @@ function ChatApp() {
 
 		// General input - Insert at cursor position
 		if (!key.ctrl && !key.meta && character) {
-			setText(previous => {
-				const newText =
-					previous.slice(0, currentCursor) +
-					character +
-					previous.slice(currentCursor);
-				textReference.current = newText;
-				return newText;
-			});
+			const newText =
+				currentText.slice(0, currentCursor) +
+				character +
+				currentText.slice(currentCursor);
+			setText(newText);
+			textReference.current = newText;
 			const newPos = currentCursor + character.length;
 			setCursor(newPos);
 			cursorReference.current = newPos;
@@ -261,7 +247,7 @@ function ChatApp() {
 			<Box marginTop={1}>
 				<Text
 					terminalCursorFocus={activeField === 'name'}
-					terminalCursorPosition={stringWidth(namePrefixString) + nameCursor}
+					terminalCursorPosition={namePrefixString.length + nameCursor}
 					color={activeField === 'name' ? 'green' : 'white'}
 				>
 					{namePrefixString}
