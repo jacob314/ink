@@ -19,6 +19,32 @@ import {
 	toStyledCharacters,
 } from './measure-text.js';
 
+/**
+ * Calculate the line index where the cursor should be positioned.
+ */
+const getCursorLineIndex = (
+	styledChars: StyledChar[],
+	cursorPosition: number,
+	maxLineIndex: number,
+): number => {
+	let lineIndex = 0;
+	let charCount = 0;
+
+	for (const char of styledChars) {
+		if (charCount >= cursorPosition) {
+			break;
+		}
+
+		if (char.value === '\n') {
+			lineIndex++;
+		}
+
+		charCount++;
+	}
+
+	return Math.min(lineIndex, maxLineIndex);
+};
+
 // If parent container is `<Box>`, text nodes will be treated as separate nodes in
 // the tree and will have their own coordinates in the layout.
 // To ensure text nodes are aligned correctly, take X and Y of the first text node
@@ -236,42 +262,38 @@ const renderNodeToOutput = (
 				);
 			}
 
-			if (styledChars.length > 0) {
+			if (styledChars.length > 0 || node.internal_terminalCursorFocus) {
 				let lines: StyledChar[][] = [];
-				const {width: currentWidth} = measureStyledChars(styledChars);
-				const maxWidth = getMaxWidth(yogaNode);
+				let cursorLineIndex = 0;
 
-				if (currentWidth > maxWidth) {
-					const textWrap = node.style.textWrap ?? 'wrap';
-					lines = wrapOrTruncateStyledChars(styledChars, maxWidth, textWrap);
+				if (styledChars.length > 0) {
+					const {width: currentWidth} = measureStyledChars(styledChars);
+					const maxWidth = getMaxWidth(yogaNode);
+
+					lines =
+						currentWidth > maxWidth
+							? wrapOrTruncateStyledChars(
+									styledChars,
+									maxWidth,
+									node.style.textWrap ?? 'wrap',
+								)
+							: splitStyledCharsByNewline(styledChars);
+
+					lines = applyPaddingToStyledChars(node, lines);
+
+					// Calculate cursor line index for terminal cursor positioning
+					cursorLineIndex =
+						node.internal_terminalCursorFocus &&
+						node.internal_terminalCursorPosition !== undefined
+							? getCursorLineIndex(
+									styledChars,
+									node.internal_terminalCursorPosition,
+									lines.length - 1,
+								)
+							: lines.length - 1;
 				} else {
-					lines = splitStyledCharsByNewline(styledChars);
-				}
-
-				lines = applyPaddingToStyledChars(node, lines);
-
-				// Calculate cursor line index for terminal cursor positioning
-				let cursorLineIndex = lines.length - 1; // Default to last line
-				if (
-					node.internal_terminalCursorFocus &&
-					node.internal_terminalCursorPosition !== undefined
-				) {
-					let charCount = 0;
-					cursorLineIndex = 0;
-					for (const char of styledChars) {
-						if (charCount >= node.internal_terminalCursorPosition) {
-							break;
-						}
-
-						if (char.value === '\n') {
-							cursorLineIndex++;
-						}
-
-						charCount++;
-					}
-
-					// Clamp to valid range
-					cursorLineIndex = Math.min(cursorLineIndex, lines.length - 1);
+					// Empty text with cursor focus - use single empty line for IME support
+					lines = [[]];
 				}
 
 				for (const [index, line] of lines.entries()) {
@@ -280,18 +302,9 @@ const renderNodeToOutput = (
 						lineIndex: index,
 						isTerminalCursorFocused:
 							node.internal_terminalCursorFocus && index === cursorLineIndex,
-						terminalCursorPosition: node.internal_terminalCursorPosition,
+						terminalCursorPosition: node.internal_terminalCursorPosition ?? 0,
 					});
 				}
-			} else if (node.internal_terminalCursorFocus) {
-				// Empty text but has cursor focus - set cursor position for IME support
-				// This is needed for CJK input where IME candidate window needs cursor position
-				// even before any text is entered
-				output.write(x, y, [], {
-					transformers: newTransformers,
-					isTerminalCursorFocused: true,
-					terminalCursorPosition: 0,
-				});
 			}
 
 			return;
