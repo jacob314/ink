@@ -1,6 +1,7 @@
 import React from 'react';
 import test from 'ava';
 import chalk from 'chalk';
+import stripAnsi from 'strip-ansi';
 import {render, Box, Text} from '../src/index.js';
 import {renderToString} from './helpers/render-to-string.js';
 import createStdout from './helpers/create-stdout.js';
@@ -20,13 +21,31 @@ test('text with standard color', t => {
 	t.is(output, chalk.green('Test'));
 });
 
+test('text with bold', t => {
+	const output = renderToString(<Text bold>Test</Text>);
+	t.is(output, chalk.bold('Test'));
+});
+
+test('text with bold+color', t => {
+	const output = renderToString(
+		<Text bold color="green">
+			Test
+		</Text>,
+	);
+
+	t.is(output, chalk.bold.green('Test'));
+});
+
 test('text with dim+bold', t => {
 	const output = renderToString(
 		<Text dimColor bold>
 			Test
 		</Text>,
 	);
-	t.is(output, chalk.bold.dim('Test'));
+
+	t.is(stripAnsi(output), 'Test');
+	t.true(output.includes('\u001B[1m'));
+	t.true(output.includes('\u001B[2m'));
 });
 
 test('text with dimmed color', t => {
