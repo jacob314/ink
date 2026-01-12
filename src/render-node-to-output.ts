@@ -39,7 +39,7 @@ const getCursorLineIndex = (
 			lineIndex++;
 		}
 
-		charCount++;
+		charCount += char.value.length;
 	}
 
 	return Math.min(lineIndex, maxLineIndex);

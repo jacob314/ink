@@ -112,11 +112,15 @@ test('Output.get() handles multiline text cursor at first line', t => {
 
 test('Output.get() handles multiline text cursor at second line', t => {
 	const output = new Output({width: 20, height: 5});
-	output.write(0, 0, 'Line1\nLine2\nLine3', {
+	// Simulate actual Ink behavior: write line by line
+	// Cursor is at position 2 in "Line2" (second line)
+	output.write(0, 0, 'Line1', {transformers: []});
+	output.write(0, 1, 'Line2', {
 		transformers: [],
 		isTerminalCursorFocused: true,
-		terminalCursorPosition: 8, // "Line1\nLi" = 6 + 2 = 8
+		terminalCursorPosition: 2, // Position 2 in "Line2"
 	});
+	output.write(0, 2, 'Line3', {transformers: []});
 
 	const result = output.get();
 	t.deepEqual(result.cursorPosition, {row: 1, col: 2});
@@ -216,15 +220,17 @@ test('Output.get() handles y offset', t => {
 
 test('Output.get() handles both x and y offset with multiline', t => {
 	const output = new Output({width: 20, height: 5});
-	output.write(3, 1, 'Line1\nLine2', {
+	// Simulate actual Ink behavior: write line by line with offsets
+	// x=3, y starts at 1
+	output.write(3, 1, 'Line1', {transformers: []});
+	output.write(3, 2, 'Line2', {
 		transformers: [],
 		isTerminalCursorFocused: true,
-		terminalCursorPosition: 8, // "Line1\nLi" = 8
+		terminalCursorPosition: 2, // Position 2 in "Line2"
 	});
 
 	const result = output.get();
-	// Y=1, lineIndex=1, so row = 1+1 = 2
-	// x=3, col in "Line2" = 2, so col = 3+2 = 5
+	// Y=2 (second line at offset 1+1), x=3, col=2, so col = 3+2 = 5
 	t.deepEqual(result.cursorPosition, {row: 2, col: 5});
 });
 
@@ -257,15 +263,17 @@ test('Output.get() backward compatible - no terminalCursorPosition uses text end
 
 test('Output.get() backward compatible - multiline without terminalCursorPosition', t => {
 	const output = new Output({width: 20, height: 5});
-	output.write(0, 0, 'Line1\nLine2', {
+	// Simulate actual Ink behavior: write line by line
+	// Focus on last line without terminalCursorPosition - should go to end
+	output.write(0, 0, 'Line1', {transformers: []});
+	output.write(0, 1, 'Line2', {
 		transformers: [],
 		isTerminalCursorFocused: true,
-		// No terminalCursorPosition - should go to end of last line
+		// No terminalCursorPosition - should go to end of this line
 	});
 
 	const result = output.get();
-	// Last line is "Line2", lastLineIndex=1, so row=1
-	// lastLineIndex !== 0, so col = stringWidth("Line2") = 5
+	// Cursor at end of "Line2" = col 5
 	t.deepEqual(result.cursorPosition, {row: 1, col: 5});
 });
 

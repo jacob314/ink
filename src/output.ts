@@ -288,7 +288,7 @@ export default class Output {
 						currentCol += inkCharacterWidth(char.value);
 					}
 
-					charCount++;
+					charCount += char.value.length;
 				}
 
 				cursorPosition = {
