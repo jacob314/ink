@@ -51,6 +51,7 @@ export type Options = {
 	incrementalRendering?: boolean;
 	debugRainbow?: boolean;
 	selectionStyle?: (char: StyledChar) => StyledChar;
+	standardReactLayoutTiming?: boolean;
 	enableImeCursor?: boolean;
 };
 
@@ -120,11 +121,23 @@ export default class Ink {
 					leading: true,
 					trailing: true,
 				});
+		let isRenderScheduled = false;
+		const renderMethod = options.standardReactLayoutTiming
+			? () => {
+					if (isRenderScheduled) return;
+					isRenderScheduled = true;
+					queueMicrotask(() => {
+						isRenderScheduled = false;
+						onRender();
+					});
+				}
+			: onRender;
+		this.rootNode.onRender = renderMethod;
+		this.unsubscribeSelection = this.selection.onChange(renderMethod);
 
-		this.rootNode.onRender = onRender;
-		this.unsubscribeSelection = this.selection.onChange(onRender);
-
-		this.rootNode.onImmediateRender = this.onRender;
+		this.rootNode.onImmediateRender = options.standardReactLayoutTiming
+			? renderMethod
+			: this.onRender; // Original unthrottled method
 		this.log = logUpdate.create(options.stdout, {
 			alternateBuffer: options.alternateBuffer,
 			alternateBufferAlreadyActive: options.alternateBufferAlreadyActive,

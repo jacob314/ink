@@ -105,6 +105,16 @@ export type RenderOptions = {
 	 */
 	selectionStyle?: (char: StyledChar) => StyledChar;
 
+	/*
+	 * If true, Ink will wait for `useLayoutEffect` hooks to run before rendering a frame.
+	 * This is useful for components that need to measure DOM elements or sync state with layout.
+	 *
+	 * **WARNING**: This option is incompatible with the `<Static>` component.
+	 *
+	 * @default false
+	 */
+	standardReactLayoutTiming?: boolean;
+
 	/**
 	Enable IME (Input Method Editor) cursor support for CJK input.
 	When enabled, the terminal cursor will be visible and synchronized with the input field position.
@@ -166,6 +176,7 @@ const render = (
 		alternateBuffer: false,
 		alternateBufferAlreadyActive: false,
 		incrementalRendering: false,
+		standardReactLayoutTiming: false,
 		...getOptions(options),
 	};
 
