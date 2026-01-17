@@ -99,6 +99,36 @@ const ensureCursorShown = (showCursor: boolean, stream: Writable): void => {
 	}
 };
 
+/**
+ * Alternate Buffer용 IME 커서 위치 설정
+ * Alternate Buffer는 스크롤이 없으므로 절대 좌표로 바로 이동 가능
+ * @returns 새로운 커서 위치 (업데이트된 경우) 또는 이전 위치 (변경 없음)
+ */
+const setAlternateBufferImeCursor = (
+	stream: Writable,
+	cursorPosition: CursorPosition | undefined,
+	previousCursorPosition: CursorPosition | undefined,
+	enableImeCursor: boolean,
+	rows: number,
+): CursorPosition | undefined => {
+	if (!enableImeCursor || !cursorPosition) return previousCursorPosition;
+
+	// 범위 체크: rows가 설정된 경우, 잘린 영역 외부의 커서는 무시
+	if (rows > 0 && cursorPosition.row >= rows) return previousCursorPosition;
+
+	// 커서 위치가 변경되지 않았으면 스킵 (불필요한 I/O 방지)
+	if (
+		previousCursorPosition &&
+		cursorPosition.row === previousCursorPosition.row &&
+		cursorPosition.col === previousCursorPosition.col
+	) {
+		return previousCursorPosition;
+	}
+
+	stream.write(ansiEscapes.cursorTo(cursorPosition.col, cursorPosition.row));
+	return cursorPosition;
+};
+
 const moveCursorDown = (buffer: string[], skippedLines: number): number => {
 	if (skippedLines > 0) {
 		if (skippedLines === 1) {
@@ -204,6 +234,15 @@ const createStandard = (
 				previousRows = rows;
 				previousColumns = columns;
 			}
+
+			// Alternate Buffer에서 IME 커서 처리
+			previousCursorPosition = setAlternateBufferImeCursor(
+				stream,
+				cursorPosition,
+				previousCursorPosition,
+				enableImeCursor,
+				rows,
+			);
 
 			previousOutput = output;
 			return;
@@ -349,6 +388,7 @@ const createIncremental = (
 	let previousColumns = 0;
 	let hasHiddenCursor = false;
 	let alternateBufferStyledOutput: StyledChar[][] = [];
+	let previousCursorPosition: CursorPosition | undefined;
 
 	if (alternateBuffer) {
 		enterAlternateBuffer(stream, alternateBufferAlreadyActive);
@@ -491,6 +531,15 @@ const createIncremental = (
 				previousOutputAlternateBuffer = alternateBufferOutput;
 				previousLines = nextLines;
 			}
+
+			// Alternate Buffer에서 IME 커서 처리
+			previousCursorPosition = setAlternateBufferImeCursor(
+				stream,
+				cursorPosition,
+				previousCursorPosition,
+				enableImeCursor,
+				rows,
+			);
 
 			previousOutput = output;
 			return;
