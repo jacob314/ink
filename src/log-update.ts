@@ -100,9 +100,9 @@ const ensureCursorShown = (showCursor: boolean, stream: Writable): void => {
 };
 
 /**
- * Alternate Buffer용 IME 커서 위치 설정
- * Alternate Buffer는 스크롤이 없으므로 절대 좌표로 바로 이동 가능
- * @returns 새로운 커서 위치 (업데이트된 경우) 또는 이전 위치 (변경 없음)
+ * Set IME cursor position for Alternate Buffer.
+ * Alternate Buffer has no scroll, so we can use absolute coordinates directly.
+ * @returns New cursor position (if updated) or previous position (if unchanged)
  */
 const setAlternateBufferImeCursor = (
 	stream: Writable,
@@ -113,10 +113,9 @@ const setAlternateBufferImeCursor = (
 ): CursorPosition | undefined => {
 	if (!enableImeCursor || !cursorPosition) return previousCursorPosition;
 
-	// 범위 체크: rows가 설정된 경우, 잘린 영역 외부의 커서는 무시
+	// Ignore cursor positions outside the visible area
 	if (rows > 0 && cursorPosition.row >= rows) return previousCursorPosition;
 
-	// 커서 위치가 변경되지 않았으면 스킵 (불필요한 I/O 방지)
 	if (
 		previousCursorPosition &&
 		cursorPosition.row === previousCursorPosition.row &&
@@ -235,7 +234,6 @@ const createStandard = (
 				previousColumns = columns;
 			}
 
-			// Alternate Buffer에서 IME 커서 처리
 			previousCursorPosition = setAlternateBufferImeCursor(
 				stream,
 				cursorPosition,
@@ -532,7 +530,6 @@ const createIncremental = (
 				previousLines = nextLines;
 			}
 
-			// Alternate Buffer에서 IME 커서 처리
 			previousCursorPosition = setAlternateBufferImeCursor(
 				stream,
 				cursorPosition,
