@@ -52,6 +52,7 @@ export type Options = {
 	debugRainbow?: boolean;
 	selectionStyle?: (char: StyledChar) => StyledChar;
 	standardReactLayoutTiming?: boolean;
+	enableImeCursor?: boolean;
 };
 
 const rainbowColors = [
@@ -83,6 +84,7 @@ export default class Ink {
 	private isUnmounted: boolean;
 	private lastOutput: string;
 	private lastOutputHeight: number;
+	private lastCursorPosition?: {row: number; col: number} | undefined;
 	private readonly container: FiberRoot;
 	private readonly rootNode: dom.DOMElement;
 	// This variable is used only in debug mode to store full static output
@@ -142,6 +144,7 @@ export default class Ink {
 			getRows: () => options.stdout.rows,
 			getColumns: () => options.stdout.columns,
 			incremental: options.incrementalRendering,
+			enableImeCursor: options.enableImeCursor,
 		});
 		this.throttledLog = unthrottled
 			? this.log
@@ -297,12 +300,13 @@ export default class Ink {
 			this.frameIndex++;
 		}
 
-		const {output, outputHeight, staticOutput, styledOutput} = render(
-			this.rootNode,
-			this.isScreenReaderEnabled,
-			this.selection,
-			this.options.selectionStyle,
-		);
+		const {output, outputHeight, staticOutput, styledOutput, cursorPosition} =
+			render(
+				this.rootNode,
+				this.isScreenReaderEnabled,
+				this.selection,
+				this.options.selectionStyle,
+			);
 
 		this.options.onRender?.({renderTime: performance.now() - startTime});
 
@@ -333,7 +337,12 @@ export default class Ink {
 				this.fullStaticOutput += staticOutput;
 			}
 
-			this.log(this.fullStaticOutput + output, styledOutput, debugRainbowColor);
+			this.log(
+				this.fullStaticOutput + output,
+				styledOutput,
+				debugRainbowColor,
+				cursorPosition,
+			);
 			this.lastOutput = output;
 			return;
 		}
@@ -383,12 +392,35 @@ export default class Ink {
 		}
 
 		if (this.lastOutputHeight >= this.options.stdout.rows) {
-			this.options.stdout.write(
-				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
-			);
+			// Build a single buffer for all operations
+			let buffer = '';
+
+			// Hide cursor at start if IME cursor mode is enabled
+			if (this.options.enableImeCursor) {
+				buffer += ansiEscapes.cursorHide;
+			}
+
+			buffer += ansiEscapes.clearTerminal + this.fullStaticOutput + output;
+
+			// EnableImeCursor mode: position cursor after screen clear
+			if (this.options.enableImeCursor && cursorPosition) {
+				const lineCount = output.split('\n').length;
+				const moveUp = lineCount - 1 - cursorPosition.row;
+
+				if (moveUp > 0) {
+					buffer += ansiEscapes.cursorUp(moveUp);
+				}
+
+				buffer += ansiEscapes.cursorTo(cursorPosition.col);
+				buffer += ansiEscapes.cursorShow;
+			}
+
+			this.options.stdout.write(buffer);
+
 			this.lastOutput = output;
 			this.lastOutputHeight = outputHeight;
-			this.log.sync(output);
+			this.lastCursorPosition = cursorPosition;
+			this.log.sync(output, cursorPosition);
 			return;
 		}
 
@@ -396,15 +428,29 @@ export default class Ink {
 		if (hasStaticOutput) {
 			this.log.clear();
 			this.options.stdout.write(staticOutput);
-			this.log(output, styledOutput, debugRainbowColor);
+			this.log(output, styledOutput, debugRainbowColor, cursorPosition);
 		}
 
-		if (!hasStaticOutput && output !== this.lastOutput) {
-			this.throttledLog(output, styledOutput, debugRainbowColor);
+		const outputChanged = output !== this.lastOutput;
+		const cursorChanged =
+			cursorPosition !== this.lastCursorPosition &&
+			(!cursorPosition ||
+				!this.lastCursorPosition ||
+				cursorPosition.row !== this.lastCursorPosition.row ||
+				cursorPosition.col !== this.lastCursorPosition.col);
+
+		if (!hasStaticOutput && (outputChanged || cursorChanged)) {
+			this.throttledLog(
+				output,
+				styledOutput,
+				debugRainbowColor,
+				cursorPosition,
+			);
 		}
 
 		this.lastOutput = output;
 		this.lastOutputHeight = outputHeight;
+		this.lastCursorPosition = cursorPosition;
 	};
 
 	recalculateLayout(): void {
@@ -436,6 +482,7 @@ export default class Ink {
 					writeToStderr={this.writeToStderr}
 					exitOnCtrlC={this.options.exitOnCtrlC}
 					selection={this.selection}
+					enableImeCursor={this.options.enableImeCursor}
 					onExit={this.unmount}
 					onRerender={this.onRerender}
 				>

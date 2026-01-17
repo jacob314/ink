@@ -11,11 +11,44 @@ const enableSynchronizedOutput = true;
 const enterSynchronizedOutput = '\u001B[?2026h';
 const exitSynchronizedOutput = '\u001B[?2026l';
 
+export type CursorPosition = {
+	row: number;
+	col: number;
+};
+
+/**
+ * Build cursor movement sequence to move from currentRow to targetRow and targetCol.
+ * Uses safe pattern: go to line start → move rows → set column
+ * This avoids issues with intermediate lines being shorter than cursor position.
+ */
+function buildCursorMovement(
+	currentRow: number,
+	targetRow: number,
+	targetCol: number,
+): string {
+	let buffer = '';
+	buffer += ansiEscapes.cursorTo(0);
+	const rowDiff = targetRow - currentRow;
+	if (rowDiff > 0) {
+		buffer += ansiEscapes.cursorDown(rowDiff);
+	} else if (rowDiff < 0) {
+		buffer += ansiEscapes.cursorUp(-rowDiff);
+	}
+
+	buffer += ansiEscapes.cursorTo(targetCol);
+	return buffer;
+}
+
 export type LogUpdate = {
 	clear: () => void;
 	done: () => void;
-	sync: (str: string) => void;
-	(str: string, styledOutput: StyledChar[][], debugRainbowColor?: string): void;
+	sync: (str: string, cursorPosition?: CursorPosition) => void;
+	(
+		str: string,
+		styledOutput: StyledChar[][],
+		debugRainbowColor?: string,
+		cursorPosition?: CursorPosition,
+	): void;
 };
 
 const enterAlternateBuffer = (
@@ -66,6 +99,35 @@ const ensureCursorShown = (showCursor: boolean, stream: Writable): void => {
 	}
 };
 
+/**
+ * Set IME cursor position for Alternate Buffer.
+ * Alternate Buffer has no scroll, so we can use absolute coordinates directly.
+ * @returns New cursor position (if updated) or previous position (if unchanged)
+ */
+const setAlternateBufferImeCursor = (
+	stream: Writable,
+	cursorPosition: CursorPosition | undefined,
+	previousCursorPosition: CursorPosition | undefined,
+	enableImeCursor: boolean,
+	rows: number,
+): CursorPosition | undefined => {
+	if (!enableImeCursor || !cursorPosition) return previousCursorPosition;
+
+	// Ignore cursor positions outside the visible area
+	if (rows > 0 && cursorPosition.row >= rows) return previousCursorPosition;
+
+	if (
+		previousCursorPosition &&
+		cursorPosition.row === previousCursorPosition.row &&
+		cursorPosition.col === previousCursorPosition.col
+	) {
+		return previousCursorPosition;
+	}
+
+	stream.write(ansiEscapes.cursorTo(cursorPosition.col, cursorPosition.row));
+	return cursorPosition;
+};
+
 const moveCursorDown = (buffer: string[], skippedLines: number): number => {
 	if (skippedLines > 0) {
 		if (skippedLines === 1) {
@@ -86,12 +148,14 @@ const createStandard = (
 		alternateBufferAlreadyActive = false,
 		getRows = () => 0,
 		getColumns = () => 0,
+		enableImeCursor = false,
 	}: {
 		showCursor?: boolean;
 		alternateBuffer?: boolean;
 		alternateBufferAlreadyActive?: boolean;
 		getRows?: () => number;
 		getColumns?: () => number;
+		enableImeCursor?: boolean;
 	} = {},
 ): LogUpdate => {
 	let previousLineCount = 0;
@@ -102,6 +166,8 @@ const createStandard = (
 	let previousRows = 0;
 	let previousColumns = 0;
 	let hasHiddenCursor = false;
+	let isFirstRender = true;
+	let previousCursorPosition: CursorPosition | undefined;
 
 	if (alternateBuffer) {
 		enterAlternateBuffer(stream, alternateBufferAlreadyActive);
@@ -111,8 +177,11 @@ const createStandard = (
 		str: string,
 		_styledOutput: StyledChar[][],
 		debugRainbowColor?: string,
+		cursorPosition?: CursorPosition,
 	) => {
-		hasHiddenCursor = ensureCursorHidden(showCursor, hasHiddenCursor, stream);
+		if (!enableImeCursor && !showCursor) {
+			hasHiddenCursor = ensureCursorHidden(showCursor, hasHiddenCursor, stream);
+		}
 
 		const output = str + '\n';
 
@@ -165,23 +234,87 @@ const createStandard = (
 				previousColumns = columns;
 			}
 
+			previousCursorPosition = setAlternateBufferImeCursor(
+				stream,
+				cursorPosition,
+				previousCursorPosition,
+				enableImeCursor,
+				rows,
+			);
+
 			previousOutput = output;
 			return;
 		}
 
+		const cursorChanged =
+			enableImeCursor &&
+			cursorPosition &&
+			previousCursorPosition &&
+			(cursorPosition.row !== previousCursorPosition.row ||
+				cursorPosition.col !== previousCursorPosition.col);
+
 		if (output === previousOutput) {
+			// Output is the same, but cursor position may have changed
+			if (cursorChanged) {
+				const buffer = buildCursorMovement(
+					previousCursorPosition!.row,
+					cursorPosition.row,
+					cursorPosition.col,
+				);
+				previousCursorPosition = cursorPosition;
+				stream.write(buffer);
+			}
+
 			return;
 		}
 
+		const lineCount = output.split('\n').length;
+		let buffer = '';
+
+		if (enableImeCursor && cursorPosition) {
+			// Hide cursor at start of frame rendering
+			buffer += ansiEscapes.cursorHide;
+
+			// Move cursor to end of previous output before erasing (only if we have previous cursor position)
+			if (!isFirstRender && previousCursorPosition) {
+				const moveDown = previousLineCount - 1 - previousCursorPosition.row;
+				if (moveDown > 0) {
+					buffer += ansiEscapes.cursorDown(moveDown);
+				}
+			}
+
+			// Always erase previous lines
+			buffer += ansiEscapes.eraseLines(previousLineCount);
+
+			buffer += output;
+			isFirstRender = false;
+
+			// Calculate relative distance within output, regardless of scroll
+			const moveUp = lineCount - 1 - cursorPosition.row;
+
+			if (moveUp > 0) {
+				buffer += ansiEscapes.cursorUp(moveUp);
+			}
+
+			buffer += ansiEscapes.cursorTo(cursorPosition.col);
+			buffer += ansiEscapes.cursorShow;
+
+			previousCursorPosition = cursorPosition;
+		} else {
+			buffer = ansiEscapes.eraseLines(previousLineCount) + output;
+		}
+
 		previousOutput = output;
-		let outputToWrite = output;
+		previousLineCount = lineCount;
+		let outputToWrite = buffer;
 
-		outputToWrite = debugRainbowColor
-			? colorize(outputToWrite, debugRainbowColor, 'background')
-			: outputToWrite;
+		if (debugRainbowColor) {
+			outputToWrite =
+				ansiEscapes.eraseLines(previousLineCount) +
+				colorize(output, debugRainbowColor, 'background');
+		}
 
-		stream.write(ansiEscapes.eraseLines(previousLineCount) + outputToWrite);
-		previousLineCount = output.split('\n').length;
+		stream.write(outputToWrite);
 	};
 
 	render.clear = () => {
@@ -204,15 +337,17 @@ const createStandard = (
 		previousOutput = '';
 		previousLineCount = 0;
 
-		ensureCursorShown(showCursor, stream);
-		hasHiddenCursor = false;
+		if (!showCursor && !enableImeCursor) {
+			ensureCursorShown(showCursor, stream);
+			hasHiddenCursor = false;
+		}
 
 		if (alternateBuffer) {
 			exitAlternateBuffer(stream, lastFrame);
 		}
 	};
 
-	render.sync = (str: string) => {
+	render.sync = (str: string, _cursorPosition?: CursorPosition) => {
 		if (alternateBuffer) {
 			previousOutput = str;
 			return;
@@ -234,12 +369,14 @@ const createIncremental = (
 		alternateBufferAlreadyActive = false,
 		getRows = () => 0,
 		getColumns = () => 0,
+		enableImeCursor = false,
 	}: {
 		showCursor?: boolean;
 		alternateBuffer?: boolean;
 		alternateBufferAlreadyActive?: boolean;
 		getRows?: () => number;
 		getColumns?: () => number;
+		enableImeCursor?: boolean;
 	} = {},
 ): LogUpdate => {
 	let previousLines: string[] = [];
@@ -249,6 +386,7 @@ const createIncremental = (
 	let previousColumns = 0;
 	let hasHiddenCursor = false;
 	let alternateBufferStyledOutput: StyledChar[][] = [];
+	let previousCursorPosition: CursorPosition | undefined;
 
 	if (alternateBuffer) {
 		enterAlternateBuffer(stream, alternateBufferAlreadyActive);
@@ -258,8 +396,11 @@ const createIncremental = (
 		str: string,
 		styledOutput: StyledChar[][],
 		debugRainbowColor?: string,
+		cursorPosition?: CursorPosition,
 	) => {
-		hasHiddenCursor = ensureCursorHidden(showCursor, hasHiddenCursor, stream);
+		if (!enableImeCursor && !showCursor) {
+			hasHiddenCursor = ensureCursorHidden(showCursor, hasHiddenCursor, stream);
+		}
 
 		const output = str + '\n';
 
@@ -389,6 +530,14 @@ const createIncremental = (
 				previousLines = nextLines;
 			}
 
+			previousCursorPosition = setAlternateBufferImeCursor(
+				stream,
+				cursorPosition,
+				previousCursorPosition,
+				enableImeCursor,
+				rows,
+			);
+
 			previousOutput = output;
 			return;
 		}
@@ -401,6 +550,49 @@ const createIncremental = (
 		const nextLines = output.split('\n');
 		const nextCount = nextLines.length;
 		const visibleCount = nextCount - 1;
+
+		if (enableImeCursor && cursorPosition) {
+			let buffer = '';
+
+			if (output === '\n' || previousOutput.length === 0) {
+				// First rendering
+				buffer += output;
+				buffer += ansiEscapes.cursorSavePosition;
+			} else {
+				// Incremental rendering after cursor restore
+				buffer += ansiEscapes.cursorRestorePosition;
+
+				if (nextCount < previousCount) {
+					buffer += ansiEscapes.eraseLines(previousCount - nextCount + 1);
+					buffer += ansiEscapes.cursorUp(visibleCount);
+				} else {
+					buffer += ansiEscapes.cursorUp(previousCount - 1);
+				}
+
+				for (let i = 0; i < visibleCount; i++) {
+					if (nextLines[i] === previousLines[i]) {
+						buffer += ansiEscapes.cursorNextLine;
+						continue;
+					}
+
+					buffer += ansiEscapes.eraseLine + nextLines[i] + '\n';
+				}
+
+				buffer += ansiEscapes.cursorSavePosition;
+			}
+
+			// Move cursor to specified position
+			buffer += buildCursorMovement(
+				visibleCount,
+				cursorPosition.row,
+				cursorPosition.col,
+			);
+
+			stream.write(buffer);
+			previousOutput = output;
+			previousLines = nextLines;
+			return;
+		}
 
 		if (output === '\n' || previousOutput.length === 0) {
 			let outputToWrite = output;
@@ -478,15 +670,17 @@ const createIncremental = (
 		previousOutput = '';
 		previousLines = [];
 
-		ensureCursorShown(showCursor, stream);
-		hasHiddenCursor = false;
+		if (!showCursor && !enableImeCursor) {
+			ensureCursorShown(showCursor, stream);
+			hasHiddenCursor = false;
+		}
 
 		if (alternateBuffer) {
 			exitAlternateBuffer(stream, lastFrame);
 		}
 	};
 
-	render.sync = (str: string) => {
+	render.sync = (str: string, _cursorPosition?: CursorPosition) => {
 		if (alternateBuffer) {
 			previousOutput = str;
 			return;
@@ -509,6 +703,7 @@ const create = (
 		incremental = false,
 		getRows,
 		getColumns,
+		enableImeCursor = false,
 	}: {
 		showCursor?: boolean;
 		alternateBuffer?: boolean;
@@ -516,6 +711,7 @@ const create = (
 		incremental?: boolean;
 		getRows?: () => number;
 		getColumns?: () => number;
+		enableImeCursor?: boolean;
 	} = {},
 ): LogUpdate => {
 	if (incremental) {
@@ -525,6 +721,7 @@ const create = (
 			alternateBufferAlreadyActive,
 			getRows,
 			getColumns,
+			enableImeCursor,
 		});
 	}
 
@@ -534,6 +731,7 @@ const create = (
 		alternateBufferAlreadyActive,
 		getRows,
 		getColumns,
+		enableImeCursor,
 	});
 };
 

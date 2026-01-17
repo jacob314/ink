@@ -11,6 +11,7 @@ type Result = {
 	outputHeight: number;
 	staticOutput: string;
 	styledOutput: StyledChar[][];
+	cursorPosition?: {row: number; col: number};
 };
 
 const calculateSelectionMap = (
@@ -235,6 +236,7 @@ const renderer = (
 			output: generatedOutput,
 			height: outputHeight,
 			styledOutput,
+			cursorPosition,
 		} = output.get();
 
 		return {
@@ -244,6 +246,7 @@ const renderer = (
 			// interactive output will override last line of static output
 			staticOutput: staticOutput ? `${staticOutput.get().output}\n` : '',
 			styledOutput,
+			cursorPosition,
 		};
 	}
 

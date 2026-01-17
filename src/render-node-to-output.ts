@@ -19,6 +19,32 @@ import {
 	toStyledCharacters,
 } from './measure-text.js';
 
+/**
+ * Calculate the line index where the cursor should be positioned.
+ */
+const getCursorLineIndex = (
+	styledChars: StyledChar[],
+	cursorPosition: number,
+	maxLineIndex: number,
+): number => {
+	let lineIndex = 0;
+	let charCount = 0;
+
+	for (const char of styledChars) {
+		if (charCount >= cursorPosition) {
+			break;
+		}
+
+		if (char.value === '\n') {
+			lineIndex++;
+		}
+
+		charCount += char.value.length;
+	}
+
+	return Math.min(lineIndex, maxLineIndex);
+};
+
 // If parent container is `<Box>`, text nodes will be treated as separate nodes in
 // the tree and will have their own coordinates in the layout.
 // To ensure text nodes are aligned correctly, take X and Y of the first text node
@@ -210,7 +236,8 @@ const renderNodeToOutput = (
 		}
 
 		if (node.nodeName === 'ink-text') {
-			let styledChars = toStyledCharacters(squashTextNodes(node));
+			const text = squashTextNodes(node);
+			let styledChars = toStyledCharacters(text);
 			let selectionState:
 				| {
 						range: {start: number; end: number};
@@ -235,24 +262,47 @@ const renderNodeToOutput = (
 				);
 			}
 
-			if (styledChars.length > 0) {
+			if (styledChars.length > 0 || node.internal_terminalCursorFocus) {
 				let lines: StyledChar[][] = [];
-				const {width: currentWidth} = measureStyledChars(styledChars);
-				const maxWidth = getMaxWidth(yogaNode);
+				let cursorLineIndex = 0;
 
-				if (currentWidth > maxWidth) {
-					const textWrap = node.style.textWrap ?? 'wrap';
-					lines = wrapOrTruncateStyledChars(styledChars, maxWidth, textWrap);
+				if (styledChars.length > 0) {
+					const {width: currentWidth} = measureStyledChars(styledChars);
+					const maxWidth = getMaxWidth(yogaNode);
+
+					lines =
+						currentWidth > maxWidth
+							? wrapOrTruncateStyledChars(
+									styledChars,
+									maxWidth,
+									node.style.textWrap ?? 'wrap',
+								)
+							: splitStyledCharsByNewline(styledChars);
+
+					lines = applyPaddingToStyledChars(node, lines);
+
+					// Calculate cursor line index for terminal cursor positioning
+					cursorLineIndex =
+						node.internal_terminalCursorFocus &&
+						node.internal_terminalCursorPosition !== undefined
+							? getCursorLineIndex(
+									styledChars,
+									node.internal_terminalCursorPosition,
+									lines.length - 1,
+								)
+							: lines.length - 1;
 				} else {
-					lines = splitStyledCharsByNewline(styledChars);
+					// Empty text with cursor focus - use single empty line for IME support
+					lines = [[]];
 				}
-
-				lines = applyPaddingToStyledChars(node, lines);
 
 				for (const [index, line] of lines.entries()) {
 					output.write(x, y + index, line, {
 						transformers: newTransformers,
 						lineIndex: index,
+						isTerminalCursorFocused:
+							node.internal_terminalCursorFocus && index === cursorLineIndex,
+						terminalCursorPosition: node.internal_terminalCursorPosition ?? 0,
 					});
 				}
 			}

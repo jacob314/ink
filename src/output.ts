@@ -4,7 +4,15 @@ import {
 	toStyledCharacters,
 	inkCharacterWidth,
 	styledCharsWidth,
+	splitStyledCharsByNewline,
 } from './measure-text.js';
+
+type TermCursorFocusInfo = {
+	x: number;
+	y: number;
+	styledChars: StyledChar[];
+	terminalCursorPosition?: number;
+};
 
 /**
 "Virtual" output class
@@ -52,6 +60,7 @@ export default class Output {
 	height: number;
 
 	private readonly operations: Operation[] = [];
+	private cursorFocusInfo: TermCursorFocusInfo | undefined = undefined;
 
 	private readonly clips: Clip[] = [];
 
@@ -74,9 +83,29 @@ export default class Output {
 			transformers: OutputTransformer[];
 			lineIndex?: number;
 			preserveBackgroundColor?: boolean;
+			isTerminalCursorFocused?: boolean;
+			terminalCursorPosition?: number;
 		},
 	): void {
-		const {transformers, lineIndex, preserveBackgroundColor} = options;
+		const {
+			transformers,
+			lineIndex,
+			preserveBackgroundColor,
+			isTerminalCursorFocused,
+			terminalCursorPosition,
+		} = options;
+
+		// Track cursor target position for terminal cursor synchronization
+		if (isTerminalCursorFocused) {
+			const styledChars =
+				typeof items === 'string' ? toStyledCharacters(items) : items;
+			this.cursorFocusInfo = {
+				x,
+				y,
+				styledChars,
+				terminalCursorPosition,
+			};
+		}
 
 		if (items.length === 0) {
 			return;
@@ -143,7 +172,12 @@ export default class Output {
 		this.clips.pop();
 	}
 
-	get(): {output: string; height: number; styledOutput: StyledChar[][]} {
+	get(): {
+		output: string;
+		height: number;
+		styledOutput: StyledChar[][];
+		cursorPosition?: {row: number; col: number};
+	} {
 		// Initialize output array with a specific set of rows, so that margin/padding at the bottom is preserved
 		const output: StyledChar[][] = [];
 
@@ -213,6 +247,57 @@ export default class Output {
 			}
 		}
 
+		// Calculate cursor position from cursor target (if exists)
+		let cursorPosition: {row: number; col: number} | undefined;
+		if (this.cursorFocusInfo) {
+			const {
+				x,
+				y,
+				styledChars,
+				terminalCursorPosition: charIndex,
+			} = this.cursorFocusInfo;
+
+			if (charIndex === undefined) {
+				// Use text end (backward compatible)
+				const lines = splitStyledCharsByNewline(styledChars);
+				const lastLineIndex = lines.length - 1;
+				const lastLine = lines[lastLineIndex] ?? [];
+
+				cursorPosition = {
+					row: y + lastLineIndex,
+					col:
+						lastLineIndex === 0
+							? x + styledCharsWidth(lastLine)
+							: styledCharsWidth(lastLine),
+				};
+			} else {
+				// Use character index to calculate cursor position using StyledChar[]
+				let currentRow = 0;
+				let currentCol = 0;
+				let charCount = 0;
+
+				for (const char of styledChars) {
+					if (charCount >= charIndex) {
+						break;
+					}
+
+					if (char.value === '\n') {
+						currentRow++;
+						currentCol = 0;
+					} else {
+						currentCol += inkCharacterWidth(char.value);
+					}
+
+					charCount += char.value.length;
+				}
+
+				cursorPosition = {
+					row: y + currentRow,
+					col: x + currentCol,
+				};
+			}
+		}
+
 		const generatedOutput = output
 			.map(line => {
 				// See https://github.com/vadimdemedes/ink/pull/564#issuecomment-1637022742
@@ -222,10 +307,24 @@ export default class Output {
 			})
 			.join('\n');
 
+		// Adjust cursor position based on actual output (after trimEnd)
+		if (cursorPosition) {
+			const lines = generatedOutput.split('\n');
+			const cursorLine = lines[cursorPosition.row];
+			if (cursorLine !== undefined) {
+				const actualLineWidth = styledCharsWidth(
+					toStyledCharacters(cursorLine),
+				);
+				// Cursor should not go beyond the actual trimmed line width
+				cursorPosition.col = Math.min(cursorPosition.col, actualLineWidth);
+			}
+		}
+
 		return {
 			output: generatedOutput,
 			height: output.length,
 			styledOutput: output,
+			cursorPosition,
 		};
 	}
 
