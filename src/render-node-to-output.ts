@@ -17,33 +17,8 @@ import {
 	measureStyledChars,
 	splitStyledCharsByNewline,
 	toStyledCharacters,
+	getPositionAtOffset,
 } from './measure-text.js';
-
-/**
- * Calculate the line index where the cursor should be positioned.
- */
-const getCursorLineIndex = (
-	styledChars: StyledChar[],
-	cursorPosition: number,
-	maxLineIndex: number,
-): number => {
-	let lineIndex = 0;
-	let charCount = 0;
-
-	for (const char of styledChars) {
-		if (charCount >= cursorPosition) {
-			break;
-		}
-
-		if (char.value === '\n') {
-			lineIndex++;
-		}
-
-		charCount += char.value.length;
-	}
-
-	return Math.min(lineIndex, maxLineIndex);
-};
 
 // If parent container is `<Box>`, text nodes will be treated as separate nodes in
 // the tree and will have their own coordinates in the layout.
@@ -285,9 +260,11 @@ const renderNodeToOutput = (
 					cursorLineIndex =
 						node.internal_terminalCursorFocus &&
 						node.internal_terminalCursorPosition !== undefined
-							? getCursorLineIndex(
-									styledChars,
-									node.internal_terminalCursorPosition,
+							? Math.min(
+									getPositionAtOffset(
+										styledChars,
+										node.internal_terminalCursorPosition,
+									).row,
 									lines.length - 1,
 								)
 							: lines.length - 1;

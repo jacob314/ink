@@ -256,3 +256,34 @@ export function measureStyledChars(styledChars: StyledChar[]): {
 	const dimensions = {width, height};
 	return dimensions;
 }
+
+/**
+ * Calculate row and column position at a given character offset.
+ * This is the unified cursor position calculation logic used by both
+ * render-node-to-output.ts and output.ts.
+ */
+export function getPositionAtOffset(
+	styledChars: StyledChar[],
+	targetOffset: number,
+): {row: number; col: number} {
+	let row = 0;
+	let col = 0;
+	let charCount = 0;
+
+	for (const char of styledChars) {
+		if (charCount >= targetOffset) {
+			break;
+		}
+
+		if (char.value === '\n') {
+			row++;
+			col = 0;
+		} else {
+			col += inkCharacterWidth(char.value);
+		}
+
+		charCount += char.value.length;
+	}
+
+	return {row, col};
+}

@@ -5,6 +5,7 @@ import {
 	inkCharacterWidth,
 	styledCharsWidth,
 	splitStyledCharsByNewline,
+	getPositionAtOffset,
 } from './measure-text.js';
 
 type TermCursorFocusInfo = {
@@ -272,28 +273,10 @@ export default class Output {
 				};
 			} else {
 				// Use character index to calculate cursor position using StyledChar[]
-				let currentRow = 0;
-				let currentCol = 0;
-				let charCount = 0;
-
-				for (const char of styledChars) {
-					if (charCount >= charIndex) {
-						break;
-					}
-
-					if (char.value === '\n') {
-						currentRow++;
-						currentCol = 0;
-					} else {
-						currentCol += inkCharacterWidth(char.value);
-					}
-
-					charCount += char.value.length;
-				}
-
+				const {row, col} = getPositionAtOffset(styledChars, charIndex);
 				cursorPosition = {
-					row: y + currentRow,
-					col: x + currentCol,
+					row: y + row,
+					col: x + col,
 				};
 			}
 		}
