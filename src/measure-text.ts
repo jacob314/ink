@@ -5,8 +5,22 @@ import {
 	type StyledChar,
 } from '@alcalzone/ansi-tokenize';
 import {DataLimitedLruMap} from './data-limited-lru-map.js';
+import {type DOMNode} from './dom.js';
 
 export type StringWidth = (text: string) => number;
+
+/**
+ * Character offset range within a text sequence.
+ * Used for mapping DOM nodes to their character positions.
+ */
+export type CharOffsetRange = {start: number; end: number};
+
+/**
+ * Maps DOM nodes to their character offset ranges within squashed text.
+ * This is the same character counting method used by getPositionAtOffset(),
+ * ensuring consistent cursor position calculations across the codebase.
+ */
+export type CharOffsetMap = Map<DOMNode, CharOffsetRange>;
 
 const defaultStringWidth: StringWidth = stringWidth;
 
@@ -261,6 +275,15 @@ export function measureStyledChars(styledChars: StyledChar[]): {
  * Calculate row and column position at a given character offset.
  * This is the unified cursor position calculation logic used by both
  * render-node-to-output.ts and output.ts.
+ *
+ * The character offset counting method matches CharOffsetMap used in
+ * selection.ts and squash-text-nodes.ts, ensuring consistent behavior
+ * between cursor positioning and text selection.
+ *
+ * Character counting rules:
+ * - Each StyledChar counts by its value.length (handles combining marks)
+ * - Newlines ('\n') advance row and reset column
+ * - Other characters add their visual width to column
  */
 export function getPositionAtOffset(
 	styledChars: StyledChar[],
