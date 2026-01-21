@@ -14,7 +14,7 @@ import wrapAnsi from 'wrap-ansi';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
-import logUpdate, {type LogUpdate} from './log-update.js';
+import logUpdate, {type LogUpdate, positionImeCursor} from './log-update.js';
 import instances from './instances.js';
 import App from './components/App.js';
 import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
@@ -405,13 +405,7 @@ export default class Ink {
 			// EnableImeCursor mode: position cursor after screen clear
 			if (this.options.enableImeCursor && cursorPosition) {
 				const lineCount = output.split('\n').length;
-				const moveUp = lineCount - 1 - cursorPosition.row;
-
-				if (moveUp > 0) {
-					buffer += ansiEscapes.cursorUp(moveUp);
-				}
-
-				buffer += ansiEscapes.cursorTo(cursorPosition.col);
+				buffer += positionImeCursor(lineCount, cursorPosition);
 				buffer += ansiEscapes.cursorShow;
 			}
 

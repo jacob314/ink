@@ -1,7 +1,11 @@
 import React from 'react';
 import test from 'ava';
+import Yoga from 'yoga-layout';
 import {render, Box, Text} from '../src/index.js';
 import Output from '../src/output.js';
+import renderer from '../src/renderer.js';
+import * as dom from '../src/dom.js';
+import applyStyles from '../src/styles.js';
 import createStdout from './helpers/create-stdout.js';
 
 // =============================================================================
@@ -275,6 +279,74 @@ test('Output.get() backward compatible - multiline without terminalCursorPositio
 	const result = output.get();
 	// Cursor at end of "Line2" = col 5
 	t.deepEqual(result.cursorPosition, {row: 1, col: 5});
+});
+
+// =============================================================================
+// Integration tests with renderer directly
+// =============================================================================
+
+test('renderer returns correct cursorPosition for multiline Text', t => {
+	const root = dom.createNode('ink-root');
+	root.yogaNode?.setWidth(100);
+
+	const textNode = dom.createNode('ink-text');
+	textNode.internal_terminalCursorFocus = true;
+	textNode.internal_terminalCursorPosition = 6; // Start of "World" in "Hello\nWorld"
+
+	const text = dom.createTextNode('Hello\nWorld');
+	dom.appendChildNode(textNode, text as unknown as dom.DOMElement);
+	dom.appendChildNode(root, textNode);
+
+	root.yogaNode?.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
+
+	const result = renderer(root, false);
+	t.deepEqual(result.cursorPosition, {row: 1, col: 0});
+});
+
+test('renderer returns correct cursorPosition for wrapped Text', t => {
+	const root = dom.createNode('ink-root');
+	root.yogaNode?.setWidth(5); // Only 5 columns wide
+
+	const textNode = dom.createNode('ink-text');
+	applyStyles(textNode.yogaNode!, {textWrap: 'wrap'});
+	textNode.internal_terminalCursorFocus = true;
+	textNode.internal_terminalCursorPosition = 6; // Start of "World" in "Hello World" (wrapped)
+
+	const text = dom.createTextNode('Hello World');
+	dom.appendChildNode(textNode, text as unknown as dom.DOMElement);
+	dom.appendChildNode(root, textNode);
+
+	root.yogaNode?.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
+
+	const result = renderer(root, false);
+	// "Hello" fits in 5 columns. Space is the 6th char (index 5).
+	// "World" starts at index 6.
+	// In Ink's wrapStyledChars, "Hello" is line 1, "World" is line 2.
+	// Index 6 ("W") is at row 1, col 0.
+	t.deepEqual(result.cursorPosition, {row: 1, col: 0});
+});
+
+test('renderer returns correct cursorPosition for Text with padding', t => {
+	const root = dom.createNode('ink-root');
+	root.yogaNode?.setWidth(100);
+
+	const boxNode = dom.createNode('ink-box');
+	applyStyles(boxNode.yogaNode!, {paddingLeft: 2, paddingTop: 1});
+
+	const textNode = dom.createNode('ink-text');
+	textNode.internal_terminalCursorFocus = true;
+	textNode.internal_terminalCursorPosition = 2; // "l" in "Hello"
+
+	const text = dom.createTextNode('Hello');
+	dom.appendChildNode(textNode, text as unknown as dom.DOMElement);
+	dom.appendChildNode(boxNode, textNode);
+	dom.appendChildNode(root, boxNode);
+
+	root.yogaNode?.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
+
+	const result = renderer(root, false);
+	// Top padding 1, Left padding 2 + cursor offset 2 = row 1, col 4
+	t.deepEqual(result.cursorPosition, {row: 1, col: 4});
 });
 
 // =============================================================================

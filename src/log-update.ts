@@ -39,6 +39,25 @@ function buildCursorMovement(
 	return buffer;
 }
 
+/**
+ * Position terminal cursor for IME support.
+ * Calculates relative distance from the end of output to the cursor position.
+ */
+export function positionImeCursor(
+	lineCount: number,
+	cursorPosition: CursorPosition,
+): string {
+	let buffer = '';
+	const moveUp = lineCount - 1 - cursorPosition.row;
+
+	if (moveUp > 0) {
+		buffer += ansiEscapes.cursorUp(moveUp);
+	}
+
+	buffer += ansiEscapes.cursorTo(cursorPosition.col);
+	return buffer;
+}
+
 export type LogUpdate = {
 	clear: () => void;
 	done: () => void;
@@ -234,6 +253,10 @@ const createStandard = (
 				previousColumns = columns;
 			}
 
+			if (enableImeCursor && !cursorPosition) {
+				stream.write(ansiEscapes.cursorHide);
+			}
+
 			previousCursorPosition = setAlternateBufferImeCursor(
 				stream,
 				cursorPosition,
@@ -241,6 +264,10 @@ const createStandard = (
 				enableImeCursor,
 				rows,
 			);
+
+			if (enableImeCursor && cursorPosition) {
+				stream.write(ansiEscapes.cursorShow);
+			}
 
 			previousOutput = output;
 			return;
@@ -271,7 +298,7 @@ const createStandard = (
 		const lineCount = output.split('\n').length;
 		let buffer = '';
 
-		if (enableImeCursor && cursorPosition) {
+		if (enableImeCursor) {
 			// Hide cursor at start of frame rendering
 			buffer += ansiEscapes.cursorHide;
 
@@ -289,15 +316,10 @@ const createStandard = (
 			buffer += output;
 			isFirstRender = false;
 
-			// Calculate relative distance within output, regardless of scroll
-			const moveUp = lineCount - 1 - cursorPosition.row;
-
-			if (moveUp > 0) {
-				buffer += ansiEscapes.cursorUp(moveUp);
+			if (cursorPosition) {
+				buffer += positionImeCursor(lineCount, cursorPosition);
+				buffer += ansiEscapes.cursorShow;
 			}
-
-			buffer += ansiEscapes.cursorTo(cursorPosition.col);
-			buffer += ansiEscapes.cursorShow;
 
 			previousCursorPosition = cursorPosition;
 		} else {
@@ -551,7 +573,7 @@ const createIncremental = (
 		const nextCount = nextLines.length;
 		const visibleCount = nextCount - 1;
 
-		if (enableImeCursor && cursorPosition) {
+		if (enableImeCursor) {
 			let buffer = '';
 
 			if (output === '\n' || previousOutput.length === 0) {
@@ -581,12 +603,16 @@ const createIncremental = (
 				buffer += ansiEscapes.cursorSavePosition;
 			}
 
-			// Move cursor to specified position
-			buffer += buildCursorMovement(
-				visibleCount,
-				cursorPosition.row,
-				cursorPosition.col,
-			);
+			if (cursorPosition) {
+				// Move cursor to specified position
+				buffer += buildCursorMovement(
+					visibleCount,
+					cursorPosition.row,
+					cursorPosition.col,
+				);
+			} else {
+				buffer += ansiEscapes.cursorHide;
+			}
 
 			stream.write(buffer);
 			previousOutput = output;

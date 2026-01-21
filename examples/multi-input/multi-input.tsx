@@ -260,4 +260,6 @@ function ChatApp() {
 
 render(<ChatApp />, {
 	enableImeCursor: true,
+	alternateBuffer: true,
+	incrementalRendering: true,
 });
