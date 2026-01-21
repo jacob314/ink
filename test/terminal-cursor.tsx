@@ -1,7 +1,11 @@
 import React from 'react';
 import test from 'ava';
+import Yoga from 'yoga-layout';
 import {render, Box, Text} from '../src/index.js';
 import Output from '../src/output.js';
+import renderer from '../src/renderer.js';
+import * as dom from '../src/dom.js';
+import applyStyles from '../src/styles.js';
 import createStdout from './helpers/create-stdout.js';
 
 // =============================================================================
@@ -278,6 +282,131 @@ test('Output.get() backward compatible - multiline without terminalCursorPositio
 });
 
 // =============================================================================
+// Integration tests with renderer directly
+// =============================================================================
+
+test('renderer returns correct cursorPosition for multiline Text', t => {
+	const root = dom.createNode('ink-root');
+	root.yogaNode?.setWidth(100);
+
+	const textNode = dom.createNode('ink-text');
+	textNode.internal_terminalCursorFocus = true;
+	textNode.internal_terminalCursorPosition = 6; // Start of "World" in "Hello\nWorld"
+
+	const text = dom.createTextNode('Hello\nWorld');
+	dom.appendChildNode(textNode, text as unknown as dom.DOMElement);
+	dom.appendChildNode(root, textNode);
+
+	root.yogaNode?.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
+
+	const result = renderer(root, false);
+	t.deepEqual(result.cursorPosition, {row: 1, col: 0});
+});
+
+test('renderer returns correct cursorPosition for wrapped Text', t => {
+	const root = dom.createNode('ink-root');
+	root.yogaNode?.setWidth(5); // Only 5 columns wide
+
+	const textNode = dom.createNode('ink-text');
+	applyStyles(textNode.yogaNode!, {textWrap: 'wrap'});
+	textNode.internal_terminalCursorFocus = true;
+	textNode.internal_terminalCursorPosition = 6; // Start of "World" in "Hello World" (wrapped)
+
+	const text = dom.createTextNode('Hello World');
+	dom.appendChildNode(textNode, text as unknown as dom.DOMElement);
+	dom.appendChildNode(root, textNode);
+
+	root.yogaNode?.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
+
+	const result = renderer(root, false);
+	// "Hello" fits in 5 columns. Space is the 6th char (index 5).
+	// "World" starts at index 6.
+	// In Ink's wrapStyledChars, "Hello" is line 1, "World" is line 2.
+	// Index 6 ("W") is at row 1, col 0.
+	t.deepEqual(result.cursorPosition, {row: 1, col: 0});
+});
+
+test('renderer returns correct cursorPosition for Text with padding', t => {
+	const root = dom.createNode('ink-root');
+	root.yogaNode?.setWidth(100);
+
+	const boxNode = dom.createNode('ink-box');
+	applyStyles(boxNode.yogaNode!, {paddingLeft: 2, paddingTop: 1});
+
+	const textNode = dom.createNode('ink-text');
+	textNode.internal_terminalCursorFocus = true;
+	textNode.internal_terminalCursorPosition = 2; // "l" in "Hello"
+
+	const text = dom.createTextNode('Hello');
+	dom.appendChildNode(textNode, text as unknown as dom.DOMElement);
+	dom.appendChildNode(boxNode, textNode);
+	dom.appendChildNode(root, boxNode);
+
+	root.yogaNode?.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
+
+	const result = renderer(root, false);
+	// Top padding 1, Left padding 2 + cursor offset 2 = row 1, col 4
+	t.deepEqual(result.cursorPosition, {row: 1, col: 4});
+});
+
+test('renderer returns correct cursorPosition for wrapped Text with dropped spaces', t => {
+	const root = dom.createNode('ink-root');
+	root.yogaNode?.setWidth(5); // Only 5 columns wide
+
+	const textNode = dom.createNode('ink-text');
+	applyStyles(textNode.yogaNode!, {textWrap: 'wrap'});
+	textNode.internal_terminalCursorFocus = true;
+	// "Hello   World"
+	// 01234567890
+	// Hello (5)
+	// spaces at 5, 6, 7 (dropped)
+	// World starts at 8
+	textNode.internal_terminalCursorPosition = 6; // On one of the dropped spaces
+
+	const text = dom.createTextNode('Hello   World');
+	dom.appendChildNode(textNode, text as unknown as dom.DOMElement);
+	dom.appendChildNode(root, textNode);
+
+	root.yogaNode?.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
+
+	const result = renderer(root, false);
+	// Currently, if it's in the "gap" created by dropping spaces, it will fall through
+	// and default to the last line's beginning if not caught.
+	// In "Hello   World" with width 5, lines are ["Hello", "World"].
+	// TargetOffset = 6.
+	// Line 0: offset 0, len 5. 6 >= 0 but 6 < 5 is false.
+	// Synchronization: next line starts with "W" which is at original index 8.
+	// CurrentOriginalOffset becomes 8.
+	// Line 1: offset 8, len 5. 6 >= 8 is false.
+	// Not found. Defaults to last line (1), relative pos 0.
+	t.deepEqual(result.cursorPosition, {row: 1, col: 0});
+});
+
+test('renderer returns correct cursorPosition for wrapped Text with dropped spaces - after gap', t => {
+	const root = dom.createNode('ink-root');
+	root.yogaNode?.setWidth(5);
+
+	const textNode = dom.createNode('ink-text');
+	applyStyles(textNode.yogaNode!, {textWrap: 'wrap'});
+	textNode.internal_terminalCursorFocus = true;
+	textNode.internal_terminalCursorPosition = 9; // On "o" in "World" (index 8 is "W")
+
+	const text = dom.createTextNode('Hello   World');
+	dom.appendChildNode(textNode, text as unknown as dom.DOMElement);
+	dom.appendChildNode(root, textNode);
+
+	root.yogaNode?.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
+
+	const result = renderer(root, false);
+	// TargetOffset = 9.
+	// Line 0: offset 0, len 5. 9 < 5 false.
+	// Sync: offset becomes 8.
+	// Line 1: offset 8, len 5. 9 >= 8 and 9 < 13 true.
+	// CursorLineIndex = 1, relativeCursorPosition = 9 - 8 = 1.
+	t.deepEqual(result.cursorPosition, {row: 1, col: 1});
+});
+
+// =============================================================================
 // Integration tests with Text component
 // =============================================================================
 
@@ -286,7 +415,6 @@ test('Text with terminalCursorFocus returns cursor position', t => {
 	render(<Text terminalCursorFocus>Hello</Text>, {
 		stdout,
 		debug: true,
-		enableImeCursor: true,
 	});
 
 	// The stdout.write spy captures the raw output, but cursor position
@@ -302,7 +430,7 @@ test('Text with terminalCursorFocus and terminalCursorPosition', t => {
 		<Text terminalCursorFocus terminalCursorPosition={2}>
 			Hello
 		</Text>,
-		{stdout, debug: true, enableImeCursor: true},
+		{stdout, debug: true},
 	);
 
 	const output = stdout.get();
@@ -315,7 +443,6 @@ test('Text with undefined children and cursor focus', t => {
 	render(<Text terminalCursorFocus terminalCursorPosition={0} />, {
 		stdout,
 		debug: true,
-		enableImeCursor: true,
 	});
 
 	// Should not throw
@@ -328,7 +455,7 @@ test('Text with null children and cursor focus', t => {
 		<Text terminalCursorFocus terminalCursorPosition={0}>
 			{null}
 		</Text>,
-		{stdout, debug: true, enableImeCursor: true},
+		{stdout, debug: true},
 	);
 
 	// Should not throw
@@ -345,7 +472,7 @@ test('Multiple Text components - only focused one affects cursor', t => {
 			</Text>
 			<Text>Also not focused</Text>
 		</Box>,
-		{stdout, debug: true, enableImeCursor: true},
+		{stdout, debug: true},
 	);
 
 	const output = stdout.get();
@@ -363,7 +490,7 @@ test('Switching focus between Text components', t => {
 			</Text>
 			<Text>Second</Text>
 		</Box>,
-		{stdout, debug: true, enableImeCursor: true},
+		{stdout, debug: true},
 	);
 
 	let output = stdout.get();

@@ -17,7 +17,6 @@ import {
 	measureStyledChars,
 	splitStyledCharsByNewline,
 	toStyledCharacters,
-	getPositionAtOffset,
 } from './measure-text.js';
 
 // If parent container is `<Box>`, text nodes will be treated as separate nodes in
@@ -240,6 +239,7 @@ const renderNodeToOutput = (
 			if (styledChars.length > 0 || node.internal_terminalCursorFocus) {
 				let lines: StyledChar[][] = [];
 				let cursorLineIndex = 0;
+				let relativeCursorPosition = node.internal_terminalCursorPosition ?? 0;
 
 				if (styledChars.length > 0) {
 					const {width: currentWidth} = measureStyledChars(styledChars);
@@ -257,17 +257,19 @@ const renderNodeToOutput = (
 					lines = applyPaddingToStyledChars(node, lines);
 
 					// Calculate cursor line index for terminal cursor positioning
-					cursorLineIndex =
+					cursorLineIndex = lines.length - 1;
+
+					if (
 						node.internal_terminalCursorFocus &&
 						node.internal_terminalCursorPosition !== undefined
-							? Math.min(
-									getPositionAtOffset(
-										styledChars,
-										node.internal_terminalCursorPosition,
-									).row,
-									lines.length - 1,
-								)
-							: lines.length - 1;
+					) {
+						({cursorLineIndex, relativeCursorPosition} =
+							calculateWrappedCursorPosition(
+								lines,
+								styledChars,
+								node.internal_terminalCursorPosition,
+							));
+					}
 				} else {
 					// Empty text with cursor focus - use single empty line for IME support
 					lines = [[]];
@@ -279,7 +281,7 @@ const renderNodeToOutput = (
 						lineIndex: index,
 						isTerminalCursorFocused:
 							node.internal_terminalCursorFocus && index === cursorLineIndex,
-						terminalCursorPosition: node.internal_terminalCursorPosition ?? 0,
+						terminalCursorPosition: relativeCursorPosition,
 					});
 				}
 			}
@@ -472,6 +474,54 @@ const renderNodeToOutput = (
 			}
 		}
 	}
+};
+
+const calculateWrappedCursorPosition = (
+	lines: StyledChar[][],
+	styledChars: StyledChar[],
+	targetOffset: number,
+): {cursorLineIndex: number; relativeCursorPosition: number} => {
+	const styledCharToOffset = new Map<StyledChar, number>();
+	let offset = 0;
+
+	for (const char of styledChars) {
+		styledCharToOffset.set(char, offset);
+		offset += char.value.length;
+	}
+
+	let cursorLineIndex = lines.length - 1;
+	let relativeCursorPosition = targetOffset;
+	let currentLineStartOffset = 0;
+
+	for (const [i, line] of lines.entries()) {
+		if (line.length > 0) {
+			const firstChar = line.find(char => styledCharToOffset.has(char));
+
+			if (firstChar) {
+				const firstCharOffset = styledCharToOffset.get(firstChar)!;
+
+				if (targetOffset >= currentLineStartOffset) {
+					cursorLineIndex = i;
+					relativeCursorPosition = Math.max(0, targetOffset - firstCharOffset);
+				}
+
+				const lastChar = line.findLast(char => styledCharToOffset.has(char));
+
+				if (lastChar) {
+					currentLineStartOffset =
+						styledCharToOffset.get(lastChar)! + lastChar.value.length;
+				}
+			}
+		} else if (i > 0 && targetOffset >= currentLineStartOffset) {
+			// Handle empty lines (usually caused by \n)
+			cursorLineIndex = i;
+			relativeCursorPosition = targetOffset - currentLineStartOffset;
+			// Advance currentLineStartOffset past the \n
+			currentLineStartOffset++;
+		}
+	}
+
+	return {cursorLineIndex, relativeCursorPosition};
 };
 
 function getStickyDescendants(node: DOMElement): DOMElement[] {

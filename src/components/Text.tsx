@@ -63,7 +63,7 @@ export type Props = {
 	readonly wrap?: Styles['textWrap'];
 
 	/**
-	When enabled with `enableImeCursor: true` in render options, the terminal cursor will be positioned at the end of this Text component's content. Useful for input fields where IME (Input Method Editor) cursor synchronization is needed.
+	When enabled, the terminal cursor will be positioned at the end of this Text component's content. Useful for input fields where IME (Input Method Editor) cursor synchronization is needed.
 	*/
 	readonly terminalCursorFocus?: boolean;
 

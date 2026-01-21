@@ -1,9 +1,30 @@
 import React, {useState, useRef, useEffect} from 'react';
-import {render, Text, Box, useInput} from '../../src/index.js';
+import {render, Text, Box, useInput, useStdout} from '../../src/index.js';
 
 let messageId = 0;
 
 function ChatApp() {
+	const {stdout} = useStdout();
+	const [dimensions, setDimensions] = useState({
+		columns: stdout.columns,
+		rows: stdout.rows,
+	});
+
+	useEffect(() => {
+		const handler = () => {
+			setDimensions({
+				columns: stdout.columns,
+				rows: stdout.rows,
+			});
+		};
+
+		stdout.on('resize', handler);
+
+		return () => {
+			stdout.off('resize', handler);
+		};
+	}, [stdout]);
+
 	const [input, setInput] = useState('');
 	const [name, setName] = useState('');
 	const [activeField, setActiveField] = useState<'input' | 'name'>('input');
@@ -17,11 +38,28 @@ function ChatApp() {
 		}>
 	>([]);
 
+	const [spinnerIndex, setSpinnerIndex] = useState(0);
+	const [isProcessing, setIsProcessing] = useState(true);
+
 	// Use refs to always have the latest values
 	const inputReference = useRef('');
 	const nameReference = useRef('');
 	const inputCursorReference = useRef(0);
 	const nameCursorReference = useRef(0);
+
+	useEffect(() => {
+		if (!isProcessing) {
+			return;
+		}
+
+		const timer = setInterval(() => {
+			setSpinnerIndex(index => (index + 1) % 10);
+		}, 100);
+
+		return () => {
+			clearInterval(timer);
+		};
+	}, [isProcessing]);
 
 	useEffect(() => {
 		inputReference.current = input;
@@ -42,6 +80,11 @@ function ChatApp() {
 	};
 
 	useInput((character, key) => {
+		if (character === 'p' && !key.ctrl && !key.meta) {
+			setIsProcessing(previous => !previous);
+			return;
+		}
+
 		// Switch focus with Tab key only
 		if (key.tab) {
 			setActiveField(current => (current === 'input' ? 'name' : 'input'));
@@ -218,40 +261,91 @@ function ChatApp() {
 	});
 
 	const namePrefixString = 'Enter your name: ';
+
+	const renderTextWithCursor = (
+		text: string,
+		cursor: number,
+		isFocused: boolean,
+	) => {
+		if (!isFocused) {
+			return text;
+		}
+
+		const before = text.slice(0, cursor);
+		const char = text[cursor] ?? ' ';
+		const after = text.slice(cursor + 1);
+
+		return (
+			<>
+				{before}
+				<Text inverse>{char}</Text>
+				{after}
+			</>
+		);
+	};
+
 	return (
-		<Box flexDirection="column" padding={1}>
-			<Text bold color="cyan">
-				=== Multi-Input Arrow Key Test ===
-			</Text>
-			<Text dimColor>
-				Arrow keys (↑↓←→) or Ctrl+P/N/B/F to move. Tab/Up/Down to switch fields.
-				Home/End or Ctrl+A/E to jump.
-			</Text>
-
-			<Box flexDirection="column" marginTop={1}>
-				{messages.map(message => (
-					<Text key={message.id}>{message.text}</Text>
-				))}
-			</Box>
-
-			<Box marginTop={1}>
-				<Text>Enter your message: </Text>
-				<Text
-					terminalCursorFocus={activeField === 'input'}
-					terminalCursorPosition={inputCursor}
-					color={activeField === 'input' ? 'green' : 'white'}
-				>
-					{input}
+		<Box
+			flexDirection="column"
+			width={dimensions.columns}
+			height={dimensions.rows - 1}
+		>
+			<Box flexDirection="column" flexGrow={1} padding={1}>
+				<Text bold color="cyan">
+					=== Multi-Input Arrow Key Test ===
 				</Text>
+
+				<Box marginTop={1}>
+					<Text color="yellow">
+						{isProcessing
+							? ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'][spinnerIndex]
+							: '⏸'}
+					</Text>
+					<Text> {isProcessing ? 'Processing...' : 'Paused'}</Text>
+				</Box>
+
+				<Box flexDirection="column" marginTop={1} flexGrow={1}>
+					{messages.map(message => (
+						<Text key={message.id}>{message.text}</Text>
+					))}
+				</Box>
+
+				<Box marginTop={1}>
+					<Text>Enter your message: </Text>
+					<Text
+						terminalCursorFocus={activeField === 'input'}
+						terminalCursorPosition={inputCursor}
+						color={activeField === 'input' ? 'green' : 'white'}
+					>
+						{renderTextWithCursor(input, inputCursor, activeField === 'input')}
+					</Text>
+				</Box>
+				<Box marginTop={1}>
+					<Text
+						terminalCursorFocus={activeField === 'name'}
+						terminalCursorPosition={namePrefixString.length + nameCursor}
+						color={activeField === 'name' ? 'green' : 'white'}
+					>
+						{renderTextWithCursor(
+							namePrefixString + name,
+							namePrefixString.length + nameCursor,
+							activeField === 'name',
+						)}
+					</Text>
+				</Box>
 			</Box>
-			<Box marginTop={1}>
-				<Text
-					terminalCursorFocus={activeField === 'name'}
-					terminalCursorPosition={namePrefixString.length + nameCursor}
-					color={activeField === 'name' ? 'green' : 'white'}
-				>
-					{namePrefixString}
-					{name}
+
+			<Box
+				borderTop
+				paddingX={1}
+				borderStyle="single"
+				borderBottom={false}
+				borderLeft={false}
+				borderRight={false}
+			>
+				<Text dimColor>
+					Arrow keys (↑↓←→) or Ctrl+P/N/B/F to move. Tab/Up/Down to switch
+					fields. Home/End or Ctrl+A/E to jump. Press 'p' to toggle processing.
 				</Text>
 			</Box>
 		</Box>
@@ -259,5 +353,6 @@ function ChatApp() {
 }
 
 render(<ChatApp />, {
-	enableImeCursor: true,
+	alternateBuffer: true,
+	incrementalRendering: true,
 });
