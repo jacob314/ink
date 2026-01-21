@@ -17,6 +17,7 @@ import {
 	measureStyledChars,
 	splitStyledCharsByNewline,
 	toStyledCharacters,
+	getPositionAtOffset,
 } from './measure-text.js';
 
 // If parent container is `<Box>`, text nodes will be treated as separate nodes in
@@ -210,7 +211,8 @@ const renderNodeToOutput = (
 		}
 
 		if (node.nodeName === 'ink-text') {
-			let styledChars = toStyledCharacters(squashTextNodes(node));
+			const text = squashTextNodes(node);
+			let styledChars = toStyledCharacters(text);
 			let selectionState:
 				| {
 						range: {start: number; end: number};
@@ -235,24 +237,49 @@ const renderNodeToOutput = (
 				);
 			}
 
-			if (styledChars.length > 0) {
+			if (styledChars.length > 0 || node.internal_terminalCursorFocus) {
 				let lines: StyledChar[][] = [];
-				const {width: currentWidth} = measureStyledChars(styledChars);
-				const maxWidth = getMaxWidth(yogaNode);
+				let cursorLineIndex = 0;
 
-				if (currentWidth > maxWidth) {
-					const textWrap = node.style.textWrap ?? 'wrap';
-					lines = wrapOrTruncateStyledChars(styledChars, maxWidth, textWrap);
+				if (styledChars.length > 0) {
+					const {width: currentWidth} = measureStyledChars(styledChars);
+					const maxWidth = getMaxWidth(yogaNode);
+
+					lines =
+						currentWidth > maxWidth
+							? wrapOrTruncateStyledChars(
+									styledChars,
+									maxWidth,
+									node.style.textWrap ?? 'wrap',
+								)
+							: splitStyledCharsByNewline(styledChars);
+
+					lines = applyPaddingToStyledChars(node, lines);
+
+					// Calculate cursor line index for terminal cursor positioning
+					cursorLineIndex =
+						node.internal_terminalCursorFocus &&
+						node.internal_terminalCursorPosition !== undefined
+							? Math.min(
+									getPositionAtOffset(
+										styledChars,
+										node.internal_terminalCursorPosition,
+									).row,
+									lines.length - 1,
+								)
+							: lines.length - 1;
 				} else {
-					lines = splitStyledCharsByNewline(styledChars);
+					// Empty text with cursor focus - use single empty line for IME support
+					lines = [[]];
 				}
-
-				lines = applyPaddingToStyledChars(node, lines);
 
 				for (const [index, line] of lines.entries()) {
 					output.write(x, y + index, line, {
 						transformers: newTransformers,
 						lineIndex: index,
+						isTerminalCursorFocused:
+							node.internal_terminalCursorFocus && index === cursorLineIndex,
+						terminalCursorPosition: node.internal_terminalCursorPosition ?? 0,
 					});
 				}
 			}

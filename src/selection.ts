@@ -6,58 +6,13 @@
 
 import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import {type DOMNode, type DOMElement, getPathToRoot} from './dom.js';
-import {toStyledCharacters} from './measure-text.js';
+import {toStyledCharacters, type CharOffsetMap} from './measure-text.js';
 import {processLayout} from './layout.js';
+import {squashTextNodesWithMap} from './squash-text-nodes.js';
 
 type PlainTextResultWithMap = {
 	styledChars: StyledChar[];
-	charOffsetMap: Map<DOMNode, {start: number; end: number}>;
-};
-
-const squashNodesWithMap = (
-	node: DOMElement,
-	map: Map<DOMNode, {start: number; end: number}>,
-	offsetRef: {current: number},
-): string => {
-	let text = '';
-
-	for (const childNode of node.childNodes) {
-		let nodeText = '';
-		const startOffset = offsetRef.current;
-
-		if (childNode.nodeName === '#text') {
-			nodeText = childNode.nodeValue;
-			map.set(childNode, {
-				start: startOffset,
-				end: startOffset + nodeText.length,
-			});
-			offsetRef.current += nodeText.length;
-		} else if (
-			childNode.nodeName === 'ink-text' ||
-			childNode.nodeName === 'ink-virtual-text'
-		) {
-			nodeText = squashNodesWithMap(childNode, map, offsetRef);
-			map.set(childNode, {
-				start: startOffset,
-				end: offsetRef.current,
-			});
-		}
-
-		if (
-			nodeText.length > 0 &&
-			childNode.nodeName !== '#text' &&
-			typeof childNode.internal_transform === 'function'
-		) {
-			nodeText = childNode.internal_transform(
-				nodeText,
-				node.childNodes.indexOf(childNode),
-			);
-		}
-
-		text += nodeText;
-	}
-
-	return text;
+	charOffsetMap: CharOffsetMap;
 };
 
 const getPlainTextFromDomNode = (node: DOMNode): PlainTextResultWithMap => {
@@ -108,7 +63,7 @@ const getPlainTextFromDomNode = (node: DOMNode): PlainTextResultWithMap => {
 
 			const map = new Map<DOMNode, {start: number; end: number}>();
 			const offsetRef = {current: 0};
-			squashNodesWithMap(fragment.node, map, offsetRef);
+			squashTextNodesWithMap(fragment.node, map, offsetRef);
 
 			// Add the fragment node itself to the map, as it covers the entire text
 			state.charOffsetMap.set(fragment.node, {
