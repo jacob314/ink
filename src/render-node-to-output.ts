@@ -528,6 +528,11 @@ const calculateWrappedCursorPosition = (
 			}
 
 			previousLineEndOffset = lineEndOffset;
+		} else if (i === 0 && targetOffset === 0) {
+			// Edge case: First line is empty and cursor is at position 0
+			cursorLineIndex = 0;
+			relativeCursorPosition = 0;
+			break;
 		} else if (i > 0 && targetOffset > previousLineEndOffset) {
 			// Handle empty lines (usually caused by \n)
 			cursorLineIndex = i;
