@@ -491,33 +491,49 @@ const calculateWrappedCursorPosition = (
 
 	let cursorLineIndex = lines.length - 1;
 	let relativeCursorPosition = targetOffset;
-	let currentLineStartOffset = 0;
+	// -1 represents "before document start" so first character (offset 0) is handled correctly
+	let previousLineEndOffset = -1;
 
 	for (const [i, line] of lines.entries()) {
 		if (line.length > 0) {
 			const firstChar = line.find(char => styledCharToOffset.has(char));
+			const lastChar = line.findLast(char => styledCharToOffset.has(char));
 
-			if (firstChar) {
-				const firstCharOffset = styledCharToOffset.get(firstChar)!;
-
-				if (targetOffset >= currentLineStartOffset) {
+			if (!firstChar || !lastChar) {
+				// Padding-only line (originally empty), treat as empty line
+				if (targetOffset > previousLineEndOffset) {
 					cursorLineIndex = i;
-					relativeCursorPosition = Math.max(0, targetOffset - firstCharOffset);
+					relativeCursorPosition = targetOffset - previousLineEndOffset - 1;
+					previousLineEndOffset++;
 				}
 
-				const lastChar = line.findLast(char => styledCharToOffset.has(char));
-
-				if (lastChar) {
-					currentLineStartOffset =
-						styledCharToOffset.get(lastChar)! + lastChar.value.length;
-				}
+				continue;
 			}
-		} else if (i > 0 && targetOffset >= currentLineStartOffset) {
+
+			const lineStartOffset = styledCharToOffset.get(firstChar)!;
+			const lineEndOffset =
+				styledCharToOffset.get(lastChar)! + lastChar.value.length;
+
+			// Set as candidate if targetOffset is at or after line start
+			if (targetOffset >= lineStartOffset) {
+				cursorLineIndex = i;
+				relativeCursorPosition = Math.max(0, targetOffset - lineStartOffset);
+			}
+
+			// Finalize and exit if targetOffset is within or before this line's range.
+			// If targetOffset is in a gap (between previousLineEndOffset and lineStartOffset),
+			// the cursor stays at the previous line's end (already set in previous iteration).
+			if (targetOffset <= lineEndOffset) {
+				break;
+			}
+
+			previousLineEndOffset = lineEndOffset;
+		} else if (i > 0 && targetOffset > previousLineEndOffset) {
 			// Handle empty lines (usually caused by \n)
 			cursorLineIndex = i;
-			relativeCursorPosition = targetOffset - currentLineStartOffset;
-			// Advance currentLineStartOffset past the \n
-			currentLineStartOffset++;
+			relativeCursorPosition = targetOffset - previousLineEndOffset - 1;
+			// Advance past the \n character
+			previousLineEndOffset++;
 		}
 	}
 
