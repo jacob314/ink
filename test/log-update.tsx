@@ -1,8 +1,12 @@
 import test, {type ExecutionContext} from 'ava';
+import {type SinonSpy} from 'sinon';
 import ansiEscapes from 'ansi-escapes';
+import xtermHeadless from '@xterm/headless';
 import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import logUpdate from '../src/log-update.js';
 import createStdout from './helpers/create-stdout.js';
+
+const {Terminal} = xtermHeadless;
 
 type Stdout = ReturnType<typeof createStdout>;
 
@@ -270,12 +274,153 @@ test('incremental rendering - alternate buffer', t => {
 });
 
 // =============================================================================
-// Cursor position tests (enableImeCursor mode)
+// Cursor position tests
 // =============================================================================
+
+test('standard rendering - clears content below cursor when cursor is set', async t => {
+	const stdout = createStdout();
+	const columns = 20;
+	const rows = 20; // Larger terminal to avoid scrolling
+	const render = logUpdate.create(stdout, {
+		incremental: false,
+		getColumns: () => columns,
+		getRows: () => rows,
+	});
+
+	const term = new Terminal({
+		cols: columns,
+		rows,
+		allowProposedApi: true,
+	});
+
+	// 1. Render 3 lines, cursor on the first line
+	render('Line 1\nLine 2\nLine 3', [], undefined, {row: 0, col: 0});
+	term.write(stdout.get());
+	(stdout.write as unknown as SinonSpy).resetHistory();
+
+	// 2. Render only 1 line
+	render('Updated', [], undefined, {row: 0, col: 0});
+	term.write(stdout.get());
+
+	// Wait
+	await new Promise(resolve => {
+		term.write('', resolve);
+	});
+
+	const buffer = term.buffer.active;
+	const getLineText = (lineIndex: number) => {
+		const line = buffer.getLine(lineIndex);
+		if (!line) return '';
+		let text = '';
+		for (let i = 0; i < columns; i++) {
+			text += line.getCell(i)?.getChars() ?? '';
+		}
+
+		return text.trim();
+	};
+
+	t.is(getLineText(0), 'Updated');
+	t.is(getLineText(1), '');
+	t.is(getLineText(2), '');
+});
+
+test('standard rendering - clear() clears content below cursor', async t => {
+	const stdout = createStdout();
+	const columns = 20;
+	const rows = 20;
+	const render = logUpdate.create(stdout, {
+		incremental: false,
+		getColumns: () => columns,
+		getRows: () => rows,
+	});
+
+	const term = new Terminal({
+		cols: columns,
+		rows,
+		allowProposedApi: true,
+	});
+
+	// 1. Render 3 lines, cursor on the first line
+	render('Line 1\nLine 2\nLine 3', [], undefined, {row: 0, col: 0});
+	term.write(stdout.get());
+	(stdout.write as unknown as SinonSpy).resetHistory();
+
+	// 2. Clear
+	render.clear();
+	term.write(stdout.get());
+
+	// Wait
+	await new Promise(resolve => {
+		term.write('', resolve);
+	});
+
+	const buffer = term.buffer.active;
+	const getLineText = (lineIndex: number) => {
+		const line = buffer.getLine(lineIndex);
+		if (!line) return '';
+		let text = '';
+		for (let i = 0; i < columns; i++) {
+			text += line.getCell(i)?.getChars() ?? '';
+		}
+
+		return text.trim();
+	};
+
+	t.is(getLineText(0), '');
+	t.is(getLineText(1), '');
+	t.is(getLineText(2), '');
+});
+
+test('incremental rendering - clear() clears content below cursor', async t => {
+	const stdout = createStdout();
+	const columns = 20;
+	const rows = 20;
+	const render = logUpdate.create(stdout, {
+		incremental: true,
+		getColumns: () => columns,
+		getRows: () => rows,
+	});
+
+	const term = new Terminal({
+		cols: columns,
+		rows,
+		allowProposedApi: true,
+	});
+
+	// 1. Render 3 lines, cursor on the first line
+	render('Line 1\nLine 2\nLine 3', [], undefined, {row: 0, col: 0});
+	term.write(stdout.get());
+	(stdout.write as unknown as SinonSpy).resetHistory();
+
+	// 2. Clear
+	render.clear();
+	term.write(stdout.get());
+
+	// Wait
+	await new Promise(resolve => {
+		term.write('', resolve);
+	});
+
+	const buffer = term.buffer.active;
+	const getLineText = (lineIndex: number) => {
+		const line = buffer.getLine(lineIndex);
+		if (!line) return '';
+		let text = '';
+		for (let i = 0; i < columns; i++) {
+			text += line.getCell(i)?.getChars() ?? '';
+		}
+
+		return text.trim();
+	};
+
+	t.is(getLineText(0), '');
+	t.is(getLineText(1), '');
+	t.is(getLineText(2), '');
+});
 
 test('standard IME cursor - moves cursor when output is same but cursor changed', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {enableImeCursor: true});
+	const render = logUpdate.create(stdout);
 
 	// First render with cursor at (0, 3)
 	render('Hello', [], undefined, {row: 0, col: 3});
@@ -295,7 +440,7 @@ test('standard IME cursor - moves cursor when output is same but cursor changed'
 
 test('standard IME cursor - skips when both output and cursor are same', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {enableImeCursor: true});
+	const render = logUpdate.create(stdout);
 
 	render('Hello', [], undefined, {row: 0, col: 3});
 	render('Hello', [], undefined, {row: 0, col: 3}); // Same output and cursor
@@ -305,7 +450,7 @@ test('standard IME cursor - skips when both output and cursor are same', t => {
 
 test('standard IME cursor - cursor backward movement', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {enableImeCursor: true});
+	const render = logUpdate.create(stdout);
 
 	render('Hello', [], undefined, {row: 0, col: 5});
 	render('Hello', [], undefined, {row: 0, col: 2}); // Move cursor left
@@ -319,7 +464,7 @@ test('standard IME cursor - cursor backward movement', t => {
 
 test('standard IME cursor - cursor up movement', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {enableImeCursor: true});
+	const render = logUpdate.create(stdout);
 
 	render('Line1\nLine2', [], undefined, {row: 1, col: 3});
 	render('Line1\nLine2', [], undefined, {row: 0, col: 3}); // Move cursor up
@@ -331,7 +476,7 @@ test('standard IME cursor - cursor up movement', t => {
 
 test('standard IME cursor - cursor down movement', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {enableImeCursor: true});
+	const render = logUpdate.create(stdout);
 
 	render('Line1\nLine2', [], undefined, {row: 0, col: 3});
 	render('Line1\nLine2', [], undefined, {row: 1, col: 3}); // Move cursor down
@@ -343,7 +488,7 @@ test('standard IME cursor - cursor down movement', t => {
 
 test('standard IME cursor - diagonal cursor movement', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {enableImeCursor: true});
+	const render = logUpdate.create(stdout);
 
 	render('Line1\nLine2', [], undefined, {row: 0, col: 0});
 	render('Line1\nLine2', [], undefined, {row: 1, col: 3}); // Move diagonally
@@ -358,7 +503,7 @@ test('standard IME cursor - diagonal cursor movement', t => {
 
 test('standard IME cursor - no cursor provided (undefined)', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {enableImeCursor: true});
+	const render = logUpdate.create(stdout);
 
 	render('Hello'); // No cursor position
 	t.is((stdout.write as any).callCount, 1);
@@ -369,7 +514,7 @@ test('standard IME cursor - no cursor provided (undefined)', t => {
 
 test('standard IME cursor - cursor at position 0,0', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {enableImeCursor: true});
+	const render = logUpdate.create(stdout);
 
 	render('Hello', [], undefined, {row: 0, col: 0});
 	t.is((stdout.write as any).callCount, 1);
@@ -379,7 +524,7 @@ test('standard IME cursor - cursor at position 0,0', t => {
 
 test('standard IME cursor - re-render when output changes', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {enableImeCursor: true});
+	const render = logUpdate.create(stdout);
 
 	render('Hello', [], undefined, {row: 0, col: 3});
 	render('World', [], undefined, {row: 0, col: 3}); // Different output, same cursor
@@ -393,7 +538,6 @@ test('incremental IME cursor - basic cursor positioning', t => {
 	const stdout = createStdout();
 	const render = logUpdate.create(stdout, {
 		incremental: true,
-		enableImeCursor: true,
 	});
 
 	render('Hello', [], undefined, {row: 0, col: 2});
@@ -404,13 +548,93 @@ test('incremental IME cursor - basic cursor positioning', t => {
 	t.true(firstCall.includes('Hello'));
 });
 
-test('standard rendering without IME cursor - ignores cursor position', t => {
+test('incremental rendering - alternate buffer - atomic IME cursor positioning', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout); // No enableImeCursor
+	let rows = 10;
+	const render = logUpdate.create(stdout, {
+		incremental: true,
+		alternateBuffer: true,
+		getRows: () => rows,
+	});
+
+	// First render
+	render('Line 1\nLine 2', [] as StyledChar[][], undefined, {row: 1, col: 2});
+	t.is((stdout.write as any).callCount, 3);
+	const firstRender = (stdout.write as any).lastCall.args[0] as string;
+	t.true(firstRender.includes('Line 1\nLine 2'));
+	t.true(firstRender.includes(ansiEscapes.cursorTo(2, 1)));
+
+	// Same output, different cursor - should trigger re-render in alternate buffer
+	render('Line 1\nLine 2', [] as StyledChar[][], undefined, {row: 0, col: 5});
+	t.is((stdout.write as any).callCount, 4);
+	const secondRender = (stdout.write as any).lastCall.args[0] as string;
+	// In alternate buffer incremental mode, it diffs.
+	// Since output is same, it might just skip content and write cursor movement.
+	// Actually, our implementation for alternate buffer in createIncremental re-renders if cursorPosition !== previousCursorPosition.
+	t.true(secondRender.includes(ansiEscapes.cursorTo(5, 0)));
+
+	// Resize (change rows)
+	rows = 5;
+	render('Line 1\nLine 2', [] as StyledChar[][], undefined, {row: 1, col: 3});
+	t.is((stdout.write as any).callCount, 5);
+	const thirdRender = (stdout.write as any).lastCall.args[0] as string;
+	t.true(thirdRender.includes('Line 1\nLine 2')); // Full redraw includes content
+	t.true(thirdRender.includes(ansiEscapes.cursorTo(3, 1)));
+	// Crucially, cursor positioning must be within the synchronized output block (between enter and exit sequences)
+	const enterIndex = thirdRender.indexOf('\u001B[?2026h');
+	const exitIndex = thirdRender.indexOf('\u001B[?2026l');
+	const cursorIndex = thirdRender.indexOf(ansiEscapes.cursorTo(3, 1));
+	t.true(enterIndex < cursorIndex);
+	t.true(cursorIndex < exitIndex);
+});
+
+test('incremental rendering - alternate buffer - defaults to no cursor positioning if not specified', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {
+		incremental: true,
+		alternateBuffer: true,
+		getRows: () => 10,
+	});
+
+	// Render without cursor
+	render('Line 1', [] as StyledChar[][]);
+	const output = stdout.get();
+	// It should NOT contain cursorTo(0, 0) for cursor positioning if not provided.
+	// Note: cursorTo(0, 0) IS used for clearing/home, so we check if there's ONLY ONE (or none for the positioning part).
+	const lastIndex = output.lastIndexOf(ansiEscapes.cursorTo(0, 0));
+	// The one at index 0 is for positioning the output.
+	// Note: if synchronized output is enabled, it will be at index 8.
+	t.is(lastIndex, 8);
+	t.true(output.includes('Line 1'));
+});
+
+test('standard rendering respects cursor position by default', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout);
 
 	render('Hello', [], undefined, {row: 0, col: 3});
-	render('Hello', [], undefined, {row: 0, col: 5}); // Different cursor, but should be ignored
+	render('Hello', [], undefined, {row: 0, col: 5}); // Different cursor
 
-	// Without enableImeCursor, same output should be skipped regardless of cursor
-	t.is((stdout.write as any).callCount, 1);
+	// Cursor position changes should trigger re-render (or at least cursor movement)
+	t.is((stdout.write as any).callCount, 2);
+});
+
+test('incremental rendering - alternate buffer - forces cursor repositioning when output changes', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {
+		incremental: true,
+		alternateBuffer: true,
+		getRows: () => 10,
+	});
+
+	// Initial render
+	render('Line 1', [] as StyledChar[][], undefined, {row: 0, col: 2});
+	t.true(stdout.get().includes(ansiEscapes.cursorTo(2, 0)));
+
+	// Output changes, but cursor position remains same.
+	// We MUST still output the cursor position because the incremental update moved the cursor.
+	render('Line 1 updated', [] as StyledChar[][], undefined, {row: 0, col: 2});
+	const secondRender = stdout.get();
+	t.true(secondRender.includes('Line 1 updated'));
+	t.true(secondRender.includes(ansiEscapes.cursorTo(2, 0)));
 });

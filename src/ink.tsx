@@ -14,7 +14,7 @@ import wrapAnsi from 'wrap-ansi';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
-import logUpdate, {type LogUpdate} from './log-update.js';
+import logUpdate, {type LogUpdate, positionImeCursor} from './log-update.js';
 import instances from './instances.js';
 import App from './components/App.js';
 import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
@@ -52,7 +52,6 @@ export type Options = {
 	debugRainbow?: boolean;
 	selectionStyle?: (char: StyledChar) => StyledChar;
 	standardReactLayoutTiming?: boolean;
-	enableImeCursor?: boolean;
 };
 
 const rainbowColors = [
@@ -144,7 +143,6 @@ export default class Ink {
 			getRows: () => options.stdout.rows,
 			getColumns: () => options.stdout.columns,
 			incremental: options.incrementalRendering,
-			enableImeCursor: options.enableImeCursor,
 		});
 		this.throttledLog = unthrottled
 			? this.log
@@ -395,24 +393,12 @@ export default class Ink {
 			// Build a single buffer for all operations
 			let buffer = '';
 
-			// Hide cursor at start if IME cursor mode is enabled
-			if (this.options.enableImeCursor) {
-				buffer += ansiEscapes.cursorHide;
-			}
-
 			buffer += ansiEscapes.clearTerminal + this.fullStaticOutput + output;
 
-			// EnableImeCursor mode: position cursor after screen clear
-			if (this.options.enableImeCursor && cursorPosition) {
+			// Position cursor after screen clear if requested by a component
+			if (cursorPosition) {
 				const lineCount = output.split('\n').length;
-				const moveUp = lineCount - 1 - cursorPosition.row;
-
-				if (moveUp > 0) {
-					buffer += ansiEscapes.cursorUp(moveUp);
-				}
-
-				buffer += ansiEscapes.cursorTo(cursorPosition.col);
-				buffer += ansiEscapes.cursorShow;
+				buffer += positionImeCursor(lineCount, cursorPosition);
 			}
 
 			this.options.stdout.write(buffer);
@@ -482,7 +468,6 @@ export default class Ink {
 					writeToStderr={this.writeToStderr}
 					exitOnCtrlC={this.options.exitOnCtrlC}
 					selection={this.selection}
-					enableImeCursor={this.options.enableImeCursor}
 					onExit={this.unmount}
 					onRerender={this.onRerender}
 				>
