@@ -370,16 +370,13 @@ test('renderer returns correct cursorPosition for wrapped Text with dropped spac
 	root.yogaNode?.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
 
 	const result = renderer(root, false);
-	// Currently, if it's in the "gap" created by dropping spaces, it will fall through
-	// and default to the last line's beginning if not caught.
+	// When cursor is in the "gap" created by dropping spaces during wrapping,
+	// it should stay at the end of the previous line rather than jumping to next line.
 	// In "Hello   World" with width 5, lines are ["Hello", "World"].
-	// TargetOffset = 6.
-	// Line 0: offset 0, len 5. 6 >= 0 but 6 < 5 is false.
-	// Synchronization: next line starts with "W" which is at original index 8.
-	// CurrentOriginalOffset becomes 8.
-	// Line 1: offset 8, len 5. 6 >= 8 is false.
-	// Not found. Defaults to last line (1), relative pos 0.
-	t.deepEqual(result.cursorPosition, {row: 1, col: 0});
+	// TargetOffset = 6 (in dropped spaces area).
+	// Line 0: [0, 4], Line 1: [8, 12]
+	// Since 6 > 4 (line 0 end) but 6 < 8 (line 1 start), cursor stays at line 0 end.
+	t.deepEqual(result.cursorPosition, {row: 0, col: 5});
 });
 
 test('renderer returns correct cursorPosition for wrapped Text with dropped spaces - after gap', t => {
@@ -404,6 +401,83 @@ test('renderer returns correct cursorPosition for wrapped Text with dropped spac
 	// Line 1: offset 8, len 5. 9 >= 8 and 9 < 13 true.
 	// CursorLineIndex = 1, relativeCursorPosition = 9 - 8 = 1.
 	t.deepEqual(result.cursorPosition, {row: 1, col: 1});
+});
+
+test('renderer returns correct cursorPosition when first line is empty', t => {
+	const root = dom.createNode('ink-root');
+	root.yogaNode?.setWidth(100);
+
+	const textNode = dom.createNode('ink-text');
+	textNode.internal_terminalCursorFocus = true;
+	textNode.internal_terminalCursorPosition = 0; // Cursor at the very beginning
+
+	// First line is empty (text starts with \n)
+	const text = dom.createTextNode('\n한글\n문제가');
+	dom.appendChildNode(textNode, text as unknown as dom.DOMElement);
+	dom.appendChildNode(root, textNode);
+
+	root.yogaNode?.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
+
+	const result = renderer(root, false);
+	// Cursor should be on the first (empty) line, not the last line
+	t.deepEqual(result.cursorPosition, {row: 0, col: 0});
+});
+
+test('renderer returns correct cursorPosition when first line is empty - cursor on second line', t => {
+	const root = dom.createNode('ink-root');
+	root.yogaNode?.setWidth(100);
+
+	const textNode = dom.createNode('ink-text');
+	textNode.internal_terminalCursorFocus = true;
+	textNode.internal_terminalCursorPosition = 1; // After the first \n, start of "한글"
+
+	const text = dom.createTextNode('\n한글\n문제가');
+	dom.appendChildNode(textNode, text as unknown as dom.DOMElement);
+	dom.appendChildNode(root, textNode);
+
+	root.yogaNode?.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
+
+	const result = renderer(root, false);
+	// Cursor should be at the start of the second line
+	t.deepEqual(result.cursorPosition, {row: 1, col: 0});
+});
+
+test('renderer handles multiple leading newlines', t => {
+	const root = dom.createNode('ink-root');
+	root.yogaNode?.setWidth(100);
+
+	const textNode = dom.createNode('ink-text');
+	textNode.internal_terminalCursorFocus = true;
+	textNode.internal_terminalCursorPosition = 0;
+
+	// Multiple empty lines at start
+	const text = dom.createTextNode('\n\n한글');
+	dom.appendChildNode(textNode, text as unknown as dom.DOMElement);
+	dom.appendChildNode(root, textNode);
+
+	root.yogaNode?.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
+
+	const result = renderer(root, false);
+	t.deepEqual(result.cursorPosition, {row: 0, col: 0});
+});
+
+test('renderer handles cursor in middle of second line after empty first', t => {
+	const root = dom.createNode('ink-root');
+	root.yogaNode?.setWidth(100);
+
+	const textNode = dom.createNode('ink-text');
+	textNode.internal_terminalCursorFocus = true;
+	textNode.internal_terminalCursorPosition = 2; // After '\n' and '한'
+
+	const text = dom.createTextNode('\n한글');
+	dom.appendChildNode(textNode, text as unknown as dom.DOMElement);
+	dom.appendChildNode(root, textNode);
+
+	root.yogaNode?.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
+
+	const result = renderer(root, false);
+	// '한' is a wide character (width 2), so cursor after '한' is at col 2
+	t.deepEqual(result.cursorPosition, {row: 1, col: 2});
 });
 
 // =============================================================================
