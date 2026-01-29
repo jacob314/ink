@@ -37,10 +37,12 @@ test('slowFlush is cancelled by flush', async t => {
 	// Update (Chunk 2)
 	const line1Update = createLine('Line 1 Updated');
 	writer.syncLine(line1Update, 0);
+	writer.finish();
 
 	// Update (Chunk 3)
 	const line1Update2 = createLine('Line 1 Updated Again');
 	writer.syncLine(line1Update2, 0);
+	writer.finish();
 
 	// Now outputBuffer has 3 chunks.
 
@@ -90,8 +92,10 @@ test('slowFlush is cancelled by another slowFlush', async t => {
 	writer.writeLines([line1]);
 	const line1Update = createLine('Line 1 Updated');
 	writer.syncLine(line1Update, 0);
+	writer.finish();
 	const line1Update2 = createLine('Line 1 Updated Again');
 	writer.syncLine(line1Update2, 0);
+	writer.finish();
 
 	const slowFlushPromise = writer.slowFlush();
 

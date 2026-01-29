@@ -211,6 +211,82 @@ test('TerminalBufferWorker handles scrolling correctly', async t => {
 	await worker.render();
 	await writeToTerm(term, output);
 
-	t.is(term.buffer.active.getLine(0)?.translateToString(true), 'Line 2');
-	t.is(term.buffer.active.getLine(4)?.translateToString(true), 'Line 6');
+	t.is(
+		term.buffer.active
+			.getLine(term.buffer.active.baseY + 0)
+			?.translateToString(true),
+		'Line 2',
+	);
+	t.is(
+		term.buffer.active
+			.getLine(term.buffer.active.baseY + 4)
+			?.translateToString(true),
+		'Line 6',
+	);
 });
+
+test('TerminalBufferWorker preserves history on initial render', async t => {
+	const columns = 80;
+	const rows = 10;
+	let output = '';
+	const stdout = {
+		write(chunk: string) {
+			output += chunk;
+			return true;
+		},
+		on() {},
+		rows,
+		columns,
+	} as unknown as NodeJS.WriteStream;
+
+	const worker = new TerminalBufferWorker(columns, rows, {stdout});
+	const term = new XtermTerminal({
+		cols: columns,
+		rows,
+		allowProposedApi: true,
+		convertEol: true,
+	});
+
+	// Pre-fill terminal with some history
+	await writeToTerm(term, 'History 1\r\nHistory 2\r\nHistory 3\r\n');
+	// Cursor is now at Row 3 (line 4)
+	t.is(term.buffer.active.cursorY, 3);
+	t.is(term.buffer.active.baseY, 0);
+
+	// First render using TerminalBufferWorker.render()
+	const lines = [createStyledLine('Ink Line 1'), createStyledLine('Ink Line 2')];
+	const data = serializer.serialize(lines);
+
+	worker.update({id: 'root', children: []}, [
+		{
+			id: 'root',
+			y: 0,
+			width: columns,
+			height: 2,
+			lines: {
+				updates: [{start: 0, end: 2, data}],
+				totalLength: 2,
+			},
+		},
+	]);
+
+	await worker.render();
+	await writeToTerm(term, output);
+
+	// Check that History is still there
+	t.is(term.buffer.active.getLine(0)?.translateToString(true), 'History 1');
+	t.is(term.buffer.active.getLine(1)?.translateToString(true), 'History 2');
+	t.is(term.buffer.active.getLine(2)?.translateToString(true), 'History 3');
+
+	// Check that Ink output started after history
+	// Since we wrote 2 lines of Ink content and the TerminalWriter also clears the rest of 'rows' (10)
+	// it should have written total 10 lines.
+	// 3 lines of history + 10 lines (from Ink) = 13 lines total.
+	// So it should have scrolled 3 lines (baseY = 3).
+	t.is(term.buffer.active.baseY, 3, 'Should have scrolled by 3 lines to make room for full Ink "screen"');
+	
+	// Ink Row 0 should be at baseY + 0
+	t.is(term.buffer.active.getLine(term.buffer.active.baseY + 0)?.translateToString(true), 'Ink Line 1');
+	t.is(term.buffer.active.getLine(term.buffer.active.baseY + 1)?.translateToString(true), 'Ink Line 2');
+});
+

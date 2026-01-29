@@ -17,6 +17,7 @@ import * as dom from './dom.js';
 import logUpdate, {type LogUpdate, positionImeCursor} from './log-update.js';
 import instances from './instances.js';
 import App from './components/App.js';
+import {type InkOptions} from './components/AppContext.js';
 import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
 import {calculateScroll} from './scroll.js';
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
@@ -49,6 +50,8 @@ export type Options = {
 	maxFps?: number;
 	alternateBuffer?: boolean;
 	alternateBufferAlreadyActive?: boolean;
+	isAlternateBufferEnabled?: boolean;
+	isBackbufferStickyHeadersEnabled?: boolean;
 	incrementalRendering?: boolean;
 	debugRainbow?: boolean;
 	selectionStyle?: (char: StyledChar) => StyledChar;
@@ -82,6 +85,7 @@ export default class Ink {
 	private readonly isScreenReaderEnabled: boolean;
 	private readonly selection: Selection;
 	private readonly terminalBuffer?: TerminalBuffer;
+	private optionsState: InkOptions;
 
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	private isUnmounted: boolean;
@@ -90,6 +94,7 @@ export default class Ink {
 	private lastCursorPosition?: {row: number; col: number} | undefined;
 	private readonly container: FiberRoot;
 	private readonly rootNode: dom.DOMElement;
+	private node: ReactNode;
 	// This variable is used only in debug mode to store full static output
 	// so that it's rerendered every time, not just new static parts, like in non-debug mode
 	private fullStaticOutput: string;
@@ -103,6 +108,12 @@ export default class Ink {
 		autoBind(this);
 
 		this.options = options;
+
+		this.optionsState = {
+			isAlternateBufferEnabled:
+				options.isAlternateBufferEnabled ?? options.alternateBuffer,
+			isBackbufferStickyHeadersEnabled: options.isBackbufferStickyHeadersEnabled,
+		};
 
 		this.rootNode = dom.createNode('ink-root');
 		this.rootNode.onComputeLayout = this.calculateLayout;
@@ -151,6 +162,9 @@ export default class Ink {
 					debugRainbowEnabled: options.debugRainbow,
 					renderInProcess: !options.renderProcess && options.terminalBuffer,
 					stdout: options.stdout,
+					isAlternateBufferEnabled: options.isAlternateBufferEnabled,
+					isBackbufferStickyHeadersEnabled:
+						options.isBackbufferStickyHeadersEnabled,
 				},
 			);
 		}
@@ -367,7 +381,7 @@ export default class Ink {
 			return;
 		}
 
-		if (this.options.alternateBuffer) {
+		if (this.optionsState.isAlternateBufferEnabled) {
 			if (hasStaticOutput) {
 				this.fullStaticOutput += staticOutput;
 			}
@@ -492,7 +506,23 @@ export default class Ink {
 		this.onRender();
 	};
 
+	setOptions = (options: Partial<InkOptions>) => {
+		this.optionsState = {
+			...this.optionsState,
+			...options,
+		};
+
+		this.terminalBuffer?.updateOptions(this.optionsState);
+
+		this.lastOutput = '';
+		if (this.node) {
+			this.render(this.node);
+		}
+	};
+
 	render(node: ReactNode): void {
+		this.node = node;
+
 		const tree = (
 			<AccessibilityContext.Provider
 				value={{isScreenReaderEnabled: this.isScreenReaderEnabled}}
@@ -505,6 +535,8 @@ export default class Ink {
 					writeToStderr={this.writeToStderr}
 					exitOnCtrlC={this.options.exitOnCtrlC}
 					selection={this.selection}
+					options={this.optionsState}
+					setOptions={this.setOptions}
 					onExit={this.unmount}
 					onRerender={this.onRerender}
 				>
@@ -590,6 +622,10 @@ export default class Ink {
 			this.options.stdout.write(this.lastOutput + '\n');
 		} else if (!this.options.debug) {
 			this.log.done();
+
+			if (this.terminalBuffer) {
+				this.terminalBuffer.done();
+			}
 		}
 
 		this.isUnmounted = true;

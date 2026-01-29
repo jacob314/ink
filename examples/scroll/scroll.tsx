@@ -7,10 +7,12 @@
 import process from 'node:process';
 import React, {
 	useState,
+	useReducer,
 	useRef,
 	useEffect,
 	useLayoutEffect,
 	useMemo,
+	useContext,
 } from 'react';
 import {
 	Box,
@@ -24,6 +26,7 @@ import {
 	type DOMElement,
 	type ScrollbarBoundingBox,
 	StaticRender,
+	AppContext,
 } from '../../src/index.js';
 import {debugLog} from '../../src/debug-log.js';
 
@@ -55,10 +58,77 @@ export function useTerminalSize(): {columns: number; rows: number} {
 
 const scrollModes: ScrollMode[] = ['vertical', 'horizontal', 'both', 'hidden'];
 
+type ScrollState = {
+	scrollTop: number;
+	scrollLeft: number;
+};
+
+type ScrollAction =
+	| {type: 'up'; delta: number}
+	| {type: 'down'; delta: number; max: number}
+	| {type: 'left'; delta: number}
+	| {type: 'right'; delta: number; max: number}
+	| {type: 'setTop'; value: number}
+	| {type: 'setLeft'; value: number}
+	| {type: 'bottom'; max: number};
+
+function scrollReducer(state: ScrollState, action: ScrollAction): ScrollState {
+	switch (action.type) {
+		case 'up': {
+			return {
+				...state,
+				scrollTop: Math.max(0, state.scrollTop - action.delta),
+			};
+		}
+
+		case 'down': {
+			return {
+				...state,
+				scrollTop: Math.min(state.scrollTop + action.delta, action.max),
+			};
+		}
+
+		case 'left': {
+			return {
+				...state,
+				scrollLeft: Math.max(0, state.scrollLeft - action.delta),
+			};
+		}
+
+		case 'right': {
+			return {
+				...state,
+				scrollLeft: Math.min(state.scrollLeft + action.delta, action.max),
+			};
+		}
+
+		case 'setTop': {
+			return {
+				...state,
+				scrollTop: action.value,
+			};
+		}
+
+		case 'setLeft': {
+			return {
+				...state,
+				scrollLeft: action.value,
+			}
+		}
+
+		case 'bottom': {
+			return {
+				...state,
+				scrollTop: action.max,
+			};
+		}
+	}
+}
+
 function ScrollableContent({
 	columns: customColumns,
 	rows: customRows,
-	itemCount = 2000,
+	itemCount = 1000,
 	useStatic: customUseStatic = false,
 }: {
 	readonly columns?: number;
@@ -66,7 +136,7 @@ function ScrollableContent({
 	readonly itemCount?: number;
 	readonly useStatic?: boolean;
 } = {}) {
-	const useStatic = true; ///customUseStatic;
+	const useStatic = true; /// customUseStatic;
 
 	const items = useMemo(() => {
 		return Array.from({length: itemCount}).map((_, i) => {
@@ -104,12 +174,16 @@ function ScrollableContent({
 	}, [itemCount]);
 
 	const [scrollMode, setScrollMode] = useState<ScrollMode>('vertical');
-	const [scrollTop, setScrollTop] = useState(0);
-	const [scrollLeft, setScrollLeft] = useState(0);
+	const [scrollState, dispatch] = useReducer(scrollReducer, {
+		scrollTop: 0,
+		scrollLeft: 0,
+	});
+	const {scrollTop, scrollLeft} = scrollState;
 	const [verticalScrollbar, setVerticalScrollbar] = useState<
 		ScrollbarBoundingBox | undefined
 	>(undefined);
 	const [showScrollbars, setShowScrollbars] = useState(true);
+	const {options, setOptions} = useContext(AppContext);
 	const reference = useRef<DOMElement>(null);
 	const {columns: terminalColumns, rows: terminalRows} = useTerminalSize();
 	const columns = customColumns ?? terminalColumns;
@@ -160,7 +234,10 @@ function ScrollableContent({
 				'XXX scrollHeight:' + scrollHeight + ' innerHeight:' + innerHeight,
 			);
 			if (scrollTop === Number.MAX_SAFE_INTEGER) {
-				setScrollTop(Math.max(0, scrollHeight - innerHeight));
+				dispatch({
+					type: 'setTop',
+					value: Math.max(0, scrollHeight - innerHeight),
+				});
 			}
 
 			if (
@@ -174,13 +251,14 @@ function ScrollableContent({
 
 	useInput((input, key) => {
 		if (input === 'b') {
-			setScrollTop(
-				Math.max(
+			dispatch({
+				type: 'bottom',
+				max: Math.max(
 					0,
 					sizeReference.current.scrollHeight -
 						sizeReference.current.innerHeight,
 				),
-			);
+			});
 			return;
 		}
 
@@ -198,6 +276,15 @@ function ScrollableContent({
 			return;
 		}
 
+		if (input === 'f' || input === 'a') {
+			const enabled = !options?.isAlternateBufferEnabled;
+			setOptions({
+				isAlternateBufferEnabled: enabled,
+				isBackbufferStickyHeadersEnabled: enabled,
+			});
+			return;
+		}
+
 		if (!key.upArrow && !key.downArrow && !key.leftArrow && !key.rightArrow) {
 			return;
 		}
@@ -206,16 +293,28 @@ function ScrollableContent({
 			clearInterval(scrollIntervalReference.current);
 		}
 
-		const scroll = (
-			setter: React.Dispatch<React.SetStateAction<number>>,
-			getNewValue: (current: number) => number,
+		const scroll = ({
+			type,
+			getDelta,
+			getMax,
 			frames = 5,
 			interval = 1,
-		) => {
+		}: {
+			type: 'left' | 'right';
+			getDelta: () => number;
+			getMax: () => number;
+			frames?: number;
+			interval?: number;
+		}) => {
 			let frame = 0;
 			scrollIntervalReference.current = setInterval(() => {
 				if (frame < frames) {
-					setter(s => getNewValue(s));
+					if (type === 'left') {
+						dispatch({type: 'left', delta: getDelta()});
+					} else {
+						dispatch({type: 'right', delta: getDelta(), max: getMax()});
+					}
+
 					frame++;
 				} else if (scrollIntervalReference.current) {
 					clearInterval(scrollIntervalReference.current);
@@ -225,41 +324,42 @@ function ScrollableContent({
 		};
 
 		if (key.upArrow) {
-			scroll(setScrollTop, s => Math.max(0, s - 1), 1, 16);
+			const delta = key.shift ? 10 : 1;
+			dispatch({type: 'up', delta});
 		}
 
 		if (key.downArrow) {
-			scroll(
-				setScrollTop,
-				s =>
-					Math.min(
-						s + 1,
-						Math.max(
-							0,
-							sizeReference.current.scrollHeight -
-								sizeReference.current.innerHeight,
-						),
-					),
-				1,
-				16,
-			);
+			const delta = key.shift ? 10 : 1;
+			dispatch({
+				type: 'down',
+				delta,
+				max: Math.max(
+					0,
+					sizeReference.current.scrollHeight -
+						sizeReference.current.innerHeight,
+				),
+			});
 		}
 
 		if (key.leftArrow) {
-			scroll(setScrollLeft, s => Math.max(0, s - 1));
+			scroll({
+				type: 'left',
+				getDelta: () => 1,
+				getMax: () => 0,
+			});
 		}
 
 		if (key.rightArrow) {
-			scroll(setScrollLeft, s =>
-				Math.min(
-					s + 1,
+			scroll({
+				type: 'right',
+				getDelta: () => 1,
+				getMax: () =>
 					Math.max(
 						0,
 						sizeReference.current.scrollWidth -
 							sizeReference.current.innerWidth,
 					),
-				),
-			);
+			});
 		}
 	});
 
@@ -293,6 +393,7 @@ function ScrollableContent({
 		if (useStatic) {
 			return (
 				<StaticRender key={`my-static-render-${columns}`} width={columns - 2}>
+					<Text>START OF STATIC BLOCK</Text>
 					{children}
 				</StaticRender>
 			);
@@ -344,6 +445,10 @@ function ScrollableContent({
 				<Text>
 					Press 's' to toggle scrollbars (current:{' '}
 					{showScrollbars ? 'on' : 'off'})
+				</Text>
+				<Text>
+					Press 'a' or 'f' to toggle alternate buffer + sticky headers (current:{' '}
+					{options?.isAlternateBufferEnabled ? 'on' : 'off'})
 				</Text>
 				<Text>ScrollTop: {scrollTop}</Text>
 				<Text>ScrollLeft: {scrollLeft}</Text>

@@ -24,36 +24,7 @@ const writeToTerm = (term: Terminal, data: string): Promise<void> =>
 		});
 	});
 
-// Helper to count lines that have a specific background color in xterm.js
-function countLinesWithBackgroundColor(term: Terminal, colorIndex: number): number {
-    let count = 0;
-    console.log(`Searching for colorIndex: ${colorIndex}`);
-    for (let i = 0; i < term.rows; i++) {
-        const line = term.buffer.active.getLine(term.buffer.active.baseY + i);
-        if (!line) continue;
-        
-        const cell = line.getCell(0);
-        const bg = cell?.getBgColor();
-        console.log(`  Line ${i}, bg: ${bg}`);
-        if (cell && bg === colorIndex) {
-            count++;
-        }
-    }
-    return count;
-}
-
-// Map color names to ANSI color indices (standard 16 colors)
-const colorToAnsi: Record<string, number> = {
-    'red': 1,
-    'green': 2,
-    'yellow': 3,
-    'blue': 4,
-    'magenta': 5,
-    'cyan': 6,
-    'white': 7,
-};
-
-test('rainbow debug counts actual terminal updates', async t => {
+test('scrolling is efficient (only new lines are updated)', async t => {
 	const columns = 80;
 	const rows = 10;
 	let output = '';
@@ -67,10 +38,7 @@ test('rainbow debug counts actual terminal updates', async t => {
 		columns,
 	} as unknown as NodeJS.WriteStream;
 
-	const worker = new TerminalBufferWorker(columns, rows, {
-        stdout,
-        debugRainbowEnabled: true
-    });
+	const worker = new TerminalBufferWorker(columns, rows, {stdout});
 	const term = new XtermTerminal({
 		cols: columns,
 		rows,
@@ -82,7 +50,7 @@ test('rainbow debug counts actual terminal updates', async t => {
 	const allLines = Array.from({length: totalLines}).map((_, i) => createStyledLine(`Line ${i}`));
 	const allLinesSerialized = serializer.serialize(allLines);
 
-	const renderFrame = async (scrollTop: number) => {
+	const updateScroll = async (scrollTop: number) => {
 		worker.update({id: 'root', children: [{id: 'scroll-box', children: []}]}, [
 			{
 				id: 'root',
@@ -110,19 +78,22 @@ test('rainbow debug counts actual terminal updates', async t => {
 		worker.resetLinesUpdated();
 		await worker.render();
 		await writeToTerm(term, output);
-        
         return worker.getLinesUpdated();
 	};
 
 	// 1. Initial render
-	const initialUpdates = await renderFrame(0);
+	const initialUpdates = await updateScroll(0);
 	t.is(initialUpdates, rows, 'Initial render should update all rows');
 
 	// 2. Scroll down 2 lines
-	const downUpdates = await renderFrame(2);
+	const downUpdates = await updateScroll(2);
+    // Ideally it should be 2, but let's see what it is currently.
+    // Sequential write for 2 lines + sync for the rest if they changed?
+    // In our case the lines 2-9 were already there.
 	t.is(downUpdates, 2, 'Scrolling down 2 lines should only update 2 lines');
 
 	// 3. Scroll up 2 lines
-	const upUpdates = await renderFrame(0);
+	const upUpdates = await updateScroll(0);
+    // This is where the reported issue is: it might be 10 (all rows) instead of 2.
 	t.is(upUpdates, 2, 'Scrolling up 2 lines should only update 2 lines');
 });

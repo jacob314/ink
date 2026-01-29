@@ -47,7 +47,7 @@ test('bottom sticky header states', t => {
 					<Text>Item 6</Text>
 					<Text>Item 7</Text>
 					<Text>Item 8</Text>
-					<Box sticky="bottom" opaque width="100%">
+					<Box opaque sticky="bottom" width="100%">
 						<Text>Sticky Footer</Text>
 					</Box>
 					<Text>Item 9</Text>

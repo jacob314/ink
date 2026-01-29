@@ -143,3 +143,90 @@ test('TerminalWriter output matches xterm expectations for scrollLines (up)', as
 	t.is(term.buffer.active.getLine(0)?.translateToString(true), 'Line 2');
 	t.is(term.buffer.active.getLine(4)?.translateToString(true), 'Line 6');
 });
+
+test('appendLinesBackbuffer pushes lines to xterm scrollback', async t => {
+	const columns = 80;
+	const rows = 10;
+	let output = '';
+	const stdout = {
+		write(chunk: string) {
+			output += chunk;
+			return true;
+		},
+	} as unknown as NodeJS.WriteStream;
+
+	const writer = new TerminalWriter(columns, rows, stdout);
+	const term = new XtermTerminal({
+		cols: columns,
+		rows,
+		allowProposedApi: true,
+	});
+
+	// Fill screen
+	const initialLines = Array.from({length: rows}).map((_, i) =>
+		createLine(`Line ${i}`),
+	);
+	writer.writeLines(initialLines);
+	writer.flush();
+	await writeToTerm(term, output);
+	output = '';
+
+	t.is(term.buffer.active.baseY, 0, 'Initially no scrollback');
+
+	// Append 5 lines to backbuffer
+	const extraLines = Array.from({length: 5}).map((_, i) =>
+		createLine(`Extra ${i}`),
+	);
+	writer.appendLinesBackbuffer(extraLines);
+	writer.flush();
+	await writeToTerm(term, output);
+
+	// Check xterm scrollback
+	t.is(term.buffer.active.baseY, 5, 'Should have 5 lines in scrollback');
+
+	for (let i = 0; i < 5; i++) {
+		const line = term.buffer.active.getLine(i);
+		t.is(
+			line?.translateToString(true),
+			`Extra ${i}`,
+			`Extra ${i} should be in scrollback`,
+		);
+	}
+});
+
+test('syncLine on first render moves cursor to row 0', async t => {
+	const columns = 80;
+	const rows = 10;
+	let output = '';
+	const stdout = {
+		write(chunk: string) {
+			output += chunk;
+			return true;
+		},
+	} as unknown as NodeJS.WriteStream;
+
+	const writer = new TerminalWriter(columns, rows, stdout);
+	const term = new XtermTerminal({
+		cols: columns,
+		rows,
+		allowProposedApi: true,
+	});
+
+	// Pre-fill terminal with some history
+	await writeToTerm(term, 'History 1\r\nHistory 2\r\nHistory 3');
+	t.is(term.buffer.active.cursorY, 2);
+
+	// First render using syncLine
+	const line = createLine('Ink Row 0');
+	writer.syncLine(line, 0);
+	writer.flush();
+	await writeToTerm(term, output);
+
+	// This verifies that syncLine(..., 0) on a first render moves to row 0
+	// which overwrites "History 1" if it's absolute.
+	t.is(
+		term.buffer.active.getLine(0)?.translateToString(true),
+		'Ink Row 0',
+		'Overwrote History 1 because cursorTo(0, 0) was used',
+	);
+});

@@ -11,6 +11,7 @@ test('TerminalBuffer uses in-process worker when renderInProcess is true', t => 
 		renderInProcess: true,
 		stdout,
 	});
+	buffer.render();
 
 	// Check if it writes something on init (it calls render())
 	// The worker writes cursorHide immediately in constructor

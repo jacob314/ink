@@ -1,3 +1,4 @@
+import process from 'node:process';
 import ansiEscapes from 'ansi-escapes';
 import {type StyledChar, styledCharsToString} from '@alcalzone/ansi-tokenize';
 import {debugLog} from '../debug-log.js';
@@ -57,6 +58,14 @@ const moveCursorUp = (skippedLines: number): string => {
 	return '';
 };
 
+const deleteLines = (count: number): string => {
+	return `\u001B[${count}M`;
+};
+
+const insertLines = (count: number): string => {
+	return `\u001B[${count}L`;
+};
+
 const setScrollRegionCode = (top: number, bottom: number): string => {
 	return `\u001B[${top};${bottom}r`;
 };
@@ -112,6 +121,7 @@ export function linesEqual(
 export class TerminalWriter {
 	public isTainted = false;
 	public debugRainbowColor?: string;
+	private linesUpdated = 0;
 	private screen: RenderLine[] = [];
 	private backbuffer: RenderLine[] = [];
 	private cursorX = -1;
@@ -130,12 +140,32 @@ export class TerminalWriter {
 	constructor(
 		private columns: number,
 		private rows: number,
-		private readonly stdout: NodeJS.WriteStream,
+		public readonly stdout: NodeJS.WriteStream,
 	) {}
+
+	getLinesUpdated(): number {
+		return this.linesUpdated;
+	}
+
+	resetLinesUpdated() {
+		this.linesUpdated = 0;
+	}
 
 	unkownCursorLocation() {
 		this.cursorX = -1;
 		this.cursorY = -1;
+	}
+
+	writeRaw(text: string) {
+		this.writeHelper(text);
+	}
+
+	taintScreen() {
+		for (const line of this.screen) {
+			if (line) {
+				line.tainted = true;
+			}
+		}
 	}
 
 	getBackbufferLength(): number {
@@ -206,6 +236,22 @@ export class TerminalWriter {
 		this.isTainted = true;
 	}
 
+	syncLines(lines: RenderLine[]) {
+		const backBufferLength = Math.max(0, lines.length - this.rows);
+
+		for (const [i, line] of lines.entries()) {
+			if (i < backBufferLength) {
+				const clampedLine = this.clampLine(line.styledChars, this.columns);
+				this.backbuffer.push(clampedLine);
+			} else {
+				const screenRow = i - backBufferLength;
+				this.syncLine(line, screenRow);
+			}
+		}
+
+		this.firstRender = false;
+	}
+
 	writeLines(lines: RenderLine[]) {
 		if (this.backbuffer.length > 0 || this.screen.length > 0) {
 			throw new Error(
@@ -228,8 +274,13 @@ export class TerminalWriter {
 			}
 
 			this.writeHelper(textToWrite);
+			this.linesUpdated++;
 
-			if (i < this.rows && this.isFirstRender) {
+			if (
+				i >= backBufferLength &&
+				i < backBufferLength + this.rows &&
+				this.isFirstRender
+			) {
 				// Need to clear any text we might be rendering on top of.
 				this.writeHelper(ansiEscapes.eraseEndLine);
 			}
@@ -256,6 +307,8 @@ export class TerminalWriter {
 		this.cursorX = -1;
 		this.cursorY = -1;
 
+		this.firstRender = false;
+
 		this.finishChunkAndUpdateCursor();
 	}
 
@@ -272,6 +325,23 @@ export class TerminalWriter {
 		this.finishChunkAndUpdateCursor();
 		this.targetCursorY = -1;
 		this.targetCursorX = -1;
+	}
+
+	done() {
+		this.finishChunkAndUpdateCursor();
+
+		if (this.screen.length > 0) {
+			const lastRow = this.screen.length - 1;
+			const lastLine = this.screen[lastRow];
+			if (lastLine) {
+				this.moveCursor(lastRow, lastLine.length);
+				this.writeHelper('\n');
+				this.cursorX = 0;
+				this.cursorY = lastRow + 1;
+			}
+		}
+
+		this.finishChunkAndUpdateCursor();
 	}
 
 	moveCursor(x: number, y: number) {
@@ -407,12 +477,17 @@ export class TerminalWriter {
 		const clampedLine = this.clampLine(line.styledChars, this.columns);
 		const currentLine = this.screen[y];
 
-		if (currentLine && currentLine.text === clampedLine.text) {
+		if (
+			currentLine &&
+			!currentLine.tainted &&
+			currentLine.text === clampedLine.text
+		) {
 			// Content matches, no update needed
 			return;
 		}
 
 		this.moveCursor(y, 0);
+		this.linesUpdated++;
 
 		let textToWrite = clampedLine.text;
 		if (this.debugRainbowColor) {
@@ -428,7 +503,7 @@ export class TerminalWriter {
 		if (y !== this.rows - 1 && y !== this.scrollRegionBottom - 1) {
 			this.writeHelper('\n');
 			this.cursorY = y + 1;
-			this.cursorX = 0;
+			this.cursorX = -1;
 		} else {
 			this.cursorY = y;
 			this.cursorX = clampedLine.length;
@@ -436,126 +511,6 @@ export class TerminalWriter {
 
 		clampedLine.tainted = false;
 		this.screen[y] = clampedLine;
-
-		this.finishChunkAndUpdateCursor();
-	}
-
-	/**
-	 * Trigger a scroll up of content into the backbuffer.
-	 */
-	private applyScrollUpBackbuffer(start: number, bottom: number) {
-		// Simulate the effect of adding a linebreak at the bottom of the scroll region.
-
-		this.moveCursor(bottom - 1, this.cursorX === -1 ? 0 : this.cursorX);
-		this.writeHelper(ansiEscapes.scrollUp);
-
-		if (start === 0) {
-			this.backbuffer.push(this.screen[0]!);
-		}
-
-		for (let i = start; i < bottom - 1; i++) {
-			this.screen[i] = this.screen[i + 1]!;
-		}
-
-		this.screen[bottom - 1] = {
-			styledChars: [],
-			text: '',
-			length: 0,
-			tainted: false,
-		};
-	}
-
-	private applyScrollUp(start: number, bottom: number) {
-		this.writeHelper(ansiEscapes.scrollUp);
-		// Simulate the effect of the ansi escape for scroll up
-		for (let i = start; i < bottom - 1; i++) {
-			this.screen[i] = this.screen[i + 1]!;
-		}
-
-		this.screen[bottom - 1] = {
-			styledChars: [],
-			text: '',
-			length: 0,
-			tainted: false,
-		};
-	}
-
-	private applyScrollDown(start: number, bottom: number) {
-		this.writeHelper(ansiEscapes.scrollDown);
-		// Simulate the effect of the ansi escape for scroll up
-		for (let i = bottom - 1; i > start; i--) {
-			this.screen[i] = this.screen[i - 1]!;
-		}
-
-		this.screen[start] = {styledChars: [], text: '', length: 0, tainted: false};
-	}
-
-	private performScroll(options: {
-		start: number;
-		end: number;
-		linesToScroll: number;
-		lines: RenderLine[];
-		direction: 'up' | 'down';
-		scrollToBackbuffer: boolean;
-	}) {
-		const {start, end, linesToScroll, lines, direction, scrollToBackbuffer} =
-			options;
-		debugLog(
-			`[terminal-writer] SCROLLING LINES ${start}-${end} by ${linesToScroll} ${direction}`,
-		);
-		this.setScrollRegion(start, end);
-		const scrollAreaHeight = end - start;
-
-		if (lines.length !== end - start + linesToScroll) {
-			throw new Error(
-				`Mismatch in scrollLines: expected ${
-					end - start + linesToScroll
-				} lines, got ${lines.length}`,
-			);
-		}
-
-		if (scrollToBackbuffer && direction !== 'up') {
-			throw new Error(
-				`scrollToBackbuffer is only supported for direction "up"`,
-			);
-		}
-
-		if (scrollToBackbuffer && start > 0) {
-			throw new Error(
-				`scrollToBackbuffer is only supported for start=0, got ${start}`,
-			);
-		}
-
-		// Make sure the content on screen before scrolling really matches what is in lines.
-		for (let i = start; i < end; i++) {
-			this.syncLine(lines[i - start]!, i);
-		}
-
-		if (direction === 'up') {
-			for (let i = 0; i < linesToScroll; i++) {
-				if (scrollToBackbuffer) {
-					this.applyScrollUpBackbuffer(start, end);
-				} else {
-					this.applyScrollUp(start, end);
-				}
-				// Add the new line at the end after scrolling up the other lines
-
-				this.unkownCursorLocation();
-				this.syncLine(lines[i + scrollAreaHeight]!, end - 1);
-			}
-
-			this.finishChunkAndUpdateCursor();
-		} else if (direction === 'down') {
-			for (let i = 0; i < linesToScroll; i++) {
-				const line = lines[linesToScroll - i]!;
-				this.applyScrollDown(start, end);
-				// Add the new line at the end after scrolling up the other lines
-				this.unkownCursorLocation();
-				this.syncLine(line, start);
-			}
-
-			this.finishChunkAndUpdateCursor();
-		}
 	}
 
 	scrollLines(options: {
@@ -590,6 +545,12 @@ export class TerminalWriter {
 				line.tainted = true;
 			}
 		}
+
+		for (const line of this.screen) {
+			if (line) {
+				line.tainted = true;
+			}
+		}
 	}
 
 	clear() {
@@ -599,16 +560,17 @@ export class TerminalWriter {
 				: ansiEscapes.eraseScreen;
 
 		this.writeHelper(eraseOperation);
-		// tmux does not reset the scroll region reliably on clear so we
+		// Tmux does not reset the scroll region reliably on clear so we
 		// reset it manually.
 		this.writeHelper(resetScrollRegion);
 		this.scrollRegionTop = -1;
 		this.scrollRegionBottom = -1;
 		this.screen = [];
 		this.backbuffer = [];
+		this.firstRender = true;
 		// Set the cursor to an unknown location as tmux
-		// does not appear to always reset it to 0,0 on clear
-		// while in mouse mode.
+		// Does not appear to always reset it to 0,0 on clear
+		// While in mouse mode.
 		this.cursorX = -1;
 		this.cursorY = -1;
 	}
@@ -717,6 +679,131 @@ export class TerminalWriter {
 					)}", got "${styledCharsToString(this.backbuffer[i]?.styledChars ?? [])}"`,
 				);
 			}
+		}
+	}
+
+	/**
+	 * Trigger a scroll up of content into the backbuffer.
+	 */
+	private applyScrollUpBackbuffer(start: number, bottom: number) {
+		// Simulate the effect of adding a linebreak at the bottom of the scroll region.
+
+		this.moveCursor(bottom - 1, 0);
+		this.writeHelper('\n');
+		this.cursorX = -1;
+		this.cursorY = bottom - 1;
+
+		if (start === 0) {
+			this.backbuffer.push(this.screen[0]!);
+		}
+
+		for (let i = start; i < bottom - 1; i++) {
+			this.screen[i] = this.screen[i + 1]!;
+		}
+
+		this.screen[bottom - 1] = {
+			styledChars: [],
+			text: '',
+			length: 0,
+			tainted: false,
+		};
+	}
+
+	private applyScrollUp(start: number, bottom: number) {
+		this.moveCursor(start, 0);
+		this.writeHelper(deleteLines(1));
+		// Simulate the effect of the ansi escape for scroll up
+		for (let i = start; i < bottom - 1; i++) {
+			this.screen[i] = this.screen[i + 1]!;
+		}
+
+		this.screen[bottom - 1] = {
+			styledChars: [],
+			text: '',
+			length: 0,
+			tainted: false,
+		};
+	}
+
+	private applyScrollDown(start: number, bottom: number) {
+		this.moveCursor(start, 0);
+		this.writeHelper(insertLines(1));
+		// Simulate the effect of the ansi escape for scroll up
+		for (let i = bottom - 1; i > start; i--) {
+			this.screen[i] = this.screen[i - 1]!;
+		}
+
+		this.screen[start] = {styledChars: [], text: '', length: 0, tainted: false};
+	}
+
+	private performScroll(options: {
+		start: number;
+		end: number;
+		linesToScroll: number;
+		lines: RenderLine[];
+		direction: 'up' | 'down';
+		scrollToBackbuffer: boolean;
+	}) {
+		const {start, end, linesToScroll, lines, direction, scrollToBackbuffer} =
+			options;
+		debugLog(
+			`[terminal-writer] SCROLLING LINES ${start}-${end} by ${linesToScroll} ${direction}`,
+		);
+		this.setScrollRegion(start, end);
+		const scrollAreaHeight = end - start;
+
+		if (lines.length !== end - start + linesToScroll) {
+			throw new Error(
+				`Mismatch in scrollLines: expected ${
+					end - start + linesToScroll
+				} lines, got ${lines.length}`,
+			);
+		}
+
+		if (scrollToBackbuffer && direction !== 'up') {
+			throw new Error(
+				`scrollToBackbuffer is only supported for direction "up"`,
+			);
+		}
+
+		if (scrollToBackbuffer && start > 0) {
+			throw new Error(
+				`scrollToBackbuffer is only supported for start=0, got ${start}`,
+			);
+		}
+
+		// Make sure the content on screen before scrolling really matches what is in lines.
+		// For 'up', existing content is at the start of 'lines'.
+		// For 'down', existing content is at the end of 'lines'.
+		const existingContentOffset = direction === 'up' ? 0 : linesToScroll;
+		for (let i = start; i < end; i++) {
+			this.syncLine(lines[existingContentOffset + i - start]!, i);
+		}
+
+		if (direction === 'up') {
+			for (let i = 0; i < linesToScroll; i++) {
+				if (scrollToBackbuffer) {
+					this.applyScrollUpBackbuffer(start, end);
+				} else {
+					this.applyScrollUp(start, end);
+				}
+				// Add the new line at the end after scrolling up the other lines
+
+				this.unkownCursorLocation();
+				this.syncLine(lines[i + scrollAreaHeight]!, end - 1);
+			}
+
+			this.finishChunkAndUpdateCursor();
+		} else if (direction === 'down') {
+			for (let i = 0; i < linesToScroll; i++) {
+				const line = lines[linesToScroll - 1 - i]!;
+				this.applyScrollDown(start, end);
+				// Add the new line at the end after scrolling up the other lines
+				this.unkownCursorLocation();
+				this.syncLine(line, start);
+			}
+
+			this.finishChunkAndUpdateCursor();
 		}
 	}
 

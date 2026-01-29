@@ -177,7 +177,6 @@ export const renderToStatic = (
 		selectionStyle?: (char: StyledChar) => StyledChar;
 	} = {},
 ) => {
-	debugLog(`renderToStatic called for ${node.nodeName}`);
 	if (options.calculateLayout && node.yogaNode) {
 		node.yogaNode.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
 	}
@@ -295,7 +294,6 @@ function renderNodeToOutput(
 		}
 
 		if (node.nodeName === 'ink-static-render' && !node.cachedRender) {
-			debugLog('Skipping render as cache already avaiable\n');
 			return;
 		}
 

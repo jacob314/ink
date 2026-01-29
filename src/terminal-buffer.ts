@@ -5,6 +5,7 @@ import {Serializer} from './serialization.js';
 import {TerminalBufferWorker} from './worker/render-worker.js';
 import {type Region, type RegionUpdate, type RegionNode} from './output.js';
 import {flattenRegion} from './renderer.js';
+import {type InkOptions} from './components/AppContext.js';
 
 const debugEdits = false;
 
@@ -19,6 +20,9 @@ export default class TerminalBuffer {
 	private lastRegions = new Map<string | number, Region>();
 	private lastCursorPosition?: {row: number; col: number};
 
+	private lastOptions?: InkOptions;
+	private optionsChanged = false;
+
 	constructor(
 		columns: number,
 		rows: number,
@@ -26,12 +30,22 @@ export default class TerminalBuffer {
 			debugRainbowEnabled?: boolean;
 			renderInProcess?: boolean;
 			stdout?: NodeJS.WriteStream;
+			isAlternateBufferEnabled?: boolean;
+			isBackbufferStickyHeadersEnabled?: boolean;
 		},
 	) {
+		this.lastOptions = {
+			isAlternateBufferEnabled: options?.isAlternateBufferEnabled,
+			isBackbufferStickyHeadersEnabled:
+				options?.isBackbufferStickyHeadersEnabled,
+		};
 		if (options?.renderInProcess) {
 			this.workerInstance = new TerminalBufferWorker(columns, rows, {
 				debugRainbowEnabled: options?.debugRainbowEnabled,
 				stdout: options?.stdout,
+				isAlternateBufferEnabled: options?.isAlternateBufferEnabled,
+				isBackbufferStickyHeadersEnabled:
+					options?.isBackbufferStickyHeadersEnabled,
 			});
 			void this.workerInstance.render();
 
@@ -60,12 +74,45 @@ export default class TerminalBuffer {
 				},
 			});
 
+			this.worker.on('error', () => {
+				// Silently ignore worker errors (e.g. EPIPE on exit)
+			});
+
 			this.worker.send({
 				type: 'init',
 				columns,
 				rows,
 				debugRainbowEnabled: options?.debugRainbowEnabled,
+				isAlternateBufferEnabled: options?.isAlternateBufferEnabled,
+				isBackbufferStickyHeadersEnabled:
+					options?.isBackbufferStickyHeadersEnabled,
 			});
+		}
+	}
+
+	updateOptions(options: InkOptions) {
+		if (
+			options.isAlternateBufferEnabled !==
+				this.lastOptions?.isAlternateBufferEnabled ||
+			options.isBackbufferStickyHeadersEnabled !==
+				this.lastOptions?.isBackbufferStickyHeadersEnabled
+		) {
+			this.optionsChanged = true;
+		}
+
+		this.lastOptions = {...options};
+
+		if (this.workerInstance) {
+			this.workerInstance.updateOptions(options);
+		} else if (this.worker?.connected) {
+			try {
+				this.worker.send({
+					type: 'updateOptions',
+					options,
+				});
+			} catch (error) {
+				console.error('Failed to send updateOptions message to worker:', error);
+			}
 		}
 	}
 
@@ -110,7 +157,8 @@ export default class TerminalBuffer {
 
 		this.lastCursorPosition = cursorPosition;
 
-		if (updates.length > 0 || cursorChanged) {
+		if (updates.length > 0 || cursorChanged || this.optionsChanged) {
+			this.optionsChanged = false;
 			this.sendEdits(tree, updates, cursorPosition);
 			return true;
 		}
@@ -121,20 +169,89 @@ export default class TerminalBuffer {
 	async render() {
 		if (this.workerInstance) {
 			await this.workerInstance.render();
-		} else {
-			this.worker?.send({
-				type: 'render',
-			});
+		} else if (this.worker?.connected) {
+			try {
+				this.worker.send({
+					type: 'render',
+				});
+			} catch (error) {
+				console.error('Failed to send render message to worker:', error);
+			}
 		}
 	}
 
 	async fullRender() {
 		if (this.workerInstance) {
 			await this.workerInstance.fullRender();
-		} else {
-			this.worker?.send({
-				type: 'fullRender',
-			});
+		} else if (this.worker?.connected) {
+			try {
+				this.worker.send({
+					type: 'fullRender',
+				});
+			} catch (error) {
+				console.error('Failed to send fullRender message to worker:', error);
+			}
+		}
+	}
+
+	done() {
+		if (this.workerInstance) {
+			this.workerInstance.done();
+		} else if (this.worker?.connected) {
+			try {
+				this.worker.send({
+					type: 'done',
+				});
+			} catch {
+				// Silently fail on exit errors as the worker might already be gone
+			}
+		}
+	}
+
+	async getLinesUpdated(): Promise<number> {
+		if (this.workerInstance) {
+			return this.workerInstance.getLinesUpdated();
+		}
+
+		if (!this.worker?.connected) {
+			return 0;
+		}
+
+		return new Promise(resolve => {
+			const handler = (message: any) => {
+				if (message.type === 'linesUpdated') {
+					this.worker?.off('message', handler);
+					resolve(message.count as number);
+				}
+			};
+
+			this.worker?.on('message', handler);
+
+			try {
+				this.worker?.send({type: 'getLinesUpdated'});
+			} catch (error) {
+				this.worker?.off('message', handler);
+				console.error(
+					'Failed to send getLinesUpdated message to worker:',
+					error,
+				);
+				resolve(0);
+			}
+		});
+	}
+
+	resetLinesUpdated() {
+		if (this.workerInstance) {
+			this.workerInstance.resetLinesUpdated();
+		} else if (this.worker?.connected) {
+			try {
+				this.worker.send({type: 'resetLinesUpdated'});
+			} catch (error) {
+				console.error(
+					'Failed to send resetLinesUpdated message to worker:',
+					error,
+				);
+			}
 		}
 	}
 
@@ -368,13 +485,17 @@ export default class TerminalBuffer {
 	) {
 		if (this.workerInstance) {
 			this.workerInstance.update(tree, updates, cursorPosition);
-		} else {
-			this.worker?.send({
-				type: 'edits',
-				tree,
-				updates,
-				cursorPosition,
-			});
+		} else if (this.worker?.connected) {
+			try {
+				this.worker.send({
+					type: 'edits',
+					tree,
+					updates,
+					cursorPosition,
+				});
+			} catch (error) {
+				console.error('Failed to send edits to worker:', error);
+			}
 		}
 	}
 

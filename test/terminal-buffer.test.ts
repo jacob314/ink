@@ -46,7 +46,7 @@ test('update - correctly diffs sequential updates', t => {
 	t.is(lineUpdates1.length, 1);
 	// Full update
 	t.is(lineUpdates1[0].start, 0);
-	t.is(lineUpdates1[0].end, 3); // length of lines
+	t.is(lineUpdates1[0].end, 3); // Length of lines
 
 	sendStub.resetHistory();
 

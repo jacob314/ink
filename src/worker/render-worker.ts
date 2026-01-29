@@ -1,11 +1,13 @@
 import process from 'node:process';
 import {Buffer} from 'node:buffer';
 import ansiEscapes from 'ansi-escapes';
+import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import {debugLog} from '../debug-log.js';
 import {calculateScrollbarThumb} from '../measure-element.js';
 import {type RegionNode, type RegionUpdate, type Region} from '../output.js';
 import {Deserializer} from '../serialization.js';
 import {renderScrollbar} from '../render-scrollbar.js';
+import {type InkOptions} from '../components/AppContext.js';
 import {
 	type RenderLine,
 	TerminalWriter,
@@ -22,6 +24,8 @@ export class TerminalBufferWorker {
 	fullRenderTimeout?: NodeJS.Timeout;
 	frameIndex = 0;
 	debugRainbowEnabled = false;
+	isAlternateBufferEnabled = false;
+	isBackbufferStickyHeadersEnabled = false;
 	resized = false;
 	cursorPosition?: {row: number; col: number};
 
@@ -29,30 +33,103 @@ export class TerminalBufferWorker {
 	screen: RenderLine[] = [];
 	backbuffer: RenderLine[] = [];
 
-	private readonly terminalWriter: TerminalWriter;
+	private readonly primaryTerminalWriter: TerminalWriter;
+	private readonly alternateTerminalWriter: TerminalWriter;
+
+	private get terminalWriter(): TerminalWriter {
+		return this.isAlternateBufferEnabled
+			? this.alternateTerminalWriter
+			: this.primaryTerminalWriter;
+	}
+
+	// Track the maximum scroll top that has been pushed to the backbuffer for each region.
+	private readonly maxRegionScrollTops = new Map<string | number, number>();
 	// Track last scroll top for regions so we can animate scrolling.
 	private readonly lastRegionScrollTops = new Map<string | number, number>();
 
 	constructor(
 		public columns: number,
 		public rows: number,
-		options?: {debugRainbowEnabled?: boolean; stdout?: NodeJS.WriteStream},
+		options?: {
+			debugRainbowEnabled?: boolean;
+			stdout?: NodeJS.WriteStream;
+			isAlternateBufferEnabled?: boolean;
+			isBackbufferStickyHeadersEnabled?: boolean;
+		},
 	) {
 		const stdout = options?.stdout ?? process.stdout;
-		this.terminalWriter = new TerminalWriter(columns, rows, stdout);
-		stdout.write(ansiEscapes.cursorHide);
+		this.primaryTerminalWriter = new TerminalWriter(columns, rows, stdout);
+		this.alternateTerminalWriter = new TerminalWriter(columns, rows, stdout);
+
+		this.primaryTerminalWriter.writeRaw(ansiEscapes.cursorHide);
+		this.alternateTerminalWriter.writeRaw(ansiEscapes.cursorHide);
 
 		if (options?.debugRainbowEnabled) {
 			this.debugRainbowEnabled = true;
 		}
+
+		if (options?.isAlternateBufferEnabled) {
+			this.isAlternateBufferEnabled = true;
+		}
+
+		if (options?.isBackbufferStickyHeadersEnabled) {
+			this.isBackbufferStickyHeadersEnabled = true;
+		}
+
+		if (this.isAlternateBufferEnabled) {
+			this.alternateTerminalWriter.writeRaw(ansiEscapes.enterAlternativeScreen);
+		}
+	}
+
+	updateOptions(options: InkOptions) {
+		if (
+			options.isAlternateBufferEnabled !== undefined &&
+			this.isAlternateBufferEnabled !== options.isAlternateBufferEnabled
+		) {
+			// Flush current writer before switching
+			this.terminalWriter.flush();
+
+			if (options.isAlternateBufferEnabled) {
+				this.primaryTerminalWriter.stdout.write(
+					ansiEscapes.enterAlternativeScreen,
+				);
+				this.isAlternateBufferEnabled = true;
+
+				// The newly active alternate buffer is effectively blank
+				this.terminalWriter.clear();
+			} else {
+				this.alternateTerminalWriter.stdout.write(
+					ansiEscapes.exitAlternativeScreen,
+				);
+				this.isAlternateBufferEnabled = false;
+
+				// When returning to the primary buffer, we don't clear it (to preserve history/static output)
+				// but we mark it as potentially having an unknown cursor position and tainted lines.
+				this.terminalWriter.unkownCursorLocation();
+				this.terminalWriter.taintScreen();
+				this.terminalWriter.isTainted = true;
+			}
+
+			this.backbufferDirty = true;
+			this.backbufferDirtyCurrentFrame = true;
+		}
+
+		if (options.isBackbufferStickyHeadersEnabled !== undefined) {
+			this.isBackbufferStickyHeadersEnabled =
+				options.isBackbufferStickyHeadersEnabled;
+		}
+
+		this.backbufferDirty = true;
+		this.backbufferDirtyCurrentFrame = true;
 	}
 
 	update(
 		tree: RegionNode,
 		updates: RegionUpdate[],
 		cursorPosition?: {row: number; col: number},
-	) {
+	): boolean {
 		this.root = tree;
+		const previousCursorPosition = this.cursorPosition;
 		this.cursorPosition = cursorPosition;
 
 		for (const update of updates) {
@@ -136,9 +213,7 @@ export class TerminalBufferWorker {
 			const rootRegion = this.regions.get(this.root.id);
 
 			if (rootRegion) {
-				const totalHeight = rootRegion.height;
-				const cameraY = Math.max(0, totalHeight - this.rows);
-
+				const cameraY = Math.max(0, rootRegion.height - this.rows);
 				for (const update of updates) {
 					const region = this.regions.get(update.id);
 
@@ -155,6 +230,15 @@ export class TerminalBufferWorker {
 				}
 			}
 		}
+
+		const cursorChanged =
+			cursorPosition !== previousCursorPosition &&
+			(!cursorPosition ||
+				!previousCursorPosition ||
+				cursorPosition.row !== previousCursorPosition.row ||
+				cursorPosition.col !== previousCursorPosition.col);
+
+		return updates.length > 0 || cursorChanged || this.backbufferDirty;
 	}
 
 	resize(columns: number, rows: number) {
@@ -166,7 +250,8 @@ export class TerminalBufferWorker {
 		this.rows = rows;
 
 		debugLog(`XXXXX [RENDER-WORKER] Resize to ${columns}x${rows}\n`);
-		this.terminalWriter.resize(columns, rows);
+		this.primaryTerminalWriter.resize(columns, rows);
+		this.alternateTerminalWriter.resize(columns, rows);
 		this.backbufferDirtyCurrentFrame = true;
 		this.resized = true;
 		void this.render();
@@ -216,81 +301,168 @@ export class TerminalBufferWorker {
 		const cameraY = this.getCameraY(rootRegion);
 		this.syncCursor(cameraY);
 
-		// 0. Handle Global Scroll (Backbuffer growth)
-		const backbufferLength = this.terminalWriter.getBackbufferLength();
-		const linesToScroll = cameraY - backbufferLength;
+		if (!this.terminalWriter.isFirstRender) {
+			// 0. Handle Global Scroll (Backbuffer growth)
+			const maxPushed = this.maxRegionScrollTops.get(rootRegion.id) ?? 0;
+			const linesToScroll = cameraY - maxPushed;
 
-		if (linesToScroll > 0) {
-			this.appendToBackbuffer(rootRegion, backbufferLength, linesToScroll);
-		}
+			if (linesToScroll > 0) {
+				this.appendToBackbuffer(rootRegion, maxPushed, linesToScroll);
+				this.maxRegionScrollTops.set(rootRegion.id, cameraY);
+			}
 
-		// 0.5 Handle Local Region Scrolls
-		for (const region of this.regions.values()) {
-			if (region.isScrollable) {
-				const scrollTop = region.scrollTop ?? 0;
-				const lastScrollTop = this.lastRegionScrollTops.get(region.id) ?? 0;
+			// 0.5 Handle Local Region Scrolls
+			for (const region of this.regions.values()) {
+				if (region.isScrollable) {
+					const scrollTop = region.scrollTop ?? 0;
+					const lastScrollTop = this.lastRegionScrollTops.get(region.id) ?? 0;
 
-				if (scrollTop !== lastScrollTop) {
-					if (region.width === this.columns && region.x === 0) {
-						// Full-width region, we can use scrolling regions!
-						const linesToScroll = Math.abs(scrollTop - lastScrollTop);
-						const direction = scrollTop > lastScrollTop ? 'up' : 'down';
-						const start = Math.max(0, region.y - cameraY);
-						const end = Math.min(this.rows, region.y + region.height - cameraY);
+					if (scrollTop !== lastScrollTop) {
+						if (region.width === this.columns && region.x === 0) {
+							// Full-width region, we can use scrolling regions!
+							const start = Math.max(0, region.y - cameraY);
+							const end = Math.min(
+								this.rows,
+								region.y + region.height - cameraY,
+							);
 
-						if (end > start) {
-							// Prepare lines for scrollLines
-							const scrollAreaHeight = end - start;
-							const lines: RenderLine[] = [];
-							const baseScrollTop =
-								direction === 'up' ? lastScrollTop : scrollTop;
+							if (end > start) {
+								const maxPushed = this.maxRegionScrollTops.get(region.id) ?? 0;
+								const direction = scrollTop > lastScrollTop ? 'up' : 'down';
+								const linesToScroll = Math.abs(scrollTop - lastScrollTop);
+								const scrollAreaHeight = end - start;
 
-							for (let i = 0; i < scrollAreaHeight + linesToScroll; i++) {
-								const contentY = baseScrollTop + i;
-								const chars = region.lines[contentY] ?? [];
-								lines.push(this.terminalWriter.clampLine(chars, this.columns));
-							}
+								const getLinesForScroll = (
+									base: number,
+									count: number,
+								): RenderLine[] => {
+									const res: RenderLine[] = [];
+									for (let i = 0; i < scrollAreaHeight + count; i++) {
+										const contentY = base + i;
+										const chars = region.lines[contentY] ?? [];
+										res.push(
+											this.terminalWriter.clampLine(chars, this.columns),
+										);
+									}
 
-							this.terminalWriter.scrollLines({
-								start,
-								end,
-								linesToScroll,
-								lines,
-								direction,
-								scrollToBackbuffer:
+									return res;
+								};
+
+								if (
 									direction === 'up' &&
-									Boolean(region.overflowToBackbuffer) &&
-									start === 0,
-							});
-						}
-					} else if (region.overflowToBackbuffer && scrollTop > lastScrollTop) {
-						// Not full-width, but needs to scroll into backbuffer
-						this.appendToBackbuffer(
-							region,
-							lastScrollTop,
-							scrollTop - lastScrollTop,
-						);
-					}
+									region.overflowToBackbuffer &&
+									start === 0
+								) {
+									const newLinesToPush = Math.max(0, scrollTop - maxPushed);
+									const linesToJustScroll = linesToScroll - newLinesToPush;
 
-					this.lastRegionScrollTops.set(region.id, scrollTop);
+									// 1. Scroll and push NEW lines to backbuffer (using sequential writes)
+									if (newLinesToPush > 0) {
+										const pushBase = Math.max(lastScrollTop, maxPushed);
+										this.terminalWriter.scrollLines({
+											start,
+											end,
+											linesToScroll: newLinesToPush,
+											lines: getLinesForScroll(pushBase, newLinesToPush),
+											direction: 'up',
+											scrollToBackbuffer: true,
+										});
+
+										this.maxRegionScrollTops.set(region.id, scrollTop);
+									}
+
+									// 2. Scroll lines that were already in backbuffer (just visual scroll on screen using DL)
+									if (linesToJustScroll > 0) {
+										const visualBase = lastScrollTop;
+										this.terminalWriter.scrollLines({
+											start,
+											end,
+											linesToScroll: linesToJustScroll,
+											lines: getLinesForScroll(visualBase, linesToJustScroll),
+											direction: 'up',
+											scrollToBackbuffer: false,
+										});
+									}
+								} else {
+									// Normal scroll: Down (scrolling up doc) OR Up (scrolling down doc) without backbuffer push
+									this.terminalWriter.scrollLines({
+										start,
+										end,
+										linesToScroll,
+										lines: getLinesForScroll(
+											direction === 'up' ? lastScrollTop : scrollTop,
+											linesToScroll,
+										),
+										direction,
+										scrollToBackbuffer: false,
+									});
+
+									if (
+										direction === 'up' &&
+										region.overflowToBackbuffer &&
+										start === 0
+									) {
+										this.maxRegionScrollTops.set(
+											region.id,
+											Math.max(maxPushed, scrollTop),
+										);
+									}
+								}
+							}
+						} else if (
+							region.overflowToBackbuffer &&
+							scrollTop > lastScrollTop
+						) {
+							// Not full-width, but needs to scroll into backbuffer
+							const maxPushed = this.maxRegionScrollTops.get(region.id) ?? 0;
+							const startPushed = Math.max(lastScrollTop, maxPushed);
+							const countPushed = scrollTop - startPushed;
+
+							if (countPushed > 0) {
+								this.appendToBackbuffer(region, startPushed, countPushed);
+								this.maxRegionScrollTops.set(region.id, scrollTop);
+							}
+						}
+
+						this.lastRegionScrollTops.set(region.id, scrollTop);
+					}
+				} else {
+					// Reset tracking if property disabled
+					this.lastRegionScrollTops.delete(region.id);
 				}
-			} else {
-				// Reset tracking if property disabled
-				this.lastRegionScrollTops.delete(region.id);
 			}
 		}
 
 		// 2. Compose Frame
 		this.composeScene();
 
-		// 3. Sync
-		for (let row = 0; row < this.rows; row++) {
-			this.terminalWriter.syncLine(this.screen[row]!, row);
+		if (this.terminalWriter.isFirstRender) {
+			this.terminalWriter.writeLines([...this.backbuffer, ...this.screen]);
+
+			// Initialize tracking maps for the first render
+			if (rootRegion) {
+				this.maxRegionScrollTops.set(rootRegion.id, cameraY);
+			}
+
+			for (const region of this.regions.values()) {
+				if (region.isScrollable) {
+					this.lastRegionScrollTops.set(region.id, region.scrollTop ?? 0);
+
+					if (region.overflowToBackbuffer) {
+						this.maxRegionScrollTops.set(region.id, region.scrollTop ?? 0);
+					}
+				}
+			}
+		} else {
+			// 3. Sync
+			for (let row = 0; row < this.rows; row++) {
+				this.terminalWriter.syncLine(this.screen[row]!, row);
+			}
 		}
 
 		this.terminalWriter.finish();
 
-		await this.terminalWriter.slowFlush();
+		this.terminalWriter.flush();
 
 		if (this.backbufferDirtyCurrentFrame) {
 			this.backbufferDirty = true;
@@ -307,6 +479,24 @@ export class TerminalBufferWorker {
 		this.backbufferDirtyCurrentFrame = false;
 	}
 
+	done() {
+		this.terminalWriter.done();
+
+		if (this.isAlternateBufferEnabled) {
+			this.terminalWriter.stdout.write(ansiEscapes.exitAlternativeScreen);
+		}
+
+		this.terminalWriter.flush();
+	}
+
+	getLinesUpdated(): number {
+		return this.terminalWriter.getLinesUpdated();
+	}
+
+	resetLinesUpdated() {
+		this.terminalWriter.resetLinesUpdated();
+	}
+
 	private composeScene() {
 		if (!this.root) {
 			return;
@@ -318,25 +508,26 @@ export class TerminalBufferWorker {
 			return;
 		}
 
-		const totalHeight = rootRegion.height;
 		const cameraY = this.getCameraY(rootRegion);
 
 		this.backbuffer = [];
 
-		for (let i = 0; i < cameraY; i++) {
-			const line = rootRegion.lines[i] ?? [];
-			this.backbuffer.push(this.terminalWriter.clampLine(line, this.columns));
-		}
+		if (!this.isAlternateBufferEnabled) {
+			for (let i = 0; i < cameraY; i++) {
+				const line = rootRegion.lines[i] ?? [];
+				this.backbuffer.push(this.terminalWriter.clampLine(line, this.columns));
+			}
 
-		for (const region of this.regions.values()) {
-			if (region.overflowToBackbuffer && region.isScrollable) {
-				const scrollTop = region.scrollTop ?? 0;
+			for (const region of this.regions.values()) {
+				if (region.overflowToBackbuffer && region.isScrollable) {
+					const scrollTop = region.scrollTop ?? 0;
 
-				for (let i = 0; i < scrollTop; i++) {
-					const line = region.lines[i] ?? [];
-					this.backbuffer.push(
-						this.terminalWriter.clampLine(line, this.columns),
-					);
+					for (let i = 0; i < scrollTop; i++) {
+						const line = region.lines[i] ?? [];
+						this.backbuffer.push(
+							this.terminalWriter.clampLine(line, this.columns),
+						);
+					}
 				}
 			}
 		}
@@ -398,7 +589,7 @@ export class TerminalBufferWorker {
 		}
 
 		// If absY + height < 0, skip?
-		if (absY + region.height < 0) {
+		if (absY + region.height < 0 && !this.isBackbufferStickyHeadersEnabled) {
 			return;
 		}
 
@@ -488,7 +679,17 @@ export class TerminalBufferWorker {
 			for (let i = 0; i < headerH; i++) {
 				const sy = headerY + i;
 
-				if (sy < myClip.y || sy >= myClip.y + myClip.h) {
+				// If header is within the region's clip (standard behavior)
+				const withinRegionClip = sy >= myClip.y && sy < myClip.y + myClip.h;
+
+				// If header is above the region (due to overflowToBackbuffer) and we want sticky headers there
+				const aboveRegionAndStickyEnabled =
+					absY < 0 &&
+					this.isBackbufferStickyHeadersEnabled &&
+					sy >= 0 &&
+					sy < Math.min(this.rows, absY + region.height);
+
+				if (!withinRegionClip && !aboveRegionAndStickyEnabled) {
 					continue;
 				}
 
@@ -613,13 +814,19 @@ export class TerminalBufferWorker {
 		for (let i = 0; i < count; i++) {
 			const lineIndex = start + i;
 			const chars = region.lines[lineIndex] ?? [];
-			linesScrollingOut.push(this.terminalWriter.clampLine(chars, this.columns));
+			linesScrollingOut.push(
+				this.terminalWriter.clampLine(chars, this.columns),
+			);
 		}
 
 		this.terminalWriter.appendLinesBackbuffer(linesScrollingOut);
 	}
 
-	private readonly setCharOnScreen = (x: number, y: number, char: StyledChar) => {
+	private readonly setCharOnScreen = (
+		x: number,
+		y: number,
+		char: StyledChar,
+	) => {
 		if (y >= 0 && y < this.rows && x >= 0 && x < this.columns) {
 			const targetLine = this.screen[y];
 			if (targetLine) {
@@ -648,7 +855,19 @@ const main = () => {
 				const rows = (process.stdout.rows || message.rows) as number;
 				buffer = new TerminalBufferWorker(columns, rows, {
 					debugRainbowEnabled: message.debugRainbowEnabled as boolean,
+					isAlternateBufferEnabled: message.isAlternateBufferEnabled as boolean,
+					isBackbufferStickyHeadersEnabled:
+						message.isBackbufferStickyHeadersEnabled as boolean,
 				});
+				break;
+			}
+
+			case 'updateOptions': {
+				if (buffer) {
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+					buffer.updateOptions(message.options);
+				}
+
 				break;
 			}
 
@@ -672,6 +891,33 @@ const main = () => {
 			case 'render': {
 				if (buffer) {
 					void buffer.render();
+				}
+
+				break;
+			}
+
+			case 'done': {
+				if (buffer) {
+					buffer.done();
+				}
+
+				break;
+			}
+
+			case 'getLinesUpdated': {
+				if (buffer) {
+					process.send?.({
+						type: 'linesUpdated',
+						count: buffer.getLinesUpdated(),
+					});
+				}
+
+				break;
+			}
+
+			case 'resetLinesUpdated': {
+				if (buffer) {
+					buffer.resetLinesUpdated();
 				}
 
 				break;
