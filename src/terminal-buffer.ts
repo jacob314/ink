@@ -122,7 +122,7 @@ export default class TerminalBuffer {
 		root: Region,
 		cursorPosition?: {row: number; col: number},
 	): boolean {
-		this.lines = flattenRegion(root, {});
+		this.lines = flattenRegion(root, {skipScrollbars: true});
 		const currentRegionsMap = new Map<string | number, Region>();
 		const updates: RegionUpdate[] = [];
 

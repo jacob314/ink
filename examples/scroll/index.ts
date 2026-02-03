@@ -11,10 +11,9 @@ import ScrollableContent from './scroll.js';
 render(React.createElement(ScrollableContent), {
 	renderProcess: true,
 	terminalBuffer: true,
-	isAlternateBufferEnabled: false,
-	// AlternateBuffer: true,
+	alternateBuffer: false,
 	standardReactLayoutTiming: true,
-	debugRainbow: false,
+	debugRainbow: true,
 	incrementalRendering: true,
 	maxFps: 10_000,
 });

@@ -19,15 +19,13 @@ export class TerminalBufferWorker {
 	regions = new Map<string | number, Region>();
 	root?: RegionNode;
 
-	backbufferDirty = false;
-	backbufferDirtyCurrentFrame = false;
-	fullRenderTimeout?: NodeJS.Timeout;
 	frameIndex = 0;
 	debugRainbowEnabled = false;
 	isAlternateBufferEnabled = false;
 	isBackbufferStickyHeadersEnabled = false;
 	resized = false;
 	cursorPosition?: {row: number; col: number};
+	forceNextRender = false;
 
 	// Ground truth on what lines should be rendered (composed frame)
 	screen: RenderLine[] = [];
@@ -41,11 +39,6 @@ export class TerminalBufferWorker {
 			? this.alternateTerminalWriter
 			: this.primaryTerminalWriter;
 	}
-
-	// Track the maximum scroll top that has been pushed to the backbuffer for each region.
-	private readonly maxRegionScrollTops = new Map<string | number, number>();
-	// Track last scroll top for regions so we can animate scrolling.
-	private readonly lastRegionScrollTops = new Map<string | number, number>();
 
 	constructor(
 		public columns: number,
@@ -89,6 +82,11 @@ export class TerminalBufferWorker {
 			// Flush current writer before switching
 			this.terminalWriter.flush();
 
+			if (this.terminalWriter.fullRenderTimeout) {
+				clearTimeout(this.terminalWriter.fullRenderTimeout);
+				this.terminalWriter.fullRenderTimeout = undefined;
+			}
+
 			if (options.isAlternateBufferEnabled) {
 				this.primaryTerminalWriter.stdout.write(
 					ansiEscapes.enterAlternativeScreen,
@@ -110,17 +108,19 @@ export class TerminalBufferWorker {
 				this.terminalWriter.isTainted = true;
 			}
 
-			this.backbufferDirty = true;
-			this.backbufferDirtyCurrentFrame = true;
+			this.forceNextRender = true;
 		}
 
-		if (options.isBackbufferStickyHeadersEnabled !== undefined) {
+		if (
+			options.isBackbufferStickyHeadersEnabled !== undefined &&
+			this.isBackbufferStickyHeadersEnabled !==
+				options.isBackbufferStickyHeadersEnabled
+		) {
 			this.isBackbufferStickyHeadersEnabled =
 				options.isBackbufferStickyHeadersEnabled;
-		}
 
-		this.backbufferDirty = true;
-		this.backbufferDirtyCurrentFrame = true;
+			this.forceNextRender = true;
+		}
 	}
 
 	update(
@@ -222,8 +222,8 @@ export class TerminalBufferWorker {
 							const absStart = region.y + chunk.start;
 
 							if (absStart < cameraY) {
-								this.backbufferDirty = true;
-								this.backbufferDirtyCurrentFrame = true;
+								this.terminalWriter.backbufferDirty = true;
+								this.terminalWriter.backbufferDirtyCurrentFrame = true;
 							}
 						}
 					}
@@ -238,7 +238,13 @@ export class TerminalBufferWorker {
 				cursorPosition.row !== previousCursorPosition.row ||
 				cursorPosition.col !== previousCursorPosition.col);
 
-		return updates.length > 0 || cursorChanged || this.backbufferDirty;
+		const shouldRender =
+			updates.length > 0 ||
+			cursorChanged ||
+			this.terminalWriter.backbufferDirty ||
+			this.forceNextRender;
+
+		return shouldRender;
 	}
 
 	resize(columns: number, rows: number) {
@@ -252,25 +258,26 @@ export class TerminalBufferWorker {
 		debugLog(`XXXXX [RENDER-WORKER] Resize to ${columns}x${rows}\n`);
 		this.primaryTerminalWriter.resize(columns, rows);
 		this.alternateTerminalWriter.resize(columns, rows);
-		this.backbufferDirtyCurrentFrame = true;
+		this.terminalWriter.backbufferDirtyCurrentFrame = true;
 		this.resized = true;
 		void this.render();
 	}
 
 	async fullRender() {
-		if (this.fullRenderTimeout) {
-			clearTimeout(this.fullRenderTimeout);
+		if (this.terminalWriter.fullRenderTimeout) {
+			clearTimeout(this.terminalWriter.fullRenderTimeout);
+			this.terminalWriter.fullRenderTimeout = undefined;
 		}
 
-		if (!this.backbufferDirty) {
+		if (!this.terminalWriter.backbufferDirty) {
 			await this.render();
 			return;
 		}
 
 		debugLog(`XXXXX [RENDER-WORKER] True full render triggered\n`);
 
-		this.backbufferDirty = false;
-		this.backbufferDirtyCurrentFrame = false;
+		this.terminalWriter.backbufferDirty = false;
+		this.terminalWriter.backbufferDirtyCurrentFrame = false;
 
 		this.composeScene();
 
@@ -298,24 +305,28 @@ export class TerminalBufferWorker {
 			return;
 		}
 
+		this.forceNextRender = false;
+
 		const cameraY = this.getCameraY(rootRegion);
 		this.syncCursor(cameraY);
 
 		if (!this.terminalWriter.isFirstRender) {
 			// 0. Handle Global Scroll (Backbuffer growth)
-			const maxPushed = this.maxRegionScrollTops.get(rootRegion.id) ?? 0;
+			const maxPushed =
+				this.terminalWriter.maxRegionScrollTops.get(rootRegion.id) ?? 0;
 			const linesToScroll = cameraY - maxPushed;
 
 			if (linesToScroll > 0) {
 				this.appendToBackbuffer(rootRegion, maxPushed, linesToScroll);
-				this.maxRegionScrollTops.set(rootRegion.id, cameraY);
+				this.terminalWriter.maxRegionScrollTops.set(rootRegion.id, cameraY);
 			}
 
 			// 0.5 Handle Local Region Scrolls
 			for (const region of this.regions.values()) {
 				if (region.isScrollable) {
 					const scrollTop = region.scrollTop ?? 0;
-					const lastScrollTop = this.lastRegionScrollTops.get(region.id) ?? 0;
+					const lastScrollTop =
+						this.terminalWriter.lastRegionScrollTops.get(region.id) ?? 0;
 
 					if (scrollTop !== lastScrollTop) {
 						if (region.width === this.columns && region.x === 0) {
@@ -327,7 +338,8 @@ export class TerminalBufferWorker {
 							);
 
 							if (end > start) {
-								const maxPushed = this.maxRegionScrollTops.get(region.id) ?? 0;
+								const maxPushed =
+									this.terminalWriter.maxRegionScrollTops.get(region.id) ?? 0;
 								const direction = scrollTop > lastScrollTop ? 'up' : 'down';
 								const linesToScroll = Math.abs(scrollTop - lastScrollTop);
 								const scrollAreaHeight = end - start;
@@ -368,7 +380,10 @@ export class TerminalBufferWorker {
 											scrollToBackbuffer: true,
 										});
 
-										this.maxRegionScrollTops.set(region.id, scrollTop);
+										this.terminalWriter.maxRegionScrollTops.set(
+											region.id,
+											scrollTop,
+										);
 									}
 
 									// 2. Scroll lines that were already in backbuffer (just visual scroll on screen using DL)
@@ -402,7 +417,7 @@ export class TerminalBufferWorker {
 										region.overflowToBackbuffer &&
 										start === 0
 									) {
-										this.maxRegionScrollTops.set(
+										this.terminalWriter.maxRegionScrollTops.set(
 											region.id,
 											Math.max(maxPushed, scrollTop),
 										);
@@ -414,21 +429,25 @@ export class TerminalBufferWorker {
 							scrollTop > lastScrollTop
 						) {
 							// Not full-width, but needs to scroll into backbuffer
-							const maxPushed = this.maxRegionScrollTops.get(region.id) ?? 0;
+							const maxPushed =
+								this.terminalWriter.maxRegionScrollTops.get(region.id) ?? 0;
 							const startPushed = Math.max(lastScrollTop, maxPushed);
 							const countPushed = scrollTop - startPushed;
 
 							if (countPushed > 0) {
 								this.appendToBackbuffer(region, startPushed, countPushed);
-								this.maxRegionScrollTops.set(region.id, scrollTop);
+								this.terminalWriter.maxRegionScrollTops.set(
+									region.id,
+									scrollTop,
+								);
 							}
 						}
 
-						this.lastRegionScrollTops.set(region.id, scrollTop);
+						this.terminalWriter.lastRegionScrollTops.set(region.id, scrollTop);
 					}
 				} else {
 					// Reset tracking if property disabled
-					this.lastRegionScrollTops.delete(region.id);
+					this.terminalWriter.lastRegionScrollTops.delete(region.id);
 				}
 			}
 		}
@@ -441,15 +460,21 @@ export class TerminalBufferWorker {
 
 			// Initialize tracking maps for the first render
 			if (rootRegion) {
-				this.maxRegionScrollTops.set(rootRegion.id, cameraY);
+				this.terminalWriter.maxRegionScrollTops.set(rootRegion.id, cameraY);
 			}
 
 			for (const region of this.regions.values()) {
 				if (region.isScrollable) {
-					this.lastRegionScrollTops.set(region.id, region.scrollTop ?? 0);
+					this.terminalWriter.lastRegionScrollTops.set(
+						region.id,
+						region.scrollTop ?? 0,
+					);
 
 					if (region.overflowToBackbuffer) {
-						this.maxRegionScrollTops.set(region.id, region.scrollTop ?? 0);
+						this.terminalWriter.maxRegionScrollTops.set(
+							region.id,
+							region.scrollTop ?? 0,
+						);
 					}
 				}
 			}
@@ -464,19 +489,19 @@ export class TerminalBufferWorker {
 
 		this.terminalWriter.flush();
 
-		if (this.backbufferDirtyCurrentFrame) {
-			this.backbufferDirty = true;
+		if (this.terminalWriter.backbufferDirtyCurrentFrame) {
+			this.terminalWriter.backbufferDirty = true;
 
-			if (this.fullRenderTimeout) {
-				clearTimeout(this.fullRenderTimeout);
+			if (this.terminalWriter.fullRenderTimeout) {
+				clearTimeout(this.terminalWriter.fullRenderTimeout);
 			}
 
-			this.fullRenderTimeout = setTimeout(() => {
+			this.terminalWriter.fullRenderTimeout = setTimeout(() => {
 				void this.fullRender();
 			}, 1000);
 		}
 
-		this.backbufferDirtyCurrentFrame = false;
+		this.terminalWriter.backbufferDirtyCurrentFrame = false;
 	}
 
 	done() {

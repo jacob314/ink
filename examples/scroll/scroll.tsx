@@ -113,7 +113,7 @@ function scrollReducer(state: ScrollState, action: ScrollAction): ScrollState {
 			return {
 				...state,
 				scrollLeft: action.value,
-			}
+			};
 		}
 
 		case 'bottom': {

@@ -1,4 +1,3 @@
-import process from 'node:process';
 import ansiEscapes from 'ansi-escapes';
 import {type StyledChar, styledCharsToString} from '@alcalzone/ansi-tokenize';
 import {debugLog} from '../debug-log.js';
@@ -121,6 +120,11 @@ export function linesEqual(
 export class TerminalWriter {
 	public isTainted = false;
 	public debugRainbowColor?: string;
+	public readonly maxRegionScrollTops = new Map<string | number, number>();
+	public readonly lastRegionScrollTops = new Map<string | number, number>();
+	public backbufferDirty = false;
+	public backbufferDirtyCurrentFrame = false;
+	public fullRenderTimeout?: NodeJS.Timeout;
 	private linesUpdated = 0;
 	private screen: RenderLine[] = [];
 	private backbuffer: RenderLine[] = [];
@@ -201,16 +205,20 @@ export class TerminalWriter {
 			// The terminal lacks an API to scroll lines to the back buffer without first adding them to the main buffer.
 			// Therefore, we simulate this by performing a scroll up of the top line(s) of the terminal,
 			// then re-adding the visible lines to the terminal.
-			this.performScroll({
-				start: 0,
-				end: this.rows,
-				linesToScroll: lines.length,
-				// We add the lines that are currently on screen at the very
-				// end to avoid corrupting the content currently on screen.
-				lines: [...lines, ...screenLines.slice(0, this.rows)],
-				direction: 'up',
-				scrollToBackbuffer: true,
-			});
+			try {
+				this.performScroll({
+					start: 0,
+					end: this.rows,
+					linesToScroll: lines.length,
+					// We add the lines that are currently on screen at the very
+					// end to avoid corrupting the content currently on screen.
+					lines: [...lines, ...screenLines.slice(0, this.rows)],
+					direction: 'up',
+					scrollToBackbuffer: true,
+				});
+			} finally {
+				this.resetScrollRegion();
+			}
 		} finally {
 			this.endSynchronizedOutput();
 		}
@@ -554,12 +562,9 @@ export class TerminalWriter {
 	}
 
 	clear() {
-		const eraseOperation =
-			process.env['TERM_PROGRAM'] === 'iTerm.app'
-				? ansiEscapes.clearTerminal
-				: ansiEscapes.eraseScreen;
+		this.writeHelper(ansiEscapes.cursorTo(0, 0));
+		this.writeHelper(ansiEscapes.eraseScreen);
 
-		this.writeHelper(eraseOperation);
 		// Tmux does not reset the scroll region reliably on clear so we
 		// reset it manually.
 		this.writeHelper(resetScrollRegion);
@@ -568,6 +573,16 @@ export class TerminalWriter {
 		this.screen = [];
 		this.backbuffer = [];
 		this.firstRender = true;
+		this.maxRegionScrollTops.clear();
+		this.lastRegionScrollTops.clear();
+		this.backbufferDirty = false;
+		this.backbufferDirtyCurrentFrame = false;
+
+		if (this.fullRenderTimeout) {
+			clearTimeout(this.fullRenderTimeout);
+			this.fullRenderTimeout = undefined;
+		}
+
 		// Set the cursor to an unknown location as tmux
 		// Does not appear to always reset it to 0,0 on clear
 		// While in mouse mode.

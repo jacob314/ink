@@ -337,12 +337,12 @@ export default class Ink {
 			styledOutput,
 			cursorPosition,
 			root,
-		} = render(
-			this.rootNode,
-			this.isScreenReaderEnabled,
-			this.selection,
-			this.options.selectionStyle,
-		);
+		} = render(this.rootNode, {
+			isScreenReaderEnabled: this.isScreenReaderEnabled,
+			selection: this.selection,
+			selectionStyle: this.options.selectionStyle,
+			skipScrollbars: Boolean(this.terminalBuffer),
+		});
 
 		this.options.onRender?.({renderTime: performance.now() - startTime});
 

@@ -177,10 +177,16 @@ const calculateSelectionMap = (
 
 const renderer = (
 	node: DOMElement,
-	isScreenReaderEnabled: boolean,
-	selection?: Selection,
-	selectionStyle?: (char: StyledChar) => StyledChar,
+	options: {
+		isScreenReaderEnabled: boolean;
+		selection?: Selection;
+		selectionStyle?: (char: StyledChar) => StyledChar;
+		skipScrollbars?: boolean;
+	},
 ): Result => {
+	const {isScreenReaderEnabled, selection, selectionStyle, skipScrollbars} =
+		options;
+
 	if (node.yogaNode) {
 		if (isScreenReaderEnabled) {
 			const output = renderNodeToScreenReaderOutput(node, {
@@ -248,7 +254,7 @@ const renderer = (
 			height: outputHeight,
 			styledOutput,
 			cursorPosition,
-		} = regionToOutput(rootRegion);
+		} = regionToOutput(rootRegion, {skipScrollbars});
 
 		return {
 			output: generatedOutput,
@@ -283,9 +289,14 @@ const renderer = (
 	};
 };
 
-function regionToOutput(region: Region) {
+function regionToOutput(
+	region: Region,
+	options?: {
+		skipScrollbars?: boolean;
+	},
+) {
 	const context: {cursorPosition?: {row: number; col: number}} = {};
-	const lines = flattenRegion(region, context);
+	const lines = flattenRegion(region, {context, ...options});
 
 	if (context.cursorPosition) {
 		const {row, col} = context.cursorPosition;
@@ -329,10 +340,12 @@ function regionToOutput(region: Region) {
 
 export function flattenRegion(
 	root: Region,
-	context: {cursorPosition?: {row: number; col: number}},
+	options?: {
+		context?: {cursorPosition?: {row: number; col: number}};
+		skipScrollbars?: boolean;
+	},
 ): StyledChar[][] {
-	const width = root.width;
-	const height = root.height;
+	const {width, height} = root;
 
 	const lines: StyledChar[][] = Array.from({length: height}, () =>
 		Array.from({length: width}, () => ({
@@ -349,7 +362,7 @@ export function flattenRegion(
 		{
 			clip: {x: 0, y: 0, w: width, h: height},
 		},
-		context,
+		options,
 	);
 	return lines;
 }
@@ -366,7 +379,10 @@ function composeRegion(
 		offsetX?: number;
 		offsetY?: number;
 	},
-	context: {cursorPosition?: {row: number; col: number}},
+	options?: {
+		context?: {cursorPosition?: {row: number; col: number}};
+		skipScrollbars?: boolean;
+	},
 ) {
 	const {
 		x,
@@ -399,12 +415,12 @@ function composeRegion(
 	const scrollTop = regionScrollTop ?? 0;
 	const scrollLeft = regionScrollLeft ?? 0;
 
-	if (regionCursorPosition) {
+	if (regionCursorPosition && options?.context) {
 		const cursorX = absX + regionCursorPosition.col - scrollLeft;
 		const cursorY = absY + regionCursorPosition.row - scrollTop;
 
 		if (cursorX >= x1 && cursorX < x2 && cursorY >= y1 && cursorY < y2) {
-			context.cursorPosition = {row: cursorY, col: cursorX};
+			options.context.cursorPosition = {row: cursorY, col: cursorX};
 		}
 	}
 
@@ -440,7 +456,7 @@ function composeRegion(
 				offsetX: absX - scrollLeft,
 				offsetY: absY - scrollTop,
 			},
-			context,
+			options,
 		);
 	}
 
@@ -482,7 +498,11 @@ function composeRegion(
 		}
 	}
 
-	if (region.isScrollable && (region.scrollbarVisible ?? true)) {
+	if (
+		!options?.skipScrollbars &&
+		region.isScrollable &&
+		(region.scrollbarVisible ?? true)
+	) {
 		const scrollHeight = region.scrollHeight ?? 0;
 		const scrollWidth = region.scrollWidth ?? 0;
 		const isVerticalScrollbarVisible =

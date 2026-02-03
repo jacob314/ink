@@ -11,6 +11,28 @@
 			"env": {
 				"NODE_NO_WARNINGS": "1"
 			}
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Run Scroll Into View Example",
+			"runtimeArgs": ["--loader", "ts-node/esm", "--no-warnings"],
+			"args": ["${workspaceFolder}/examples/scroll-into-view/index.ts"],
+			"console": "integratedTerminal",
+			"env": {
+				"NODE_NO_WARNINGS": "1"
+			}
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Debug Current File",
+			"runtimeArgs": ["--loader", "ts-node/esm", "--no-warnings"],
+			"args": ["${file}"],
+			"console": "integratedTerminal",
+			"env": {
+				"NODE_NO_WARNINGS": "1"
+			}
 		}
 	]
 }
