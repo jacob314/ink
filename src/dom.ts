@@ -39,13 +39,16 @@ export type CachedRender = {
 export type StickyHeader = {
 	nodeId: number;
 	node?: DOMElement;
-	lines: StyledChar[][];
-	styledOutput: StyledChar[][];
-	x: number; // Absolute X position relative to the Region's top-left
-	y: number; // Absolute Y position relative to the Region's top-left
-	startRow: number;
-	endRow: number;
-	scrollContainerId: number;
+	lines: StyledChar[][]; // Natural (scrolling) version
+	stuckLines?: StyledChar[][]; // Alternate (sticky) version
+	styledOutput: StyledChar[][]; // Legacy property
+	x: number; // Stuck X position relative to region
+	y: number; // Stuck Y position relative to region
+	naturalRow: number; // Natural row offset relative to content start
+	startRow: number; // Content-relative start row (same as naturalRow)
+	endRow: number; // Content-relative end row
+	scrollContainerId: number | string;
+	isStuckOnly: boolean; // If true, natural 'lines' are already in background content
 
 	// Metadata for cached headers
 	relativeX?: number; // Relative to StaticRender

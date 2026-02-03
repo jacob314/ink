@@ -348,6 +348,7 @@ export function flattenRegion(
 	options?: {
 		context?: {cursorPosition?: {row: number; col: number}};
 		skipScrollbars?: boolean;
+		skipStickyHeaders?: boolean;
 	},
 ): StyledChar[][] {
 	const {width, height} = root;
@@ -387,6 +388,7 @@ function composeRegion(
 	options?: {
 		context?: {cursorPosition?: {row: number; col: number}};
 		skipScrollbars?: boolean;
+		skipStickyHeaders?: boolean;
 	},
 ) {
 	const {
@@ -429,25 +431,25 @@ function composeRegion(
 		}
 	}
 
-	for (let y = myClip.y; y < myClip.y + myClip.h; y++) {
-		const row = targetLines[y];
+	const {x: myClipX, y: myClipY, w: myClipW, h: myClipH} = myClip;
+
+	for (let sy = myClipY; sy < myClipY + myClipH; sy++) {
+		const row = targetLines[sy];
 		if (!row) {
 			continue;
 		}
 
-		const localY = y - absY + scrollTop;
+		const localY = sy - absY + scrollTop;
 		const sourceLine = lines[localY];
 		if (!sourceLine) {
 			continue;
 		}
 
-		const {x: clipX, w: clipW} = myClip;
-
-		for (let x = clipX; x < clipX + clipW; x++) {
-			const localX = x - absX + scrollLeft;
+		for (let sx = myClipX; sx < myClipX + myClipW; sx++) {
+			const localX = sx - absX + scrollLeft;
 			const char = sourceLine[localX];
 			if (char) {
-				row[x] = char;
+				row[sx] = char;
 			}
 		}
 	}
@@ -465,39 +467,39 @@ function composeRegion(
 		);
 	}
 
-	for (const header of stickyHeaders) {
-		const headerY = header.y + offsetY; // Absolute Y
-		const headerH = header.lines.length;
+	if (!options?.skipStickyHeaders) {
+		for (const header of stickyHeaders) {
+			const headerY = header.y + offsetY; // Absolute Y
+			const headerH = header.lines.length;
 
-		for (let i = 0; i < headerH; i++) {
-			const y = headerY + i;
-			if (y < myClip.y || y >= myClip.y + myClip.h) {
-				continue;
-			}
+			for (let i = 0; i < headerH; i++) {
+				const sy = headerY + i;
+				if (sy < myClipY || sy >= myClipY + myClipH) {
+					continue;
+				}
 
-			const row = targetLines[y];
-			if (!row) {
-				continue;
-			}
+				const row = targetLines[sy];
+				if (!row) {
+					continue;
+				}
 
-			const line = header.lines[i];
-			if (!line) {
-				continue;
-			}
+				const line = header.lines[i];
+				if (!line) {
+					continue;
+				}
 
-			const headerX = header.x + offsetX;
-			const headerW = line.length;
+				const headerX = header.x + offsetX;
+				const headerW = line.length;
 
-			const {x: clipX, w: clipW} = myClip;
+				const hx1 = Math.max(headerX, myClipX);
+				const hx2 = Math.min(headerX + headerW, myClipX + myClipW);
 
-			const hx1 = Math.max(headerX, clipX);
-			const hx2 = Math.min(headerX + headerW, clipX + clipW);
-
-			for (let x = hx1; x < hx2; x++) {
-				const cx = x - headerX;
-				const char = line[cx];
-				if (char) {
-					row[x] = char;
+				for (let sx = hx1; sx < hx2; sx++) {
+					const cx = sx - headerX;
+					const char = line[cx];
+					if (char) {
+						row[sx] = char;
+					}
 				}
 			}
 		}

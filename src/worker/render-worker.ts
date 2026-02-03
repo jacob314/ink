@@ -8,21 +8,34 @@ import {type RegionNode, type RegionUpdate, type Region} from '../output.js';
 import {Deserializer} from '../serialization.js';
 import {renderScrollbar} from '../render-scrollbar.js';
 import {type InkOptions} from '../components/AppContext.js';
+import {type StickyHeader} from '../dom.js';
 import {
 	type RenderLine,
 	TerminalWriter,
 	rainbowColors,
 } from './terminal-writer.js';
 
+const ANIMATION_INTERVAL = 4; // We could use 16ms for 60fps but choose a higher rate to get a nice motion blur in Ghostty.
+/**
+ * Core renderer that composes together scrollable blocks of styled content.
+ *
+ * Key features supported:
+ * * Efficient rendering of scrollable regions.
+ * * Sticky headers.
+ */
 export class TerminalBufferWorker {
 	// Local state of regions
 	regions = new Map<string | number, Region>();
+	targetScrollTops = new Map<string | number, number>();
 	root?: RegionNode;
 
 	frameIndex = 0;
 	debugRainbowEnabled = false;
 	isAlternateBufferEnabled = false;
 	stickyHeadersInBackbuffer = false;
+	animatedScroll = false;
+	updatesReceived = 0;
+	animationInterval?: NodeJS.Timeout;
 	resized = false;
 	cursorPosition?: {row: number; col: number};
 	forceNextRender = false;
@@ -40,6 +53,22 @@ export class TerminalBufferWorker {
 			: this.primaryTerminalWriter;
 	}
 
+	get backbufferDirty(): boolean {
+		return this.terminalWriter.backbufferDirty;
+	}
+
+	set backbufferDirty(value: boolean) {
+		this.terminalWriter.backbufferDirty = value;
+	}
+
+	get backbufferDirtyCurrentFrame(): boolean {
+		return this.terminalWriter.backbufferDirtyCurrentFrame;
+	}
+
+	set backbufferDirtyCurrentFrame(value: boolean) {
+		this.terminalWriter.backbufferDirtyCurrentFrame = value;
+	}
+
 	constructor(
 		public columns: number,
 		public rows: number,
@@ -48,6 +77,7 @@ export class TerminalBufferWorker {
 			stdout?: NodeJS.WriteStream;
 			isAlternateBufferEnabled?: boolean;
 			stickyHeadersInBackbuffer?: boolean;
+			animatedScroll?: boolean;
 		},
 	) {
 		const stdout = options?.stdout ?? process.stdout;
@@ -67,6 +97,10 @@ export class TerminalBufferWorker {
 
 		if (options?.stickyHeadersInBackbuffer) {
 			this.stickyHeadersInBackbuffer = true;
+		}
+
+		if (options?.animatedScroll) {
+			this.animatedScroll = true;
 		}
 
 		if (this.isAlternateBufferEnabled) {
@@ -119,6 +153,18 @@ export class TerminalBufferWorker {
 
 			this.forceNextRender = true;
 		}
+
+		if (
+			options.animatedScroll !== undefined &&
+			this.animatedScroll !== options.animatedScroll
+		) {
+			this.animatedScroll = options.animatedScroll;
+			if (this.animatedScroll) {
+				this.startAnimation();
+			} else {
+				this.stopAnimation();
+			}
+		}
 	}
 
 	update(
@@ -129,6 +175,30 @@ export class TerminalBufferWorker {
 		this.root = tree;
 		const previousCursorPosition = this.cursorPosition;
 		this.cursorPosition = cursorPosition;
+
+		this.updatesReceived++;
+
+		if (this.animatedScroll) {
+			if (this.updatesReceived > 2 && updates.length > 0) {
+				debugLog(
+					`[RENDER-WORKER] Interrupting animation for jump at update #${this.updatesReceived}\n`,
+				);
+
+				// Jump all animating regions to their targets
+				for (const [id, target] of this.targetScrollTops) {
+					const region = this.regions.get(id);
+					if (region) {
+						region.scrollTop = target;
+					}
+				}
+
+				this.stopAnimation();
+			}
+
+			if (!this.animationInterval) {
+				this.startAnimation();
+			}
+		}
 
 		for (const update of updates) {
 			let region = this.regions.get(update.id);
@@ -159,7 +229,15 @@ export class TerminalBufferWorker {
 			if (update.y !== undefined) region.y = update.y;
 			if (update.width !== undefined) region.width = update.width;
 			if (update.height !== undefined) region.height = update.height;
-			if (update.scrollTop !== undefined) region.scrollTop = update.scrollTop;
+
+			if (update.scrollTop !== undefined) {
+				if (this.animatedScroll) {
+					this.targetScrollTops.set(region.id, update.scrollTop);
+				} else {
+					region.scrollTop = update.scrollTop;
+				}
+			}
+
 			if (update.scrollLeft !== undefined)
 				region.scrollLeft = update.scrollLeft;
 			if (update.scrollHeight !== undefined)
@@ -305,6 +383,12 @@ export class TerminalBufferWorker {
 
 		this.forceNextRender = false;
 
+		if (this.debugRainbowEnabled) {
+			this.frameIndex++;
+			this.terminalWriter.debugRainbowColor =
+				rainbowColors[this.frameIndex % rainbowColors.length];
+		}
+
 		const cameraY = this.getCameraY(rootRegion);
 		this.syncCursor(cameraY);
 
@@ -315,7 +399,7 @@ export class TerminalBufferWorker {
 			const linesToScroll = cameraY - maxPushed;
 
 			if (linesToScroll > 0) {
-				this.appendToBackbuffer(rootRegion, maxPushed, linesToScroll);
+				this.appendToBackbuffer(maxPushed, linesToScroll);
 				this.terminalWriter.maxRegionScrollTops.set(rootRegion.id, cameraY);
 			}
 
@@ -328,76 +412,71 @@ export class TerminalBufferWorker {
 
 					if (scrollTop !== lastScrollTop) {
 						// Full-width region, we can use scrolling regions!
-						const start = Math.max(0, region.y - cameraY);
-						const end = Math.min(
-							this.rows,
-							region.y + region.height - cameraY,
-						);
+						const absY = Math.round(region.y - cameraY);
+						const start = Math.max(0, absY);
+						const regionHeight = Math.round(region.height);
+						const end = Math.min(this.rows, absY + regionHeight);
 
-						if (end > start) {
+						const actualStuckTopHeight = this.calculateActualStuckTopHeight(
+							region,
+							absY,
+							scrollTop,
+						);
+						const actualStuckBottomHeight =
+							this.calculateActualStuckBottomHeight(region, absY, scrollTop);
+
+						const adjustedStart = Math.round(Math.max(start, absY + actualStuckTopHeight));
+						const adjustedEnd = Math.round(Math.min(
+							end,
+							absY + regionHeight - actualStuckBottomHeight,
+						));
+
+						if (adjustedEnd > adjustedStart) {
 							const maxPushed =
 								this.terminalWriter.maxRegionScrollTops.get(region.id) ?? 0;
 							const direction = scrollTop > lastScrollTop ? 'up' : 'down';
 							const linesToScroll = Math.abs(scrollTop - lastScrollTop);
-							const scrollAreaHeight = end - start;
+							const scrollAreaHeight = adjustedEnd - adjustedStart;
 
 							const getLinesForScroll = (
 								scrollStart: number,
 								count: number,
 							): RenderLine[] => {
-								const res = this.createEmptyLines(scrollAreaHeight + count);
+								// Wait, composeNode uses the region's STASHED scrollTop.
+								// If we want to render with 'scrollStart', we need to temporarily update the region.
+								const originalScrollTop = region.scrollTop;
+								region.scrollTop = scrollStart;
+								try {
+									// We render into 'res' which has size 'scrollAreaHeight + count'
+									// We want the lines that would be visible if scrollTop was 'scrollStart'.
+									// These lines would be at screen rows [adjustedStart, adjustedEnd + count).
+									// So we render the whole scene but only keep the lines we need.
 
-								// Determine which RegionNode corresponds to this Region
-								const node = this.findNodeForRegion(region.id);
-
-								if (node) {
-									const rootRegion = this.root
-										? this.regions.get(this.root.id)
-										: undefined;
-									const rootCameraY = rootRegion
-										? this.getCameraY(rootRegion)
-										: 0;
-
-									// We want to render the region as if it were at its current screen Y,
-									// but with a specific scrollTop.
-									this.composeNode(node, res, {
-										clip: undefined,
-										// The node's internal composeNode uses region.scrollTop.
-										// To force a specific scrollTop for this capture, we temporarily swap it.
-										offsetY: region.y - rootCameraY,
-									});
-
-									// Wait, composeNode uses the region's STASHED scrollTop.
-									// If we want to render with 'scrollStart', we need to temporarily update the region.
-									const originalScrollTop = region.scrollTop;
-									region.scrollTop = scrollStart;
-									try {
-										// We render into 'res' which has size 'scrollAreaHeight + count'
-										// We want the lines that would be visible if scrollTop was 'scrollStart'.
-										// These lines would be at screen rows [start, end + count).
-										// So we render the whole scene but only keep the lines we need?
-										// Better: Render just this region and its children into 'res'.
-
-										// Clear res first (already empty)
-										const tempScreen = this.createEmptyLines(this.rows + count);
-										this.composeNode(this.root!, tempScreen, {
+									// Clear res first (already empty)
+									const tempScreen = this.createEmptyLines(this.rows + count);
+									this.composeNode(
+										this.root!,
+										tempScreen,
+										{
 											clip: undefined,
-											offsetY: -rootCameraY,
-										});
+											offsetY: -cameraY,
+										},
+										{skipStickyHeaders: true, skipScrollbars: true},
+									);
 
-										return tempScreen.slice(start, start + scrollAreaHeight + count);
-									} finally {
-										region.scrollTop = originalScrollTop;
-									}
+									return tempScreen.slice(
+										adjustedStart,
+										adjustedStart + scrollAreaHeight + count,
+									);
+								} finally {
+									region.scrollTop = originalScrollTop;
 								}
-
-								return res;
 							};
 
 							if (
 								direction === 'up' &&
 								region.overflowToBackbuffer &&
-								start === 0 &&
+								adjustedStart === 0 &&
 								region.width === this.columns &&
 								region.x === 0
 							) {
@@ -408,8 +487,8 @@ export class TerminalBufferWorker {
 								if (newLinesToPush > 0) {
 									const pushBase = Math.max(lastScrollTop, maxPushed);
 									this.terminalWriter.scrollLines({
-										start,
-										end,
+										start: adjustedStart,
+										end: adjustedEnd,
 										linesToScroll: newLinesToPush,
 										lines: getLinesForScroll(pushBase, newLinesToPush),
 										direction: 'up',
@@ -426,8 +505,8 @@ export class TerminalBufferWorker {
 								if (linesToJustScroll > 0) {
 									const visualBase = lastScrollTop;
 									this.terminalWriter.scrollLines({
-										start,
-										end,
+										start: adjustedStart,
+										end: adjustedEnd,
 										linesToScroll: linesToJustScroll,
 										lines: getLinesForScroll(visualBase, linesToJustScroll),
 										direction: 'up',
@@ -437,8 +516,8 @@ export class TerminalBufferWorker {
 							} else {
 								// Normal scroll: Down (scrolling up doc) OR Up (scrolling down doc) without backbuffer push
 								this.terminalWriter.scrollLines({
-									start,
-									end,
+									start: adjustedStart,
+									end: adjustedEnd,
 									linesToScroll,
 									lines: getLinesForScroll(
 										direction === 'up' ? lastScrollTop : scrollTop,
@@ -451,7 +530,7 @@ export class TerminalBufferWorker {
 								if (
 									direction === 'up' &&
 									region.overflowToBackbuffer &&
-									start === 0 &&
+									adjustedStart === 0 &&
 									region.width === this.columns &&
 									region.x === 0
 								) {
@@ -525,6 +604,7 @@ export class TerminalBufferWorker {
 	}
 
 	done() {
+		this.stopAnimation();
 		this.terminalWriter.done();
 
 		if (this.isAlternateBufferEnabled) {
@@ -540,6 +620,57 @@ export class TerminalBufferWorker {
 
 	resetLinesUpdated() {
 		this.terminalWriter.resetLinesUpdated();
+	}
+
+	private startAnimation() {
+		if (this.animationInterval) {
+			return;
+		}
+
+		this.animationInterval = setInterval(() => {
+			this.tickAnimation();
+		}, ANIMATION_INTERVAL);
+	}
+
+	private stopAnimation() {
+		if (this.animationInterval) {
+			clearInterval(this.animationInterval);
+			this.animationInterval = undefined;
+		}
+	}
+
+	private tickAnimation() {
+		let hasScrolled = false;
+		let canScrollMore = false;
+
+		for (const region of this.regions.values()) {
+			const target = this.targetScrollTops.get(region.id);
+			if (target === undefined) {
+				continue;
+			}
+
+			const current = region.scrollTop ?? 0;
+
+			if (current !== target) {
+				if (current < target) {
+					region.scrollTop = current + 1;
+				} else {
+					region.scrollTop = current - 1;
+				}
+
+				hasScrolled = true;
+				canScrollMore = true;
+			}
+		}
+
+		if (hasScrolled) {
+			void this.render();
+		}
+
+		if (!canScrollMore) {
+			debugLog(`[RENDER-WORKER] Stopping animation: all targets reached\n`);
+			this.stopAnimation();
+		}
 	}
 
 	private composeScene() {
@@ -586,16 +717,6 @@ export class TerminalBufferWorker {
 			clip: undefined,
 			offsetY: -cameraY,
 		});
-
-		if (this.debugRainbowEnabled) {
-			this.frameIndex++;
-		}
-
-		const debugRainbowColor = this.debugRainbowEnabled
-			? rainbowColors[this.frameIndex % rainbowColors.length]
-			: undefined;
-
-		this.terminalWriter.debugRainbowColor = debugRainbowColor;
 	}
 
 	private composeNode(
@@ -610,6 +731,10 @@ export class TerminalBufferWorker {
 			offsetY?: number;
 			offsetX?: number;
 		},
+		options?: {
+			skipStickyHeaders?: boolean;
+			skipScrollbars?: boolean;
+		},
 	) {
 		const region = this.regions.get(node.id);
 
@@ -617,8 +742,8 @@ export class TerminalBufferWorker {
 			return;
 		}
 
-		const absX = region.x + offsetX;
-		const absY = region.y + offsetY; // Apply camera offset
+		const absX = Math.round(region.x + offsetX);
+		const absY = Math.round(region.y + offsetY); // Apply camera offset
 
 		const bufferHeight = targetLines.length;
 
@@ -635,8 +760,8 @@ export class TerminalBufferWorker {
 		let myClip = {
 			x: absX,
 			y: absY,
-			w: region.width,
-			h: region.height,
+			w: Math.round(region.width),
+			h: Math.round(region.height),
 		};
 
 		if (clip) {
@@ -661,7 +786,17 @@ export class TerminalBufferWorker {
 			}
 
 			const dy = sy - absY;
-			const contentY = scrollTop + dy;
+			const contentY = Math.round(scrollTop + dy);
+
+			if (
+				this.shouldSkipNaturalLine(region, contentY, sy, {
+					absY,
+					scrollTop,
+					skipStickyHeaders: options?.skipStickyHeaders,
+				})
+			) {
+				continue;
+			}
 
 			const line = region.lines[contentY];
 
@@ -675,8 +810,8 @@ export class TerminalBufferWorker {
 				continue;
 			}
 
-			const startSx = myClip.x;
-			const endSx = myClip.x + myClip.w;
+			const startSx = Math.round(myClip.x);
+			const endSx = Math.round(myClip.x + myClip.w);
 
 			while (targetLine.styledChars.length < this.columns) {
 				targetLine.styledChars.push({
@@ -704,66 +839,97 @@ export class TerminalBufferWorker {
 		}
 
 		for (const child of node.children) {
-			this.composeNode(child, targetLines, {
-				clip: myClip,
-				offsetY: absY - scrollTop,
-				offsetX: absX - scrollLeft,
-			});
+			this.composeNode(
+				child,
+				targetLines,
+				{
+					clip: myClip,
+					offsetY: absY - scrollTop,
+					offsetX: absX - scrollLeft,
+				},
+				options,
+			);
 		}
 
-		for (const header of region.stickyHeaders) {
-			const headerY = header.y + offsetY;
-			const headerH = header.lines.length;
+		if (!options?.skipStickyHeaders) {
+			for (const header of region.stickyHeaders) {
+				const useStuckPosition = this.isHeaderStuck(
+					header,
+					absY,
+					scrollTop,
+				);
 
-			for (let i = 0; i < headerH; i++) {
-				const sy = headerY + i;
+				if (!useStuckPosition && header.isStuckOnly) {
+					continue;
+				}
 
-				// If header is within the region's clip (standard behavior)
-				const withinRegionClip = sy >= myClip.y && sy < myClip.y + myClip.h;
+				const linesToRender = useStuckPosition
+					? (header.stuckLines ?? header.lines)
+					: header.lines;
 
-				// If header is above the region (due to overflowToBackbuffer) and we want sticky headers there
-				const aboveRegionAndStickyEnabled =
-					absY < 0 &&
+				let headerY =
+					absY + (useStuckPosition ? header.y : header.naturalRow - scrollTop);
+				const headerH = linesToRender.length;
+
+				if (
 					this.stickyHeadersInBackbuffer &&
-					sy >= 0 &&
-					sy < Math.min(bufferHeight, absY + region.height);
-
-				if (!withinRegionClip && !aboveRegionAndStickyEnabled) {
-					continue;
+					header.type === 'top' &&
+					headerY < 0 &&
+					absY + region.height > 0
+				) {
+					headerY = 0;
 				}
 
-				if (sy < 0 || sy >= bufferHeight) {
-					continue;
-				}
+				for (let i = 0; i < headerH; i++) {
+					const sy = Math.round(headerY + i);
 
-				const line = header.lines[i];
+					// If header is within the region's clip (standard behavior)
+					const withinRegionClip = sy >= myClip.y && sy < myClip.y + myClip.h;
 
-				if (!line) {
-					continue;
-				}
+					// If header is above the region (due to overflowToBackbuffer) and we want sticky headers there
+					const aboveRegionAndStickyEnabled =
+						absY < 0 &&
+						this.stickyHeadersInBackbuffer &&
+						sy >= 0 &&
+						sy < Math.min(bufferHeight, absY + region.height);
 
-				const targetLine = targetLines[sy];
-
-				if (!targetLine) {
-					continue;
-				}
-
-				const headerX = header.x + offsetX;
-				const headerW = line.length;
-
-				const hx1 = Math.max(headerX, myClip.x);
-				const hx2 = Math.min(headerX + headerW, myClip.x + myClip.w);
-
-				for (let sx = hx1; sx < hx2; sx++) {
-					if (sx < 0 || sx >= this.columns) {
+					if (!withinRegionClip && !aboveRegionAndStickyEnabled) {
 						continue;
 					}
 
-					const cx = sx - headerX;
-					const char = line[cx];
+					if (sy < 0 || sy >= bufferHeight) {
+						continue;
+					}
 
-					if (char) {
-						targetLine.styledChars[sx] = char;
+					const line = linesToRender[i];
+
+					if (!line) {
+						continue;
+					}
+
+					const targetLine = targetLines[sy];
+
+					if (!targetLine) {
+						continue;
+					}
+
+					const headerX = Math.round(header.x + absX);
+					const headerW = Math.round(line.length);
+
+					const hx1 = Math.max(headerX, myClip.x);
+					const hx2 = Math.min(headerX + headerW, myClip.x + myClip.w);
+
+					for (let sx = hx1; sx < hx2; sx++) {
+						if (sx < 0 || sx >= this.columns) {
+							continue;
+						}
+
+						const cx = sx - headerX;
+						const char = line[cx];
+
+						if (char) {
+							targetLine.styledChars[sx] = char;
+						}
 					}
 				}
 			}
@@ -776,7 +942,11 @@ export class TerminalBufferWorker {
 		const isHorizontalScrollbarVisible =
 			(region.isHorizontallyScrollable ?? false) && scrollWidth > region.width;
 
-		if (region.isScrollable && (region.scrollbarVisible ?? true)) {
+		if (
+			!options?.skipScrollbars &&
+			region.isScrollable &&
+			(region.scrollbarVisible ?? true)
+		) {
 			if (isVerticalScrollbarVisible) {
 				const {startIndex, endIndex, thumbStartHalf, thumbEndHalf} =
 					calculateScrollbarThumb({
@@ -796,8 +966,9 @@ export class TerminalBufferWorker {
 					clip: myClip,
 					axis: 'vertical',
 					color: region.scrollbarThumbColor,
-					setChar: (x, y, char) =>
-						this.setCharOnBuffer(targetLines, x, y, char),
+					setChar: (x, y, char) => {
+						this.setCharOnBuffer(targetLines, x, y, char);
+					},
 				});
 			}
 
@@ -823,8 +994,9 @@ export class TerminalBufferWorker {
 					clip: myClip,
 					axis: 'horizontal',
 					color: region.scrollbarThumbColor,
-					setChar: (x, y, char) =>
-						this.setCharOnBuffer(targetLines, x, y, char),
+					setChar: (x, y, char) => {
+						this.setCharOnBuffer(targetLines, x, y, char);
+					},
 				});
 			}
 		}
@@ -872,6 +1044,43 @@ export class TerminalBufferWorker {
 		return Math.max(0, rootRegion.height - this.rows);
 	}
 
+	private shouldSkipNaturalLine(
+		region: Region,
+		contentY: number,
+		renderRow: number,
+		options: {absY: number; scrollTop: number; skipStickyHeaders?: boolean},
+	): boolean {
+		if (options.skipStickyHeaders) {
+			return false;
+		}
+
+		for (const header of region.stickyHeaders) {
+			const useStuckPosition = this.isHeaderStuck(
+				header,
+				options.absY,
+				options.scrollTop,
+			);
+
+			// 1. Skip any content that is currently HIDDEN under a stuck header overlay
+			if (useStuckPosition) {
+				const linesToRender = header.stuckLines ?? header.lines;
+				const headerY = Math.round(options.absY + header.y);
+				if (renderRow >= headerY && renderRow < headerY + linesToRender.length) {
+					return true;
+				}
+			}
+
+			// 2. Skip natural lines of the header itself if they are NOT already in the background content
+			if (!header.isStuckOnly) {
+				if (contentY >= header.startRow && contentY < header.endRow) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
 	private syncCursor(cameraY: number) {
 		let cursorRow = -1;
 		let cursorCol = -1;
@@ -887,41 +1096,103 @@ export class TerminalBufferWorker {
 		this.terminalWriter.setTargetCursorPosition(cursorRow, cursorCol);
 	}
 
-	private appendToBackbuffer(region: Region, start: number, count: number) {
-		const linesScrollingOut: RenderLine[] = [];
-
-		for (let i = 0; i < count; i++) {
-			const lineIndex = start + i;
-			const chars = region.lines[lineIndex] ?? [];
-			linesScrollingOut.push(
-				this.terminalWriter.clampLine(chars, this.columns),
-			);
+	private appendToBackbuffer(start: number, count: number) {
+		if (!this.root) {
+			return;
 		}
+
+		const tempLines = this.createEmptyLines(count);
+		// TODO(jacob314): optimize to avoid a full re-render here.
+		this.composeNode(
+			this.root,
+			tempLines,
+			{
+				clip: undefined,
+				offsetY: -start,
+			},
+			{skipStickyHeaders: true, skipScrollbars: true},
+		);
+
+		const linesScrollingOut = tempLines.map(line =>
+			this.terminalWriter.clampLine(line.styledChars, this.columns),
+		);
 
 		this.terminalWriter.appendLinesBackbuffer(linesScrollingOut);
 	}
 
-	private findNodeForRegion(id: string | number): RegionNode | undefined {
-		if (!this.root) {
-			return undefined;
+	private isHeaderStuck(
+		header: StickyHeader,
+		absY: number,
+		scrollTop: number,
+	): boolean {
+		const isStuckState =
+			header.type === 'bottom'
+				? header.naturalRow - scrollTop >= header.y
+				: header.naturalRow - scrollTop <= 0;
+
+		if (!isStuckState) {
+			return false;
 		}
 
-		const visit = (node: RegionNode): RegionNode | undefined => {
-			if (node.id === id) {
-				return node;
-			}
+		// A header is only "effectively" stuck if it's not at the top/bottom of the terminal
+		// OR if the relevant stickiness setting is enabled for that buffer mode.
+		if (header.type === 'top') {
+			return this.stickyHeadersInBackbuffer || absY > 0;
+		}
 
-			for (const child of node.children) {
-				const found = visit(child);
-				if (found) {
-					return found;
+		// Bottom headers are currently always stuck if they reach the bottom
+		return true;
+	}
+
+	private calculateActualStuckTopHeight(
+		region: Region,
+		absY: number,
+		scrollTop: number,
+	): number {
+		let stuckHeight = 0;
+		const topHeaders = region.stickyHeaders
+			.filter(h => h.type === 'top')
+			.sort((a, b) => a.y - b.y);
+
+		for (const header of topHeaders) {
+			if (
+				this.isHeaderStuck(header, absY, scrollTop) &&
+				Math.round(header.y) === stuckHeight
+			) {
+				const linesToRender = header.stuckLines ?? header.lines;
+				stuckHeight += linesToRender.length;
+			} else if (this.isHeaderStuck(header, absY, scrollTop)) {
+				break;
+			}
+		}
+
+		return stuckHeight;
+	}
+
+	private calculateActualStuckBottomHeight(
+		region: Region,
+		absY: number,
+		scrollTop: number,
+	): number {
+		let stuckHeight = 0;
+		const bottomHeaders = region.stickyHeaders
+			.filter(h => h.type === 'bottom')
+			.sort((a, b) => b.y - a.y);
+
+		for (const header of bottomHeaders) {
+			if (this.isHeaderStuck(header, absY, scrollTop)) {
+				const linesToRender = header.stuckLines ?? header.lines;
+				const footerRowInRegion =
+					region.height - linesToRender.length - stuckHeight;
+				if (Math.round(header.y) === Math.round(footerRowInRegion)) {
+					stuckHeight += linesToRender.length;
+				} else {
+					break;
 				}
 			}
+		}
 
-			return undefined;
-		};
-
-		return visit(this.root);
+		return stuckHeight;
 	}
 }
 
@@ -938,6 +1209,7 @@ const main = () => {
 					isAlternateBufferEnabled: message.isAlternateBufferEnabled as boolean,
 					stickyHeadersInBackbuffer:
 						message.stickyHeadersInBackbuffer as boolean,
+					animatedScroll: message.animatedScroll as boolean,
 				});
 				break;
 			}

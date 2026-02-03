@@ -54,6 +54,7 @@ export type Options = {
 	stickyHeadersInBackbuffer?: boolean;
 	incrementalRendering?: boolean;
 	debugRainbow?: boolean;
+	animatedScroll?: boolean;
 	selectionStyle?: (char: StyledChar) => StyledChar;
 	standardReactLayoutTiming?: boolean;
 	renderProcess?: boolean;
@@ -113,6 +114,7 @@ export default class Ink {
 			isAlternateBufferEnabled:
 				options.isAlternateBufferEnabled ?? options.alternateBuffer,
 			stickyHeadersInBackbuffer: options.stickyHeadersInBackbuffer,
+			animatedScroll: options.animatedScroll,
 		};
 
 		this.rootNode = dom.createNode('ink-root');
@@ -154,16 +156,17 @@ export default class Ink {
 			: this.onRender; // Original unthrottled method
 		this.rootNode.onImmediateRender = renderMethod;
 
-		if (options.renderProcess || options.terminalBuffer) {
+		if (options.renderProcess === true || options.terminalBuffer === true) {
 			this.terminalBuffer = new TerminalBuffer(
-				options.stdout.columns || 80,
-				options.stdout.rows || 24,
+				options.stdout.columns ?? 80,
+				options.stdout.rows ?? 24,
 				{
 					debugRainbowEnabled: options.debugRainbow,
 					renderInProcess: !options.renderProcess && options.terminalBuffer,
 					stdout: options.stdout,
 					isAlternateBufferEnabled: options.isAlternateBufferEnabled,
 					stickyHeadersInBackbuffer: options.stickyHeadersInBackbuffer,
+					animatedScroll: options.animatedScroll,
 				},
 			);
 		}
@@ -250,7 +253,7 @@ export default class Ink {
 	calculateLayout = () => {
 		// The 'columns' property can be undefined or 0 when not using a TTY.
 		// In that case we fall back to 80.
-		const terminalWidth = this.options.stdout.columns || 80;
+		const terminalWidth = this.options.stdout.columns ?? 80;
 
 		this.rootNode.yogaNode!.setWidth(terminalWidth);
 
@@ -355,6 +358,7 @@ export default class Ink {
 			if (appliedChanges) {
 				void this.terminalBuffer.render();
 			}
+
 			return;
 		}
 
@@ -411,7 +415,7 @@ export default class Ink {
 				return;
 			}
 
-			const terminalWidth = this.options.stdout.columns || 80;
+			const terminalWidth = this.options.stdout.columns ?? 80;
 
 			const wrappedOutput = wrapAnsi(output, terminalWidth, {
 				trim: false,

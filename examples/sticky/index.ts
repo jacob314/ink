@@ -15,5 +15,6 @@ render(React.createElement(ScrollableContent), {
 	standardReactLayoutTiming: true,
 	debugRainbow: true,
 	incrementalRendering: true,
+	animatedScroll: true,
 	maxFps: 10_000,
 });

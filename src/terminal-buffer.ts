@@ -32,20 +32,21 @@ export default class TerminalBuffer {
 			stdout?: NodeJS.WriteStream;
 			isAlternateBufferEnabled?: boolean;
 			stickyHeadersInBackbuffer?: boolean;
+			animatedScroll?: boolean;
 		},
 	) {
 		this.lastOptions = {
 			isAlternateBufferEnabled: options?.isAlternateBufferEnabled,
-			stickyHeadersInBackbuffer:
-				options?.stickyHeadersInBackbuffer,
+			stickyHeadersInBackbuffer: options?.stickyHeadersInBackbuffer,
+			animatedScroll: options?.animatedScroll,
 		};
 		if (options?.renderInProcess) {
 			this.workerInstance = new TerminalBufferWorker(columns, rows, {
 				debugRainbowEnabled: options?.debugRainbowEnabled,
 				stdout: options?.stdout,
 				isAlternateBufferEnabled: options?.isAlternateBufferEnabled,
-				stickyHeadersInBackbuffer:
-					options?.stickyHeadersInBackbuffer,
+				stickyHeadersInBackbuffer: options?.stickyHeadersInBackbuffer,
+				animatedScroll: options?.animatedScroll,
 			});
 			void this.workerInstance.render();
 
@@ -84,8 +85,8 @@ export default class TerminalBuffer {
 				rows,
 				debugRainbowEnabled: options?.debugRainbowEnabled,
 				isAlternateBufferEnabled: options?.isAlternateBufferEnabled,
-				stickyHeadersInBackbuffer:
-					options?.stickyHeadersInBackbuffer,
+				stickyHeadersInBackbuffer: options?.stickyHeadersInBackbuffer,
+				animatedScroll: options?.animatedScroll,
 			});
 		}
 	}
@@ -95,7 +96,8 @@ export default class TerminalBuffer {
 			options.isAlternateBufferEnabled !==
 				this.lastOptions?.isAlternateBufferEnabled ||
 			options.stickyHeadersInBackbuffer !==
-				this.lastOptions?.stickyHeadersInBackbuffer
+				this.lastOptions?.stickyHeadersInBackbuffer ||
+			options.animatedScroll !== this.lastOptions?.animatedScroll
 		) {
 			this.optionsChanged = true;
 		}
@@ -122,7 +124,10 @@ export default class TerminalBuffer {
 		root: Region,
 		cursorPosition?: {row: number; col: number},
 	): boolean {
-		this.lines = flattenRegion(root, {skipScrollbars: true});
+		this.lines = flattenRegion(root, {
+			skipScrollbars: true,
+			skipStickyHeaders: true,
+		});
 		const currentRegionsMap = new Map<string | number, Region>();
 		const updates: RegionUpdate[] = [];
 

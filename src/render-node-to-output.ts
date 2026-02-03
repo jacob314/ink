@@ -192,47 +192,57 @@ export const renderToStatic = (
 	const cachedStickyHeaders: StickyHeader[] = [];
 
 	for (const {node: stickyNode} of stickyNodes) {
-		const stickyYogaNode = stickyNode.yogaNode;
-		if (!stickyYogaNode) {
-			continue;
-		}
+		const alternateStickyNode = stickyNode.childNodes.find(
+			childNode => (childNode as DOMElement).internalStickyAlternate,
+		) as DOMElement | undefined;
 
-		// Create a temporary output to render the sticky header
-		const stickyOutput = new Output({
-			width: stickyYogaNode.getComputedWidth(),
-			height: stickyYogaNode.getComputedHeight(),
-		});
+		const naturalHeight = stickyNode.yogaNode!.getComputedHeight();
+		const stuckHeight = alternateStickyNode?.yogaNode?.getComputedHeight() ?? 0;
+		const maxHeaderHeight = Math.max(naturalHeight, stuckHeight);
 
-		renderNodeToOutput(stickyNode, stickyOutput, {
-			offsetX: -stickyYogaNode.getComputedLeft(),
-			offsetY: -stickyYogaNode.getComputedTop(),
-			transformers: undefined,
-			skipStaticElements: options.skipStaticElements ?? false,
-			nodesToSkip: undefined,
-			isStickyRender: true,
-			selectionMap: options.selectionMap,
-			selectionStyle: options.selectionStyle,
-		});
+		const renderHeader = (isSticky: boolean) => {
+			const stickyOutput = new Output({
+				width: stickyNode.yogaNode!.getComputedWidth(),
+				height: maxHeaderHeight,
+			});
 
-		const {lines: styledOutput} = stickyOutput.get();
+			renderNodeToOutput(stickyNode, stickyOutput, {
+				offsetX: -stickyNode.yogaNode!.getComputedLeft(),
+				offsetY: -stickyNode.yogaNode!.getComputedTop(),
+				transformers: undefined,
+				skipStaticElements: options.skipStaticElements ?? false,
+				nodesToSkip: undefined,
+				isStickyRender: isSticky,
+				selectionMap: options.selectionMap,
+				selectionStyle: options.selectionStyle,
+			});
+
+			return stickyOutput.get().lines;
+		};
+
+		const naturalLines = renderHeader(false);
+		const stuckLines = alternateStickyNode ? renderHeader(true) : undefined;
 		const parent = stickyNode.parentNode;
 		const parentYogaNode = parent?.yogaNode;
+		const naturalRow = getRelativeTop(stickyNode, node);
 
 		cachedStickyHeaders.push({
 			nodeId: stickyNode.internal_id,
 			node: stickyNode,
-			lines: styledOutput,
-			styledOutput,
+			lines: naturalLines,
+			stuckLines,
+			styledOutput: stuckLines ?? naturalLines,
 			x: getRelativeLeft(stickyNode, node),
 			y: getRelativeTop(stickyNode, node),
-			startRow: getRelativeTop(stickyNode, node),
-			endRow:
-				getRelativeTop(stickyNode, node) + stickyYogaNode.getComputedHeight(),
-			scrollContainerId: -1, // Will be set when rendered into a real scroll container
+			naturalRow,
+			startRow: naturalRow,
+			endRow: naturalRow + naturalHeight,
+			scrollContainerId: -1,
+			isStuckOnly: true,
 
 			relativeX: getRelativeLeft(stickyNode, node),
 			relativeY: getRelativeTop(stickyNode, node),
-			height: stickyYogaNode.getComputedHeight(),
+			height: maxHeaderHeight,
 			type: stickyNode.internalSticky === 'bottom' ? 'bottom' : 'top',
 			parentRelativeTop: parent ? getRelativeTop(parent, node) : 0,
 			parentHeight: parentYogaNode
@@ -252,7 +262,7 @@ export const renderToStatic = (
 			offsetY: 0,
 			transformers: undefined,
 			skipStaticElements: options.skipStaticElements ?? false,
-			nodesToSkip: stickyNodes.map(s => s.node),
+			nodesToSkip: undefined,
 			isStickyRender: options.isStickyRender,
 			selectionMap: options.selectionMap,
 			selectionStyle: options.selectionStyle,
@@ -376,19 +386,6 @@ function renderNodeToOutput(
 					output.write(x, y + index, line, {
 						transformers: newTransformers,
 						lineIndex: index,
-					});
-				}
-			}
-
-			if (node.cachedRender.stickyHeaders && !skipStickyHeaders) {
-				for (const header of node.cachedRender.stickyHeaders) {
-					output.addStickyHeader({
-						...header,
-						x: x + header.x,
-						y: y + header.y,
-						startRow: y + header.startRow,
-						endRow: y + header.endRow,
-						// scrollContainerId remains -1 or we can try to find it.
 					});
 				}
 			}
@@ -554,18 +551,22 @@ function renderNodeToOutput(
 
 						const stickyNodeBottom = stickyNodeTop + stickyNodeHeight;
 
-						if (stickyType === 'top' && stickyNodeTop < scrollTop) {
-							if (parentTop + parentHeight > scrollTop) {
-								activeTopStickyNode = stickyNodeInfo;
-								activeTopStickyNodeIndex = index;
-							}
+						if (
+							stickyType === 'top' &&
+							stickyNodeTop < scrollTop &&
+							parentTop + parentHeight > scrollTop
+						) {
+							activeTopStickyNode = stickyNodeInfo;
+							activeTopStickyNodeIndex = index;
 						}
 
-						if (stickyType === 'bottom' && stickyNodeBottom > viewportBottom) {
-							if (parentTop < viewportBottom) {
-								activeBottomStickyNode = stickyNodeInfo;
-								activeBottomStickyNodeIndex = index;
-							}
+						if (
+							stickyType === 'bottom' &&
+							Math.floor(stickyNodeBottom) > Math.floor(viewportBottom) + 1 &&
+							parentTop < viewportBottom
+						) {
+							activeBottomStickyNode = stickyNodeInfo;
+							activeBottomStickyNodeIndex = index;
 						}
 					}
 
@@ -705,111 +706,66 @@ function renderNodeToOutput(
 						});
 					}
 
-										for (const {
+					for (const {
+						stickyNode,
 
-											stickyNode,
+						type,
 
-											type,
+						nextStickyNode,
 
-											nextStickyNode,
+						cached,
 
-											cached,
+						anchor,
+					} of activeStickyNodes) {
+						let stickyNodeHeight: number;
 
-											anchor,
+						let stickyNodeTop: number;
 
-										} of activeStickyNodes) {
+						let parentTop: number;
 
-											let stickyNodeHeight: number;
+						let parentHeight: number;
 
-											let stickyNodeTop: number;
+						let stickyOffsetX: number;
 
-											let parentTop: number;
+						let stickyNodeId: number;
 
-											let parentHeight: number;
+						if (cached && anchor) {
+							const staticRenderPosTop = getRelativeTop(anchor, node);
 
-											let stickyOffsetX: number;
+							const staticRenderPosLeft = getRelativeLeft(anchor, node);
 
-											let stickyNodeId: number;
+							stickyNodeTop = staticRenderPosTop + cached.relativeY!;
 
-											let nodeToRender: DOMElement | undefined;
+							stickyNodeHeight = cached.height!;
 
-					
+							parentTop = staticRenderPosTop + cached.parentRelativeTop!;
 
-											if (cached && anchor) {
+							parentHeight = cached.parentHeight!;
 
-												const staticRenderPosTop = getRelativeTop(anchor, node);
+							stickyOffsetX = x + staticRenderPosLeft + cached.relativeX!;
 
-												const staticRenderPosLeft = getRelativeLeft(anchor, node);
+							stickyNodeId = cached.nodeId;
+						} else {
+							stickyNodeTop = getRelativeTop(stickyNode, node);
 
-												stickyNodeTop = staticRenderPosTop + cached.relativeY!;
+							stickyNodeHeight = stickyNode.yogaNode!.getComputedHeight();
 
-												stickyNodeHeight = cached.height!;
+							const parent = stickyNode.parentNode!;
 
-												parentTop = staticRenderPosTop + cached.parentRelativeTop!;
+							if (parent?.yogaNode) {
+								parentTop = getRelativeTop(parent, node);
 
-												parentHeight = cached.parentHeight!;
+								parentHeight = parent.yogaNode.getComputedHeight();
+							} else {
+								parentTop = 0;
 
-												stickyOffsetX = x + staticRenderPosLeft + cached.relativeX!;
+								parentHeight = 1_000_000;
+							}
 
-												stickyNodeId = cached.nodeId;
+							stickyOffsetX = x + getRelativeLeft(stickyNode, node);
 
-											} else {
-
-												const alternateStickyNode = stickyNode.childNodes.find(
-
-													childNode =>
-
-														(childNode as DOMElement).internalStickyAlternate,
-
-												) as DOMElement | undefined;
-
-					
-
-												nodeToRender = alternateStickyNode ?? stickyNode;
-
-												const nodeToRenderYogaNode = nodeToRender.yogaNode;
-
-					
-
-												if (!nodeToRenderYogaNode) {
-
-													continue;
-
-												}
-
-					
-
-												stickyNodeTop = getRelativeTop(stickyNode, node);
-
-												stickyNodeHeight = nodeToRenderYogaNode.getComputedHeight();
-
-					
-
-												const parent = stickyNode.parentNode!;
-
-												if (parent?.yogaNode) {
-
-													parentTop = getRelativeTop(parent, node);
-
-													parentHeight = parent.yogaNode.getComputedHeight();
-
-												} else {
-
-													parentTop = 0;
-
-													parentHeight = 1_000_000;
-
-												}
-
-					
-
-												stickyOffsetX = x + getRelativeLeft(nodeToRender, node);
-
-												stickyNodeId = nodeToRender.internal_id;
-
-											}
-
-					
+							stickyNodeId = stickyNode.internal_id;
+						}
 
 						const currentBorderTop = yogaNode.getComputedBorder(Yoga.EDGE_TOP);
 						const currentScrollTop = node.internal_scrollState?.scrollTop ?? 0;
@@ -863,87 +819,75 @@ function renderNodeToOutput(
 							}
 						}
 
-												const stickyOffsetY = finalStickyY;
+						const stickyOffsetY = finalStickyY;
+						const naturalHeight = stickyNode.yogaNode!.getComputedHeight();
+						const alternateStickyNode = stickyNode.childNodes.find(
+							childNode => (childNode as DOMElement).internalStickyAlternate,
+						) as DOMElement | undefined;
+						const stuckHeight =
+							alternateStickyNode?.yogaNode?.getComputedHeight() ?? 0;
+						const maxHeaderHeight = Math.max(naturalHeight, stuckHeight);
 
-						
+						let naturalLines: StyledChar[][];
+						let stuckLines: StyledChar[][] | undefined;
 
-												let styledOutput: StyledChar[][];
+						if (cached) {
+							naturalLines = cached.lines;
+							stuckLines = cached.stuckLines;
+						} else {
+							const renderHeader = (isSticky: boolean) => {
+								const stickyOutput = new Output({
+									width: stickyNode.yogaNode!.getComputedWidth(),
+									height: maxHeaderHeight,
+								});
 
-						
+								renderNodeToOutput(stickyNode, stickyOutput, {
+									offsetX: -stickyNode.yogaNode!.getComputedLeft(),
+									offsetY: -stickyNode.yogaNode!.getComputedTop(),
+									transformers: newTransformers,
+									skipStaticElements,
+									nodesToSkip: undefined,
+									isStickyRender: isSticky,
+									selectionMap,
+									selectionStyle,
+								});
 
-												if (cached) {
+								return stickyOutput.get().lines;
+							};
 
-													styledOutput = cached.styledOutput;
+							naturalLines = renderHeader(false);
+							stuckLines = alternateStickyNode ? renderHeader(true) : undefined;
+						}
 
-												} else {
+						const naturalRow = stickyNodeTop - currentBorderTop;
 
-													const nodeToRenderYogaNode = nodeToRender!.yogaNode!;
+						output.addStickyHeader({
+							nodeId: stickyNodeId,
 
-						
+							node: stickyNode,
 
-													// Create a temporary output to render the sticky header
+							lines: naturalLines,
 
-													const stickyOutput = new Output({
+							stuckLines,
 
-														width: nodeToRenderYogaNode.getComputedWidth(),
+							styledOutput: stuckLines ?? naturalLines,
 
-														height: nodeToRenderYogaNode.getComputedHeight(),
+							x: stickyOffsetX - offsetX,
 
-													});
+							y: stickyOffsetY - offsetY,
 
-						
+							naturalRow,
 
-													renderNodeToOutput(nodeToRender!, stickyOutput, {
+							startRow: naturalRow, // Relative to content start
 
-														offsetX: -nodeToRenderYogaNode.getComputedLeft(),
+							endRow: naturalRow + naturalHeight,
 
-														offsetY: -nodeToRenderYogaNode.getComputedTop(),
+							scrollContainerId: node.internal_id,
 
-														transformers: newTransformers,
+							isStuckOnly: false,
 
-														skipStaticElements,
-
-														nodesToSkip: undefined,
-
-														isStickyRender: true,
-
-														selectionMap,
-
-														selectionStyle,
-
-													});
-
-						
-
-													styledOutput = stickyOutput.get().lines;
-
-												}
-
-						
-
-												output.addStickyHeader({
-
-													nodeId: stickyNodeId,
-
-													node: nodeToRender,
-
-													lines: styledOutput,
-
-													styledOutput,
-
-													x: stickyOffsetX - offsetX,
-
-													y: stickyOffsetY - offsetY,
-
-													startRow: stickyOffsetY - y, // Relative to scroll region top
-
-													endRow: stickyOffsetY - y + stickyNodeHeight,
-
-													scrollContainerId: node.internal_id,
-
-												});
-
-						
+							type,
+						});
 					}
 
 					output.endChildRegion();

@@ -111,11 +111,13 @@ export function linesEqual(
 }
 
 /**
- * This class is the core low level terminal renderer.
+ * Low level terminal renderer.
  *
+ * This class makes it easy to perform efficient incremental updates to the
+ * terminal, scroll regions, and inject content into the backbuffer.
  * It handles caching what content was previously rendered and operations
- * such as syncing individual lines without generating flicker and adding
- * lines to the backbuffer.
+ * such as syncing individual lines without generating flicker, adding
+ * lines to the backbuffer, and scrolling content onto the backbuffer.
  */
 export class TerminalWriter {
 	public isTainted = false;

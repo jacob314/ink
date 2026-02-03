@@ -1,4 +1,3 @@
-
 import React from 'react';
 import test from 'ava';
 import {Box, Text, StaticRender} from '../src/index.js';
@@ -45,7 +44,7 @@ test('StaticRender with sticky header', t => {
 						<Text>End of list</Text>
 					</Box>
 				</StaticRender>
-			</Box>
+			</Box>,
 		);
 
 		t.snapshot(output, `${name} (scrollTop: ${scrollTop}) - ${description}`);
@@ -97,9 +96,45 @@ test('StaticRender containing multiple sticky headers', t => {
 						</Box>
 					</Box>
 				</StaticRender>
-			</Box>
+			</Box>,
 		);
 
 		t.snapshot(output, `${name} (scrollTop: ${scrollTop})`);
 	}
+});
+
+test('StaticRender with multi-line sticky header', t => {
+	const output = renderToString(
+		<Box
+			height={10}
+			width={20}
+			overflowY="scroll"
+			flexDirection="column"
+			scrollTop={5}
+		>
+			<StaticRender width={20}>
+				<Box flexDirection="column">
+					<Box
+						sticky
+						opaque
+						width="100%"
+						stickyChildren={
+							<Box flexDirection="column" width="100%">
+								<Text>STICKY LINE 1</Text>
+								<Text>STICKY LINE 2</Text>
+							</Box>
+						}
+					>
+						<Text>Normal Header</Text>
+					</Box>
+					{Array.from({length: 20}).map((_, i) => {
+						const text = `Line ${i}`;
+						return <Text key={text}>{text}</Text>;
+					})}
+				</Box>
+			</StaticRender>
+		</Box>,
+	);
+
+	t.snapshot(output);
 });

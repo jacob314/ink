@@ -1,10 +1,9 @@
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 
 const debugLogEnabled = true;
 let isFirstRun = true;
-const logFilePath = path.join(os.homedir(), 'log.txt');
+const logFilePath = path.join(process.cwd(), 'debug.log');
 
 export const debugLog = (message: string) => {
 	if (!debugLogEnabled) {

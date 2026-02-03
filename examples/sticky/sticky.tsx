@@ -90,8 +90,10 @@ function scrollReducer(state: ScrollState, action: ScrollAction): ScrollState {
 	}
 }
 
-function ScrollableContent({useStatic = true}: {readonly useStatic?: boolean} = {}) {
-	const [showBorder, setShowBorder] = useState(true);
+function ScrollableContent({
+	useStatic = true,
+}: {readonly useStatic?: boolean} = {}) {
+	const [showBorder, setShowBorder] = useState(false);
 	const [scrollState, dispatch] = useReducer(scrollReducer, {scrollTop: 0});
 	const {scrollTop} = scrollState;
 	const {columns, rows} = useTerminalSize();
@@ -252,15 +254,19 @@ function ScrollableContent({useStatic = true}: {readonly useStatic?: boolean} = 
 			return;
 		}
 
-		if (key.upArrow) {
-			dispatch({type: 'up', delta: key.shift ? 10 : 1});
+		if (key.upArrow || input === 'w') {
+			dispatch({type: 'up', delta: input === 'w' ? 30 : (key.shift ? 10 : 1)});
 		}
 
-		if (key.downArrow) {
+		if (key.downArrow || input === 's') {
 			dispatch({
 				type: 'down',
-				delta: key.shift ? 10 : 1,
-				max: Math.max(0, sizeReference.current.scrollHeight - sizeReference.current.innerHeight),
+				delta: input === 's' ? 30 : (key.shift ? 10 : 1),
+				max: Math.max(
+					0,
+					sizeReference.current.scrollHeight -
+						sizeReference.current.innerHeight,
+				),
 			});
 		}
 	});
@@ -285,7 +291,10 @@ function ScrollableContent({useStatic = true}: {readonly useStatic?: boolean} = 
 				<Text>
 					This is a demo showing a scrollable box with sticky headers.
 				</Text>
-				<Text>Press up/down arrow to scroll vertically (Shift for faster).</Text>
+				<Text>
+					Press up/down arrow or w/s to scroll vertically (w/s for 30 lines,
+					Shift for 10).
+				</Text>
 				<Text>Press 'space' to toggle border.</Text>
 				<Text>
 					Press 'a' or 'f' to toggle alternate buffer + sticky headers (current:{' '}

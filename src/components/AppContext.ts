@@ -4,6 +4,7 @@ import {type Selection} from '../selection.js';
 export type InkOptions = {
 	readonly isAlternateBufferEnabled?: boolean;
 	readonly stickyHeadersInBackbuffer?: boolean;
+	readonly animatedScroll?: boolean;
 };
 
 export type Props = {

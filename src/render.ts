@@ -131,6 +131,14 @@ export type RenderOptions = {
 	 * @default false
 	 */
 	terminalBuffer?: boolean;
+
+	/**
+	 * If true, the worker-based renderer will automatically scroll all scrollable regions
+	 * by 1 line every 16ms. This is only supported when using `terminalBuffer` or `renderProcess`.
+	 *
+	 * @default false
+	 */
+	animatedScroll?: boolean;
 };
 
 export type Instance = {
@@ -188,6 +196,7 @@ const render = (
 		standardReactLayoutTiming: false,
 		renderProcess: false,
 		terminalBuffer: false,
+		animatedScroll: false,
 		...getOptions(options),
 	};
 
