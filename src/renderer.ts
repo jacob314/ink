@@ -3,8 +3,13 @@ import {calculateScrollbarThumb} from './measure-element.js';
 import renderNodeToOutput, {
 	renderNodeToScreenReaderOutput,
 } from './render-node-to-output.js';
-import Output, {type Region, type StickyHeader} from './output.js';
-import {type DOMElement, type DOMNode, isNodeSelectable} from './dom.js';
+import Output, {type Region} from './output.js';
+import {
+	type DOMElement,
+	type DOMNode,
+	isNodeSelectable,
+	type StickyHeader,
+} from './dom.js';
 import {type Selection} from './selection.js';
 import {renderScrollbar} from './render-scrollbar.js';
 

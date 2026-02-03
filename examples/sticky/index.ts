@@ -9,8 +9,11 @@ import {render} from '../../src/index.js';
 import ScrollableContent from './sticky.js';
 
 render(React.createElement(ScrollableContent), {
-    standardReactLayoutTiming: true,
 	renderProcess: true,
 	terminalBuffer: true,
-    exitOnCtrlC: true,
+	alternateBuffer: false,
+	standardReactLayoutTiming: true,
+	debugRainbow: true,
+	incrementalRendering: true,
+	maxFps: 10_000,
 });

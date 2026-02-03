@@ -33,6 +33,27 @@ export type CachedRender = {
 	width: number;
 	height: number;
 	key?: unknown;
+	stickyHeaders?: StickyHeader[];
+};
+
+export type StickyHeader = {
+	nodeId: number;
+	node?: DOMElement;
+	lines: StyledChar[][];
+	styledOutput: StyledChar[][];
+	x: number; // Absolute X position relative to the Region's top-left
+	y: number; // Absolute Y position relative to the Region's top-left
+	startRow: number;
+	endRow: number;
+	scrollContainerId: number;
+
+	// Metadata for cached headers
+	relativeX?: number; // Relative to StaticRender
+	relativeY?: number; // Relative to StaticRender
+	height?: number;
+	parentRelativeTop?: number;
+	parentHeight?: number;
+	type?: 'top' | 'bottom';
 };
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -134,6 +155,8 @@ export const createNode = (nodeName: ElementNames): DOMElement => {
 		internal_accessibility: {},
 		internalSticky: false,
 		internalStickyAlternate: false,
+		internal_opaque: false,
+		internal_scrollbar: true,
 		internal_id: idCounter++,
 	};
 

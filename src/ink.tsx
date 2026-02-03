@@ -51,7 +51,7 @@ export type Options = {
 	alternateBuffer?: boolean;
 	alternateBufferAlreadyActive?: boolean;
 	isAlternateBufferEnabled?: boolean;
-	isBackbufferStickyHeadersEnabled?: boolean;
+	stickyHeadersInBackbuffer?: boolean;
 	incrementalRendering?: boolean;
 	debugRainbow?: boolean;
 	selectionStyle?: (char: StyledChar) => StyledChar;
@@ -112,7 +112,7 @@ export default class Ink {
 		this.optionsState = {
 			isAlternateBufferEnabled:
 				options.isAlternateBufferEnabled ?? options.alternateBuffer,
-			isBackbufferStickyHeadersEnabled: options.isBackbufferStickyHeadersEnabled,
+			stickyHeadersInBackbuffer: options.stickyHeadersInBackbuffer,
 		};
 
 		this.rootNode = dom.createNode('ink-root');
@@ -163,8 +163,7 @@ export default class Ink {
 					renderInProcess: !options.renderProcess && options.terminalBuffer,
 					stdout: options.stdout,
 					isAlternateBufferEnabled: options.isAlternateBufferEnabled,
-					isBackbufferStickyHeadersEnabled:
-						options.isBackbufferStickyHeadersEnabled,
+					stickyHeadersInBackbuffer: options.stickyHeadersInBackbuffer,
 				},
 			);
 		}

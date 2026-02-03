@@ -6,6 +6,7 @@ import {
 	styledCharsWidth,
 } from './measure-text.js';
 import {type CursorPosition} from './log-update.js';
+import {type StickyHeader} from './dom.js';
 
 /**
 "Virtual" output class
@@ -25,17 +26,6 @@ type Clip = {
 	x2: number | undefined;
 	y1: number | undefined;
 	y2: number | undefined;
-};
-
-export type StickyHeader = {
-	nodeId: number;
-	lines: StyledChar[][];
-	styledOutput: StyledChar[][];
-	x: number;
-	y: number; // Absolute Y position relative to the Region's top-left
-	startRow: number;
-	endRow: number;
-	scrollContainerId: number;
 };
 
 export type Region = {
@@ -262,7 +252,8 @@ export default class Output {
 			const region = this.getActiveRegion();
 			let col = 0;
 			let row = 0;
-			const chars = typeof items === 'string' ? toStyledCharacters(items) : items;
+			const chars =
+				typeof items === 'string' ? toStyledCharacters(items) : items;
 			let charOffset = 0;
 			const targetOffset = terminalCursorPosition ?? Number.POSITIVE_INFINITY;
 

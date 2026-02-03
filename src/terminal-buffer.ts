@@ -31,21 +31,21 @@ export default class TerminalBuffer {
 			renderInProcess?: boolean;
 			stdout?: NodeJS.WriteStream;
 			isAlternateBufferEnabled?: boolean;
-			isBackbufferStickyHeadersEnabled?: boolean;
+			stickyHeadersInBackbuffer?: boolean;
 		},
 	) {
 		this.lastOptions = {
 			isAlternateBufferEnabled: options?.isAlternateBufferEnabled,
-			isBackbufferStickyHeadersEnabled:
-				options?.isBackbufferStickyHeadersEnabled,
+			stickyHeadersInBackbuffer:
+				options?.stickyHeadersInBackbuffer,
 		};
 		if (options?.renderInProcess) {
 			this.workerInstance = new TerminalBufferWorker(columns, rows, {
 				debugRainbowEnabled: options?.debugRainbowEnabled,
 				stdout: options?.stdout,
 				isAlternateBufferEnabled: options?.isAlternateBufferEnabled,
-				isBackbufferStickyHeadersEnabled:
-					options?.isBackbufferStickyHeadersEnabled,
+				stickyHeadersInBackbuffer:
+					options?.stickyHeadersInBackbuffer,
 			});
 			void this.workerInstance.render();
 
@@ -84,8 +84,8 @@ export default class TerminalBuffer {
 				rows,
 				debugRainbowEnabled: options?.debugRainbowEnabled,
 				isAlternateBufferEnabled: options?.isAlternateBufferEnabled,
-				isBackbufferStickyHeadersEnabled:
-					options?.isBackbufferStickyHeadersEnabled,
+				stickyHeadersInBackbuffer:
+					options?.stickyHeadersInBackbuffer,
 			});
 		}
 	}
@@ -94,8 +94,8 @@ export default class TerminalBuffer {
 		if (
 			options.isAlternateBufferEnabled !==
 				this.lastOptions?.isAlternateBufferEnabled ||
-			options.isBackbufferStickyHeadersEnabled !==
-				this.lastOptions?.isBackbufferStickyHeadersEnabled
+			options.stickyHeadersInBackbuffer !==
+				this.lastOptions?.stickyHeadersInBackbuffer
 		) {
 			this.optionsChanged = true;
 		}
@@ -289,7 +289,9 @@ export default class TerminalBuffer {
 			update.marginRight = current.marginRight;
 			update.marginBottom = current.marginBottom;
 			update.scrollbarThumbColor = current.scrollbarThumbColor;
-			update.stickyHeaders = current.stickyHeaders;
+			update.stickyHeaders = current.stickyHeaders.map(
+				({node: _, ...rest}) => rest,
+			);
 
 			// Send all lines
 			const serialized = this.serializer.serialize(current.lines);
@@ -394,7 +396,9 @@ export default class TerminalBuffer {
 		// To be safe and simple: always send sticky headers if they exist or existed.
 		if (current.stickyHeaders.length > 0 || last.stickyHeaders.length > 0) {
 			// TODO: optimize comparison
-			update.stickyHeaders = current.stickyHeaders;
+			update.stickyHeaders = current.stickyHeaders.map(
+				({node: _, ...rest}) => rest,
+			);
 			hasChanges = true;
 		}
 

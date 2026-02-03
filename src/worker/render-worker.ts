@@ -22,7 +22,7 @@ export class TerminalBufferWorker {
 	frameIndex = 0;
 	debugRainbowEnabled = false;
 	isAlternateBufferEnabled = false;
-	isBackbufferStickyHeadersEnabled = false;
+	stickyHeadersInBackbuffer = false;
 	resized = false;
 	cursorPosition?: {row: number; col: number};
 	forceNextRender = false;
@@ -47,7 +47,7 @@ export class TerminalBufferWorker {
 			debugRainbowEnabled?: boolean;
 			stdout?: NodeJS.WriteStream;
 			isAlternateBufferEnabled?: boolean;
-			isBackbufferStickyHeadersEnabled?: boolean;
+			stickyHeadersInBackbuffer?: boolean;
 		},
 	) {
 		const stdout = options?.stdout ?? process.stdout;
@@ -65,8 +65,8 @@ export class TerminalBufferWorker {
 			this.isAlternateBufferEnabled = true;
 		}
 
-		if (options?.isBackbufferStickyHeadersEnabled) {
-			this.isBackbufferStickyHeadersEnabled = true;
+		if (options?.stickyHeadersInBackbuffer) {
+			this.stickyHeadersInBackbuffer = true;
 		}
 
 		if (this.isAlternateBufferEnabled) {
@@ -112,12 +112,10 @@ export class TerminalBufferWorker {
 		}
 
 		if (
-			options.isBackbufferStickyHeadersEnabled !== undefined &&
-			this.isBackbufferStickyHeadersEnabled !==
-				options.isBackbufferStickyHeadersEnabled
+			options.stickyHeadersInBackbuffer !== undefined &&
+			this.stickyHeadersInBackbuffer !== options.stickyHeadersInBackbuffer
 		) {
-			this.isBackbufferStickyHeadersEnabled =
-				options.isBackbufferStickyHeadersEnabled;
+			this.stickyHeadersInBackbuffer = options.stickyHeadersInBackbuffer;
 
 			this.forceNextRender = true;
 		}
@@ -329,117 +327,139 @@ export class TerminalBufferWorker {
 						this.terminalWriter.lastRegionScrollTops.get(region.id) ?? 0;
 
 					if (scrollTop !== lastScrollTop) {
-						if (region.width === this.columns && region.x === 0) {
-							// Full-width region, we can use scrolling regions!
-							const start = Math.max(0, region.y - cameraY);
-							const end = Math.min(
-								this.rows,
-								region.y + region.height - cameraY,
-							);
+						// Full-width region, we can use scrolling regions!
+						const start = Math.max(0, region.y - cameraY);
+						const end = Math.min(
+							this.rows,
+							region.y + region.height - cameraY,
+						);
 
-							if (end > start) {
-								const maxPushed =
-									this.terminalWriter.maxRegionScrollTops.get(region.id) ?? 0;
-								const direction = scrollTop > lastScrollTop ? 'up' : 'down';
-								const linesToScroll = Math.abs(scrollTop - lastScrollTop);
-								const scrollAreaHeight = end - start;
+						if (end > start) {
+							const maxPushed =
+								this.terminalWriter.maxRegionScrollTops.get(region.id) ?? 0;
+							const direction = scrollTop > lastScrollTop ? 'up' : 'down';
+							const linesToScroll = Math.abs(scrollTop - lastScrollTop);
+							const scrollAreaHeight = end - start;
 
-								const getLinesForScroll = (
-									base: number,
-									count: number,
-								): RenderLine[] => {
-									const res: RenderLine[] = [];
-									for (let i = 0; i < scrollAreaHeight + count; i++) {
-										const contentY = base + i;
-										const chars = region.lines[contentY] ?? [];
-										res.push(
-											this.terminalWriter.clampLine(chars, this.columns),
-										);
+							const getLinesForScroll = (
+								scrollStart: number,
+								count: number,
+							): RenderLine[] => {
+								const res = this.createEmptyLines(scrollAreaHeight + count);
+
+								// Determine which RegionNode corresponds to this Region
+								const node = this.findNodeForRegion(region.id);
+
+								if (node) {
+									const rootRegion = this.root
+										? this.regions.get(this.root.id)
+										: undefined;
+									const rootCameraY = rootRegion
+										? this.getCameraY(rootRegion)
+										: 0;
+
+									// We want to render the region as if it were at its current screen Y,
+									// but with a specific scrollTop.
+									this.composeNode(node, res, {
+										clip: undefined,
+										// The node's internal composeNode uses region.scrollTop.
+										// To force a specific scrollTop for this capture, we temporarily swap it.
+										offsetY: region.y - rootCameraY,
+									});
+
+									// Wait, composeNode uses the region's STASHED scrollTop.
+									// If we want to render with 'scrollStart', we need to temporarily update the region.
+									const originalScrollTop = region.scrollTop;
+									region.scrollTop = scrollStart;
+									try {
+										// We render into 'res' which has size 'scrollAreaHeight + count'
+										// We want the lines that would be visible if scrollTop was 'scrollStart'.
+										// These lines would be at screen rows [start, end + count).
+										// So we render the whole scene but only keep the lines we need?
+										// Better: Render just this region and its children into 'res'.
+
+										// Clear res first (already empty)
+										const tempScreen = this.createEmptyLines(this.rows + count);
+										this.composeNode(this.root!, tempScreen, {
+											clip: undefined,
+											offsetY: -rootCameraY,
+										});
+
+										return tempScreen.slice(start, start + scrollAreaHeight + count);
+									} finally {
+										region.scrollTop = originalScrollTop;
 									}
+								}
 
-									return res;
-								};
+								return res;
+							};
+
+							if (
+								direction === 'up' &&
+								region.overflowToBackbuffer &&
+								start === 0 &&
+								region.width === this.columns &&
+								region.x === 0
+							) {
+								const newLinesToPush = Math.max(0, scrollTop - maxPushed);
+								const linesToJustScroll = linesToScroll - newLinesToPush;
+
+								// 1. Scroll and push NEW lines to backbuffer (using sequential writes)
+								if (newLinesToPush > 0) {
+									const pushBase = Math.max(lastScrollTop, maxPushed);
+									this.terminalWriter.scrollLines({
+										start,
+										end,
+										linesToScroll: newLinesToPush,
+										lines: getLinesForScroll(pushBase, newLinesToPush),
+										direction: 'up',
+										scrollToBackbuffer: true,
+									});
+
+									this.terminalWriter.maxRegionScrollTops.set(
+										region.id,
+										scrollTop,
+									);
+								}
+
+								// 2. Scroll lines that were already in backbuffer (just visual scroll on screen using DL)
+								if (linesToJustScroll > 0) {
+									const visualBase = lastScrollTop;
+									this.terminalWriter.scrollLines({
+										start,
+										end,
+										linesToScroll: linesToJustScroll,
+										lines: getLinesForScroll(visualBase, linesToJustScroll),
+										direction: 'up',
+										scrollToBackbuffer: false,
+									});
+								}
+							} else {
+								// Normal scroll: Down (scrolling up doc) OR Up (scrolling down doc) without backbuffer push
+								this.terminalWriter.scrollLines({
+									start,
+									end,
+									linesToScroll,
+									lines: getLinesForScroll(
+										direction === 'up' ? lastScrollTop : scrollTop,
+										linesToScroll,
+									),
+									direction,
+									scrollToBackbuffer: false,
+								});
 
 								if (
 									direction === 'up' &&
 									region.overflowToBackbuffer &&
-									start === 0
+									start === 0 &&
+									region.width === this.columns &&
+									region.x === 0
 								) {
-									const newLinesToPush = Math.max(0, scrollTop - maxPushed);
-									const linesToJustScroll = linesToScroll - newLinesToPush;
-
-									// 1. Scroll and push NEW lines to backbuffer (using sequential writes)
-									if (newLinesToPush > 0) {
-										const pushBase = Math.max(lastScrollTop, maxPushed);
-										this.terminalWriter.scrollLines({
-											start,
-											end,
-											linesToScroll: newLinesToPush,
-											lines: getLinesForScroll(pushBase, newLinesToPush),
-											direction: 'up',
-											scrollToBackbuffer: true,
-										});
-
-										this.terminalWriter.maxRegionScrollTops.set(
-											region.id,
-											scrollTop,
-										);
-									}
-
-									// 2. Scroll lines that were already in backbuffer (just visual scroll on screen using DL)
-									if (linesToJustScroll > 0) {
-										const visualBase = lastScrollTop;
-										this.terminalWriter.scrollLines({
-											start,
-											end,
-											linesToScroll: linesToJustScroll,
-											lines: getLinesForScroll(visualBase, linesToJustScroll),
-											direction: 'up',
-											scrollToBackbuffer: false,
-										});
-									}
-								} else {
-									// Normal scroll: Down (scrolling up doc) OR Up (scrolling down doc) without backbuffer push
-									this.terminalWriter.scrollLines({
-										start,
-										end,
-										linesToScroll,
-										lines: getLinesForScroll(
-											direction === 'up' ? lastScrollTop : scrollTop,
-											linesToScroll,
-										),
-										direction,
-										scrollToBackbuffer: false,
-									});
-
-									if (
-										direction === 'up' &&
-										region.overflowToBackbuffer &&
-										start === 0
-									) {
-										this.terminalWriter.maxRegionScrollTops.set(
-											region.id,
-											Math.max(maxPushed, scrollTop),
-										);
-									}
+									this.terminalWriter.maxRegionScrollTops.set(
+										region.id,
+										Math.max(maxPushed, scrollTop),
+									);
 								}
-							}
-						} else if (
-							region.overflowToBackbuffer &&
-							scrollTop > lastScrollTop
-						) {
-							// Not full-width, but needs to scroll into backbuffer
-							const maxPushed =
-								this.terminalWriter.maxRegionScrollTops.get(region.id) ?? 0;
-							const startPushed = Math.max(lastScrollTop, maxPushed);
-							const countPushed = scrollTop - startPushed;
-
-							if (countPushed > 0) {
-								this.appendToBackbuffer(region, startPushed, countPushed);
-								this.terminalWriter.maxRegionScrollTops.set(
-									region.id,
-									scrollTop,
-								);
 							}
 						}
 
@@ -557,21 +577,12 @@ export class TerminalBufferWorker {
 			}
 		}
 
-		this.screen = [];
-
-		for (let i = 0; i < this.rows; i++) {
-			this.screen.push({
-				styledChars: [],
-				text: '',
-				length: 0,
-				tainted: this.resized,
-			});
-		}
+		this.screen = this.createEmptyLines(this.rows);
 
 		this.resized = false;
 
 		// Render relative to cameraY
-		this.composeNode(this.root, {
+		this.composeNode(this.root, this.screen, {
 			clip: undefined,
 			offsetY: -cameraY,
 		});
@@ -589,6 +600,7 @@ export class TerminalBufferWorker {
 
 	private composeNode(
 		node: RegionNode,
+		targetLines: RenderLine[],
 		{
 			clip,
 			offsetY = 0,
@@ -608,13 +620,15 @@ export class TerminalBufferWorker {
 		const absX = region.x + offsetX;
 		const absY = region.y + offsetY; // Apply camera offset
 
+		const bufferHeight = targetLines.length;
+
 		// If absY is completely off screen (below), we can skip?
-		if (absY >= this.rows) {
+		if (absY >= bufferHeight) {
 			return;
 		}
 
 		// If absY + height < 0, skip?
-		if (absY + region.height < 0 && !this.isBackbufferStickyHeadersEnabled) {
+		if (absY + region.height < 0 && !this.stickyHeadersInBackbuffer) {
 			return;
 		}
 
@@ -642,7 +656,7 @@ export class TerminalBufferWorker {
 		const scrollLeft = region.scrollLeft ?? 0;
 
 		for (let sy = myClip.y; sy < myClip.y + myClip.h; sy++) {
-			if (sy < 0 || sy >= this.rows) {
+			if (sy < 0 || sy >= bufferHeight) {
 				continue;
 			}
 
@@ -655,7 +669,7 @@ export class TerminalBufferWorker {
 				continue;
 			}
 
-			const targetLine = this.screen[sy];
+			const targetLine = targetLines[sy];
 
 			if (!targetLine) {
 				continue;
@@ -690,7 +704,7 @@ export class TerminalBufferWorker {
 		}
 
 		for (const child of node.children) {
-			this.composeNode(child, {
+			this.composeNode(child, targetLines, {
 				clip: myClip,
 				offsetY: absY - scrollTop,
 				offsetX: absX - scrollLeft,
@@ -710,15 +724,15 @@ export class TerminalBufferWorker {
 				// If header is above the region (due to overflowToBackbuffer) and we want sticky headers there
 				const aboveRegionAndStickyEnabled =
 					absY < 0 &&
-					this.isBackbufferStickyHeadersEnabled &&
+					this.stickyHeadersInBackbuffer &&
 					sy >= 0 &&
-					sy < Math.min(this.rows, absY + region.height);
+					sy < Math.min(bufferHeight, absY + region.height);
 
 				if (!withinRegionClip && !aboveRegionAndStickyEnabled) {
 					continue;
 				}
 
-				if (sy < 0 || sy >= this.rows) {
+				if (sy < 0 || sy >= bufferHeight) {
 					continue;
 				}
 
@@ -728,7 +742,7 @@ export class TerminalBufferWorker {
 					continue;
 				}
 
-				const targetLine = this.screen[sy];
+				const targetLine = targetLines[sy];
 
 				if (!targetLine) {
 					continue;
@@ -782,7 +796,8 @@ export class TerminalBufferWorker {
 					clip: myClip,
 					axis: 'vertical',
 					color: region.scrollbarThumbColor,
-					setChar: this.setCharOnScreen,
+					setChar: (x, y, char) =>
+						this.setCharOnBuffer(targetLines, x, y, char),
 				});
 			}
 
@@ -808,8 +823,47 @@ export class TerminalBufferWorker {
 					clip: myClip,
 					axis: 'horizontal',
 					color: region.scrollbarThumbColor,
-					setChar: this.setCharOnScreen,
+					setChar: (x, y, char) =>
+						this.setCharOnBuffer(targetLines, x, y, char),
 				});
+			}
+		}
+	}
+
+	private createEmptyLines(rows: number): RenderLine[] {
+		const lines: RenderLine[] = [];
+		for (let i = 0; i < rows; i++) {
+			lines.push({
+				styledChars: [],
+				text: '',
+				length: 0,
+				tainted: this.resized,
+			});
+		}
+
+		return lines;
+	}
+
+	private setCharOnBuffer(
+		targetLines: RenderLine[],
+		x: number,
+		y: number,
+		char: StyledChar,
+	) {
+		const bufferHeight = targetLines.length;
+		if (y >= 0 && y < bufferHeight && x >= 0 && x < this.columns) {
+			const targetLine = targetLines[y];
+			if (targetLine) {
+				while (targetLine.styledChars.length <= x) {
+					targetLine.styledChars.push({
+						type: 'char',
+						value: ' ',
+						fullWidth: false,
+						styles: [],
+					});
+				}
+
+				targetLine.styledChars[x] = char;
 			}
 		}
 	}
@@ -847,27 +901,28 @@ export class TerminalBufferWorker {
 		this.terminalWriter.appendLinesBackbuffer(linesScrollingOut);
 	}
 
-	private readonly setCharOnScreen = (
-		x: number,
-		y: number,
-		char: StyledChar,
-	) => {
-		if (y >= 0 && y < this.rows && x >= 0 && x < this.columns) {
-			const targetLine = this.screen[y];
-			if (targetLine) {
-				while (targetLine.styledChars.length <= x) {
-					targetLine.styledChars.push({
-						type: 'char',
-						value: ' ',
-						fullWidth: false,
-						styles: [],
-					});
-				}
-
-				targetLine.styledChars[x] = char;
-			}
+	private findNodeForRegion(id: string | number): RegionNode | undefined {
+		if (!this.root) {
+			return undefined;
 		}
-	};
+
+		const visit = (node: RegionNode): RegionNode | undefined => {
+			if (node.id === id) {
+				return node;
+			}
+
+			for (const child of node.children) {
+				const found = visit(child);
+				if (found) {
+					return found;
+				}
+			}
+
+			return undefined;
+		};
+
+		return visit(this.root);
+	}
 }
 
 let buffer: TerminalBufferWorker;
@@ -881,8 +936,8 @@ const main = () => {
 				buffer = new TerminalBufferWorker(columns, rows, {
 					debugRainbowEnabled: message.debugRainbowEnabled as boolean,
 					isAlternateBufferEnabled: message.isAlternateBufferEnabled as boolean,
-					isBackbufferStickyHeadersEnabled:
-						message.isBackbufferStickyHeadersEnabled as boolean,
+					stickyHeadersInBackbuffer:
+						message.stickyHeadersInBackbuffer as boolean,
 				});
 				break;
 			}

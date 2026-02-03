@@ -280,7 +280,14 @@ function ScrollableContent({
 			const enabled = !options?.isAlternateBufferEnabled;
 			setOptions({
 				isAlternateBufferEnabled: enabled,
-				isBackbufferStickyHeadersEnabled: enabled,
+				stickyHeadersInBackbuffer: enabled,
+			});
+			return;
+		}
+
+		if (input === 'h') {
+			setOptions({
+				stickyHeadersInBackbuffer: !options?.stickyHeadersInBackbuffer,
 			});
 			return;
 		}
@@ -449,6 +456,10 @@ function ScrollableContent({
 				<Text>
 					Press 'a' or 'f' to toggle alternate buffer + sticky headers (current:{' '}
 					{options?.isAlternateBufferEnabled ? 'on' : 'off'})
+				</Text>
+				<Text>
+					Press 'h' to toggle sticky headers in backbuffer (current:{' '}
+					{options?.stickyHeadersInBackbuffer ? 'on' : 'off'})
 				</Text>
 				<Text>ScrollTop: {scrollTop}</Text>
 				<Text>ScrollLeft: {scrollLeft}</Text>

@@ -3,7 +3,7 @@ import {type Selection} from '../selection.js';
 
 export type InkOptions = {
 	readonly isAlternateBufferEnabled?: boolean;
-	readonly isBackbufferStickyHeadersEnabled?: boolean;
+	readonly stickyHeadersInBackbuffer?: boolean;
 };
 
 export type Props = {
