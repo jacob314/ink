@@ -40,7 +40,7 @@ export {
 } from './measure-element.js';
 export {getScrollHeight, getScrollWidth} from './scroll.js';
 export {
-	clearStringWidthCache, 
+	clearStringWidthCache,
 	setStringWidthFunction,
 	toStyledCharacters,
 	styledCharsToString,
