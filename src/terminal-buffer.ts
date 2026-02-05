@@ -33,12 +33,18 @@ export default class TerminalBuffer {
 			isAlternateBufferEnabled?: boolean;
 			stickyHeadersInBackbuffer?: boolean;
 			animatedScroll?: boolean;
+			animationInterval?: number;
+			backbufferUpdateDelay?: number;
+			maxScrollbackLength?: number;
 		},
 	) {
 		this.lastOptions = {
 			isAlternateBufferEnabled: options?.isAlternateBufferEnabled,
 			stickyHeadersInBackbuffer: options?.stickyHeadersInBackbuffer,
 			animatedScroll: options?.animatedScroll,
+			animationInterval: options?.animationInterval,
+			backbufferUpdateDelay: options?.backbufferUpdateDelay,
+			maxScrollbackLength: options?.maxScrollbackLength,
 		};
 		if (options?.renderInProcess) {
 			this.workerInstance = new TerminalBufferWorker(columns, rows, {
@@ -47,6 +53,9 @@ export default class TerminalBuffer {
 				isAlternateBufferEnabled: options?.isAlternateBufferEnabled,
 				stickyHeadersInBackbuffer: options?.stickyHeadersInBackbuffer,
 				animatedScroll: options?.animatedScroll,
+				animationInterval: options?.animationInterval,
+				backbufferUpdateDelay: options?.backbufferUpdateDelay,
+				maxScrollbackLength: options?.maxScrollbackLength,
 			});
 			void this.workerInstance.render();
 
@@ -87,6 +96,9 @@ export default class TerminalBuffer {
 				isAlternateBufferEnabled: options?.isAlternateBufferEnabled,
 				stickyHeadersInBackbuffer: options?.stickyHeadersInBackbuffer,
 				animatedScroll: options?.animatedScroll,
+				animationInterval: options?.animationInterval,
+				backbufferUpdateDelay: options?.backbufferUpdateDelay,
+				maxScrollbackLength: options?.maxScrollbackLength,
 			});
 		}
 	}
@@ -97,7 +109,11 @@ export default class TerminalBuffer {
 				this.lastOptions?.isAlternateBufferEnabled ||
 			options.stickyHeadersInBackbuffer !==
 				this.lastOptions?.stickyHeadersInBackbuffer ||
-			options.animatedScroll !== this.lastOptions?.animatedScroll
+			options.animatedScroll !== this.lastOptions?.animatedScroll ||
+			options.animationInterval !== this.lastOptions?.animationInterval ||
+			options.backbufferUpdateDelay !==
+				this.lastOptions?.backbufferUpdateDelay ||
+			options.maxScrollbackLength !== this.lastOptions?.maxScrollbackLength
 		) {
 			this.optionsChanged = true;
 		}

@@ -5,6 +5,9 @@ export type InkOptions = {
 	readonly isAlternateBufferEnabled?: boolean;
 	readonly stickyHeadersInBackbuffer?: boolean;
 	readonly animatedScroll?: boolean;
+	readonly animationInterval?: number;
+	readonly backbufferUpdateDelay?: number;
+	readonly maxScrollbackLength?: number;
 };
 
 export type Props = {

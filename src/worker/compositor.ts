@@ -86,7 +86,7 @@ export class Compositor {
 			}
 
 			const linesToRender = useStuckPosition
-				? header.stuckLines ?? header.lines
+				? (header.stuckLines ?? header.lines)
 				: header.lines;
 
 			let headerY =
@@ -100,6 +100,15 @@ export class Compositor {
 				absY + region.height > 0
 			) {
 				headerY = 0;
+			}
+
+			if (
+				this.options.stickyHeadersInBackbuffer &&
+				header.type === 'bottom' &&
+				headerY + headerH > canvas.height &&
+				absY < canvas.height
+			) {
+				headerY = canvas.height - headerH;
 			}
 
 			for (let i = 0; i < headerH; i++) {
@@ -154,7 +163,7 @@ export class Compositor {
 		clip: Rect,
 	) {
 		if (
-			this.options.skipScrollbars ||
+			(this.options.skipScrollbars ?? false) ||
 			!region.isScrollable ||
 			region.scrollbarVisible === false
 		) {
@@ -211,7 +220,8 @@ export class Compositor {
 		}
 
 		if (isHorizontalScrollbarVisible) {
-			const scrollbarWidth = region.width - (isVerticalScrollbarVisible ? 1 : 0);
+			const scrollbarWidth =
+				region.width - (isVerticalScrollbarVisible ? 1 : 0);
 
 			const {startIndex, endIndex, thumbStartHalf, thumbEndHalf} =
 				calculateScrollbarThumb({
@@ -238,18 +248,27 @@ export class Compositor {
 		}
 	}
 
-	isHeaderStuck(header: StickyHeader, absY: number, scrollTop: number): boolean {
+	isHeaderStuck(
+		header: StickyHeader,
+		absY: number,
+		scrollTop: number,
+	): boolean {
+		const naturalHeight = header.lines.length;
+		const stuckHeight = (header.stuckLines ?? header.lines).length;
+		const maxHeaderHeight = Math.max(naturalHeight, stuckHeight);
+
 		const isStuckState =
 			header.type === 'bottom'
-				? header.naturalRow - scrollTop >= header.y
-				: header.naturalRow - scrollTop <= 0;
+				? Math.round(header.naturalRow - scrollTop + naturalHeight) >
+					Math.round(header.y + maxHeaderHeight)
+				: Math.round(header.naturalRow - scrollTop) < Math.round(header.y);
 
 		if (!isStuckState) {
 			return false;
 		}
 
 		if (header.type === 'top') {
-			return this.options.stickyHeadersInBackbuffer || absY > 0;
+			return (this.options.stickyHeadersInBackbuffer ?? false) || absY >= 0;
 		}
 
 		return true;
@@ -272,17 +291,20 @@ export class Compositor {
 			if (useStuckPosition) {
 				const linesToRender = header.stuckLines ?? header.lines;
 				const headerY = Math.round(absY + header.y);
-				if (renderRow >= headerY && renderRow < headerY + linesToRender.length) {
+				if (
+					renderRow >= headerY &&
+					renderRow < headerY + linesToRender.length
+				) {
 					return true;
 				}
-			}
 
-			if (
-				!header.isStuckOnly &&
-				contentY >= header.startRow &&
-				contentY < header.endRow
-			) {
-				return true;
+				if (
+					!header.isStuckOnly &&
+					contentY >= header.startRow &&
+					contentY < header.endRow
+				) {
+					return true;
+				}
 			}
 		}
 

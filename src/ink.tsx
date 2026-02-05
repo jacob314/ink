@@ -55,6 +55,9 @@ export type Options = {
 	incrementalRendering?: boolean;
 	debugRainbow?: boolean;
 	animatedScroll?: boolean;
+	animationInterval?: number;
+	backbufferUpdateDelay?: number;
+	maxScrollbackLength?: number;
 	selectionStyle?: (char: StyledChar) => StyledChar;
 	standardReactLayoutTiming?: boolean;
 	renderProcess?: boolean;
@@ -115,6 +118,9 @@ export default class Ink {
 				options.isAlternateBufferEnabled ?? options.alternateBuffer,
 			stickyHeadersInBackbuffer: options.stickyHeadersInBackbuffer,
 			animatedScroll: options.animatedScroll,
+			animationInterval: options.animationInterval,
+			backbufferUpdateDelay: options.backbufferUpdateDelay,
+			maxScrollbackLength: options.maxScrollbackLength,
 		};
 
 		this.rootNode = dom.createNode('ink-root');
@@ -167,6 +173,9 @@ export default class Ink {
 					isAlternateBufferEnabled: options.isAlternateBufferEnabled,
 					stickyHeadersInBackbuffer: options.stickyHeadersInBackbuffer,
 					animatedScroll: options.animatedScroll,
+					animationInterval: options.animationInterval,
+					backbufferUpdateDelay: options.backbufferUpdateDelay,
+					maxScrollbackLength: options.maxScrollbackLength,
 				},
 			);
 

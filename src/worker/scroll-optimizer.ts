@@ -28,7 +28,12 @@ export class ScrollOptimizer {
 		rows: number,
 		columns: number,
 		cameraY: number,
-		getLinesForScroll: (scrollStart: number, count: number) => RenderLine[],
+		getLinesForScroll: (
+			scrollStart: number,
+			count: number,
+			start: number,
+			end: number,
+		) => RenderLine[],
 		calculateStuckTopHeight: (
 			region: Region,
 			absY: number,
@@ -102,7 +107,12 @@ export class ScrollOptimizer {
 					start: adjustedStart,
 					end: adjustedEnd,
 					linesToScroll: newLinesToPush,
-					lines: getLinesForScroll(pushBase, newLinesToPush),
+					lines: getLinesForScroll(
+						pushBase,
+						newLinesToPush,
+						adjustedStart,
+						adjustedEnd,
+					),
 					direction: 'up',
 					scrollToBackbuffer: true,
 					regionId: region.id,
@@ -116,7 +126,12 @@ export class ScrollOptimizer {
 					start: adjustedStart,
 					end: adjustedEnd,
 					linesToScroll: linesToJustScroll,
-					lines: getLinesForScroll(visualBase, linesToJustScroll),
+					lines: getLinesForScroll(
+						visualBase,
+						linesToJustScroll,
+						adjustedStart,
+						adjustedEnd,
+					),
 					direction: 'up',
 					scrollToBackbuffer: false,
 					regionId: region.id,
@@ -130,28 +145,13 @@ export class ScrollOptimizer {
 				lines: getLinesForScroll(
 					direction === 'up' ? lastScrollTop : scrollTop,
 					linesToScroll,
+					adjustedStart,
+					adjustedEnd,
 				),
 				direction,
 				scrollToBackbuffer: false,
 				regionId: region.id,
 			});
-
-			if (
-				direction === 'up' &&
-				region.overflowToBackbuffer &&
-				adjustedStart === 0 &&
-				region.width === columns &&
-				region.x === 0
-			) {
-				const newMaxPushed = Math.max(maxPushed, scrollTop);
-				if (newMaxPushed !== maxPushed) {
-					// We need to signal that maxPushed updated even if we didn't push to backbuffer here?
-					// Wait, the original code did:
-					// this.terminalWriter.maxRegionScrollTops.set(region.id, Math.max(maxPushed, scrollTop));
-					// So I should track it.
-					this.maxRegionScrollTops.set(region.id, newMaxPushed);
-				}
-			}
 		}
 
 		this.lastRegionScrollTops.set(region.id, scrollTop);
@@ -161,6 +161,10 @@ export class ScrollOptimizer {
 	updateMaxPushed(regionId: string | number, maxPushed: number) {
 		const current = this.maxRegionScrollTops.get(regionId) ?? 0;
 		this.maxRegionScrollTops.set(regionId, Math.max(current, maxPushed));
+	}
+
+	setMaxPushed(regionId: string | number, maxPushed: number) {
+		this.maxRegionScrollTops.set(regionId, maxPushed);
 	}
 
 	resetTracking(regionId: string | number) {

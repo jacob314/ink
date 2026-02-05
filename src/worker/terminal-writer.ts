@@ -1,3 +1,4 @@
+import process from 'node:process';
 import ansiEscapes from 'ansi-escapes';
 import {type StyledChar, styledCharsToString} from '@alcalzone/ansi-tokenize';
 import {debugLog} from '../debug-log.js';
@@ -6,6 +7,10 @@ import {
 	enterSynchronizedOutput,
 	exitSynchronizedOutput,
 	resetScrollRegion,
+	ris,
+	itermClearScrollback,
+	clearScrollbackStandard,
+	homeEraseDown,
 	getMoveCursorDownCode,
 	getMoveCursorUpCode,
 	getDeleteLinesCode,
@@ -15,23 +20,25 @@ import {
 import {platform} from './platform.js';
 
 const synchronizeOutput = true;
+const isVsCode = process.env['TERM_PROGRAM'] === 'vscode';
+const isIterm = process.env['TERM_PROGRAM'] === 'iTerm.app';
 
 export const rainbowColors = [
-	'red',
-	'green',
-	'yellow',
-	'blue',
-	'magenta',
-	'cyan',
-	'white',
-	'blackBright',
-	'redBright',
-	'greenBright',
-	'yellowBright',
-	'blueBright',
-	'magentaBright',
-	'cyanBright',
-	'whiteBright',
+	'ansi256(232)',
+	'ansi256(17)',
+	'ansi256(233)',
+	'ansi256(22)',
+	'ansi256(234)',
+	'ansi256(52)',
+	'ansi256(235)',
+	'ansi256(53)',
+	'ansi256(236)',
+	'ansi256(58)',
+	'ansi256(237)',
+	'ansi256(18)',
+	'ansi256(238)',
+	'ansi256(23)',
+	'ansi256(239)',
 ];
 
 export type RenderLine = {
@@ -93,8 +100,10 @@ export class TerminalWriter {
 	public isTainted = false;
 	public debugRainbowColor?: string;
 	public backbufferDirty = false;
+	public backbufferScrolledIncorrectly = false;
 	public backbufferDirtyCurrentFrame = false;
 	public fullRenderTimeout?: NodeJS.Timeout;
+	public maxScrollbackLength = 1000;
 	private linesUpdated = 0;
 	private screen: RenderLine[] = [];
 	private backbuffer: RenderLine[] = [];
@@ -165,33 +174,12 @@ export class TerminalWriter {
 	appendLinesBackbuffer(lines: RenderLine[]) {
 		this.startSynchronizedOutput();
 		try {
-			// Ensure we have enough lines in screen to match rows
-			const screenLines = [...this.screen];
-			while (screenLines.length < this.rows) {
-				screenLines.push({
-					styledChars: [],
-					text: '',
-					length: 0,
-					tainted: false,
-				});
-			}
+			for (const line of lines) {
+				// 1. Replace the top line with the clean version
+				this.syncLine(line, 0);
 
-			// The terminal lacks an API to scroll lines to the back buffer without first adding them to the main buffer.
-			// Therefore, we simulate this by performing a scroll up of the top line(s) of the terminal,
-			// then re-adding the visible lines to the terminal.
-			try {
-				this.performScroll({
-					start: 0,
-					end: this.rows,
-					linesToScroll: lines.length,
-					// We add the lines that are currently on screen at the very
-					// end to avoid corrupting the content currently on screen.
-					lines: [...lines, ...screenLines.slice(0, this.rows)],
-					direction: 'up',
-					scrollToBackbuffer: true,
-				});
-			} finally {
-				this.resetScrollRegion();
+				// 2. Scroll the terminal up, which pushes row 0 (the clean line) to history
+				this.applyScrollUpBackbuffer(0, this.rows);
 			}
 		} finally {
 			this.endSynchronizedOutput();
@@ -225,6 +213,10 @@ export class TerminalWriter {
 			if (i < backBufferLength) {
 				const clampedLine = this.clampLine(line.styledChars, this.columns);
 				this.backbuffer.push(clampedLine);
+
+				if (this.backbuffer.length > this.maxScrollbackLength) {
+					this.backbuffer.shift();
+				}
 			} else {
 				const screenRow = i - backBufferLength;
 				this.syncLine(line, screenRow);
@@ -261,7 +253,8 @@ export class TerminalWriter {
 			if (
 				i >= backBufferLength &&
 				i < backBufferLength + this.rows &&
-				this.isFirstRender
+				this.isFirstRender &&
+				clampedLine.length < this.columns
 			) {
 				// Need to clear any text we might be rendering on top of.
 				this.writeHelper(ansiEscapes.eraseEndLine);
@@ -273,6 +266,10 @@ export class TerminalWriter {
 
 			if (i < backBufferLength) {
 				this.backbuffer.push(clampedLine);
+
+				if (this.backbuffer.length > this.maxScrollbackLength) {
+					this.backbuffer.shift();
+				}
 			} else {
 				this.screen.push(clampedLine);
 			}
@@ -536,8 +533,16 @@ export class TerminalWriter {
 	}
 
 	clear(_options?: {readonly keepTrackingMaps?: boolean}) {
-		this.writeHelper(ansiEscapes.cursorTo(0, 0));
-		this.writeHelper(ansiEscapes.eraseScreen);
+		if (isVsCode) {
+			this.writeHelper(ris);
+		} else {
+			if (isIterm) {
+				this.writeHelper(itermClearScrollback);
+			}
+
+			this.writeHelper(clearScrollbackStandard);
+			this.writeHelper(homeEraseDown);
+		}
 
 		// Tmux does not reset the scroll region reliably on clear so we
 		// reset it manually.
@@ -614,7 +619,7 @@ export class TerminalWriter {
 					finished = true;
 					this.cancelSlowFlush = undefined;
 					resolve();
-				}, 30);
+				}, 50);
 
 				this.cancelSlowFlush = () => {
 					if (!finished) {
@@ -682,6 +687,10 @@ export class TerminalWriter {
 
 		if (start === 0) {
 			this.backbuffer.push(this.screen[0]!);
+
+			if (this.backbuffer.length > this.maxScrollbackLength) {
+				this.backbuffer.shift();
+			}
 		}
 
 		for (let i = start; i < bottom - 1; i++) {
@@ -704,7 +713,6 @@ export class TerminalWriter {
 			const line0Content = this.screen[1];
 
 			// Set scroll region to lines 1 through bottom (excluding line 0)
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			this.writeHelper(getSetScrollRegionCode(1, bottom)); // 1-indexed: line 2 = index 1
 			this.scrollRegionTop = 1;
 			this.scrollRegionBottom = bottom;
@@ -813,6 +821,9 @@ export class TerminalWriter {
 		if (direction === 'up') {
 			for (let i = 0; i < linesToScroll; i++) {
 				if (scrollToBackbuffer) {
+					// 1. Use the provided 'clean' line to replace the top row
+					this.syncLine(lines[i]!, start);
+
 					this.applyScrollUpBackbuffer(start, end);
 				} else {
 					this.applyScrollUp(start, end);

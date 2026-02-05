@@ -2,7 +2,7 @@ import test from 'ava';
 import React from 'react';
 import delay from 'delay';
 import {render} from '../src/index.js';
-import ScrollableContent from '../examples/scroll/scroll.tsx.js';
+import ScrollableContent from '../examples/scroll/scroll.js';
 import createStdout from './helpers/create-stdout.js';
 
 test('scrollbar is shown on the VERY first frame in ScrollableContent', async t => {

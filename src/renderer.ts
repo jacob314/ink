@@ -428,7 +428,7 @@ function composeRegion(
 		const cursorX = absX + regionCursorPosition.col - scrollLeft;
 		const cursorY = absY + regionCursorPosition.row - scrollTop;
 
-		if (cursorX >= x1 && cursorX < x2 && cursorY >= y1 && cursorY < y2) {
+		if (cursorX >= x1 && cursorX <= x2 && cursorY >= y1 && cursorY <= y2) {
 			options.context.cursorPosition = {row: cursorY, col: cursorX};
 		}
 	}
@@ -471,8 +471,8 @@ function composeRegion(
 
 	if (!options?.skipStickyHeaders) {
 		for (const header of stickyHeaders) {
-			const headerY = header.y + offsetY; // Absolute Y
-			const headerH = header.lines.length;
+			const headerY = header.y + absY; // Absolute Y
+			const headerH = header.styledOutput.length;
 
 			for (let i = 0; i < headerH; i++) {
 				const sy = headerY + i;
@@ -485,12 +485,12 @@ function composeRegion(
 					continue;
 				}
 
-				const line = header.lines[i];
+				const line = header.styledOutput[i];
 				if (!line) {
 					continue;
 				}
 
-				const headerX = header.x + offsetX;
+				const headerX = header.x + absX;
 				const headerW = line.length;
 
 				const hx1 = Math.max(headerX, myClipX);

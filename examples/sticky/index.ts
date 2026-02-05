@@ -13,8 +13,8 @@ render(React.createElement(ScrollableContent), {
 	terminalBuffer: true,
 	alternateBuffer: false,
 	standardReactLayoutTiming: true,
-	debugRainbow: true,
 	incrementalRendering: true,
 	animatedScroll: true,
+	backbufferUpdateDelay: 100,
 	maxFps: 10_000,
 });

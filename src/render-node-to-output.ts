@@ -562,7 +562,7 @@ function renderNodeToOutput(
 
 						if (
 							stickyType === 'bottom' &&
-							Math.floor(stickyNodeBottom) > Math.floor(viewportBottom) + 1 &&
+							stickyNodeBottom > viewportBottom &&
 							parentTop < viewportBottom
 						) {
 							activeBottomStickyNode = stickyNodeInfo;
@@ -775,12 +775,21 @@ function renderNodeToOutput(
 
 						const parentBottom = parentTop + parentHeight;
 
+						const naturalHeight = stickyNode.yogaNode!.getComputedHeight();
+						const alternateStickyNode = stickyNode.childNodes.find(
+							childNode => (childNode as DOMElement).internalStickyAlternate,
+						) as DOMElement | undefined;
+						const stuckHeight =
+							alternateStickyNode?.yogaNode?.getComputedHeight() ?? 0;
+						const maxHeaderHeight = Math.max(naturalHeight, stuckHeight);
+
+						const naturalStickyY = y - currentScrollTop + stickyNodeTop;
+
 						let finalStickyY = 0;
 
 						if (type === 'top') {
 							const maxStickyTop =
-								y - currentScrollTop + parentBottom - stickyNodeHeight;
-							const naturalStickyY = y - currentScrollTop + stickyNodeTop;
+								y - currentScrollTop + parentBottom - maxHeaderHeight;
 							const stuckStickyY = y + currentBorderTop;
 
 							finalStickyY = Math.min(
@@ -798,13 +807,16 @@ function renderNodeToOutput(
 							}
 						} else {
 							// Bottom sticky
+							const viewportBottom = y + currentBorderTop + currentClientHeight;
+							const naturalBottom = naturalStickyY + naturalHeight;
+							const isActuallyStuck = naturalBottom > viewportBottom;
+
 							const minStickyTop = y - currentScrollTop + parentTop;
-							const naturalStickyY = y - currentScrollTop + stickyNodeTop;
 							const stuckStickyY =
-								y + currentBorderTop + currentClientHeight - stickyNodeHeight;
+								y + currentBorderTop + currentClientHeight - maxHeaderHeight;
 
 							finalStickyY = Math.max(
-								Math.min(stuckStickyY, naturalStickyY),
+								isActuallyStuck ? stuckStickyY : naturalStickyY,
 								minStickyTop,
 							);
 
@@ -821,13 +833,7 @@ function renderNodeToOutput(
 						}
 
 						const stickyOffsetY = finalStickyY;
-						const naturalHeight = stickyNode.yogaNode!.getComputedHeight();
-						const alternateStickyNode = stickyNode.childNodes.find(
-							childNode => (childNode as DOMElement).internalStickyAlternate,
-						) as DOMElement | undefined;
-						const stuckHeight =
-							alternateStickyNode?.yogaNode?.getComputedHeight() ?? 0;
-						const maxHeaderHeight = Math.max(naturalHeight, stuckHeight);
+						const isStuck = finalStickyY !== naturalStickyY;
 
 						let naturalLines: StyledChar[][];
 						let stuckLines: StyledChar[][] | undefined;
@@ -862,6 +868,10 @@ function renderNodeToOutput(
 
 						const naturalRow = stickyNodeTop - currentBorderTop;
 
+						const styledOutput = isStuck
+							? (stuckLines ?? naturalLines)
+							: naturalLines;
+
 						output.addStickyHeader({
 							nodeId: stickyNodeId,
 
@@ -871,11 +881,11 @@ function renderNodeToOutput(
 
 							stuckLines,
 
-							styledOutput: stuckLines ?? naturalLines,
+							styledOutput,
 
-							x: stickyOffsetX - offsetX,
+							x: stickyOffsetX - (x + borderLeft),
 
-							y: stickyOffsetY - offsetY,
+							y: stickyOffsetY - (y + borderTop),
 
 							naturalRow,
 

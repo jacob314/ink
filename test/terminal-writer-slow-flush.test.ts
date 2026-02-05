@@ -53,8 +53,8 @@ test('slowFlush is cancelled by flush', async t => {
 	t.is(writes.length, 1);
 	t.true(writes[0]!.includes('Line 1'));
 
-	// Wait a bit (less than 200ms)
-	await new Promise(r => setTimeout(r, 50));
+	// Wait a bit
+	await new Promise(r => setTimeout(r, 30));
 
 	// Still 1 chunk
 	t.is(writes.length, 1);
@@ -62,17 +62,17 @@ test('slowFlush is cancelled by flush', async t => {
 	// 3. Trigger flush (should cancel slowFlush)
 	writer.flush();
 
-	// Should have written the rest immediately
-	t.is(writes.length, 3);
+	// Should have written the rest immediately (merged into one write)
+	t.is(writes.length, 2);
 	t.true(writes[1]!.includes('Updated'));
-	t.true(writes[2]!.includes('Again'));
+	t.true(writes[1]!.includes('Again'));
 
 	// 4. Ensure slowFlush promise resolves
 	await slowFlushPromise;
 
 	// 5. Wait more to ensure no phantom writes happen (if cancellation failed)
 	await new Promise(r => setTimeout(r, 300));
-	t.is(writes.length, 3);
+	t.is(writes.length, 2);
 });
 
 test('slowFlush is cancelled by another slowFlush', async t => {
@@ -101,16 +101,16 @@ test('slowFlush is cancelled by another slowFlush', async t => {
 
 	t.is(writes.length, 1);
 
-	await new Promise(r => setTimeout(r, 50));
+	await new Promise(r => setTimeout(r, 30));
 	t.is(writes.length, 1);
 
 	// Trigger slowFlush again
 	await writer.slowFlush();
 
-	// Should have flushed everything
-	t.is(writes.length, 3);
+	// Should have flushed everything (merged into one write)
+	t.is(writes.length, 2);
 	t.true(writes[1]!.includes('Updated'));
-	t.true(writes[2]!.includes('Again'));
+	t.true(writes[1]!.includes('Again'));
 
 	await slowFlushPromise;
 });

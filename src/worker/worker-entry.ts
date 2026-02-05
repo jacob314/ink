@@ -15,6 +15,9 @@ const main = () => {
 					stickyHeadersInBackbuffer:
 						message.stickyHeadersInBackbuffer as boolean,
 					animatedScroll: message.animatedScroll as boolean,
+					animationInterval: message.animationInterval as number,
+					backbufferUpdateDelay: message.backbufferUpdateDelay as number,
+					maxScrollbackLength: message.maxScrollbackLength as number,
 				});
 				break;
 			}

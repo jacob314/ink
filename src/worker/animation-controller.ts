@@ -16,6 +16,13 @@ export class AnimationController {
 	constructor(private readonly options: AnimationOptions) {}
 
 	/**
+	 * Updates the animation interval.
+	 */
+	updateInterval(interval: number) {
+		this.options.interval = interval;
+	}
+
+	/**
 	 * Returns the internal target scroll tops map.
 	 */
 	get allTargetScrollTops(): ReadonlyMap<string | number, number> {

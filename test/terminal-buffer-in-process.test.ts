@@ -2,7 +2,7 @@ import {PassThrough} from 'node:stream';
 import test from 'ava';
 import TerminalBuffer from '../src/terminal-buffer.js';
 
-test('TerminalBuffer uses in-process worker when renderInProcess is true', t => {
+test('TerminalBuffer uses in-process worker when renderInProcess is true', async t => {
 	const stdout = new PassThrough() as unknown as NodeJS.WriteStream;
 	(stdout as any).columns = 20;
 	(stdout as any).rows = 10;
@@ -11,7 +11,19 @@ test('TerminalBuffer uses in-process worker when renderInProcess is true', t => 
 		renderInProcess: true,
 		stdout,
 	});
-	buffer.render();
+	buffer.update(0, 10, {
+		id: 'root',
+		x: 0,
+		y: 0,
+		width: 20,
+		height: 10,
+		lines: [],
+		styledOutput: [],
+		isScrollable: false,
+		stickyHeaders: [],
+		children: [],
+	});
+	await buffer.render();
 
 	// Check if it writes something on init (it calls render())
 	// The worker writes cursorHide immediately in constructor

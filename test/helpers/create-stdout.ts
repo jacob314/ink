@@ -13,7 +13,7 @@ const createStdout = (columns?: number): FakeStdout => {
 	const write = spy();
 	stdout.write = write;
 
-	stdout.get = () => write.lastCall.args[0] as string;
+	stdout.get = () => (write.lastCall?.args[0] as string) ?? '';
 
 	return stdout;
 };

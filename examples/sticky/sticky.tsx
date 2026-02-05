@@ -18,6 +18,7 @@ import {
 	Box,
 	Text,
 	useInput,
+	useStdout,
 	getInnerHeight,
 	getScrollHeight,
 	getAddedScrollHeight,
@@ -97,7 +98,10 @@ function ScrollableContent({
 	const [shouldScrollToBottom, setShouldScrollToBottom] = useState(false);
 	const [scrollState, dispatch] = useReducer(scrollReducer, {scrollTop: 0});
 	const {scrollTop} = scrollState;
-	const {columns, rows} = useTerminalSize();
+	const {columns: terminalColumns, rows: terminalRows} = useTerminalSize();
+	const {stdout} = useStdout();
+	const columns = (stdout as any)?.columns ?? terminalColumns;
+	const rows = (stdout as any)?.rows ?? terminalRows;
 	const reference = useRef<DOMElement>(null);
 	const {options, setOptions} = useContext(AppContext);
 

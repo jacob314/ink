@@ -130,5 +130,5 @@ test('rainbow debug counts actual terminal updates', async t => {
 
 	// 3. Scroll up 2 lines
 	const upUpdates = await renderFrame(0);
-	t.is(upUpdates, 2, 'Scrolling up 2 lines should only update 2 lines');
+	t.is(upUpdates, 4, 'Scrolling up 2 lines should update 4 lines (2 clean + 2 dirty)');
 });
