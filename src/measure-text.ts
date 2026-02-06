@@ -219,7 +219,9 @@ export function inkCharacterWidth(text: string): number {
 	return calculatedWidth;
 }
 
-export function groupStyledChars(styledChars: StyledChar[]): StyledChar[][] {
+export function wordBreakStyledChars(
+	styledChars: StyledChar[],
+): StyledChar[][] {
 	const words: StyledChar[][] = [];
 	let currentWord: StyledChar[] = [];
 
