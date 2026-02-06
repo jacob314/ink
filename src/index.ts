@@ -44,8 +44,6 @@ export {
 	setStringWidthFunction,
 	styledCharsWidth,
 	widestLineFromStyledChars,
-	clearStringWidthCache,
-	setStringWidthFunction,
 	toStyledCharacters,
 	styledCharsToString,
 } from './measure-text.js';
