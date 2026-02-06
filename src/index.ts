@@ -44,6 +44,10 @@ export {
 	setStringWidthFunction,
 	styledCharsWidth,
 	widestLineFromStyledChars,
+	clearStringWidthCache,
+	setStringWidthFunction,
+	toStyledCharacters,
+	styledCharsToString,
 } from './measure-text.js';
 export {type DOMElement, type DOMNode, getPathToRoot} from './dom.js';
 export type {StyledChar} from '@alcalzone/ansi-tokenize';
@@ -52,3 +56,4 @@ export {
 	ResizeObserverEntry,
 } from './resize-observer.js';
 export {Selection, Range, comparePoints} from './selection.js';
+export {wrapStyledChars} from './text-wrap.js';
