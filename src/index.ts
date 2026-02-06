@@ -42,8 +42,11 @@ export {getScrollHeight, getScrollWidth} from './scroll.js';
 export {
 	clearStringWidthCache,
 	setStringWidthFunction,
+	styledCharsWidth,
+	widestLineFromStyledChars,
 	toStyledCharacters,
 	styledCharsToString,
+	wordBreakStyledChars,
 } from './measure-text.js';
 export {type DOMElement, type DOMNode, getPathToRoot} from './dom.js';
 export type {StyledChar} from '@alcalzone/ansi-tokenize';

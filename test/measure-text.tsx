@@ -4,7 +4,9 @@ import stringWidth from 'string-width';
 import {
 	measureStyledChars,
 	toStyledCharacters,
+	styledCharsToString,
 	setStringWidthFunction,
+	wordBreakStyledChars,
 } from '../src/measure-text.js';
 
 const measureText = (text: string) =>
@@ -120,4 +122,35 @@ test.serial('handle string width function that throws', t => {
 		setStringWidthFunction(stringWidth);
 		warn.restore();
 	}
+});
+
+test('group styled chars into words', t => {
+	const chars = toStyledCharacters('hello world');
+	const groups = wordBreakStyledChars(chars);
+
+	t.is(groups.length, 3);
+	t.is(styledCharsToString(groups[0]!), 'hello');
+	t.is(styledCharsToString(groups[1]!), ' ');
+	t.is(styledCharsToString(groups[2]!), 'world');
+});
+
+test('group styled chars with newlines', t => {
+	const chars = toStyledCharacters('hello\nworld');
+	const groups = wordBreakStyledChars(chars);
+
+	t.is(groups.length, 3);
+	t.is(styledCharsToString(groups[0]!), 'hello');
+	t.is(styledCharsToString(groups[1]!), '\n');
+	t.is(styledCharsToString(groups[2]!), 'world');
+});
+
+test('group styled chars with multiple spaces', t => {
+	const chars = toStyledCharacters('a  b');
+	const groups = wordBreakStyledChars(chars);
+
+	t.is(groups.length, 4);
+	t.is(styledCharsToString(groups[0]!), 'a');
+	t.is(styledCharsToString(groups[1]!), ' ');
+	t.is(styledCharsToString(groups[2]!), ' ');
+	t.is(styledCharsToString(groups[3]!), 'b');
 });

@@ -219,6 +219,32 @@ export function inkCharacterWidth(text: string): number {
 	return calculatedWidth;
 }
 
+export function wordBreakStyledChars(
+	styledChars: StyledChar[],
+): StyledChar[][] {
+	const words: StyledChar[][] = [];
+	let currentWord: StyledChar[] = [];
+
+	for (const char of styledChars) {
+		if (char.value === '\n' || char.value === ' ') {
+			if (currentWord.length > 0) {
+				words.push(currentWord);
+			}
+
+			currentWord = [];
+			words.push([char]);
+		} else {
+			currentWord.push(char);
+		}
+	}
+
+	if (currentWord.length > 0) {
+		words.push(currentWord);
+	}
+
+	return words;
+}
+
 export function splitStyledCharsByNewline(
 	styledChars: StyledChar[],
 ): StyledChar[][] {
