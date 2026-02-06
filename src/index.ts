@@ -46,6 +46,7 @@ export {
 	widestLineFromStyledChars,
 	toStyledCharacters,
 	styledCharsToString,
+	groupStyledChars,
 } from './measure-text.js';
 export {type DOMElement, type DOMNode, getPathToRoot} from './dom.js';
 export type {StyledChar} from '@alcalzone/ansi-tokenize';
