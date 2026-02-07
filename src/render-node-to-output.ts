@@ -286,6 +286,8 @@ function renderNodeToOutput(
 	options: {
 		offsetX?: number;
 		offsetY?: number;
+		absoluteOffsetX?: number;
+		absoluteOffsetY?: number;
 		transformers?: OutputTransformer[];
 		skipStaticElements: boolean;
 		nodesToSkip?: DOMElement[];
@@ -302,6 +304,8 @@ function renderNodeToOutput(
 	const {
 		offsetX = 0,
 		offsetY = 0,
+		absoluteOffsetX = 0,
+		absoluteOffsetY = 0,
 		transformers = [],
 		skipStaticElements,
 		nodesToSkip,
@@ -330,15 +334,19 @@ function renderNodeToOutput(
 		const x = offsetX + yogaNode.getComputedLeft();
 		const y = offsetY + yogaNode.getComputedTop();
 
+		// Absolute screen coordinates (for clipping/visibility check)
+		const absX = absoluteOffsetX + yogaNode.getComputedLeft();
+		const absY = absoluteOffsetY + yogaNode.getComputedTop();
+
 		const width = yogaNode.getComputedWidth();
 		const height = yogaNode.getComputedHeight();
 		const clip = output.getCurrentClip();
 
 		if (clip) {
-			const nodeLeft = x;
-			const nodeRight = x + width;
-			const nodeTop = y;
-			const nodeBottom = y + height;
+			const absoluteNodeLeft = absX;
+			const absoluteNodeRight = absoluteNodeLeft + width;
+			const absoluteNodeTop = absY;
+			const absoluteNodeBottom = absoluteNodeTop + height;
 
 			const clipLeft = clip.x1 ?? -Infinity;
 			const clipRight = clip.x2 ?? Infinity;
@@ -346,10 +354,10 @@ function renderNodeToOutput(
 			const clipBottom = clip.y2 ?? Infinity;
 
 			const isVisible =
-				nodeRight > clipLeft &&
-				nodeLeft < clipRight &&
-				nodeBottom > clipTop &&
-				nodeTop < clipBottom;
+				absoluteNodeRight > clipLeft &&
+				absoluteNodeLeft < clipRight &&
+				absoluteNodeBottom > clipTop &&
+				absoluteNodeTop < clipBottom;
 
 			if (!isVisible) {
 				return;
@@ -622,22 +630,23 @@ function renderNodeToOutput(
 			const clipVertically = overflowY === 'hidden' || overflowY === 'scroll';
 
 			if (clipHorizontally || clipVertically) {
+				const regionOffset = output.getRegionAbsoluteOffset();
 				const x1 = clipHorizontally
-					? x + yogaNode.getComputedBorder(Yoga.EDGE_LEFT)
+					? regionOffset.x + x + yogaNode.getComputedBorder(Yoga.EDGE_LEFT)
 					: undefined;
 
 				const x2 = clipHorizontally
-					? x +
+					? regionOffset.x + x +
 						yogaNode.getComputedWidth() -
 						yogaNode.getComputedBorder(Yoga.EDGE_RIGHT)
 					: undefined;
 
 				const y1 = clipVertically
-					? y + yogaNode.getComputedBorder(Yoga.EDGE_TOP)
+					? regionOffset.y + y + yogaNode.getComputedBorder(Yoga.EDGE_TOP)
 					: undefined;
 
 				const y2 = clipVertically
-					? y +
+					? regionOffset.y + y +
 						yogaNode.getComputedHeight() -
 						yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM)
 					: undefined;
@@ -664,10 +673,10 @@ function renderNodeToOutput(
 
 					output.startChildRegion({
 						id: node.internal_id,
-						x: x1 ?? x + borderLeft,
-						y: y1 ?? y + borderTop,
-						width: (x2 ?? x + width) - (x1 ?? x + borderLeft),
-						height: (y2 ?? y + height) - (y1 ?? y + borderTop),
+						x: x1 ?? regionOffset.x + x + borderLeft,
+						y: y1 ?? regionOffset.y + y + borderTop,
+						width: (x2 ?? regionOffset.x + x + width) - (x1 ?? regionOffset.x + x + borderLeft),
+						height: (y2 ?? regionOffset.y + y + height) - (y1 ?? regionOffset.y + y + borderTop),
 						isScrollable: true,
 						isVerticallyScrollable: verticallyScrollable,
 						isHorizontallyScrollable: horizontallyScrollable,
@@ -697,6 +706,8 @@ function renderNodeToOutput(
 						renderNodeToOutput(childNode as DOMElement, output, {
 							offsetX: childOffsetX,
 							offsetY: childOffsetY,
+							absoluteOffsetX: absX - scrollLeft,
+							absoluteOffsetY: absY - scrollTop,
 							transformers: newTransformers,
 							skipStaticElements,
 							nodesToSkip: allNodesToSkip,
@@ -922,6 +933,8 @@ function renderNodeToOutput(
 					renderNodeToOutput(childNode as DOMElement, output, {
 						offsetX: childrenOffsetX,
 						offsetY: childrenOffsetY,
+						absoluteOffsetX: absX,
+						absoluteOffsetY: absY,
 						transformers: newTransformers,
 						skipStaticElements,
 						nodesToSkip: allNodesToSkip,

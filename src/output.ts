@@ -140,6 +140,11 @@ export default class Output {
 		return this.activeRegionStack.at(-1)!;
 	}
 
+	getRegionAbsoluteOffset(): {x: number; y: number} {
+		const region = this.getActiveRegion();
+		return {x: region.x, y: region.y};
+	}
+
 	startChildRegion(options: {
 		id: number | string;
 		x: number;
@@ -434,13 +439,23 @@ export default class Output {
 		let toX: number | undefined;
 
 		if (clip) {
-			const clipResult = this.clipChars(chars, x, y, clip);
+			const clipResult = this.clipChars(
+				chars,
+				x + region.x - (region.scrollLeft ?? 0),
+				y + region.y - (region.scrollTop ?? 0),
+				clip,
+			);
 
 			if (!clipResult) {
 				return;
 			}
 
-			({chars, x, y, fromX, toX} = clipResult);
+			let absoluteX: number;
+			let absoluteY: number;
+
+			({chars, x: absoluteX, y: absoluteY, fromX, toX} = clipResult);
+			x = absoluteX - region.x + (region.scrollLeft ?? 0);
+			y = absoluteY - region.y + (region.scrollTop ?? 0);
 		}
 
 		const currentLine = lines[y];
