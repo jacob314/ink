@@ -242,11 +242,15 @@ export const renderToStatic = (
 			relativeX: getRelativeLeft(stickyNode, node),
 			relativeY: getRelativeTop(stickyNode, node),
 			height: maxHeaderHeight,
-			type: stickyNode.internalSticky === 'bottom' ? 'bottom' : 'top',
+			// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+			type: (stickyNode.internalSticky === 'bottom' ? 'bottom' : 'top') as
+				| 'top'
+				| 'bottom',
 			parentRelativeTop: parent ? getRelativeTop(parent, node) : 0,
 			parentHeight: parentYogaNode
 				? parentYogaNode.getComputedHeight()
 				: 1_000_000,
+			node: stickyNode,
 		};
 
 		cachedStickyHeaders.push(headerObj);
@@ -643,7 +647,8 @@ function renderNodeToOutput(
 					: undefined;
 
 				const x2 = clipHorizontally
-					? regionOffset.x + x +
+					? regionOffset.x +
+						x +
 						yogaNode.getComputedWidth() -
 						yogaNode.getComputedBorder(Yoga.EDGE_RIGHT)
 					: undefined;
@@ -653,7 +658,8 @@ function renderNodeToOutput(
 					: undefined;
 
 				const y2 = clipVertically
-					? regionOffset.y + y +
+					? regionOffset.y +
+						y +
 						yogaNode.getComputedHeight() -
 						yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM)
 					: undefined;
@@ -682,8 +688,12 @@ function renderNodeToOutput(
 						id: node.internal_id,
 						x: x + borderLeft,
 						y: y + borderTop,
-						width: (x2 ?? regionOffset.x + x + width) - (x1 ?? regionOffset.x + x + borderLeft),
-						height: (y2 ?? regionOffset.y + y + height) - (y1 ?? regionOffset.y + y + borderTop),
+						width:
+							(x2 ?? regionOffset.x + x + width) -
+							(x1 ?? regionOffset.x + x + borderLeft),
+						height:
+							(y2 ?? regionOffset.y + y + height) -
+							(y1 ?? regionOffset.y + y + borderTop),
 						isScrollable: true,
 						isVerticallyScrollable: verticallyScrollable,
 						isHorizontallyScrollable: horizontallyScrollable,

@@ -21,6 +21,7 @@ Used to generate the final output of all nodes before writing it to actual outpu
 type Options = {
 	width: number;
 	height: number;
+	node?: DOMElement;
 };
 
 type Clip = {
@@ -63,6 +64,7 @@ export type Region = {
 	cursorPosition?: CursorPosition;
 	stableScrollback?: boolean;
 	nodeId?: number;
+	node?: DOMElement;
 };
 
 export type RegionNode = {
@@ -111,7 +113,7 @@ export default class Output {
 	private readonly clips: Clip[] = [];
 
 	constructor(options: Options) {
-		const {width, height} = options;
+		const {width, height, node} = options;
 
 		this.width = width;
 		this.height = height;
@@ -127,6 +129,7 @@ export default class Output {
 			isScrollable: false,
 			stickyHeaders: [],
 			children: [],
+			node,
 		};
 
 		this.initLines(this.root, width, height);

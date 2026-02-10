@@ -58,6 +58,7 @@ export type StickyHeader = {
 	parentRelativeTop?: number;
 	parentHeight?: number;
 	type?: 'top' | 'bottom';
+	node?: DOMElement;
 };
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -163,10 +164,13 @@ export const createNode = (nodeName: ElementNames): DOMElement => {
 		internal_accessibility: {},
 		internalSticky: false,
 		internalStickyAlternate: false,
+		// eslint-disable-next-line @typescript-eslint/naming-convention
 		internal_opaque: false,
+		// eslint-disable-next-line @typescript-eslint/naming-convention
 		internal_scrollbar: true,
 		internalMaxScrollTop: 0,
 		internalIsScrollbackDirty: false,
+		// eslint-disable-next-line @typescript-eslint/naming-convention
 		internal_id: idCounter++,
 	};
 

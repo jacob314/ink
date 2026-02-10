@@ -58,6 +58,7 @@ export type Options = {
 	animationInterval?: number;
 	backbufferUpdateDelay?: number;
 	maxScrollbackLength?: number;
+	forceScrollToBottomOnBackbufferRefresh?: boolean;
 	selectionStyle?: (char: StyledChar) => StyledChar;
 	standardReactLayoutTiming?: boolean;
 	renderProcess?: boolean;
@@ -121,6 +122,8 @@ export default class Ink {
 			animationInterval: options.animationInterval,
 			backbufferUpdateDelay: options.backbufferUpdateDelay,
 			maxScrollbackLength: options.maxScrollbackLength,
+			forceScrollToBottomOnBackbufferRefresh:
+				options.forceScrollToBottomOnBackbufferRefresh,
 		};
 
 		this.rootNode = dom.createNode('ink-root');
@@ -176,6 +179,8 @@ export default class Ink {
 					animationInterval: options.animationInterval,
 					backbufferUpdateDelay: options.backbufferUpdateDelay,
 					maxScrollbackLength: options.maxScrollbackLength,
+					forceScrollToBottomOnBackbufferRefresh:
+						options.forceScrollToBottomOnBackbufferRefresh,
 				},
 			);
 

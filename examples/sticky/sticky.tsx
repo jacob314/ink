@@ -86,7 +86,7 @@ function scrollReducer(state: ScrollState, action: ScrollAction): ScrollState {
 }
 
 function ScrollableContent({
-	useStatic = true,
+useStatic = true,
 }: {readonly useStatic?: boolean} = {}) {
 	const [listItems, setListItems] = useState<Array<{id: number; text: string}>>(
 		[],

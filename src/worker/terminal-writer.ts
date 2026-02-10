@@ -104,6 +104,7 @@ export class TerminalWriter {
 	public backbufferDirtyCurrentFrame = false;
 	public fullRenderTimeout?: NodeJS.Timeout;
 	public maxScrollbackLength = 1000;
+	public forceScrollToBottomOnBackbufferRefresh = false;
 	private linesUpdated = 0;
 	private screen: RenderLine[] = [];
 	private backbuffer: RenderLine[] = [];
@@ -533,7 +534,7 @@ export class TerminalWriter {
 	}
 
 	clear(_options?: {readonly keepTrackingMaps?: boolean}) {
-		if (isVsCode) {
+		if (isVsCode && this.forceScrollToBottomOnBackbufferRefresh) {
 			this.writeHelper(ris);
 		} else {
 			if (isIterm) {

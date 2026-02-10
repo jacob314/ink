@@ -29,6 +29,7 @@ export class TerminalBufferWorker {
 	animationInterval = defaultAnimationInterval;
 	backbufferUpdateDelay = 1000;
 	maxScrollbackLength = defaultMaxScrollbackLength;
+	forceScrollToBottomOnBackbufferRefresh = false;
 	updatesReceived = 0;
 	resized = false;
 	cursorPosition?: {row: number; col: number};
@@ -78,6 +79,7 @@ export class TerminalBufferWorker {
 			animationInterval?: number;
 			backbufferUpdateDelay?: number;
 			maxScrollbackLength?: number;
+			forceScrollToBottomOnBackbufferRefresh?: boolean;
 		},
 	) {
 		const stdout = options?.stdout ?? process.stdout;
@@ -115,8 +117,18 @@ export class TerminalBufferWorker {
 			this.maxScrollbackLength = options.maxScrollbackLength;
 		}
 
+		if (options?.forceScrollToBottomOnBackbufferRefresh !== undefined) {
+			this.forceScrollToBottomOnBackbufferRefresh =
+				options.forceScrollToBottomOnBackbufferRefresh;
+		}
+
 		this.primaryTerminalWriter.maxScrollbackLength = this.maxScrollbackLength;
 		this.alternateTerminalWriter.maxScrollbackLength = this.maxScrollbackLength;
+
+		this.primaryTerminalWriter.forceScrollToBottomOnBackbufferRefresh =
+			this.forceScrollToBottomOnBackbufferRefresh;
+		this.alternateTerminalWriter.forceScrollToBottomOnBackbufferRefresh =
+			this.forceScrollToBottomOnBackbufferRefresh;
 
 		if (this.isAlternateBufferEnabled) {
 			this.alternateTerminalWriter.writeRaw(ansiEscapes.enterAlternativeScreen);
@@ -208,6 +220,19 @@ export class TerminalBufferWorker {
 			this.primaryTerminalWriter.maxScrollbackLength = this.maxScrollbackLength;
 			this.alternateTerminalWriter.maxScrollbackLength =
 				this.maxScrollbackLength;
+		}
+
+		if (
+			options.forceScrollToBottomOnBackbufferRefresh !== undefined &&
+			this.forceScrollToBottomOnBackbufferRefresh !==
+				options.forceScrollToBottomOnBackbufferRefresh
+		) {
+			this.forceScrollToBottomOnBackbufferRefresh =
+				options.forceScrollToBottomOnBackbufferRefresh;
+			this.primaryTerminalWriter.forceScrollToBottomOnBackbufferRefresh =
+				this.forceScrollToBottomOnBackbufferRefresh;
+			this.alternateTerminalWriter.forceScrollToBottomOnBackbufferRefresh =
+				this.forceScrollToBottomOnBackbufferRefresh;
 		}
 	}
 
@@ -440,7 +465,10 @@ export class TerminalBufferWorker {
 							if (count > 0 && start === 0) {
 								const dirtyLines = getLines(false);
 								// First 'count' lines are clean (for backbuffer), the rest are dirty (for viewport)
-								return [...cleanLines.slice(0, count), ...dirtyLines.slice(count)];
+								return [
+									...cleanLines.slice(0, count),
+									...dirtyLines.slice(count),
+								];
 							}
 
 							return cleanLines;

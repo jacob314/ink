@@ -18,6 +18,8 @@ const main = () => {
 					animationInterval: message.animationInterval as number,
 					backbufferUpdateDelay: message.backbufferUpdateDelay as number,
 					maxScrollbackLength: message.maxScrollbackLength as number,
+					forceScrollToBottomOnBackbufferRefresh:
+						message.forceScrollToBottomOnBackbufferRefresh as boolean,
 				});
 				break;
 			}

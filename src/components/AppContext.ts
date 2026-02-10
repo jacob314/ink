@@ -8,6 +8,15 @@ export type InkOptions = {
 	readonly animationInterval?: number;
 	readonly backbufferUpdateDelay?: number;
 	readonly maxScrollbackLength?: number;
+
+	/**
+	 * When set to true, Ink will attempt to force the terminal to scroll to the bottom
+	 * when performing a full re-render (e.g. when the backbuffer is refreshed).
+	 *
+	 * Currently this is only supported in VS Code due to lack of robust APIs in other
+	 * terminals to force scrolling to the bottom.
+	 */
+	readonly forceScrollToBottomOnBackbufferRefresh?: boolean;
 };
 
 export type Props = {

@@ -3,7 +3,12 @@ import {fork, type ChildProcess} from 'node:child_process';
 import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import {Serializer} from './serialization.js';
 import {TerminalBufferWorker} from './worker/render-worker.js';
-import {type Region, type RegionUpdate, type RegionNode, flattenRegion} from './output.js';
+import {
+	type Region,
+	type RegionUpdate,
+	type RegionNode,
+	flattenRegion,
+} from './output.js';
 import {type InkOptions} from './components/AppContext.js';
 import {type DOMElement} from './dom.js';
 
@@ -18,7 +23,6 @@ export default class TerminalBuffer {
 
 	// Track previous state of all regions by ID
 	private lastRegions = new Map<string | number, Region>();
-	private lastNodeIdToElement = new Map<number, DOMElement>();
 	private lastCursorPosition?: {row: number; col: number};
 
 	private lastOptions?: InkOptions;
@@ -37,6 +41,7 @@ export default class TerminalBuffer {
 			animationInterval?: number;
 			backbufferUpdateDelay?: number;
 			maxScrollbackLength?: number;
+			forceScrollToBottomOnBackbufferRefresh?: boolean;
 		},
 	) {
 		this.lastOptions = {
@@ -46,6 +51,8 @@ export default class TerminalBuffer {
 			animationInterval: options?.animationInterval,
 			backbufferUpdateDelay: options?.backbufferUpdateDelay,
 			maxScrollbackLength: options?.maxScrollbackLength,
+			forceScrollToBottomOnBackbufferRefresh:
+				options?.forceScrollToBottomOnBackbufferRefresh,
 		};
 		if (options?.renderInProcess) {
 			this.workerInstance = new TerminalBufferWorker(columns, rows, {
@@ -57,6 +64,8 @@ export default class TerminalBuffer {
 				animationInterval: options?.animationInterval,
 				backbufferUpdateDelay: options?.backbufferUpdateDelay,
 				maxScrollbackLength: options?.maxScrollbackLength,
+				forceScrollToBottomOnBackbufferRefresh:
+					options?.forceScrollToBottomOnBackbufferRefresh,
 			});
 			void this.workerInstance.render();
 
@@ -100,6 +109,8 @@ export default class TerminalBuffer {
 				animationInterval: options?.animationInterval,
 				backbufferUpdateDelay: options?.backbufferUpdateDelay,
 				maxScrollbackLength: options?.maxScrollbackLength,
+				forceScrollToBottomOnBackbufferRefresh:
+					options?.forceScrollToBottomOnBackbufferRefresh,
 			});
 		}
 	}
@@ -114,7 +125,9 @@ export default class TerminalBuffer {
 			options.animationInterval !== this.lastOptions?.animationInterval ||
 			options.backbufferUpdateDelay !==
 				this.lastOptions?.backbufferUpdateDelay ||
-			options.maxScrollbackLength !== this.lastOptions?.maxScrollbackLength
+			options.maxScrollbackLength !== this.lastOptions?.maxScrollbackLength ||
+			options.forceScrollToBottomOnBackbufferRefresh !==
+				this.lastOptions?.forceScrollToBottomOnBackbufferRefresh
 		) {
 			this.optionsChanged = true;
 		}
@@ -175,7 +188,6 @@ export default class TerminalBuffer {
 
 		// Update local state to current frame
 		this.lastRegions = currentRegionsMap;
-		this.lastNodeIdToElement = nodeIdToElement;
 
 		const cursorChanged =
 			cursorPosition !== this.lastCursorPosition &&
@@ -294,7 +306,10 @@ export default class TerminalBuffer {
 		}
 	}
 
-	private diffRegion(current: Region, nodeIdToElement: Map<number, DOMElement>): RegionUpdate | undefined {
+	private diffRegion(
+		current: Region,
+		nodeIdToElement: Map<number, DOMElement>,
+	): RegionUpdate | undefined {
 		const last = this.lastRegions.get(current.id);
 		const update: RegionUpdate = {id: current.id};
 		let hasChanges = false;
@@ -421,7 +436,11 @@ export default class TerminalBuffer {
 		// or we can rely on the fact they are rebuilt every frame.
 		// Let's just resend if length differs or assume they might change.
 		// To be safe and simple: always send sticky headers if they exist or existed.
-		if (current.stickyHeaders !== last.stickyHeaders || current.stickyHeaders.length > 0 || last.stickyHeaders.length > 0) {
+		if (
+			current.stickyHeaders !== last.stickyHeaders ||
+			current.stickyHeaders.length > 0 ||
+			last.stickyHeaders.length > 0
+		) {
 			update.stickyHeaders = current.stickyHeaders;
 			hasChanges = true;
 		}

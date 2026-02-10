@@ -17,4 +17,5 @@ render(React.createElement(ScrollableContent), {
 	animatedScroll: true,
 	backbufferUpdateDelay: 100,
 	maxFps: 10_000,
+	debugRainbow: true,
 });
