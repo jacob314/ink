@@ -155,6 +155,51 @@ function ScrollableContent({
 			const itemsInGroup = listItems.slice(headerIndex, headerIndex + 10);
 			const nextItems = listItems.slice(headerIndex + 10, headerIndex + 20);
 
+			if (headerId % 3 === 0) {
+				elements.push(
+					<Box
+						key={`inner-scroll-${headerId}`}
+						flexDirection="column"
+						height={10}
+						overflowY="scroll"
+						borderStyle="single"
+						borderColor="cyan"
+						scrollTop={100}xx
+					>
+						<Box flexShrink={0} flexDirection="column">
+							<Box
+								sticky
+								stickyChildren={
+									<Box
+										opaque
+										width="100%"
+										borderBottom
+										borderStyle="single"
+										borderColor="cyan"
+									>
+										<Text color="cyan">Inner Sticky {headerId}</Text>
+									</Box>
+								}
+							>
+								<Box width="100%">
+									<Text color="cyan">Inner Header {headerId}</Text>
+								</Box>
+							</Box>
+							{Array.from({length: 100}).map((_, index) => {
+								const value = index + 1;
+								return (
+									<Text key={value} color="gray">
+										{value}
+									</Text>
+								);
+							})}
+						</Box>
+					</Box>,
+				);
+
+				continue;
+			}
+
 			elements.push(
 				<Box key={`group-${headerId}`} flexDirection="column">
 					<Box

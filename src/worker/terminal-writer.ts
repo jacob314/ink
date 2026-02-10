@@ -24,21 +24,21 @@ const isVsCode = process.env['TERM_PROGRAM'] === 'vscode';
 const isIterm = process.env['TERM_PROGRAM'] === 'iTerm.app';
 
 export const rainbowColors = [
-	'ansi256(232)',
 	'ansi256(17)',
-	'ansi256(233)',
-	'ansi256(22)',
-	'ansi256(234)',
-	'ansi256(52)',
-	'ansi256(235)',
-	'ansi256(53)',
-	'ansi256(236)',
-	'ansi256(58)',
-	'ansi256(237)',
 	'ansi256(18)',
-	'ansi256(238)',
-	'ansi256(23)',
-	'ansi256(239)',
+	'ansi256(19)',
+	'ansi256(20)',
+	'ansi256(21)',
+	'ansi256(25)',
+	'ansi256(26)',
+	'ansi256(27)',
+	'ansi256(31)',
+	'ansi256(32)',
+	'ansi256(33)',
+	'ansi256(39)',
+	'ansi256(63)',
+	'ansi256(69)',
+	'ansi256(75)',
 ];
 
 export type RenderLine = {
