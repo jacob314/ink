@@ -86,7 +86,7 @@ function scrollReducer(state: ScrollState, action: ScrollAction): ScrollState {
 }
 
 function ScrollableContent({
-	useStatic = false,
+	useStatic = true,
 }: {readonly useStatic?: boolean} = {}) {
 	const [listItems, setListItems] = useState<Array<{id: number; text: string}>>(
 		[],
@@ -164,7 +164,7 @@ function ScrollableContent({
 						overflowY="scroll"
 						borderStyle="single"
 						borderColor="cyan"
-						scrollTop={100}xx
+						scrollTop={40}
 					>
 						<Box flexShrink={0} flexDirection="column">
 							<Box
@@ -376,7 +376,6 @@ function ScrollableContent({
 		<Box flexDirection="column" height={rows} width={columns}>
 			<Box
 				ref={reference}
-				overflowToBackbuffer
 				flexGrow={1}
 				borderStyle={showBorder ? 'round' : undefined}
 				flexShrink={1}

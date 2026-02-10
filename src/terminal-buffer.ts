@@ -3,9 +3,9 @@ import {fork, type ChildProcess} from 'node:child_process';
 import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import {Serializer} from './serialization.js';
 import {TerminalBufferWorker} from './worker/render-worker.js';
-import {type Region, type RegionUpdate, type RegionNode} from './output.js';
-import {flattenRegion} from './renderer.js';
+import {type Region, type RegionUpdate, type RegionNode, flattenRegion} from './output.js';
 import {type InkOptions} from './components/AppContext.js';
+import {type DOMElement} from './dom.js';
 
 const debugEdits = false;
 
@@ -18,6 +18,7 @@ export default class TerminalBuffer {
 
 	// Track previous state of all regions by ID
 	private lastRegions = new Map<string | number, Region>();
+	private lastNodeIdToElement = new Map<number, DOMElement>();
 	private lastCursorPosition?: {row: number; col: number};
 
 	private lastOptions?: InkOptions;
@@ -145,14 +146,20 @@ export default class TerminalBuffer {
 			skipStickyHeaders: true,
 		});
 		const currentRegionsMap = new Map<string | number, Region>();
+		const nodeIdToElement = new Map<number, DOMElement>();
 		const updates: RegionUpdate[] = [];
 
 		// Traverse tree to collect all current regions and build structure
 		const buildTree = (r: Region): RegionNode => {
 			currentRegionsMap.set(r.id, r);
 
+			// Populate nodeIdToElement map
+			if (r.nodeId !== undefined && r.node !== undefined) {
+				nodeIdToElement.set(r.nodeId, r.node);
+			}
+
 			// Diff this region
-			const update = this.diffRegion(r);
+			const update = this.diffRegion(r, nodeIdToElement);
 
 			if (update) {
 				updates.push(update);
@@ -168,6 +175,7 @@ export default class TerminalBuffer {
 
 		// Update local state to current frame
 		this.lastRegions = currentRegionsMap;
+		this.lastNodeIdToElement = nodeIdToElement;
 
 		const cursorChanged =
 			cursorPosition !== this.lastCursorPosition &&
@@ -286,7 +294,7 @@ export default class TerminalBuffer {
 		}
 	}
 
-	private diffRegion(current: Region): RegionUpdate | undefined {
+	private diffRegion(current: Region, nodeIdToElement: Map<number, DOMElement>): RegionUpdate | undefined {
 		const last = this.lastRegions.get(current.id);
 		const update: RegionUpdate = {id: current.id};
 		let hasChanges = false;
@@ -310,9 +318,7 @@ export default class TerminalBuffer {
 			update.marginRight = current.marginRight;
 			update.marginBottom = current.marginBottom;
 			update.scrollbarThumbColor = current.scrollbarThumbColor;
-			update.stickyHeaders = current.stickyHeaders.map(
-				({node: _, ...rest}) => rest,
-			);
+			update.stickyHeaders = current.stickyHeaders;
 
 			// Send all lines
 			const serialized = this.serializer.serialize(current.lines);
@@ -415,11 +421,8 @@ export default class TerminalBuffer {
 		// or we can rely on the fact they are rebuilt every frame.
 		// Let's just resend if length differs or assume they might change.
 		// To be safe and simple: always send sticky headers if they exist or existed.
-		if (current.stickyHeaders.length > 0 || last.stickyHeaders.length > 0) {
-			// TODO: optimize comparison
-			update.stickyHeaders = current.stickyHeaders.map(
-				({node: _, ...rest}) => rest,
-			);
+		if (current.stickyHeaders !== last.stickyHeaders || current.stickyHeaders.length > 0 || last.stickyHeaders.length > 0) {
+			update.stickyHeaders = current.stickyHeaders;
 			hasChanges = true;
 		}
 
@@ -433,22 +436,25 @@ export default class TerminalBuffer {
 				totalLength: current.lines.length,
 			};
 
-			if (current.node?.style.stableScrollback) {
-				const scrollTop = current.scrollTop ?? 0;
-				for (const chunk of lineUpdates) {
-					if (chunk.start < scrollTop) {
-						current.node.internalIsScrollbackDirty = true;
-						break;
+			if (current.stableScrollback && current.nodeId !== undefined) {
+				const element = nodeIdToElement.get(current.nodeId);
+				if (element) {
+					const scrollTop = current.scrollTop ?? 0;
+					for (const chunk of lineUpdates) {
+						if (chunk.start < scrollTop) {
+							element.internalIsScrollbackDirty = true;
+							break;
+						}
 					}
-				}
 
-				// Also check if lines were removed from the end of the content but still within the scrollback
-				if (
-					!current.node.internalIsScrollbackDirty &&
-					current.lines.length < last.lines.length &&
-					current.lines.length < scrollTop
-				) {
-					current.node.internalIsScrollbackDirty = true;
+					// Also check if lines were removed from the end of the content but still within the scrollback
+					if (
+						!element.internalIsScrollbackDirty &&
+						current.lines.length < last.lines.length &&
+						current.lines.length < scrollTop
+					) {
+						element.internalIsScrollbackDirty = true;
+					}
 				}
 			}
 		}

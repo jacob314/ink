@@ -10,6 +10,7 @@ import {wrapOrTruncateStyledChars} from './text-wrap.js';
 import squashTextNodes from './squash-text-nodes.js';
 import {type OutputTransformer} from './render-node-to-output.js';
 import type ResizeObserver from './resize-observer.js';
+import {type Region} from './output.js';
 
 type InkNode = {
 	parentNode: DOMElement | undefined;
@@ -34,11 +35,11 @@ export type CachedRender = {
 	height: number;
 	key?: unknown;
 	stickyHeaders?: StickyHeader[];
+	root?: Region;
 };
 
 export type StickyHeader = {
 	nodeId: number;
-	node?: DOMElement;
 	lines: StyledChar[][]; // Natural (scrolling) version
 	stuckLines?: StyledChar[][]; // Alternate (sticky) version
 	styledOutput: StyledChar[][]; // Legacy property

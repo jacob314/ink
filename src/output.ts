@@ -7,6 +7,8 @@ import {
 } from './measure-text.js';
 import {type CursorPosition} from './log-update.js';
 import {type StickyHeader, type DOMElement} from './dom.js';
+import {calculateScrollbarThumb} from './measure-element.js';
+import {renderScrollbar} from './render-scrollbar.js';
 
 /**
 "Virtual" output class
@@ -19,7 +21,6 @@ Used to generate the final output of all nodes before writing it to actual outpu
 type Options = {
 	width: number;
 	height: number;
-	node?: DOMElement;
 };
 
 type Clip = {
@@ -31,8 +32,8 @@ type Clip = {
 
 export type Region = {
 	id: number | string;
-	x: number; // Absolute screen X
-	y: number; // Absolute screen Y
+	x: number; // Position relative to parent region's content start
+	y: number; // Position relative to parent region's content start
 	width: number;
 	height: number;
 
@@ -60,7 +61,8 @@ export type Region = {
 	stickyHeaders: StickyHeader[];
 	children: Region[];
 	cursorPosition?: CursorPosition;
-	node?: DOMElement;
+	stableScrollback?: boolean;
+	nodeId?: number;
 };
 
 export type RegionNode = {
@@ -109,7 +111,7 @@ export default class Output {
 	private readonly clips: Clip[] = [];
 
 	constructor(options: Options) {
-		const {width, height, node} = options;
+		const {width, height} = options;
 
 		this.width = width;
 		this.height = height;
@@ -125,7 +127,6 @@ export default class Output {
 			isScrollable: false,
 			stickyHeaders: [],
 			children: [],
-			node,
 		};
 
 		this.initLines(this.root, width, height);
@@ -141,8 +142,15 @@ export default class Output {
 	}
 
 	getRegionAbsoluteOffset(): {x: number; y: number} {
-		const region = this.getActiveRegion();
-		return {x: region.x, y: region.y};
+		let x = 0;
+		let y = 0;
+
+		for (const region of this.activeRegionStack) {
+			x += region.x - (region.scrollLeft ?? 0);
+			y += region.y - (region.scrollTop ?? 0);
+		}
+
+		return {x, y};
 	}
 
 	startChildRegion(options: {
@@ -165,7 +173,8 @@ export default class Output {
 		marginRight?: number;
 		marginBottom?: number;
 		scrollbarThumbColor?: string;
-		node?: DOMElement;
+		nodeId?: number;
+		stableScrollback?: boolean;
 	}) {
 		const {
 			id,
@@ -182,7 +191,8 @@ export default class Output {
 			marginRight,
 			marginBottom,
 			scrollbarThumbColor,
-			node,
+			nodeId,
+			stableScrollback,
 		} = options;
 
 		// Create new region
@@ -213,7 +223,8 @@ export default class Output {
 			scrollbarThumbColor,
 			stickyHeaders: [],
 			children: [],
-			node,
+			nodeId,
+			stableScrollback,
 		};
 
 		this.initLines(region, bufferWidth, bufferHeight);
@@ -348,6 +359,49 @@ export default class Output {
 		return this.root;
 	}
 
+	addRegionTree(region: Region, x: number, y: number) {
+		const activeRegion = this.getActiveRegion();
+
+		// 1. Write the lines of the cached root region into the active region
+		for (let row = 0; row < region.lines.length; row++) {
+			const line = region.lines[row];
+			if (line) {
+				this.applyWrite(x, y + row, line, [], 0, false);
+			}
+		}
+
+		// 2. Add children regions
+		for (const child of region.children) {
+			const clonedChild = this.cloneRegion(child, x, y);
+			activeRegion.children.push(clonedChild);
+		}
+
+		// 3. Add sticky headers
+		for (const header of region.stickyHeaders) {
+			activeRegion.stickyHeaders.push({
+				...header,
+				x: header.x + x,
+				y: header.y + y,
+			});
+		}
+	}
+
+	private cloneRegion(region: Region, x: number, y: number): Region {
+		const cloned: Region = {
+			...region,
+			x: region.x + x,
+			y: region.y + y,
+			stickyHeaders: region.stickyHeaders.map(header => ({
+				...header,
+				x: header.x,
+				y: header.y,
+			})),
+			children: region.children.map(child => this.cloneRegion(child, 0, 0)),
+		};
+
+		return cloned;
+	}
+
 	private trimRegionLines(region: Region) {
 		for (let y = 0; y < region.lines.length; y++) {
 			const line = region.lines[y]!;
@@ -439,10 +493,11 @@ export default class Output {
 		let toX: number | undefined;
 
 		if (clip) {
+			const regionOffset = this.getRegionAbsoluteOffset();
 			const clipResult = this.clipChars(
 				chars,
-				x + region.x - (region.scrollLeft ?? 0),
-				y + region.y - (region.scrollTop ?? 0),
+				x + regionOffset.x,
+				y + regionOffset.y,
 				clip,
 			);
 
@@ -454,8 +509,8 @@ export default class Output {
 			let absoluteY: number;
 
 			({chars, x: absoluteX, y: absoluteY, fromX, toX} = clipResult);
-			x = absoluteX - region.x + (region.scrollLeft ?? 0);
-			y = absoluteY - region.y + (region.scrollTop ?? 0);
+			x = absoluteX - regionOffset.x;
+			y = absoluteY - regionOffset.y;
 		}
 
 		const currentLine = lines[y];
@@ -599,5 +654,248 @@ export default class Output {
 		}
 
 		return {chars, x, y, fromX, toX};
+	}
+}
+
+export function flattenRegion(
+	root: Region,
+	options?: {
+		context?: {cursorPosition?: {row: number; col: number}};
+		skipScrollbars?: boolean;
+		skipStickyHeaders?: boolean;
+	},
+): StyledChar[][] {
+	const {width, height} = root;
+
+	const lines: StyledChar[][] = Array.from({length: height}, () =>
+		Array.from({length: width}, () => ({
+			type: 'char',
+			value: ' ',
+			fullWidth: false,
+			styles: [],
+		})),
+	);
+
+	composeRegion(
+		root,
+		lines,
+		{
+			clip: {x: 0, y: 0, w: width, h: height},
+		},
+		options,
+	);
+	return lines;
+}
+
+function composeRegion(
+	region: Region,
+	targetLines: StyledChar[][],
+	{
+		clip,
+		offsetX = 0,
+		offsetY = 0,
+	}: {
+		clip: {x: number; y: number; w: number; h: number};
+		offsetX?: number;
+		offsetY?: number;
+	},
+	options?: {
+		context?: {cursorPosition?: {row: number; col: number}};
+		skipScrollbars?: boolean;
+		skipStickyHeaders?: boolean;
+	},
+) {
+	const {
+		x,
+		y,
+		width,
+		height,
+		lines,
+		children,
+		stickyHeaders,
+		scrollTop: regionScrollTop,
+		scrollLeft: regionScrollLeft,
+		cursorPosition: regionCursorPosition,
+	} = region;
+	const absX = x + offsetX;
+	const absY = y + offsetY;
+
+	const {x: clipX, y: clipY, w: clipW, h: clipH} = clip;
+
+	const x1 = Math.max(clipX, absX);
+	const y1 = Math.max(clipY, absY);
+	const x2 = Math.min(clipX + clipW, absX + width);
+	const y2 = Math.min(clipY + clipH, absY + height);
+
+	if (x2 <= x1 || y2 <= y1) {
+		return;
+	}
+
+	const myClip = {x: x1, y: y1, w: x2 - x1, h: y2 - y1};
+
+	const scrollTop = regionScrollTop ?? 0;
+	const scrollLeft = regionScrollLeft ?? 0;
+
+	if (regionCursorPosition && options?.context) {
+		const cursorX = absX + regionCursorPosition.col - scrollLeft;
+		const cursorY = absY + regionCursorPosition.row - scrollTop;
+
+		if (cursorX >= x1 && cursorX <= x2 && cursorY >= y1 && cursorY <= y2) {
+			options.context.cursorPosition = {row: cursorY, col: cursorX};
+		}
+	}
+
+	const {x: myClipX, y: myClipY, w: myClipW, h: myClipH} = myClip;
+
+	for (let sy = myClipY; sy < myClipY + myClipH; sy++) {
+		const row = targetLines[sy];
+		if (!row) {
+			continue;
+		}
+
+		const localY = sy - absY + scrollTop;
+		const sourceLine = lines[localY];
+		if (!sourceLine) {
+			continue;
+		}
+
+		for (let sx = myClipX; sx < myClipX + myClipW; sx++) {
+			const localX = sx - absX + scrollLeft;
+			const char = sourceLine[localX];
+			if (char) {
+				row[sx] = char;
+			}
+		}
+	}
+
+	for (const child of children) {
+		composeRegion(
+			child,
+			targetLines,
+			{
+				clip: myClip,
+				offsetX: absX - scrollLeft,
+				offsetY: absY - scrollTop,
+			},
+			options,
+		);
+	}
+
+	if (!options?.skipStickyHeaders) {
+		for (const header of stickyHeaders) {
+			const headerY = header.y + absY; // Absolute Y
+			const headerH = header.styledOutput.length;
+
+			for (let i = 0; i < headerH; i++) {
+				const sy = headerY + i;
+				if (sy < myClipY || sy >= myClipY + myClipH) {
+					continue;
+				}
+
+				const row = targetLines[sy];
+				if (!row) {
+					continue;
+				}
+
+				const line = header.styledOutput[i];
+				if (!line) {
+					continue;
+				}
+
+				const headerX = header.x + absX;
+				const headerW = line.length;
+
+				const hx1 = Math.max(headerX, myClipX);
+				const hx2 = Math.min(headerX + headerW, myClipX + myClipW);
+
+				for (let sx = hx1; sx < hx2; sx++) {
+					const cx = sx - headerX;
+					const char = line[cx];
+					if (char) {
+						row[sx] = char;
+					}
+				}
+			}
+		}
+	}
+
+	if (
+		!options?.skipScrollbars &&
+		region.isScrollable &&
+		(region.scrollbarVisible ?? true)
+	) {
+		const scrollHeight = region.scrollHeight ?? 0;
+		const scrollWidth = region.scrollWidth ?? 0;
+		const isVerticalScrollbarVisible =
+			(region.isVerticallyScrollable ?? false) && scrollHeight > region.height;
+		const isHorizontalScrollbarVisible =
+			(region.isHorizontallyScrollable ?? false) && scrollWidth > region.width;
+
+		if (isVerticalScrollbarVisible) {
+			const {startIndex, endIndex, thumbStartHalf, thumbEndHalf} =
+				calculateScrollbarThumb({
+					scrollbarDimension: region.height,
+					clientDimension: region.height,
+					scrollDimension: scrollHeight,
+					scrollPosition: scrollTop,
+					axis: 'vertical',
+				});
+
+			const barX = absX + region.width - 1 - (region.marginRight ?? 0);
+
+			renderScrollbar({
+				x: barX,
+				y: absY,
+				thumb: {startIndex, endIndex, thumbStartHalf, thumbEndHalf},
+				clip: myClip,
+				axis: 'vertical',
+				color: region.scrollbarThumbColor,
+				setChar(x, y, char) {
+					if (
+						y >= 0 &&
+						y < targetLines.length &&
+						x >= 0 &&
+						x < targetLines[0]!.length
+					) {
+						targetLines[y]![x] = char;
+					}
+				},
+			});
+		}
+
+		if (isHorizontalScrollbarVisible) {
+			const scrollbarWidth =
+				region.width - (isVerticalScrollbarVisible ? 1 : 0);
+
+			const {startIndex, endIndex, thumbStartHalf, thumbEndHalf} =
+				calculateScrollbarThumb({
+					scrollbarDimension: scrollbarWidth,
+					clientDimension: region.width,
+					scrollDimension: scrollWidth,
+					scrollPosition: scrollLeft,
+					axis: 'horizontal',
+				});
+
+			const barY = absY + region.height - 1 - (region.marginBottom ?? 0);
+
+			renderScrollbar({
+				x: absX,
+				y: barY,
+				thumb: {startIndex, endIndex, thumbStartHalf, thumbEndHalf},
+				clip: myClip,
+				axis: 'horizontal',
+				color: region.scrollbarThumbColor,
+				setChar(x, y, char) {
+					if (
+						y >= 0 &&
+						y < targetLines.length &&
+						x >= 0 &&
+						x < targetLines[0]!.length
+					) {
+						targetLines[y]![x] = char;
+					}
+				},
+			});
+		}
 	}
 }
