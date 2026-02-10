@@ -139,6 +139,13 @@ export type RenderOptions = {
 	 * @default false
 	 */
 	animatedScroll?: boolean;
+
+	/**
+	 * Render sticky headers stuck at the top/bottom of scrollable regions
+	 * when they are pushed to the terminal backbuffer.
+	 * @default false
+	 */
+	stickyHeadersInBackbuffer?: boolean;
 };
 
 export type Instance = {

@@ -20,13 +20,18 @@ export class SceneManager {
 		updates: RegionUpdate[],
 		options: {
 			animatedScroll: boolean;
-			onScrollUpdate: (regionId: string | number, scrollTop: number) => void;
+			onScrollUpdate: (
+				regionId: string | number,
+				scrollTop: number,
+				isNew: boolean,
+			) => void;
 		},
 	): boolean {
 		this.root = tree;
 
 		for (const update of updates) {
 			let region = this.regions.get(update.id);
+			const isNew = !region;
 
 			if (region) {
 				// We'll let the caller handle the animation logic, but we track if it was at the end.
@@ -62,7 +67,7 @@ export class SceneManager {
 			if (update.height !== undefined) region.height = update.height;
 
 			if (update.scrollTop !== undefined) {
-				options.onScrollUpdate(region.id, update.scrollTop);
+				options.onScrollUpdate(region.id, update.scrollTop, isNew);
 			}
 
 			if (update.scrollLeft !== undefined)

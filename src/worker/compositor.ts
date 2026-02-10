@@ -11,6 +11,7 @@ export type CompositionOptions = {
 	animatedScroll?: boolean;
 	targetScrollTops: ReadonlyMap<string | number, number>;
 	regionWasAtEnd: Map<string | number, boolean>;
+	canvasHeight: number;
 };
 
 /**
@@ -93,22 +94,17 @@ export class Compositor {
 				absY + (useStuckPosition ? header.y : header.naturalRow - scrollTop);
 			const headerH = linesToRender.length;
 
-			if (
-				this.options.stickyHeadersInBackbuffer &&
-				header.type === 'top' &&
-				headerY < 0 &&
-				absY + region.height > 0
-			) {
-				headerY = 0;
-			}
-
-			if (
-				this.options.stickyHeadersInBackbuffer &&
-				header.type === 'bottom' &&
-				headerY + headerH > canvas.height &&
-				absY < canvas.height
-			) {
-				headerY = canvas.height - headerH;
+			if (this.options.stickyHeadersInBackbuffer) {
+				if (header.type === 'top') {
+					if (headerY < header.y && absY + region.height > header.y) {
+						headerY = header.y;
+					}
+				} else if (header.type === 'bottom') {
+					const stuckPos = this.options.canvasHeight - region.height + header.y;
+					if (headerY > stuckPos && absY < stuckPos + headerH) {
+						headerY = stuckPos;
+					}
+				}
 			}
 
 			for (let i = 0; i < headerH; i++) {
@@ -253,22 +249,18 @@ export class Compositor {
 		absY: number,
 		scrollTop: number,
 	): boolean {
-		const naturalHeight = header.lines.length;
-		const stuckHeight = (header.stuckLines ?? header.lines).length;
-		const maxHeaderHeight = Math.max(naturalHeight, stuckHeight);
-
 		const isStuckState =
 			header.type === 'bottom'
-				? Math.round(header.naturalRow - scrollTop + naturalHeight) >
-					Math.round(header.y + maxHeaderHeight)
-				: Math.round(header.naturalRow - scrollTop) < Math.round(header.y);
+				? Math.round(header.naturalRow - scrollTop + header.lines.length) >=
+					Math.round(header.y + (header.stuckLines ?? header.lines).length)
+				: Math.round(header.naturalRow - scrollTop) <= Math.round(header.y);
 
 		if (!isStuckState) {
 			return false;
 		}
 
 		if (header.type === 'top') {
-			return (this.options.stickyHeadersInBackbuffer ?? false) || absY >= 0;
+			return (this.options.stickyHeadersInBackbuffer ?? false) || absY > 0;
 		}
 
 		return true;
@@ -290,7 +282,21 @@ export class Compositor {
 
 			if (useStuckPosition) {
 				const linesToRender = header.stuckLines ?? header.lines;
-				const headerY = Math.round(absY + header.y);
+				let headerY = Math.round(absY + header.y);
+
+				if (this.options.stickyHeadersInBackbuffer) {
+					if (header.type === 'top') {
+						if (headerY < header.y && absY + region.height > header.y) {
+							headerY = header.y;
+						}
+					} else if (header.type === 'bottom') {
+						const stuckPos = this.options.canvasHeight - region.height + header.y;
+						if (headerY > stuckPos && absY < stuckPos + linesToRender.length) {
+							headerY = stuckPos;
+						}
+					}
+				}
+
 				if (
 					renderRow >= headerY &&
 					renderRow < headerY + linesToRender.length
@@ -305,6 +311,14 @@ export class Compositor {
 				) {
 					return true;
 				}
+			}
+
+			if (
+				!header.isStuckOnly &&
+				contentY >= header.startRow &&
+				contentY < header.endRow
+			) {
+				return true;
 			}
 		}
 

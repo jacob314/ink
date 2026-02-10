@@ -259,13 +259,17 @@ export class TerminalBufferWorker {
 
 		this.sceneManager.update(tree, updates, {
 			animatedScroll: this.animatedScroll,
-			onScrollUpdate: (id, scrollTop) => {
-				if (this.animatedScroll) {
+			onScrollUpdate: (id, scrollTop, isNew) => {
+				if (this.animatedScroll && !isNew) {
 					this.animationController.setTargetScrollTop(id, scrollTop);
 				} else {
 					const region = this.sceneManager.getRegion(id);
 					if (region) {
 						region.scrollTop = scrollTop;
+
+						if (this.animatedScroll) {
+							this.animationController.setTargetScrollTop(id, scrollTop);
+						}
 					}
 				}
 			},
@@ -571,26 +575,30 @@ export class TerminalBufferWorker {
 				height: number,
 				offset: number,
 			) => {
-				if (this.stickyHeadersInBackbuffer) {
-					const canvas = Canvas.create(this.columns, height);
+				const canvas = Canvas.create(this.columns, height);
+				const originalScrollTop = region.scrollTop;
+				region.scrollTop = offset;
+				try {
 					this.composeNode(
 						node,
 						canvas,
-						{clip: undefined, offsetY: -offset},
+						{
+							clip: undefined,
+							offsetY: -region.y,
+							offsetX: 0,
+							overrideHeight: height,
+							isExpanded: true,
+						},
 						{skipScrollbars: true},
 					);
-					for (const line of canvas.getLines()) {
-						this.backbuffer.push(
-							this.terminalWriter.clampLine(line.styledChars, this.columns),
-						);
-					}
-				} else {
-					for (let i = 0; i < height; i++) {
-						const line = region.lines[i + offset] ?? [];
-						this.backbuffer.push(
-							this.terminalWriter.clampLine(line, this.columns),
-						);
-					}
+				} finally {
+					region.scrollTop = originalScrollTop;
+				}
+
+				for (const line of canvas.getLines()) {
+					this.backbuffer.push(
+						this.terminalWriter.clampLine(line.styledChars, this.columns),
+					);
 				}
 			};
 
@@ -630,10 +638,14 @@ export class TerminalBufferWorker {
 			clip,
 			offsetY = 0,
 			offsetX = 0,
+			overrideHeight,
+			isExpanded = false,
 		}: {
 			clip?: {x: number; y: number; w: number; h: number};
 			offsetY?: number;
 			offsetX?: number;
+			overrideHeight?: number;
+			isExpanded?: boolean;
 		},
 		options?: {skipStickyHeaders?: boolean; skipScrollbars?: boolean},
 	) {
@@ -643,14 +655,21 @@ export class TerminalBufferWorker {
 		const absX = Math.round(region.x + offsetX);
 		const absY = Math.round(region.y + offsetY);
 
+		const inExpandedContext = isExpanded || overrideHeight !== undefined;
+		const height =
+			overrideHeight ??
+			(inExpandedContext && region.isScrollable
+				? (region.scrollHeight ?? 0)
+				: (region.height ?? 0));
+
 		if (absY >= canvas.height) return;
-		if (absY + region.height < 0 && !this.stickyHeadersInBackbuffer) return;
+		if (absY + height < 0 && !this.stickyHeadersInBackbuffer) return;
 
 		let myClip = {
 			x: absX,
 			y: absY,
 			w: Math.round(region.width),
-			h: Math.round(region.height),
+			h: Math.round(height),
 		};
 		if (clip) {
 			const x1 = Math.max(myClip.x, clip.x);
@@ -661,24 +680,44 @@ export class TerminalBufferWorker {
 			myClip = {x: x1, y: y1, w: x2 - x1, h: y2 - y1};
 		}
 
-		const compositor = this.createCompositor(options);
-		compositor.drawContent(canvas, region, absX, absY, myClip);
-
-		for (const child of node.children) {
-			this.composeNode(
-				child,
-				canvas,
-				{
-					clip: myClip,
-					offsetY: absY - (region.scrollTop ?? 0),
-					offsetX: absX - (region.scrollLeft ?? 0),
-				},
-				options,
-			);
+		const originalScrollTop = region.scrollTop;
+		if (
+			inExpandedContext &&
+			region.isScrollable &&
+			overrideHeight === undefined
+		) {
+			region.scrollTop = 0;
 		}
 
-		compositor.drawStickyHeaders(canvas, region, absX, absY, myClip);
-		compositor.drawScrollbars(canvas, region, absX, absY, myClip);
+		try {
+			const compositor = this.createCompositor(options);
+			compositor.drawContent(canvas, region, absX, absY, myClip);
+
+			for (const child of node.children) {
+				this.composeNode(
+					child,
+					canvas,
+					{
+						clip: myClip,
+						offsetY: absY - (region.scrollTop ?? 0),
+						offsetX: absX - (region.scrollLeft ?? 0),
+						isExpanded: inExpandedContext,
+					},
+					options,
+				);
+			}
+
+			compositor.drawStickyHeaders(canvas, region, absX, absY, myClip);
+			compositor.drawScrollbars(canvas, region, absX, absY, myClip);
+		} finally {
+			if (
+				inExpandedContext &&
+				region.isScrollable &&
+				overrideHeight === undefined
+			) {
+				region.scrollTop = originalScrollTop;
+			}
+		}
 	}
 
 	private createCompositor(options?: {
@@ -692,6 +731,7 @@ export class TerminalBufferWorker {
 			animatedScroll: this.animatedScroll,
 			targetScrollTops: this.animationController.allTargetScrollTops,
 			regionWasAtEnd: this.sceneManager.regionWasAtEnd,
+			canvasHeight: this.rows,
 		});
 	}
 

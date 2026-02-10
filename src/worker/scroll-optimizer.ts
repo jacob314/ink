@@ -51,6 +51,12 @@ export class ScrollOptimizer {
 		}
 
 		const scrollTop = region.scrollTop ?? 0;
+
+		if (!this.lastRegionScrollTops.has(region.id)) {
+			this.lastRegionScrollTops.set(region.id, scrollTop);
+			return [];
+		}
+
 		const lastScrollTop = this.lastRegionScrollTops.get(region.id) ?? 0;
 
 		if (scrollTop === lastScrollTop) {
