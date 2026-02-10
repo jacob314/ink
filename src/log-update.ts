@@ -354,6 +354,15 @@ const createStandard = (
 	};
 
 	render.done = () => {
+		if (previousCursorPosition && !alternateBuffer) {
+			const moveDown = previousLineCount - 1 - previousCursorPosition.row;
+			if (moveDown > 0) {
+				stream.write(ansiEscapes.cursorDown(moveDown));
+			}
+
+			stream.write('\n');
+		}
+
 		const lastFrame = previousOutput;
 		previousOutput = '';
 		previousLineCount = 0;
@@ -697,6 +706,15 @@ const createIncremental = (
 	};
 
 	render.done = () => {
+		if (previousCursorPosition && !alternateBuffer) {
+			const moveDown = previousLines.length - 1 - previousCursorPosition.row;
+			if (moveDown > 0) {
+				stream.write(ansiEscapes.cursorDown(moveDown));
+			}
+
+			stream.write('\n');
+		}
+
 		const lastFrame = previousOutput;
 		previousOutput = '';
 		previousLines = [];

@@ -170,6 +170,16 @@ export function calculateScrollbarThumb(options: {
 }
 
 /**
+ * Get how much scroll height was added by stableScrollback.
+ */
+export const getAddedScrollHeight = (node: DOMElement): number => {
+	const scrollHeight = node.internal_scrollState?.scrollHeight ?? 0;
+	const actualScrollHeight = node.internal_scrollState?.actualScrollHeight ?? 0;
+
+	return Math.max(0, scrollHeight - actualScrollHeight);
+};
+
+/**
  * Get the bounding box of the vertical scrollbar.
  */
 export const getVerticalScrollbarBoundingBox = (

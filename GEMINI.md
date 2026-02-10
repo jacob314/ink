@@ -93,22 +93,24 @@ Ink exposes several internal APIs for measuring elements and retrieving layout i
 
 ### Rendering Pipeline
 
-#### `src/render-node-to-output.ts`
-This module is responsible for traversing the Ink DOM tree (after Yoga has computed the layout) and generating an intermediate `Output` representation.
-- **Layout Mapping**: It maps Yoga's computed layout (relative positions) to absolute terminal coordinates.
-- **Clipping**: It handles `overflow: hidden` and `overflow: scroll` by defining clipping regions. Nodes outside the clip region are skipped or truncated.
-- **Text Handling**: It handles text wrapping and truncation based on `textWrap` style. It also applies padding to text nodes if the parent Box has padding.
-- **Sticky Positioning**: It implements logic for `position: sticky` (or Ink's internal equivalent), ensuring elements stick to the top of the viewport or scroll container.
-- **Scrollbars**: It triggers the rendering of scrollbars if the element is scrollable.
+#### `src/worker/`
+This directory contains the modern rendering pipeline for Ink, which contains the recommended renders for Gemini CLI.
+- **`render-worker.ts`**: The main entry point for the rendering worker. It handles scene composition, scroll management, and coordination between primary and alternate buffers.
+- **`terminal-writer.ts`**: A low-level utility that handles optimized writing to the terminal, including line diffing, cursor management, and synchronized output.
 
-#### `src/log-update.ts`
-This module manages the actual output to the terminal `stdout`.
-- **Modes**: It supports two primary modes:
-    - **Standard**: Erases the previous output (using `eraseLines`) and writes the new frame.
-    - **Alternate Buffer**: Enters the terminal's alternate screen buffer (full-screen mode).
-- **Incremental Rendering**: To improve performance and reduce flickering, it can diff the new output against the previous frame and only write the changed lines (or parts of lines).
-- **Synchronized Output**: It uses terminal synchronized output sequences (`\u001B[?2026h` / `l`) to prevent tearing during updates, if supported.
-- **Cursor Management**: It handles hiding and showing the cursor during updates to prevent flickering.
+**Important:** New features MUST be added for these efficient renders. Note that this new renderer ONLY supports `<StaticRender>` and will never support the legacy `<Static>` component.
+
+**Note:** `src/log-update.ts` and its associated rendering logic in `src/render-node-to-output.ts` are considered **obsolete** and are being replaced by the worker-based architecture. Support for new features in these legacy renderers is optional.
+
+#### `src/render-node-to-output.ts` (Obsolete)
+This module was responsible for traversing the Ink DOM tree and generating an intermediate `Output` representation.
+
+#### `src/log-update.ts` (Obsolete)
+This module managed the actual output to the terminal `stdout` in the legacy rendering pipeline.
+
+### Testing Guidelines
+- **End-to-End Testing:** When possible, tests SHOULD use `xterm.js` headless (via `@xterm/headless`) to verify the actual rendered output end-to-end, rather than taking test snapshots. This allows for asserting on the final state of the terminal buffer, including cursor position and alternate buffer state. For examples of the most complete such tests, see `test/render-worker-xterm.test.ts` and `test/terminal-writer-xterm.test.ts`.
 
 ### Legacy Features
-- **`<Static>`**: This component is considered a legacy feature. It is intended for permanently outputting text above the active Ink app (like a log). However, it is **not fully supported in alternate buffer mode**. The architectural challenge is that `<Static>` relies on side-effects that can conflict with the strict timing requirements of `useLayoutEffect` used in the main rendering loop, potentially leading to out-of-order output or visual glitches in full-screen apps.
+- **`<Static>`**: This component is considered a legacy feature. It is intended for permanently outputting text above the active Ink app (like a log). However, it is **not fully supported in alternate buffer mode** and will NEVER be supported by the new worker-based renderer. The architectural challenge is that `<Static>` relies on side-effects that can conflict with the strict timing requirements of `useLayoutEffect` used in the main rendering loop, potentially leading to out-of-order output or visual glitches in full-screen apps.
+- **`<StaticRender>`**: This is the more modern and efficient replacement for `<Static>`, designed to work better with the new rendering pipeline and avoid the pitfalls of the legacy implementation. This is the only static-style component supported by the new renderer. Use this instead of `<Static>` for new developments.
