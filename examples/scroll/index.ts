@@ -15,6 +15,6 @@ render(React.createElement(ScrollableContent), {
 	standardReactLayoutTiming: true,
 	debugRainbow: true,
 	incrementalRendering: true,
-	backbufferUpdateDelay: 100,
+//	backbufferUpdateDelay: 100,
 	maxFps: 10_000,
 });

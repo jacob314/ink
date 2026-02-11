@@ -86,7 +86,7 @@ function scrollReducer(state: ScrollState, action: ScrollAction): ScrollState {
 }
 
 function ScrollableContent({
-	useStatic = true,
+	useStatic = false,
 }: {readonly useStatic?: boolean} = {}) {
 	const [listItems, setListItems] = useState<Array<{id: number; text: string}>>(
 		[],
@@ -374,69 +374,71 @@ function ScrollableContent({
 
 	return (
 		<Box flexDirection="column" height={rows} width={columns}>
-			<Box
-				ref={reference}
-				flexGrow={1}
-				borderStyle={showBorder ? 'round' : undefined}
-				flexShrink={1}
-				width={boxWidth}
-				flexDirection="column"
-				overflowX="hidden"
-				overflowY="scroll"
-				paddingRight={0}
-				overflowToBackbuffer={true}
-				scrollTop={scrollTop}
-				stableScrollback={
-					stableScrollback && !options?.isAlternateBufferEnabled
-				}
-				scrollbar={showScrollbar}
-			>
-				{staticContent}
-			</Box>
-			<Box
-				flexDirection="column"
-				flexShrink={0}
-				overflow="hidden"
-				height={isFooterExpanded ? undefined : 2}
-			>
-				{isFooterExpanded ? (
-					<>
-						<Text>
-							This is a demo showing a scrollable box with sticky headers.
-						</Text>
-						<Text>
-							Press up/down arrow or w/s to scroll vertically (w/s for 30 lines,
-							Shift for 10).
-						</Text>
-						<Text>Press 'space' to add a block, 'c' to clear list.</Text>
-						<Text>
-							Press 'b' to toggle scrollbar ({showScrollbar ? 'on' : 'off'}),
-							't' to toggle border.
-						</Text>
-						<Text>
-							Press 'f' to collapse footer, 'a' to toggle alternate buffer +
-							sticky headers (current:{' '}
-							{options?.isAlternateBufferEnabled ? 'on' : 'off'})
-						</Text>
-						<Text>
-							Press 'h' to toggle sticky headers in backbuffer (current:{' '}
-							{options?.stickyHeadersInBackbuffer ? 'on' : 'off'})
-						</Text>
-						<Text>
-							Press 'v' to toggle stable scrollback (
-							{stableScrollback && !options?.isAlternateBufferEnabled
-								? 'on'
-								: 'off'}
-							)
-						</Text>
-					</>
-				) : (
-					<Text>press f to expand footer</Text>
-				)}
-				<Text>
-					ScrollTop: {scrollTop}, Size: {size.innerHeight}, Content:{' '}
-					{size.scrollHeight}, Added Scroll: {size.addedScrollHeight}
-				</Text>
+			<Box flexDirection="column" width="100%" height="100%">
+				<Box
+					ref={reference}
+					flexGrow={1}
+					borderStyle={showBorder ? 'round' : undefined}
+					flexShrink={1}
+					width={boxWidth}
+					flexDirection="column"
+					overflowX="hidden"
+					overflowY="scroll"
+					paddingRight={0}
+					overflowToBackbuffer={true}
+					scrollTop={scrollTop}
+					stableScrollback={
+						stableScrollback && !options?.isAlternateBufferEnabled
+					}
+					scrollbar={showScrollbar}
+				>
+					{staticContent}
+				</Box>
+				<Box
+					flexDirection="column"
+					flexShrink={0}
+					overflow="hidden"
+					height={isFooterExpanded ? undefined : 2}
+				>
+					{isFooterExpanded ? (
+						<>
+							<Text>
+								This is a demo showing a scrollable box with sticky headers.
+							</Text>
+							<Text>
+								Press up/down arrow or w/s to scroll vertically (w/s for 30
+								lines, Shift for 10).
+							</Text>
+							<Text>Press 'space' to add a block, 'c' to clear list.</Text>
+							<Text>
+								Press 'b' to toggle scrollbar ({showScrollbar ? 'on' : 'off'}),
+								't' to toggle border.
+							</Text>
+							<Text>
+								Press 'f' to collapse footer, 'a' to toggle alternate buffer +
+								sticky headers (current:{' '}
+								{options?.isAlternateBufferEnabled ? 'on' : 'off'})
+							</Text>
+							<Text>
+								Press 'h' to toggle sticky headers in backbuffer (current:{' '}
+								{options?.stickyHeadersInBackbuffer ? 'on' : 'off'})
+							</Text>
+							<Text>
+								Press 'v' to toggle stable scrollback (
+								{stableScrollback && !options?.isAlternateBufferEnabled
+									? 'on'
+									: 'off'}
+								)
+							</Text>
+						</>
+					) : (
+						<Text>press f to expand footer</Text>
+					)}
+					<Text>
+						ScrollTop: {scrollTop}, Size: {size.innerHeight}, Content:{' '}
+						{size.scrollHeight}, Added Scroll: {size.addedScrollHeight}
+					</Text>
+				</Box>
 			</Box>
 		</Box>
 	);

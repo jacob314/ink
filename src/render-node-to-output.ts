@@ -357,7 +357,9 @@ function renderNodeToOutput(
 
 			const clipLeft = clip.x1 ?? -Infinity;
 			const clipRight = clip.x2 ?? Infinity;
-			const clipTop = clip.y1 ?? -Infinity;
+			const clipTop = output.getActiveRegion().overflowToBackbuffer
+				? -Infinity
+				: clip.y1 ?? -Infinity;
 			const clipBottom = clip.y2 ?? Infinity;
 
 			const isVisible =
