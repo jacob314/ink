@@ -639,8 +639,14 @@ export default class Output {
 			}
 		}
 
-		if (clipVertically && (y < clip.y1! || y >= clip.y2!)) {
-			return undefined;
+		if (clipVertically) {
+			const effectiveY1 = this.getActiveRegion().overflowToBackbuffer
+				? -Infinity
+				: clip.y1!;
+
+			if (y < effectiveY1 || y >= clip.y2!) {
+				return undefined;
+			}
 		}
 
 		let fromX: number | undefined;

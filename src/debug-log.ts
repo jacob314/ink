@@ -22,3 +22,13 @@ export const debugLog = (message: string) => {
 		fs.appendFileSync(logFilePath, message + '\n');
 	} catch {}
 };
+
+export const clearDebugLog = () => {
+	if (!debugLogEnabled) {
+		return;
+	}
+
+	try {
+		fs.writeFileSync(logFilePath, '');
+	} catch {}
+};

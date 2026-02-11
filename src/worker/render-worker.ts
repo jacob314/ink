@@ -1,6 +1,6 @@
 import process from 'node:process';
 import ansiEscapes from 'ansi-escapes';
-import {debugLog} from '../debug-log.js';
+import {debugLog, clearDebugLog} from '../debug-log.js';
 import {type RegionNode, type RegionUpdate, type Region} from '../output.js';
 import {type InkOptions} from '../components/AppContext.js';
 import {
@@ -372,6 +372,7 @@ export class TerminalBufferWorker {
 	}
 
 	async fullRender() {
+		clearDebugLog();
 		if (this.terminalWriter.fullRenderTimeout) {
 			clearTimeout(this.terminalWriter.fullRenderTimeout);
 			this.terminalWriter.fullRenderTimeout = undefined;
@@ -404,9 +405,12 @@ export class TerminalBufferWorker {
 		this.terminalWriter.finish();
 		this.terminalWriter.flush();
 		this.terminalWriter.validateLinesConsistent(this.screen);
+
+		this.logScene();
 	}
 
 	async render() {
+		clearDebugLog();
 		const rootRegion = this.sceneManager.getRootRegion();
 		if (!rootRegion) {
 			return;
@@ -423,6 +427,8 @@ export class TerminalBufferWorker {
 		const cameraY = this.getCameraY(rootRegion);
 		this.syncCursor(cameraY);
 
+		const scrolledToBackbuffer = new Map<string | number, number>();
+
 		if (!this.terminalWriter.isFirstRender) {
 			// 0. Handle Global Scroll (Backbuffer growth)
 			const maxPushed =
@@ -430,6 +436,10 @@ export class TerminalBufferWorker {
 			const linesToScroll = cameraY - maxPushed;
 
 			if (linesToScroll > 0) {
+				debugLog(
+					`[RENDER-WORKER] Root region ${rootRegion.id} pushing ${linesToScroll} lines to backbuffer (cameraY: ${cameraY}, maxPushed: ${maxPushed})`,
+				);
+				scrolledToBackbuffer.set(rootRegion.id, linesToScroll);
 				this.appendToBackbuffer(maxPushed, linesToScroll);
 				this.scrollOptimizer.updateMaxPushed(rootRegion.id, cameraY);
 			}
@@ -485,6 +495,16 @@ export class TerminalBufferWorker {
 				);
 
 				for (const op of operations) {
+					if (op.scrollToBackbuffer) {
+						debugLog(
+							`[RENDER-WORKER] Region ${op.regionId} scrolling ${op.linesToScroll} lines to backbuffer`,
+						);
+						scrolledToBackbuffer.set(
+							op.regionId,
+							(scrolledToBackbuffer.get(op.regionId) ?? 0) + op.linesToScroll,
+						);
+					}
+
 					this.terminalWriter.scrollLines(op);
 					if (op.newMaxPushed !== undefined) {
 						this.scrollOptimizer.updateMaxPushed(op.regionId, op.newMaxPushed);
@@ -523,6 +543,8 @@ export class TerminalBufferWorker {
 		}
 
 		this.terminalWriter.backbufferDirtyCurrentFrame = false;
+
+		this.logScene(scrolledToBackbuffer);
 	}
 
 	done() {
@@ -826,5 +848,158 @@ export class TerminalBufferWorker {
 		};
 
 		return visit(this.sceneManager.root);
+	}
+
+	private logScene(scrolledToBackbuffer?: Map<string | number, number>) {
+		const rootNode = this.sceneManager.root;
+		if (!rootNode) {
+			return;
+		}
+
+		const rootRegion = this.sceneManager.getRootRegion();
+		const cameraY = rootRegion ? this.getCameraY(rootRegion) : 0;
+
+		debugLog('='.repeat(80));
+		debugLog(
+			`FRAME START (Index: ${this.frameIndex}, Updates: ${this.updatesReceived})`,
+		);
+		debugLog('='.repeat(80));
+
+		const traverse = (
+			node: RegionNode,
+			depth: number,
+			offsetX: number,
+			offsetY: number,
+			clip: {x: number; y: number; w: number; h: number},
+		) => {
+			const region = this.sceneManager.getRegion(node.id);
+			if (!region) {
+				return;
+			}
+
+			const absX = Math.round(region.x + offsetX);
+			const absY = Math.round(region.y + offsetY);
+			const width = Math.round(region.width);
+			const height = Math.round(region.height);
+
+			let myClip = {
+				x: absX,
+				y: absY,
+				w: width,
+				h: height,
+			};
+
+			if (clip) {
+				const x1 = Math.max(myClip.x, clip.x);
+				const y1 = Math.max(myClip.y, clip.y);
+				const x2 = Math.min(myClip.x + myClip.w, clip.x + clip.w);
+				const y2 = Math.min(myClip.y + myClip.h, clip.y + clip.h);
+
+				if (x2 > x1 && y2 > y1) {
+					myClip = {x: x1, y: y1, w: x2 - x1, h: y2 - y1};
+				} else {
+					myClip = {x: 0, y: 0, w: 0, h: 0};
+				}
+			}
+
+			const indent = '  '.repeat(depth);
+			const isStatic = region.node?.nodeName === 'ink-static-render';
+
+			debugLog(`${indent}Region: ${region.id} ${isStatic ? '(STATIC)' : ''}`);
+			debugLog(
+				`${indent}  Bounds: x=${absX}, y=${absY}, w=${width}, h=${height}`,
+			);
+			debugLog(
+				`${indent}  Scroll: top=${region.scrollTop ?? 0}, left=${region.scrollLeft ?? 0}, height=${region.scrollHeight ?? 0}, width=${region.scrollWidth ?? 0}`,
+			);
+
+			const linesPushed =
+				this.scrollOptimizer.maxRegionScrollTops.get(region.id) ?? 0;
+			const justScrolled = scrolledToBackbuffer?.get(region.id) ?? 0;
+			debugLog(
+				`${indent}  Backbuffer: enabled=${region.overflowToBackbuffer ?? false}, linesPushed=${linesPushed}${justScrolled > 0 ? `, JUST_SCROLLED=${justScrolled}` : ''}`,
+			);
+
+			debugLog(
+				`${indent}  Clip: x=${myClip.x}, y=${myClip.y}, w=${myClip.w}, h=${myClip.h}`,
+			);
+
+			if (region.lines.length > 0) {
+				debugLog(`${indent}  Content:`);
+				for (const line of region.lines) {
+					const plainText = line
+						.map(c => c.value)
+						.join('')
+						.trimEnd();
+					if (plainText) {
+						debugLog(`${indent}    ${plainText}`);
+					}
+				}
+			}
+
+			if (region.stickyHeaders.length > 0) {
+				debugLog(`${indent}  Sticky Headers:`);
+				for (const header of region.stickyHeaders) {
+					const scrollTop = region.scrollTop ?? 0;
+					const isStuckState =
+						header.type === 'bottom'
+							? Math.round(header.naturalRow - scrollTop + header.lines.length) >=
+								Math.round(
+									header.y + (header.stuckLines ?? header.lines).length,
+								)
+							: Math.round(header.naturalRow - scrollTop) <=
+								Math.round(header.y);
+
+					let isStuck = isStuckState;
+					if (isStuck && header.type === 'top') {
+						isStuck = this.stickyHeadersInBackbuffer || absY > 0;
+					}
+
+					debugLog(
+						`${indent}    Header nodeID: ${header.nodeId}, type: ${header.type}, isStuckOnly: ${header.isStuckOnly}, IS_STUCK: ${isStuck}`,
+					);
+					debugLog(
+						`${indent}    Range: ${header.startRow}-${header.endRow}, StuckPos: y=${header.y}, NaturalRow: ${header.naturalRow}`,
+					);
+
+					const linesToLog = isStuck
+						? header.stuckLines ?? header.lines
+						: header.lines;
+					debugLog(
+						`${indent}    Header Content (${isStuck ? 'STUCK' : 'NATURAL'}):`,
+					);
+					for (const line of linesToLog) {
+						const plainText = line
+							.map(c => c.value)
+							.join('')
+							.trimEnd();
+						if (plainText) {
+							debugLog(`${indent}      ${plainText}`);
+						}
+					}
+				}
+			}
+
+			for (const child of node.children) {
+				traverse(
+					child,
+					depth + 1,
+					absX - (region.scrollLeft ?? 0),
+					absY - (region.scrollTop ?? 0),
+					myClip,
+				);
+			}
+		};
+
+		traverse(rootNode, 0, 0, -cameraY, {
+			x: 0,
+			y: 0,
+			w: this.columns,
+			h: this.rows,
+		});
+
+		debugLog('='.repeat(80));
+		debugLog('FRAME END');
+		debugLog('='.repeat(80));
 	}
 }
