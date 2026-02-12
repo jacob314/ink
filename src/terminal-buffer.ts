@@ -11,6 +11,11 @@ import {
 } from './output.js';
 import {type InkOptions} from './components/AppContext.js';
 import {type DOMElement} from './dom.js';
+import {
+	saveReplay,
+	serializeReplayUpdate,
+	type ReplayData,
+} from './worker/replay.js';
 
 const debugEdits = false;
 
@@ -27,6 +32,16 @@ export default class TerminalBuffer {
 
 	private lastOptions?: InkOptions;
 	private optionsChanged = false;
+
+	private readonly columns: number;
+	private readonly rows: number;
+
+	private recording: 'none' | 'single' | 'sequence' = 'none';
+	private recordedFrames: Array<{
+		tree: RegionNode;
+		updates: RegionUpdate[];
+		cursorPosition?: {row: number; col: number};
+	}> = [];
 
 	constructor(
 		columns: number,
@@ -54,6 +69,8 @@ export default class TerminalBuffer {
 			forceScrollToBottomOnBackbufferRefresh:
 				options?.forceScrollToBottomOnBackbufferRefresh,
 		};
+		this.columns = columns;
+		this.rows = rows;
 		if (options?.renderInProcess) {
 			this.workerInstance = new TerminalBufferWorker(columns, rows, {
 				debugRainbowEnabled: options?.debugRainbowEnabled,
@@ -148,6 +165,48 @@ export default class TerminalBuffer {
 		}
 	}
 
+	startRecording(type: 'single' | 'sequence') {
+		this.recording = type;
+		this.recordedFrames = [];
+	}
+
+	stopRecording(filename: string) {
+		if (this.recording === 'none') return;
+
+		const data: ReplayData = {
+			type: this.recording,
+			columns: this.columns,
+			rows: this.rows,
+			frames: this.recordedFrames.map(f => ({
+				tree: f.tree,
+				updates: f.updates.map(u => serializeReplayUpdate(u, this.serializer)),
+				cursorPosition: f.cursorPosition,
+			})),
+		};
+
+		saveReplay(data, filename);
+		this.recording = 'none';
+		this.recordedFrames = [];
+	}
+
+	dumpCurrentFrame(filename: string) {
+		if (this.workerInstance) {
+			this.workerInstance.dumpCurrentFrame(filename);
+		} else if (this.worker?.connected) {
+			try {
+				this.worker.send({
+					type: 'dumpCurrentFrame',
+					filename,
+				});
+			} catch (error) {
+				console.error(
+					'Failed to send dumpCurrentFrame message to worker:',
+					error,
+				);
+			}
+		}
+	}
+
 	update(
 		_start: number,
 		_end: number,
@@ -188,6 +247,23 @@ export default class TerminalBuffer {
 
 		// Update local state to current frame
 		this.lastRegions = currentRegionsMap;
+
+		if (this.recording !== 'none') {
+			if (this.recordedFrames.length === 0) {
+				const fullUpdates: RegionUpdate[] = [];
+				for (const r of currentRegionsMap.values()) {
+					fullUpdates.push(this.createFullRegionUpdate(r));
+				}
+
+				this.recordedFrames.push({
+					tree,
+					updates: fullUpdates,
+					cursorPosition,
+				});
+			} else if (this.recording === 'sequence') {
+				this.recordedFrames.push({tree, updates, cursorPosition});
+			}
+		}
 
 		const cursorChanged =
 			cursorPosition !== this.lastCursorPosition &&
@@ -304,6 +380,41 @@ export default class TerminalBuffer {
 		if (this.resizeListener) {
 			process.stdout.off('resize', this.resizeListener);
 		}
+	}
+
+	private createFullRegionUpdate(current: Region): RegionUpdate {
+		const update: RegionUpdate = {id: current.id};
+		update.x = current.x;
+		update.y = current.y;
+		update.width = current.width;
+		update.height = current.height;
+		update.scrollTop = current.scrollTop;
+		update.scrollLeft = current.scrollLeft;
+		update.scrollHeight = current.scrollHeight;
+		update.scrollWidth = current.scrollWidth;
+		update.isScrollable = current.isScrollable;
+		update.isVerticallyScrollable = current.isVerticallyScrollable;
+		update.isHorizontallyScrollable = current.isHorizontallyScrollable;
+		update.scrollbarVisible = current.scrollbarVisible;
+		update.overflowToBackbuffer = current.overflowToBackbuffer;
+		update.marginRight = current.marginRight;
+		update.marginBottom = current.marginBottom;
+		update.scrollbarThumbColor = current.scrollbarThumbColor;
+		update.stickyHeaders = current.stickyHeaders;
+
+		const serialized = this.serializer.serialize(current.lines);
+		update.lines = {
+			updates: [
+				{
+					start: 0,
+					end: current.lines.length,
+					data: serialized as unknown as Uint8Array,
+				},
+			],
+			totalLength: current.lines.length,
+		};
+
+		return update;
 	}
 
 	private diffRegion(

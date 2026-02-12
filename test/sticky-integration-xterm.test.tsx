@@ -102,16 +102,20 @@ const createTestEnv = (
 	};
 
 	const getBackbufferHeight = () => {
-		// xterm-headless baseY increases as lines are pushed to scrollback.
+		// Xterm-headless baseY increases as lines are pushed to scrollback.
 		// However, \u001B[3J clears history but DOES NOT reset baseY to 0.
 		// It only clears the lines in history.
 		// We need to check how many lines in history are non-empty.
 		let count = 0;
 		for (let i = 0; i < term.buffer.active.baseY; i++) {
-			const line = term.buffer.active.getLine(i)?.translateToString(true).trim();
+			const line = term.buffer.active
+				.getLine(i)
+				?.translateToString(true)
+				.trim();
 			if (i < 10) {
 				console.log(`[BACKBUFFER-DEBUG] Line ${i}: "${line}"`);
 			}
+
 			if (line && line !== '') {
 				count++;
 			}
@@ -257,7 +261,10 @@ test('examples/sticky - fast backbuffer update after scrolling to top', async t 
 	await env.press('space');
 	await env.wait(500);
 
-	t.true(env.getBackbufferHeight() > 10, 'Should have many lines in backbuffer');
+	t.true(
+		env.getBackbufferHeight() > 10,
+		'Should have many lines in backbuffer',
+	);
 
 	// Press 'w' 20 times to scroll up (30 lines each time) to ensure we reach the top
 	for (let i = 0; i < 20; i++) {

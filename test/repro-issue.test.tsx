@@ -1,4 +1,3 @@
-
 import {PassThrough} from 'node:stream';
 import test from 'ava';
 import React from 'react';
@@ -125,17 +124,20 @@ test('repro issue: sticky headers and spurious renders', async t => {
 	// 3. Toggle sticky headers ON
 	await env.press('h');
 	await env.wait(500);
-	
+
 	const contentAfterHOn = env.getFullContent();
 	t.log('Content after pressing H (on):\n' + contentAfterHOn);
-	
+
 	// Assertion 1: Sticky header should be visible when stuck to the terminal top
-	// Header 4 is at row 80 in items. 
+	// Header 4 is at row 80 in items.
 	// Each block is 20 lines. Header 0: 0-19, Header 1: 20-39, Header 2: 40-59, Header 3: 60-79, Header 4: 80-99.
 	// We scrolled down 10 lines from the bottom (which was at row 100+ after 5 space presses).
 	// Content height is ~180. We scrolled to ~170.
 	// Header 4 is definitely above us.
-	t.true(contentAfterHOn.includes('Header 4'), 'Header 4 should be visible (stuck to top) when stickyHeadersInBackbuffer is on');
+	t.true(
+		contentAfterHOn.includes('Header 4'),
+		'Header 4 should be visible (stuck to top) when stickyHeadersInBackbuffer is on',
+	);
 
 	// 4. Toggle sticky headers OFF
 	await env.press('h');
@@ -144,7 +146,10 @@ test('repro issue: sticky headers and spurious renders', async t => {
 	t.log('Content after pressing H (off):\n' + contentAfterHOff);
 
 	// Assertion 2: Sticky header should NOT be visible when toggled off
-	t.false(contentAfterHOff.includes('Header 4 (sticky top)'), 'Header 4 (sticky top) should not be visible when stickyHeadersInBackbuffer is off');
+	t.false(
+		contentAfterHOff.includes('Header 4 (sticky top)'),
+		'Header 4 (sticky top) should not be visible when stickyHeadersInBackbuffer is off',
+	);
 
 	env.unmount();
 });

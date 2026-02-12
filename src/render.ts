@@ -180,6 +180,13 @@ export type Instance = {
 	 * Get the selection object.
 	 */
 	getSelection: () => Selection;
+
+	/**
+	 * Exports the current internal rendering state to a JSON file and a human-readable text dump.
+	 * Only supported when `terminalBuffer` is enabled.
+	 * @param filename The path/name for the JSON file (e.g., 'snapshot.json').
+	 */
+	dumpCurrentFrame: (filename: string) => void;
 };
 
 /**
@@ -224,6 +231,7 @@ const render = (
 		clear: instance.clear,
 		recalculateLayout: instance.recalculateLayout,
 		getSelection: instance.getSelection,
+		dumpCurrentFrame: instance.dumpCurrentFrame,
 	};
 };
 

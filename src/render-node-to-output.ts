@@ -359,7 +359,7 @@ function renderNodeToOutput(
 			const clipRight = clip.x2 ?? Infinity;
 			const clipTop = output.getActiveRegion().overflowToBackbuffer
 				? -Infinity
-				: clip.y1 ?? -Infinity;
+				: (clip.y1 ?? -Infinity);
 			const clipBottom = clip.y2 ?? Infinity;
 
 			const isVisible =
@@ -501,6 +501,7 @@ function renderNodeToOutput(
 			stickyNode: DOMElement;
 			type: 'top' | 'bottom';
 			nextStickyNode?: DOMElement;
+			nextStickyNodeInfo?: StickyNodeInfo;
 			cached?: StickyHeader;
 			anchor?: DOMElement;
 		}> = [];
@@ -593,6 +594,7 @@ function renderNodeToOutput(
 
 					if (activeTopStickyNode) {
 						let nextStickyNode: DOMElement | undefined;
+						let nextStickyNodeInfo: StickyNodeInfo | undefined;
 						for (
 							let i = activeTopStickyNodeIndex + 1;
 							i < stickyNodes.length;
@@ -601,6 +603,7 @@ function renderNodeToOutput(
 							const info = stickyNodes[i]!;
 							if (info.type !== 'bottom') {
 								nextStickyNode = info.node;
+								nextStickyNodeInfo = info;
 								break;
 							}
 						}
@@ -609,6 +612,7 @@ function renderNodeToOutput(
 							stickyNode: activeTopStickyNode.node,
 							type: 'top',
 							nextStickyNode,
+							nextStickyNodeInfo,
 							cached: activeTopStickyNode.cached,
 							anchor: activeTopStickyNode.anchor,
 						});
@@ -616,10 +620,12 @@ function renderNodeToOutput(
 
 					if (activeBottomStickyNode) {
 						let nextStickyNode: DOMElement | undefined;
+						let nextStickyNodeInfo: StickyNodeInfo | undefined;
 						for (let i = activeBottomStickyNodeIndex - 1; i >= 0; i--) {
 							const info = stickyNodes[i]!;
 							if (info.type === 'bottom') {
 								nextStickyNode = info.node;
+								nextStickyNodeInfo = info;
 								break;
 							}
 						}
@@ -628,6 +634,7 @@ function renderNodeToOutput(
 							stickyNode: activeBottomStickyNode.node,
 							type: 'bottom',
 							nextStickyNode,
+							nextStickyNodeInfo,
 							cached: activeBottomStickyNode.cached,
 							anchor: activeBottomStickyNode.anchor,
 						});
@@ -743,7 +750,7 @@ function renderNodeToOutput(
 
 						type,
 
-						nextStickyNode,
+						nextStickyNodeInfo,
 
 						cached,
 
@@ -762,7 +769,9 @@ function renderNodeToOutput(
 						let stickyNodeId: number;
 
 						const currentBorderTop = yogaNode.getComputedBorder(Yoga.EDGE_TOP);
-						const currentBorderLeft = yogaNode.getComputedBorder(Yoga.EDGE_LEFT);
+						const currentBorderLeft = yogaNode.getComputedBorder(
+							Yoga.EDGE_LEFT,
+						);
 
 						if (cached && anchor) {
 							const staticRenderPosTop = getRelativeTop(anchor, node);
@@ -798,7 +807,8 @@ function renderNodeToOutput(
 								parentHeight = 1_000_000;
 							}
 
-							stickyOffsetX = x + currentBorderLeft + getRelativeLeft(stickyNode, node);
+							stickyOffsetX =
+								x + currentBorderLeft + getRelativeLeft(stickyNode, node);
 
 							stickyNodeId = stickyNode.internal_id;
 						}
@@ -813,7 +823,11 @@ function renderNodeToOutput(
 
 						if (type === 'top') {
 							const maxStickyTop =
-								y + currentBorderTop - currentScrollTop + parentBottom - stickyNodeHeight;
+								y +
+								currentBorderTop -
+								currentScrollTop +
+								parentBottom -
+								stickyNodeHeight;
 							const naturalStickyY =
 								y + currentBorderTop - currentScrollTop + stickyNodeTop;
 							const stuckStickyY = y + currentBorderTop;
@@ -823,17 +837,32 @@ function renderNodeToOutput(
 								maxStickyTop,
 							);
 
-							if (nextStickyNode?.yogaNode) {
-								const nextNodeTop = getRelativeTop(nextStickyNode, node);
-								const nextNodeTopInViewport =
-									y + currentBorderTop - currentScrollTop + nextNodeTop;
-								if (nextNodeTopInViewport < finalStickyY + stickyNodeHeight) {
-									finalStickyY = nextNodeTopInViewport - stickyNodeHeight;
+							if (nextStickyNodeInfo) {
+								let nextNodeTop: number | undefined;
+
+								if (nextStickyNodeInfo.cached && nextStickyNodeInfo.anchor) {
+									const staticRenderPosTop = getRelativeTop(
+										nextStickyNodeInfo.anchor,
+										node,
+									);
+									nextNodeTop =
+										staticRenderPosTop + nextStickyNodeInfo.cached.relativeY!;
+								} else if (nextStickyNodeInfo.node?.yogaNode) {
+									nextNodeTop = getRelativeTop(nextStickyNodeInfo.node, node);
+								}
+
+								if (nextNodeTop !== undefined) {
+									const nextNodeTopInViewport =
+										y + currentBorderTop - currentScrollTop + nextNodeTop;
+									if (nextNodeTopInViewport < finalStickyY + stickyNodeHeight) {
+										finalStickyY = nextNodeTopInViewport - stickyNodeHeight;
+									}
 								}
 							}
 						} else {
 							// Bottom sticky
-							const minStickyTop = y + currentBorderTop - currentScrollTop + parentTop;
+							const minStickyTop =
+								y + currentBorderTop - currentScrollTop + parentTop;
 							const naturalStickyY =
 								y + currentBorderTop - currentScrollTop + stickyNodeTop;
 							const stuckStickyY =
@@ -844,34 +873,57 @@ function renderNodeToOutput(
 								minStickyTop,
 							);
 
-							if (nextStickyNode?.yogaNode) {
-								const nextNodeHeight =
-									nextStickyNode.yogaNode.getComputedHeight();
-								const nextNodeTop = getRelativeTop(nextStickyNode, node);
-								const nextNodeBottomInViewport =
-									y + currentBorderTop - currentScrollTop + nextNodeTop + nextNodeHeight;
-								if (nextNodeBottomInViewport > finalStickyY) {
-									finalStickyY = nextNodeBottomInViewport;
+							if (nextStickyNodeInfo) {
+								let nextNodeHeight: number | undefined;
+								let nextNodeTop: number | undefined;
+
+								if (nextStickyNodeInfo.cached && nextStickyNodeInfo.anchor) {
+									nextNodeHeight = nextStickyNodeInfo.cached.height;
+									const staticRenderPosTop = getRelativeTop(
+										nextStickyNodeInfo.anchor,
+										node,
+									);
+									nextNodeTop =
+										staticRenderPosTop + nextStickyNodeInfo.cached.relativeY!;
+								} else if (nextStickyNodeInfo.node?.yogaNode) {
+									nextNodeHeight =
+										nextStickyNodeInfo.node.yogaNode.getComputedHeight();
+									nextNodeTop = getRelativeTop(nextStickyNodeInfo.node, node);
+								}
+
+								if (nextNodeTop !== undefined && nextNodeHeight !== undefined) {
+									const nextNodeBottomInViewport =
+										y +
+										currentBorderTop -
+										currentScrollTop +
+										nextNodeTop +
+										nextNodeHeight;
+									if (nextNodeBottomInViewport > finalStickyY) {
+										finalStickyY = nextNodeBottomInViewport;
+									}
 								}
 							}
 						}
 
 						const stickyOffsetY = finalStickyY;
-						const naturalHeight = stickyNode.yogaNode!.getComputedHeight();
-						const alternateStickyNode = stickyNode.childNodes.find(
-							childNode => (childNode as DOMElement).internalStickyAlternate,
-						) as DOMElement | undefined;
-						const stuckHeight =
-							alternateStickyNode?.yogaNode?.getComputedHeight() ?? 0;
-						const maxHeaderHeight = Math.max(naturalHeight, stuckHeight);
 
 						let naturalLines: StyledChar[][];
 						let stuckLines: StyledChar[][] | undefined;
+						let naturalHeight: number;
 
 						if (cached) {
 							naturalLines = cached.lines;
 							stuckLines = cached.stuckLines;
+							naturalHeight = cached.endRow - cached.startRow;
 						} else {
+							naturalHeight = stickyNode.yogaNode!.getComputedHeight();
+							const alternateStickyNode = stickyNode.childNodes.find(
+								childNode => (childNode as DOMElement).internalStickyAlternate,
+							) as DOMElement | undefined;
+							const stuckHeight =
+								alternateStickyNode?.yogaNode?.getComputedHeight() ?? 0;
+							const maxHeaderHeight = Math.max(naturalHeight, stuckHeight);
+
 							const renderHeader = (isSticky: boolean) => {
 								const stickyOutput = new Output({
 									width: stickyNode.yogaNode!.getComputedWidth(),

@@ -15,8 +15,11 @@ test('clipping - nested scrollable box inside hidden overflow box should be visi
 	);
 
 	const lines = output.split('\n');
-    const visibleLine = lines[10];
-	t.true(visibleLine?.includes('VISIBLE'), `Expected "VISIBLE" in line 10, got: ${JSON.stringify(visibleLine)}`);
+	const visibleLine = lines[10];
+	t.true(
+		visibleLine?.includes('VISIBLE'),
+		`Expected "VISIBLE" in line 10, got: ${JSON.stringify(visibleLine)}`,
+	);
 });
 
 test('clipping - content should be clipped by parent hidden overflow', t => {
@@ -28,7 +31,7 @@ test('clipping - content should be clipped by parent hidden overflow', t => {
 		</Box>,
 	);
 
-    // Should only show "12345"
+	// Should only show "12345"
 	t.is(output, '12345');
 });
 
@@ -41,6 +44,6 @@ test('clipping - content should be clipped by nested hidden overflow', t => {
 		</Box>,
 	);
 
-    // Should only show "12345"
+	// Should only show "12345"
 	t.is(output, '12345');
 });

@@ -290,7 +290,8 @@ export class Compositor {
 							headerY = header.y;
 						}
 					} else if (header.type === 'bottom') {
-						const stuckPos = this.options.canvasHeight - region.height + header.y;
+						const stuckPos =
+							this.options.canvasHeight - region.height + header.y;
 						if (headerY > stuckPos && absY < stuckPos + linesToRender.length) {
 							headerY = stuckPos;
 						}

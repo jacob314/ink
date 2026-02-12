@@ -17,6 +17,11 @@ export type InkOptions = {
 	 * terminals to force scrolling to the bottom.
 	 */
 	readonly forceScrollToBottomOnBackbufferRefresh?: boolean;
+
+	/**
+	 * A dummy property that can be used to force a re-render.
+	 */
+	readonly optionsUpdateTimestamp?: number;
 };
 
 export type Props = {
@@ -32,6 +37,13 @@ export type Props = {
 	readonly selection?: Selection;
 	readonly options: InkOptions;
 	readonly setOptions: (options: Partial<InkOptions>) => void;
+
+	/**
+	 * Exports the current internal rendering state to a JSON file and a human-readable text dump.
+	 * Only supported when `terminalBuffer` is enabled.
+	 * @param filename The path/name for the JSON file (e.g., 'snapshot.json').
+	 */
+	readonly dumpCurrentFrame: (filename: string) => void;
 };
 
 /**
@@ -43,6 +55,7 @@ export const AppContext = createContext<Props>({
 	rerender() {},
 	options: {},
 	setOptions() {},
+	dumpCurrentFrame() {},
 });
 
 AppContext.displayName = 'AppContext';

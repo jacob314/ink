@@ -87,23 +87,47 @@ function scrollReducer(state: ScrollState, action: ScrollAction): ScrollState {
 
 function ScrollableContent({
 	useStatic = false,
-}: {readonly useStatic?: boolean} = {}) {
+	initialItems = 0,
+	initialScroll = 0,
+	exportFilename = '',
+}: {
+	readonly useStatic?: boolean;
+	readonly initialItems?: number;
+	readonly initialScroll?: number;
+	readonly exportFilename?: string;
+} = {}) {
 	const [listItems, setListItems] = useState<Array<{id: number; text: string}>>(
-		[],
+		() => {
+			if (initialItems <= 0) return [];
+
+			const items = [];
+			for (let i = 0; i < initialItems * 20; i++) {
+				items.push({
+					id: i,
+					text: `Line ${i} - ${'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat(
+						(i * 5) % 6,
+					)}`,
+				});
+			}
+
+			return items;
+		},
 	);
 	const [showBorder, setShowBorder] = useState(false);
 	const [showScrollbar, setShowScrollbar] = useState(true);
 	const [stableScrollback, setStableScrollback] = useState(true);
 	const [isFooterExpanded, setIsFooterExpanded] = useState(true);
 	const [shouldScrollToBottom, setShouldScrollToBottom] = useState(false);
-	const [scrollState, dispatch] = useReducer(scrollReducer, {scrollTop: 0});
+	const [scrollState, dispatch] = useReducer(scrollReducer, {
+		scrollTop: initialScroll,
+	});
 	const {scrollTop} = scrollState;
 	const {columns: terminalColumns, rows: terminalRows} = useTerminalSize();
 	const {stdout} = useStdout();
 	const columns = (stdout as any)?.columns ?? terminalColumns;
 	const rows = (stdout as any)?.rows ?? terminalRows;
 	const reference = useRef<DOMElement>(null);
-	const {options, setOptions} = useContext(AppContext);
+	const {options, setOptions, dumpCurrentFrame} = useContext(AppContext);
 
 	const [size, setSize] = useState({
 		innerHeight: 0,
@@ -140,6 +164,22 @@ function ScrollableContent({
 		}
 	});
 
+	useEffect(() => {
+		if (exportFilename) {
+			const timeout = setTimeout(() => {
+				dumpCurrentFrame(exportFilename);
+				console.log('Dumping frame to:', exportFilename);
+				setTimeout(() => {
+					// eslint-disable-next-line unicorn/no-process-exit
+					process.exit(0);
+				}, 500);
+			}, 100);
+			return () => {
+				clearTimeout(timeout);
+			};
+		}
+	}, [exportFilename, dumpCurrentFrame]);
+
 	const boxWidth = columns;
 	const contentWidth = showBorder ? boxWidth - 2 : boxWidth;
 
@@ -148,139 +188,168 @@ function ScrollableContent({
 		for (let i = 0; i < listItems.length; i += 20) {
 			const headerIndex = i;
 			const headerId = headerIndex / 20;
-			const headerText = `Header ${headerId}`;
-			const stickyHeaderText = `Header ${headerId} (sticky top)`;
-			const stickyFooterText = `Footer ${headerId} (sticky bottom)`;
+			const headerText = `Sticky Header ${headerId}`;
+			const stickyHeaderText = `Sticky Header ${headerId} (sticky top)`;
+			const stickyFooterText = `Sticky Footer ${headerId} (sticky bottom)`;
 
 			const itemsInGroup = listItems.slice(headerIndex, headerIndex + 10);
 			const nextItems = listItems.slice(headerIndex + 10, headerIndex + 20);
 
 			if (headerId % 3 === 0) {
-				elements.push(
-					<StaticRender
-						key={`static-inner-scroll-${headerId}`}
-						width={contentWidth}
+				const innerBox = (
+					<Box
+						key={`inner-scroll-${headerId}`}
+						flexDirection="column"
+						height={10}
+						overflowY="scroll"
+						borderStyle="single"
+						borderColor="cyan"
+						scrollTop={40}
 					>
-						<Box
-							key={`inner-scroll-${headerId}`}
-							flexDirection="column"
-							height={10}
-							overflowY="scroll"
-							borderStyle="single"
-							borderColor="cyan"
-							scrollTop={40}
-						>
-							<Box flexShrink={0} flexDirection="column" overflow="hidden">
-								<Box
-									sticky
-									stickyChildren={
-										<Box
-											opaque
-											width="100%"
-											borderBottom
-											borderStyle="single"
-											borderColor="cyan"
-										>
-											<Text color="cyan">Inner Sticky {headerId}</Text>
-										</Box>
-									}
-								>
-									<Box width="100%">
-										<Text color="cyan">Inner Header {headerId}</Text>
-									</Box>
-								</Box>
-								{Array.from({length: 100}).map((_, index) => {
-									const value = index + 1;
-									return (
-										<Text key={value} color="gray">
-											{value}
+						<Box flexShrink={0} flexDirection="column" overflow="hidden">
+							<Box
+								sticky
+								stickyChildren={
+									<Box
+										opaque
+										borderBottom
+										width="100%"
+										borderStyle="single"
+										borderColor="cyan"
+									>
+										<Text color="cyan">
+											Sticky Inner Header {headerId} (sticky top)
 										</Text>
-									);
-								})}
+									</Box>
+								}
+							>
+								<Box width="100%">
+									<Text color="cyan">Sticky Inner Header {headerId}</Text>
+								</Box>
 							</Box>
+							{Array.from({length: 100}).map((_, index) => {
+								const value = index + 1;
+								return (
+									<Text key={value} color="gray">
+										[body line for header {headerId}] {value}
+									</Text>
+								);
+							})}
 						</Box>
-					</StaticRender>,
+					</Box>
+				);
+
+				elements.push(
+					useStatic ? (
+						<StaticRender
+							key={`static-inner-scroll-${headerId}`}
+							width={contentWidth}
+						>
+							{innerBox}
+						</StaticRender>
+					) : (
+						innerBox
+					),
 				);
 
 				continue;
 			}
 
-			elements.push(
-				<StaticRender key={`static-group-${headerId}`} width={contentWidth}>
-					<Box key={`group-${headerId}`} flexDirection="column">
-						<Box
-							sticky
-							width="100%"
-							stickyChildren={
-								<Box
-									opaque
-									borderBottom
-									flexDirection="column"
-									width="100%"
-									paddingLeft={1}
-									borderStyle="round"
-									borderColor="#000000"
-									paddingX={0}
-									borderTop={false}
-									borderLeft={false}
-									borderRight={false}
-								>
-									<Text>{stickyHeaderText}</Text>
-								</Box>
-							}
-						>
+			const groupInnerBox = (
+				<Box key={`group-${headerId}`} flexDirection="column">
+					<Box
+						sticky
+						width="100%"
+						stickyChildren={
 							<Box
+								opaque
+								borderBottom
 								flexDirection="column"
 								width="100%"
 								paddingLeft={1}
+								borderStyle="round"
+								borderColor="#000000"
 								paddingX={0}
+								borderTop={false}
+								borderLeft={false}
+								borderRight={false}
 							>
-								<Text>{headerText}</Text>
+								<Text>{stickyHeaderText}</Text>
 							</Box>
-						</Box>
-						{itemsInGroup.map(item => (
-							<Box key={item.id} paddingLeft={1}>
-								<Text color="#999999">{item.text}</Text>
-							</Box>
-						))}
+						}
+					>
 						<Box
-							sticky="bottom"
+							flexDirection="column"
 							width="100%"
-							stickyChildren={
-								<Box
-									opaque
-									borderTop
-									flexDirection="column"
-									width="100%"
-									paddingLeft={1}
-									borderStyle="round"
-									borderColor="#000000"
-									paddingX={0}
-									borderBottom={false}
-									borderLeft={false}
-									borderRight={false}
-								>
-									<Text>{stickyFooterText}</Text>
-								</Box>
-							}
+							paddingLeft={1}
+							paddingX={0}
 						>
-							<Box paddingLeft={1}>
-								<Text>
-									last element matching header (footer naturally here)
-								</Text>
-							</Box>
+							<Text>{headerText}</Text>
 						</Box>
 					</Box>
-				</StaticRender>,
-				...nextItems.map(item => (
-					<StaticRender key={`static-item-${item.id}`} width={contentWidth}>
-						<Box key={item.id} flexDirection="column" paddingLeft={1}>
-							<Text key={item.id} color="#999999">
-								{item.text}
+					{itemsInGroup.map(item => (
+						<Box key={item.id} paddingLeft={1}>
+							<Text color="#999999">
+								[body line for header {headerId}] {item.text}
 							</Text>
 						</Box>
+					))}
+					<Box
+						sticky="bottom"
+						width="100%"
+						stickyChildren={
+							<Box
+								opaque
+								borderTop
+								flexDirection="column"
+								width="100%"
+								paddingLeft={1}
+								borderStyle="round"
+								borderColor="#000000"
+								paddingX={0}
+								borderBottom={false}
+								borderLeft={false}
+								borderRight={false}
+							>
+								<Text>{stickyFooterText}</Text>
+							</Box>
+						}
+					>
+						<Box paddingLeft={1}>
+							<Text>
+								[body line for header {headerId}] last element matching header
+								(sticky footer naturally here)
+							</Text>
+						</Box>
+					</Box>
+				</Box>
+			);
+
+			elements.push(
+				useStatic ? (
+					<StaticRender key={`static-group-${headerId}`} width={contentWidth}>
+						{groupInnerBox}
 					</StaticRender>
-				)),
+				) : (
+					groupInnerBox
+				),
+				...nextItems.map(item => {
+					const itemInnerBox = (
+						<Box key={item.id} flexDirection="column" paddingLeft={1}>
+							<Text key={item.id} color="#999999">
+								[body line for header {headerId}] {item.text}
+							</Text>
+						</Box>
+					);
+
+					return useStatic ? (
+						<StaticRender key={`static-item-${item.id}`} width={contentWidth}>
+							{itemInnerBox}
+						</StaticRender>
+					) : (
+						itemInnerBox
+					);
+				}),
 			);
 		}
 
@@ -356,6 +425,11 @@ function ScrollableContent({
 			return;
 		}
 
+		if (input === 'e') {
+			dumpCurrentFrame('snapshot.json');
+			return;
+		}
+
 		if (key.upArrow || input === 'w') {
 			dispatch({type: 'up', delta: input === 'w' ? 100 : key.shift ? 10 : 1});
 			return;
@@ -379,6 +453,7 @@ function ScrollableContent({
 			<Box flexDirection="column" width="100%" height="100%">
 				<Box
 					ref={reference}
+					overflowToBackbuffer
 					flexGrow={1}
 					borderStyle={showBorder ? 'round' : undefined}
 					flexShrink={1}
@@ -387,7 +462,6 @@ function ScrollableContent({
 					overflowX="hidden"
 					overflowY="scroll"
 					paddingRight={0}
-					overflowToBackbuffer={true}
 					scrollTop={scrollTop}
 					stableScrollback={
 						stableScrollback && !options?.isAlternateBufferEnabled

@@ -2,8 +2,8 @@ import process from 'node:process';
 import ansiEscapes from 'ansi-escapes';
 import {type StyledChar, styledCharsToString} from '@alcalzone/ansi-tokenize';
 import {debugLog} from '../debug-log.js';
-import {debugWorker} from './render-worker.js';
 import colorize from '../colorize.js';
+import {debugWorker} from './render-worker.js';
 import {
 	enterSynchronizedOutput,
 	exitSynchronizedOutput,
@@ -653,14 +653,15 @@ export class TerminalWriter {
 				continue;
 			}
 
-			if (!linesEqual(this.screen[r]?.styledChars, lines[index]?.styledChars)) {
-				if (debugWorker) {
-					debugLog(
-						`Line ${r} on screen inconsistent between terminalWriter and ground truth. Expected "${styledCharsToString(
-							lines[index]?.styledChars ?? [],
-						)}", got "${styledCharsToString(this.screen[r]?.styledChars ?? [])}"`,
-					);
-				}
+			if (
+				!linesEqual(this.screen[r]?.styledChars, lines[index]?.styledChars) &&
+				debugWorker
+			) {
+				debugLog(
+					`Line ${r} on screen inconsistent between terminalWriter and ground truth. Expected "${styledCharsToString(
+						lines[index]?.styledChars ?? [],
+					)}", got "${styledCharsToString(this.screen[r]?.styledChars ?? [])}"`,
+				);
 			}
 		}
 
@@ -668,14 +669,15 @@ export class TerminalWriter {
 		const backbufferLimit = lines.length - this.rows;
 
 		for (let i = 0; i < backbufferLimit; i++) {
-			if (!linesEqual(this.backbuffer[i]?.styledChars, lines[i]?.styledChars)) {
-				if (debugWorker) {
-					debugLog(
-						`Line ${i} in backbuffer inconsistent. Expected "${styledCharsToString(
-							lines[i]?.styledChars ?? [],
-						)}", got "${styledCharsToString(this.backbuffer[i]?.styledChars ?? [])}"`,
-					);
-				}
+			if (
+				!linesEqual(this.backbuffer[i]?.styledChars, lines[i]?.styledChars) &&
+				debugWorker
+			) {
+				debugLog(
+					`Line ${i} in backbuffer inconsistent. Expected "${styledCharsToString(
+						lines[i]?.styledChars ?? [],
+					)}", got "${styledCharsToString(this.backbuffer[i]?.styledChars ?? [])}"`,
+				);
 			}
 		}
 	}
@@ -795,6 +797,7 @@ export class TerminalWriter {
 				`[terminal-writer] SCROLLING LINES ${start}-${end} by ${linesToScroll} ${direction}`,
 			);
 		}
+
 		this.setScrollRegion(start, end);
 		const scrollAreaHeight = end - start;
 

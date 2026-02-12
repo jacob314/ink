@@ -33,11 +33,11 @@ export class Serializer {
 
 	private writeStyledChar(char: StyledChar) {
 		let flags = 0;
-		if (char.fullWidth) flags |= FULL_WIDTH_MASK;
-		if (char.styles.length > 0) flags |= HAS_STYLES_MASK;
+		if (char?.fullWidth) flags |= FULL_WIDTH_MASK;
+		if (char?.styles?.length > 0) flags |= HAS_STYLES_MASK;
 
 		this.writeUInt8(flags);
-		this.writeString(char.value);
+		this.writeString(char?.value || '');
 
 		if (flags & HAS_STYLES_MASK) {
 			this.writeUInt8(char.styles.length);

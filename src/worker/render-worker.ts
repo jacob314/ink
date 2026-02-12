@@ -1,8 +1,17 @@
+import fs from 'node:fs';
 import process from 'node:process';
 import ansiEscapes from 'ansi-escapes';
 import {debugLog, clearDebugLog} from '../debug-log.js';
 import {type RegionNode, type RegionUpdate, type Region} from '../output.js';
 import {type InkOptions} from '../components/AppContext.js';
+import {Serializer} from '../serialization.js';
+import {
+	saveReplay,
+	createHumanReadableDump,
+	type ReplayData,
+	type LoadedReplayData,
+	serializeReplayUpdate,
+} from './replay.js';
 import {
 	type RenderLine,
 	TerminalWriter,
@@ -144,6 +153,82 @@ export class TerminalBufferWorker {
 		});
 	}
 
+	getSceneManager() {
+		return this.sceneManager;
+	}
+
+	public dumpCurrentFrame(filename: string) {
+		const {root} = this.sceneManager;
+		if (!root) return;
+
+		const serializer = new Serializer();
+		const updates: RegionUpdate[] = [];
+		for (const region of this.sceneManager.regions.values()) {
+			const update: RegionUpdate = {
+				id: region.id,
+				x: region.x,
+				y: region.y,
+				width: region.width,
+				height: region.height,
+				scrollTop: region.scrollTop,
+				scrollLeft: region.scrollLeft,
+				scrollHeight: region.scrollHeight,
+				scrollWidth: region.scrollWidth,
+				isScrollable: region.isScrollable,
+				isVerticallyScrollable: region.isVerticallyScrollable,
+				isHorizontallyScrollable: region.isHorizontallyScrollable,
+				scrollbarVisible: region.scrollbarVisible,
+				overflowToBackbuffer: region.overflowToBackbuffer,
+				marginRight: region.marginRight,
+				marginBottom: region.marginBottom,
+				scrollbarThumbColor: region.scrollbarThumbColor,
+				stickyHeaders: region.stickyHeaders,
+				lines: {
+					updates: [
+						{
+							start: 0,
+							end: region.lines.length,
+							data: serializer.serialize(region.lines) as unknown as Uint8Array,
+						},
+					],
+					totalLength: region.lines.length,
+				},
+			};
+			updates.push(update);
+		}
+
+		const data: ReplayData = {
+			type: 'single',
+			columns: this.columns,
+			rows: this.rows,
+			frames: [
+				{
+					tree: root,
+					updates: updates.map(u => serializeReplayUpdate(u, serializer)),
+					cursorPosition: this.cursorPosition,
+				},
+			],
+		};
+
+		saveReplay(data, filename);
+
+		const loadedData: LoadedReplayData = {
+			type: 'single',
+			columns: this.columns,
+			rows: this.rows,
+			frames: [
+				{
+					tree: root,
+					updates,
+					cursorPosition: this.cursorPosition,
+				},
+			],
+		};
+
+		const dumpText = createHumanReadableDump(loadedData);
+		fs.writeFileSync(filename + '.dump.txt', dumpText);
+	}
+
 	updateOptions(options: InkOptions) {
 		if (
 			options.isAlternateBufferEnabled !== undefined &&
@@ -255,6 +340,7 @@ export class TerminalBufferWorker {
 						`[RENDER-WORKER] Interrupting animation for jump at update #${this.updatesReceived}\n`,
 					);
 				}
+
 				this.animationController.jumpToTargets(this.sceneManager.regions);
 			}
 
@@ -370,6 +456,7 @@ export class TerminalBufferWorker {
 		if (debugWorker) {
 			debugLog(`XXXXX [RENDER-WORKER] Resize to ${columns}x${rows}\n`);
 		}
+
 		this.primaryTerminalWriter.resize(columns, rows);
 		this.alternateTerminalWriter.resize(columns, rows);
 		this.terminalWriter.backbufferDirtyCurrentFrame = true;
@@ -381,6 +468,7 @@ export class TerminalBufferWorker {
 		if (clearDebugLogPerFrame) {
 			clearDebugLog();
 		}
+
 		if (this.terminalWriter.fullRenderTimeout) {
 			clearTimeout(this.terminalWriter.fullRenderTimeout);
 			this.terminalWriter.fullRenderTimeout = undefined;
@@ -423,6 +511,7 @@ export class TerminalBufferWorker {
 		if (clearDebugLogPerFrame) {
 			clearDebugLog();
 		}
+
 		const rootRegion = this.sceneManager.getRootRegion();
 		if (!rootRegion) {
 			return;
@@ -453,6 +542,7 @@ export class TerminalBufferWorker {
 						`[RENDER-WORKER] Root region ${rootRegion.id} pushing ${linesToScroll} lines to backbuffer (cameraY: ${cameraY}, maxPushed: ${maxPushed})`,
 					);
 				}
+
 				scrolledToBackbuffer.set(rootRegion.id, linesToScroll);
 				this.appendToBackbuffer(maxPushed, linesToScroll);
 				this.scrollOptimizer.updateMaxPushed(rootRegion.id, cameraY);
@@ -515,6 +605,7 @@ export class TerminalBufferWorker {
 								`[RENDER-WORKER] Region ${op.regionId} scrolling ${op.linesToScroll} lines to backbuffer`,
 							);
 						}
+
 						scrolledToBackbuffer.set(
 							op.regionId,
 							(scrolledToBackbuffer.get(op.regionId) ?? 0) + op.linesToScroll,
@@ -595,6 +686,7 @@ export class TerminalBufferWorker {
 			if (debugWorker) {
 				debugLog(`[RENDER-WORKER] Stopping animation: all targets reached\n`);
 			}
+
 			this.animationController.stop();
 		}
 	}
@@ -741,7 +833,6 @@ export class TerminalBufferWorker {
 						clip: myClip,
 						offsetY: absY - (region.scrollTop ?? 0),
 						offsetX: absX - (region.scrollLeft ?? 0),
-						isExpanded: inExpandedContext,
 					},
 					options,
 				);
@@ -917,11 +1008,10 @@ export class TerminalBufferWorker {
 				const x2 = Math.min(myClip.x + myClip.w, clip.x + clip.w);
 				const y2 = Math.min(myClip.y + myClip.h, clip.y + clip.h);
 
-				if (x2 > x1 && y2 > y1) {
-					myClip = {x: x1, y: y1, w: x2 - x1, h: y2 - y1};
-				} else {
-					myClip = {x: 0, y: 0, w: 0, h: 0};
-				}
+				myClip =
+					x2 > x1 && y2 > y1
+						? {x: x1, y: y1, w: x2 - x1, h: y2 - y1}
+						: {x: 0, y: 0, w: 0, h: 0};
 			}
 
 			const indent = '  '.repeat(depth);
@@ -965,7 +1055,9 @@ export class TerminalBufferWorker {
 					const scrollTop = region.scrollTop ?? 0;
 					const isStuckState =
 						header.type === 'bottom'
-							? Math.round(header.naturalRow - scrollTop + header.lines.length) >=
+							? Math.round(
+									header.naturalRow - scrollTop + header.lines.length,
+								) >=
 								Math.round(
 									header.y + (header.stuckLines ?? header.lines).length,
 								)
@@ -985,7 +1077,7 @@ export class TerminalBufferWorker {
 					);
 
 					const linesToLog = isStuck
-						? header.stuckLines ?? header.lines
+						? (header.stuckLines ?? header.lines)
 						: header.lines;
 					debugLog(
 						`${indent}    Header Content (${isStuck ? 'STUCK' : 'NATURAL'}):`,

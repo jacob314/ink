@@ -85,6 +85,15 @@ const main = () => {
 				break;
 			}
 
+			case 'dumpCurrentFrame': {
+				if (buffer) {
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+					buffer.dumpCurrentFrame(message.filename);
+				}
+
+				break;
+			}
+
 			default: {
 				break;
 			}

@@ -27,6 +27,7 @@ type Props = {
 	readonly selection?: Selection;
 	readonly options: InkOptions;
 	readonly setOptions: (options: Partial<InkOptions>) => void;
+	readonly dumpCurrentFrame: (filename: string) => void;
 };
 
 type State = {
@@ -79,6 +80,7 @@ export default class App extends PureComponent<Props, State> {
 					selection: this.props.selection,
 					options: this.props.options,
 					setOptions: this.props.setOptions,
+					dumpCurrentFrame: this.props.dumpCurrentFrame,
 				}}
 			>
 				<StdinContext.Provider

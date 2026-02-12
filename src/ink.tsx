@@ -556,6 +556,7 @@ export default class Ink {
 					selection={this.selection}
 					options={this.optionsState}
 					setOptions={this.setOptions}
+					dumpCurrentFrame={this.dumpCurrentFrame}
 					onExit={this.unmount}
 					onRerender={this.onRerender}
 				>
@@ -671,6 +672,16 @@ export default class Ink {
 		});
 
 		return this.exitPromise;
+	}
+
+	dumpCurrentFrame(filename: string): void {
+		if (this.terminalBuffer) {
+			this.terminalBuffer.dumpCurrentFrame(filename);
+		} else {
+			console.error(
+				'dumpCurrentFrame is only supported when terminalBuffer is true',
+			);
+		}
 	}
 
 	clear(): void {

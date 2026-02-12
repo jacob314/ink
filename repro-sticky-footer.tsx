@@ -1,8 +1,7 @@
-
 import React from 'react';
 import {render, Box, Text, useApp} from './src/index.js';
 
-const App = () => {
+function App() {
 	const {exit} = useApp();
 
 	return (
@@ -17,7 +16,13 @@ const App = () => {
 					{Array.from({length: 20}).map((_, i) => (
 						<Text key={i}>Line {i}</Text>
 					))}
-					<Box sticky="bottom" opaque width="100%" borderStyle="single" borderColor="red">
+					<Box
+						opaque
+						sticky="bottom"
+						width="100%"
+						borderStyle="single"
+						borderColor="red"
+					>
 						<Text color="red">STICKY FOOTER</Text>
 					</Box>
 				</Box>
@@ -25,8 +30,8 @@ const App = () => {
 			<Text>Press Ctrl+C to exit</Text>
 		</Box>
 	);
-};
+}
 
 render(<App />, {
-    terminalBuffer: true
+	terminalBuffer: true,
 });

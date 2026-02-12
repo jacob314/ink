@@ -52,7 +52,9 @@ test('TerminalBufferWorker should not animate scroll on first frame of a region'
 	});
 
 	// Create a region with 20 lines of content
-	const lines = Array.from({length: 20}, (_, i) => createStyledLine(`Line ${i + 1}`));
+	const lines = Array.from({length: 20}, (_, i) =>
+		createStyledLine(`Line ${i + 1}`),
+	);
 	const data = serializer.serialize(lines);
 
 	// First update for this region, setting scrollTop to 10
@@ -86,7 +88,11 @@ test('TerminalBufferWorker should not animate scroll on first frame of a region'
 	// If it didn't animate, it should show "Line 11" at the top (scrollTop 10)
 	// If it DID animate, it would show "Line 1" at the top (scrollTop 0) because animation hasn't ticked yet
 	const firstLine = term.buffer.active.getLine(0)?.translateToString(true);
-	t.is(firstLine, 'Line 11', 'Should immediately show Line 11 on the first frame');
+	t.is(
+		firstLine,
+		'Line 11',
+		'Should immediately show Line 11 on the first frame',
+	);
 
 	// Clear output for next render
 	output = '';
@@ -105,7 +111,17 @@ test('TerminalBufferWorker should not animate scroll on first frame of a region'
 	// This time it SHOULD animate. So after one render() call (without animation ticks),
 	// it should still show "Line 11".
 	// If it animated, it shouldn't have jumped to Line 16 (scrollTop 15) yet.
-	const firstLineAfterUpdate = term.buffer.active.getLine(0)?.translateToString(true);
-	t.not(firstLineAfterUpdate, 'Line 16', 'Should NOT have jumped to Line 16 immediately on subsequent update');
-	t.is(firstLineAfterUpdate, 'Line 11', 'Should still show Line 11 before animation ticks');
+	const firstLineAfterUpdate = term.buffer.active
+		.getLine(0)
+		?.translateToString(true);
+	t.not(
+		firstLineAfterUpdate,
+		'Line 16',
+		'Should NOT have jumped to Line 16 immediately on subsequent update',
+	);
+	t.is(
+		firstLineAfterUpdate,
+		'Line 11',
+		'Should still show Line 11 before animation ticks',
+	);
 });
