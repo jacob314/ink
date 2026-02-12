@@ -157,118 +157,129 @@ function ScrollableContent({
 
 			if (headerId % 3 === 0) {
 				elements.push(
-					<Box
-						key={`inner-scroll-${headerId}`}
-						flexDirection="column"
-						height={10}
-						overflowY="scroll"
-						borderStyle="single"
-						borderColor="cyan"
-						scrollTop={40}
+					<StaticRender
+						key={`static-inner-scroll-${headerId}`}
+						width={contentWidth}
 					>
-						<Box flexShrink={0} flexDirection="column">
-							<Box
-								sticky
-								stickyChildren={
-									<Box
-										opaque
-										width="100%"
-										borderBottom
-										borderStyle="single"
-										borderColor="cyan"
-									>
-										<Text color="cyan">Inner Sticky {headerId}</Text>
+						<Box
+							key={`inner-scroll-${headerId}`}
+							flexDirection="column"
+							height={10}
+							overflowY="scroll"
+							borderStyle="single"
+							borderColor="cyan"
+							scrollTop={40}
+						>
+							<Box flexShrink={0} flexDirection="column" overflow="hidden">
+								<Box
+									sticky
+									stickyChildren={
+										<Box
+											opaque
+											width="100%"
+											borderBottom
+											borderStyle="single"
+											borderColor="cyan"
+										>
+											<Text color="cyan">Inner Sticky {headerId}</Text>
+										</Box>
+									}
+								>
+									<Box width="100%">
+										<Text color="cyan">Inner Header {headerId}</Text>
 									</Box>
-								}
-							>
-								<Box width="100%">
-									<Text color="cyan">Inner Header {headerId}</Text>
 								</Box>
+								{Array.from({length: 100}).map((_, index) => {
+									const value = index + 1;
+									return (
+										<Text key={value} color="gray">
+											{value}
+										</Text>
+									);
+								})}
 							</Box>
-							{Array.from({length: 100}).map((_, index) => {
-								const value = index + 1;
-								return (
-									<Text key={value} color="gray">
-										{value}
-									</Text>
-								);
-							})}
 						</Box>
-					</Box>,
+					</StaticRender>,
 				);
 
 				continue;
 			}
 
 			elements.push(
-				<Box key={`group-${headerId}`} flexDirection="column">
-					<Box
-						sticky
-						width="100%"
-						stickyChildren={
-							<Box
-								opaque
-								borderBottom
-								flexDirection="column"
-								width="100%"
-								paddingLeft={1}
-								borderStyle="round"
-								borderColor="#000000"
-								paddingX={0}
-								borderTop={false}
-								borderLeft={false}
-								borderRight={false}
-							>
-								<Text>{stickyHeaderText}</Text>
-							</Box>
-						}
-					>
+				<StaticRender key={`static-group-${headerId}`} width={contentWidth}>
+					<Box key={`group-${headerId}`} flexDirection="column">
 						<Box
-							flexDirection="column"
+							sticky
 							width="100%"
-							paddingLeft={1}
-							paddingX={0}
+							stickyChildren={
+								<Box
+									opaque
+									borderBottom
+									flexDirection="column"
+									width="100%"
+									paddingLeft={1}
+									borderStyle="round"
+									borderColor="#000000"
+									paddingX={0}
+									borderTop={false}
+									borderLeft={false}
+									borderRight={false}
+								>
+									<Text>{stickyHeaderText}</Text>
+								</Box>
+							}
 						>
-							<Text>{headerText}</Text>
-						</Box>
-					</Box>
-					{itemsInGroup.map(item => (
-						<Box key={item.id} paddingLeft={1}>
-							<Text color="#999999">{item.text}</Text>
-						</Box>
-					))}
-					<Box
-						sticky="bottom"
-						width="100%"
-						stickyChildren={
 							<Box
-								opaque
-								borderTop
 								flexDirection="column"
 								width="100%"
 								paddingLeft={1}
-								borderStyle="round"
-								borderColor="#000000"
 								paddingX={0}
-								borderBottom={false}
-								borderLeft={false}
-								borderRight={false}
 							>
-								<Text>{stickyFooterText}</Text>
+								<Text>{headerText}</Text>
 							</Box>
-						}
-					>
-						<Box paddingLeft={1}>
-							<Text>last element matching header (footer naturally here)</Text>
+						</Box>
+						{itemsInGroup.map(item => (
+							<Box key={item.id} paddingLeft={1}>
+								<Text color="#999999">{item.text}</Text>
+							</Box>
+						))}
+						<Box
+							sticky="bottom"
+							width="100%"
+							stickyChildren={
+								<Box
+									opaque
+									borderTop
+									flexDirection="column"
+									width="100%"
+									paddingLeft={1}
+									borderStyle="round"
+									borderColor="#000000"
+									paddingX={0}
+									borderBottom={false}
+									borderLeft={false}
+									borderRight={false}
+								>
+									<Text>{stickyFooterText}</Text>
+								</Box>
+							}
+						>
+							<Box paddingLeft={1}>
+								<Text>
+									last element matching header (footer naturally here)
+								</Text>
+							</Box>
 						</Box>
 					</Box>
-				</Box>,
+				</StaticRender>,
 				...nextItems.map(item => (
-					<Box key={item.id} flexDirection="column" paddingLeft={1}>
-						<Text key={item.id} color="#999999">
-							{item.text}
-						</Text>
-					</Box>
+					<StaticRender key={`static-item-${item.id}`} width={contentWidth}>
+						<Box key={item.id} flexDirection="column" paddingLeft={1}>
+							<Text key={item.id} color="#999999">
+								{item.text}
+							</Text>
+						</Box>
+					</StaticRender>
 				)),
 			);
 		}
@@ -285,16 +296,7 @@ function ScrollableContent({
 			</Box>
 		);
 
-		return useStatic ? (
-			<StaticRender
-				key={`static-${contentWidth}-${listItems.length}`}
-				width={contentWidth}
-			>
-				{content}
-			</StaticRender>
-		) : (
-			content
-		);
+		return content;
 	}, [contentWidth, useStatic, listItems]);
 
 	useInput((input, key) => {
@@ -355,14 +357,14 @@ function ScrollableContent({
 		}
 
 		if (key.upArrow || input === 'w') {
-			dispatch({type: 'up', delta: input === 'w' ? 30 : key.shift ? 10 : 1});
+			dispatch({type: 'up', delta: input === 'w' ? 100 : key.shift ? 10 : 1});
 			return;
 		}
 
 		if (key.downArrow || input === 's') {
 			dispatch({
 				type: 'down',
-				delta: input === 's' ? 30 : key.shift ? 10 : 1,
+				delta: input === 's' ? 100 : key.shift ? 10 : 1,
 				max: Math.max(
 					0,
 					sizeReference.current.scrollHeight -
