@@ -1,3 +1,4 @@
+import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import Yoga, {type Node as YogaNode} from 'yoga-layout';
 import {
 	measureStyledChars,
@@ -22,9 +23,41 @@ export type ElementNames =
 	| 'ink-root'
 	| 'ink-box'
 	| 'ink-text'
-	| 'ink-virtual-text';
+	| 'ink-virtual-text'
+	| 'ink-static-render';
 
 export type NodeNames = ElementNames | TextName;
+
+export type CachedRender = {
+	output: StyledChar[][];
+	width: number;
+	height: number;
+	key?: unknown;
+	stickyHeaders?: StickyHeader[];
+};
+
+export type StickyHeader = {
+	nodeId: number;
+	node?: DOMElement;
+	lines: StyledChar[][]; // Natural (scrolling) version
+	stuckLines?: StyledChar[][]; // Alternate (sticky) version
+	styledOutput: StyledChar[][]; // Legacy property
+	x: number; // Stuck X position relative to region
+	y: number; // Stuck Y position relative to region
+	naturalRow: number; // Natural row offset relative to content start
+	startRow: number; // Content-relative start row (same as naturalRow)
+	endRow: number; // Content-relative end row
+	scrollContainerId: number | string;
+	isStuckOnly: boolean; // If true, natural 'lines' are already in background content
+
+	// Metadata for cached headers
+	relativeX?: number; // Relative to StaticRender
+	relativeY?: number; // Relative to StaticRender
+	height?: number;
+	parentRelativeTop?: number;
+	parentHeight?: number;
+	type?: 'top' | 'bottom';
+};
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export type DOMElement = {
@@ -34,6 +67,7 @@ export type DOMElement = {
 	internal_transform?: OutputTransformer;
 	internal_terminalCursorFocus?: boolean;
 	internal_terminalCursorPosition?: number;
+	cachedRender?: CachedRender;
 
 	internal_accessibility?: {
 		role?:
@@ -75,11 +109,13 @@ export type DOMElement = {
 	onRender?: () => void;
 	onImmediateRender?: () => void;
 	internal_scrollState?: ScrollState;
-	internalSticky?: boolean;
+	internalSticky?: boolean | 'top' | 'bottom';
 	internalStickyAlternate?: boolean;
 	internal_opaque?: boolean;
+	internal_scrollbar?: boolean;
 	resizeObservers?: Set<ResizeObserver>;
 	internal_lastMeasuredSize?: {width: number; height: number};
+	internal_id: number;
 } & InkNode;
 
 export type ScrollState = {
@@ -108,6 +144,8 @@ export type DOMNode<T = {nodeName: NodeNames}> = T extends {
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export type DOMNodeAttribute = boolean | string | number;
 
+let idCounter = 0;
+
 export const createNode = (nodeName: ElementNames): DOMElement => {
 	const node: DOMElement = {
 		nodeName,
@@ -120,6 +158,9 @@ export const createNode = (nodeName: ElementNames): DOMElement => {
 		internal_accessibility: {},
 		internalSticky: false,
 		internalStickyAlternate: false,
+		internal_opaque: false,
+		internal_scrollbar: true,
+		internal_id: idCounter++,
 	};
 
 	if (nodeName === 'ink-text') {
@@ -191,16 +232,16 @@ export const removeChildNode = (
 	node: DOMElement,
 	removeNode: DOMNode,
 ): void => {
+	const index = node.childNodes.indexOf(removeNode);
+	if (index >= 0) {
+		node.childNodes.splice(index, 1);
+	}
+
 	if (removeNode.yogaNode) {
 		removeNode.parentNode?.yogaNode?.removeChild(removeNode.yogaNode);
 	}
 
 	removeNode.parentNode = undefined;
-
-	const index = node.childNodes.indexOf(removeNode);
-	if (index >= 0) {
-		node.childNodes.splice(index, 1);
-	}
 
 	if (node.nodeName === 'ink-text' || node.nodeName === 'ink-virtual-text') {
 		markNodeAsDirty(node);
@@ -277,10 +318,68 @@ const findClosestYogaNode = (node?: DOMNode): YogaNode | undefined => {
 	return node.yogaNode ?? findClosestYogaNode(node.parentNode);
 };
 
+export const setCachedRender = (
+	node: DOMElement,
+	cachedRender: CachedRender | undefined,
+) => {
+	if (node.cachedRender === cachedRender) {
+		return;
+	}
+
+	node.cachedRender = cachedRender;
+
+	if (node.yogaNode) {
+		if (cachedRender) {
+			node.yogaNode.setWidth(cachedRender.width);
+			node.yogaNode.setHeight(cachedRender.height);
+
+			while (node.yogaNode.getChildCount() > 0) {
+				node.yogaNode.removeChild(node.yogaNode.getChild(0));
+			}
+		} else {
+			if (node.style.width === undefined) {
+				node.yogaNode.setWidthAuto();
+			} else if (typeof node.style.width === 'number') {
+				node.yogaNode.setWidth(node.style.width);
+			} else if (typeof node.style.width === 'string') {
+				node.yogaNode.setWidthPercent(Number.parseInt(node.style.width, 10));
+			} else {
+				node.yogaNode.setWidthAuto();
+			}
+
+			if (node.style.height === undefined) {
+				node.yogaNode.setHeightAuto();
+			} else if (typeof node.style.height === 'number') {
+				node.yogaNode.setHeight(node.style.height);
+			} else if (typeof node.style.height === 'string') {
+				node.yogaNode.setHeightPercent(Number.parseInt(node.style.height, 10));
+			} else {
+				node.yogaNode.setHeightAuto();
+			}
+
+			for (const [index, child] of node.childNodes.entries()) {
+				if (child.yogaNode) {
+					node.yogaNode.insertChild(child.yogaNode, index);
+				}
+			}
+		}
+	}
+};
+
 const markNodeAsDirty = (node?: DOMNode): void => {
 	// Mark closest Yoga node as dirty to measure text dimensions again
 	const yogaNode = findClosestYogaNode(node);
 	yogaNode?.markDirty();
+
+	let current: DOMNode | undefined = node;
+
+	while (current) {
+		if (current.nodeName === 'ink-static-render') {
+			setCachedRender(current, undefined);
+		}
+
+		current = current.parentNode;
+	}
 };
 
 export const setTextNodeValue = (node: TextNode, text: string): void => {

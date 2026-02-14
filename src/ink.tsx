@@ -17,11 +17,13 @@ import * as dom from './dom.js';
 import logUpdate, {type LogUpdate, positionImeCursor} from './log-update.js';
 import instances from './instances.js';
 import App from './components/App.js';
+import {type InkOptions} from './components/AppContext.js';
 import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
 import {calculateScroll} from './scroll.js';
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
 import ResizeObserver, {ResizeObserverEntry} from './resize-observer.js';
 import {Selection} from './selection.js';
+import TerminalBuffer from './terminal-buffer.js';
 
 const noop = () => {};
 
@@ -48,10 +50,15 @@ export type Options = {
 	maxFps?: number;
 	alternateBuffer?: boolean;
 	alternateBufferAlreadyActive?: boolean;
+	isAlternateBufferEnabled?: boolean;
+	stickyHeadersInBackbuffer?: boolean;
 	incrementalRendering?: boolean;
 	debugRainbow?: boolean;
+	animatedScroll?: boolean;
 	selectionStyle?: (char: StyledChar) => StyledChar;
 	standardReactLayoutTiming?: boolean;
+	renderProcess?: boolean;
+	terminalBuffer?: boolean;
 };
 
 const rainbowColors = [
@@ -78,6 +85,8 @@ export default class Ink {
 	private readonly throttledLog: LogUpdate;
 	private readonly isScreenReaderEnabled: boolean;
 	private readonly selection: Selection;
+	private readonly terminalBuffer?: TerminalBuffer;
+	private optionsState: InkOptions;
 
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	private isUnmounted: boolean;
@@ -86,6 +95,7 @@ export default class Ink {
 	private lastCursorPosition?: {row: number; col: number} | undefined;
 	private readonly container: FiberRoot;
 	private readonly rootNode: dom.DOMElement;
+	private node: ReactNode;
 	// This variable is used only in debug mode to store full static output
 	// so that it's rerendered every time, not just new static parts, like in non-debug mode
 	private fullStaticOutput: string;
@@ -99,6 +109,13 @@ export default class Ink {
 		autoBind(this);
 
 		this.options = options;
+
+		this.optionsState = {
+			isAlternateBufferEnabled:
+				options.isAlternateBufferEnabled ?? options.alternateBuffer,
+			stickyHeadersInBackbuffer: options.stickyHeadersInBackbuffer,
+			animatedScroll: options.animatedScroll,
+		};
 
 		this.rootNode = dom.createNode('ink-root');
 		this.rootNode.onComputeLayout = this.calculateLayout;
@@ -137,6 +154,23 @@ export default class Ink {
 		this.rootNode.onImmediateRender = options.standardReactLayoutTiming
 			? renderMethod
 			: this.onRender; // Original unthrottled method
+		this.rootNode.onImmediateRender = renderMethod;
+
+		if (options.renderProcess === true || options.terminalBuffer === true) {
+			this.terminalBuffer = new TerminalBuffer(
+				options.stdout.columns ?? 80,
+				options.stdout.rows ?? 24,
+				{
+					debugRainbowEnabled: options.debugRainbow,
+					renderInProcess: !options.renderProcess && options.terminalBuffer,
+					stdout: options.stdout,
+					isAlternateBufferEnabled: options.isAlternateBufferEnabled,
+					stickyHeadersInBackbuffer: options.stickyHeadersInBackbuffer,
+					animatedScroll: options.animatedScroll,
+				},
+			);
+		}
+
 		this.log = logUpdate.create(options.stdout, {
 			alternateBuffer: options.alternateBuffer,
 			alternateBufferAlreadyActive: options.alternateBufferAlreadyActive,
@@ -219,7 +253,7 @@ export default class Ink {
 	calculateLayout = () => {
 		// The 'columns' property can be undefined or 0 when not using a TTY.
 		// In that case we fall back to 80.
-		const terminalWidth = this.options.stdout.columns || 80;
+		const terminalWidth = this.options.stdout.columns ?? 80;
 
 		this.rootNode.yogaNode!.setWidth(terminalWidth);
 
@@ -298,15 +332,35 @@ export default class Ink {
 			this.frameIndex++;
 		}
 
-		const {output, outputHeight, staticOutput, styledOutput, cursorPosition} =
-			render(
-				this.rootNode,
-				this.isScreenReaderEnabled,
-				this.selection,
-				this.options.selectionStyle,
-			);
+		const {
+			output,
+			outputHeight,
+			staticOutput,
+			styledOutput,
+			cursorPosition,
+			root,
+		} = render(this.rootNode, {
+			isScreenReaderEnabled: this.isScreenReaderEnabled,
+			selection: this.selection,
+			selectionStyle: this.options.selectionStyle,
+			skipScrollbars: Boolean(this.terminalBuffer),
+		});
 
 		this.options.onRender?.({renderTime: performance.now() - startTime});
+
+		if (this.terminalBuffer && root) {
+			const appliedChanges = this.terminalBuffer.update(
+				0,
+				Number.MAX_SAFE_INTEGER,
+				root,
+				cursorPosition,
+			);
+			if (appliedChanges) {
+				void this.terminalBuffer.render();
+			}
+
+			return;
+		}
 
 		// If <Static> output isn't empty, it means new children have been added to it
 		const hasStaticOutput = staticOutput && staticOutput !== '\n';
@@ -330,7 +384,7 @@ export default class Ink {
 			return;
 		}
 
-		if (this.options.alternateBuffer) {
+		if (this.optionsState.isAlternateBufferEnabled) {
 			if (hasStaticOutput) {
 				this.fullStaticOutput += staticOutput;
 			}
@@ -361,7 +415,7 @@ export default class Ink {
 				return;
 			}
 
-			const terminalWidth = this.options.stdout.columns || 80;
+			const terminalWidth = this.options.stdout.columns ?? 80;
 
 			const wrappedOutput = wrapAnsi(output, terminalWidth, {
 				trim: false,
@@ -455,7 +509,23 @@ export default class Ink {
 		this.onRender();
 	};
 
+	setOptions = (options: Partial<InkOptions>) => {
+		this.optionsState = {
+			...this.optionsState,
+			...options,
+		};
+
+		this.terminalBuffer?.updateOptions(this.optionsState);
+
+		this.lastOutput = '';
+		if (this.node) {
+			this.render(this.node);
+		}
+	};
+
 	render(node: ReactNode): void {
+		this.node = node;
+
 		const tree = (
 			<AccessibilityContext.Provider
 				value={{isScreenReaderEnabled: this.isScreenReaderEnabled}}
@@ -468,6 +538,8 @@ export default class Ink {
 					writeToStderr={this.writeToStderr}
 					exitOnCtrlC={this.options.exitOnCtrlC}
 					selection={this.selection}
+					options={this.optionsState}
+					setOptions={this.setOptions}
 					onExit={this.unmount}
 					onRerender={this.onRerender}
 				>
@@ -553,6 +625,10 @@ export default class Ink {
 			this.options.stdout.write(this.lastOutput + '\n');
 		} else if (!this.options.debug) {
 			this.log.done();
+
+			if (this.terminalBuffer) {
+				this.terminalBuffer.done();
+			}
 		}
 
 		this.isUnmounted = true;

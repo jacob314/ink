@@ -114,6 +114,31 @@ export type RenderOptions = {
 	 * @default false
 	 */
 	standardReactLayoutTiming?: boolean;
+
+	/**
+	 * Use a separate process-based rendering mode so that render updates are
+	 * not blocked by the main thread
+	 *
+	 * @default false
+	 */
+	renderProcess?: boolean;
+
+	/**
+	 * Use the terminal buffer logic (backbuffer tracking) for rendering.
+	 * If `renderProcess` is also true, this is implied.
+	 * If `renderProcess` is false and this is true, the terminal buffer logic runs in the main process.
+	 *
+	 * @default false
+	 */
+	terminalBuffer?: boolean;
+
+	/**
+	 * If true, the worker-based renderer will automatically scroll all scrollable regions
+	 * by 1 line every 16ms. This is only supported when using `terminalBuffer` or `renderProcess`.
+	 *
+	 * @default false
+	 */
+	animatedScroll?: boolean;
 };
 
 export type Instance = {
@@ -169,6 +194,9 @@ const render = (
 		alternateBufferAlreadyActive: false,
 		incrementalRendering: false,
 		standardReactLayoutTiming: false,
+		renderProcess: false,
+		terminalBuffer: false,
+		animatedScroll: false,
 		...getOptions(options),
 	};
 
