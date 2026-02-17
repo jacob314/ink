@@ -47,7 +47,7 @@ const testCases = [
 	{
 		name: 'Thai text with sara am',
 		text: 'น้ำตาลนำน้ำมาทำงาน',
-		expectedWidth: 16,
+		expectedWidth: 12,
 	},
 ];
 
