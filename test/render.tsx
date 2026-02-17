@@ -319,22 +319,23 @@ test.serial('throttle renders to maxFps', t => {
 
 test.serial('outputs renderTime when onRender is passed', async t => {
 	const metrics: RenderMetrics[] = [];
-	let resolve: () => void = () => {};
-	let renderPromise = new Promise<void>(r => {
-		resolve = r;
+	let resolveRender: () => void = () => {};
+	let renderPromise = new Promise<void>(resolve => {
+		resolveRender = resolve;
 	});
 
 	const onRender = (m: RenderMetrics) => {
 		metrics.push(m);
-		const currentResolve = resolve;
-		renderPromise = new Promise<void>(r => {
-			resolve = r;
+		const currentResolve = resolveRender;
+		renderPromise = new Promise<void>(resolve => {
+			resolveRender = resolve;
 		});
 		currentResolve();
 	};
 
 	const waitForRender = async (predicate: () => boolean) => {
 		while (!predicate()) {
+			// eslint-disable-next-line no-await-in-loop
 			await renderPromise;
 		}
 	};
@@ -356,7 +357,7 @@ test.serial('outputs renderTime when onRender is passed', async t => {
 	);
 
 	await waitForRender(() => metrics.some(m => m.output.includes('Test')));
-	t.true(metrics.some(m => m.staticOutput && m.staticOutput.includes('Static 1')));
+	t.true(metrics.some(m => m.staticOutput?.includes('Static 1')));
 
 	// Manual rerender
 	metrics.length = 0;

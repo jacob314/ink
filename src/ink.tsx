@@ -634,7 +634,11 @@ export default class Ink {
 		}
 	}
 
-	private callOnRender(startTime: number, output: string, staticOutput?: string) {
+	private callOnRender(
+		startTime: number,
+		output: string,
+		staticOutput?: string,
+	) {
 		this.options.onRender?.({
 			renderTime: performance.now() - startTime,
 			output,
