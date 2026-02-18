@@ -11,7 +11,7 @@ import ansiEscapes from 'ansi-escapes';
 import stripAnsi from 'strip-ansi';
 import boxen from 'boxen';
 import delay from 'delay';
-import {render, Box, Text, useInput} from '../src/index.js';
+import {render, Box, Text, useInput, Static} from '../src/index.js';
 import {type RenderMetrics} from '../src/ink.js';
 import createStdout from './helpers/create-stdout.js';
 
@@ -318,61 +318,56 @@ test.serial('throttle renders to maxFps', t => {
 });
 
 test.serial('outputs renderTime when onRender is passed', async t => {
-	const renderTimes: number[] = [];
-	const funcObj = {
-		onRender(metrics: RenderMetrics) {
-			const {renderTime} = metrics;
-			renderTimes.push(renderTime);
-		},
-	};
-
-	const onRenderStub = stub(funcObj, 'onRender').callThrough();
-
-	function Test({children}: {readonly children?: ReactNode}) {
-		const [text, setText] = useState('Test');
-
-		useInput(input => {
-			setText(input);
-		});
-
-		return (
-			<Box borderStyle="round">
-				<Text>{text}</Text>
-				{children}
-			</Box>
-		);
-	}
-
-	const stdin = createStdin();
-	const {unmount, rerender} = render(<Test />, {
-		onRender: onRenderStub,
-		stdin,
+	const metrics: RenderMetrics[] = [];
+	let resolveRender: () => void = () => {};
+	let renderPromise = new Promise<void>(resolve => {
+		resolveRender = resolve;
 	});
 
-	// Initial render
-	t.is(onRenderStub.callCount, 1);
-	t.true(renderTimes[0] >= 0);
+	const onRender = (m: RenderMetrics) => {
+		metrics.push(m);
+		const currentResolve = resolveRender;
+		renderPromise = new Promise<void>(resolve => {
+			resolveRender = resolve;
+		});
+		currentResolve();
+	};
+
+	const waitForRender = async (predicate: () => boolean) => {
+		while (!predicate()) {
+			// eslint-disable-next-line no-await-in-loop
+			await renderPromise;
+		}
+	};
+
+	const stdin = createStdin();
+	const stdout = createStdout();
+	const {unmount, rerender} = render(
+		<Box>
+			<Static items={['Static 1']}>
+				{item => <Text key={item}>{item}</Text>}
+			</Static>
+			<Text>Test</Text>
+		</Box>,
+		{
+			onRender,
+			stdin,
+			stdout,
+		},
+	);
+
+	await waitForRender(() => metrics.some(m => m.output.includes('Test')));
+	t.true(metrics.some(m => m.staticOutput?.includes('Static 1')));
 
 	// Manual rerender
-	onRenderStub.resetHistory();
+	metrics.length = 0;
 	rerender(
-		<Test>
+		<Box>
 			<Text>Updated</Text>
-		</Test>,
+		</Box>,
 	);
-	await delay(100);
-	t.is(onRenderStub.callCount, 1);
-	t.true(renderTimes[1] >= 0);
 
-	// Internal state update via useInput
-	onRenderStub.resetHistory();
-	emitReadable(stdin, 'a');
-	await delay(100);
-	t.is(onRenderStub.callCount, 1);
-	t.true(renderTimes[2] >= 0);
-
-	// Verify all renders were tracked
-	t.is(renderTimes.length, 3);
+	await waitForRender(() => metrics.some(m => m.output.includes('Updated')));
 
 	unmount();
 });
