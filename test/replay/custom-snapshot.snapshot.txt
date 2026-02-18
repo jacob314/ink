@@ -1,0 +1,248 @@
+Line 1
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ ┌──────────────────────────────────┐
+│ │Sticky Inner Header 0 (sticky top)│
+│ └──────────────────────────────────┘
+│[body line for header 0] 43                                                                                                                                          │
+│[body line for header 0] 44                                                                                                                                          │
+│[body line for header 0] 45                                                                                                                                          │
+│[body line for header 0] 46                                                                                                                                          │
+│[body line for header 0] 47                                                                                                                                          │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+ Sticky Header 1
+ [body line for header 1] Line 20 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 1] Line 21 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. 
+ [body line for header 1] Line 22 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 1] Line 23 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 1] Line 24 - 
+ [body line for header 1] Line 25 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 1] Line 26 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 1] Line 27 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. 
+ [body line for header 1] Line 28 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 1] Line 29 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 1] last element matching header (sticky footer naturally here)
+ [body line for header 1] Line 30 - 
+ [body line for header 1] Line 31 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 1] Line 32 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 1] Line 33 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. 
+ [body line for header 1] Line 34 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 1] Line 35 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 1] Line 36 - 
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ Sticky Footer 10 (sticky bottom)
+ [body line for header 1] Line 38 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 1] Line 39 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. 
+ Sticky Header 2
+ [body line for header 2] Line 40 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 2] Line 41 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 2] Line 42 - 
+ [body line for header 2] Line 43 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 2] Line 44 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 2] Line 45 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. 
+ [body line for header 2] Line 46 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 2] Line 47 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 2] Line 48 - 
+ [body line for header 2] Line 49 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 2] last element matching header (sticky footer naturally here)
+ [body line for header 2] Line 50 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 2] Line 51 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. 
+ [body line for header 2] Line 52 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 2] Line 53 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 2] Line 54 - 
+ [body line for header 2] Line 55 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 2] Line 56 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 2] Line 57 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. 
+ [body line for header 2] Line 58 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 2] Line 59 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ ┌──────────────────────────────────┐
+│ │Sticky Inner Header 3 (sticky top)│
+│ └──────────────────────────────────┘
+│[body line for header 3] 43                                                                                                                                          │
+│[body line for header 3] 44                                                                                                                                          │
+│[body line for header 3] 45                                                                                                                                          │
+│[body line for header 3] 46                                                                                                                                          │
+│[body line for header 3] 47                                                                                                                                          │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+ Sticky Header 4
+ [body line for header 4] Line 80 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 4] Line 81 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. 
+ [body line for header 4] Line 82 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 4] Line 83 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 4] Line 84 - 
+ [body line for header 4] Line 85 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 4] Line 86 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 4] Line 87 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. 
+ [body line for header 4] Line 88 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 4] Line 89 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 4] last element matching header (sticky footer naturally here)
+ [body line for header 4] Line 90 - 
+ [body line for header 4] Line 91 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 4] Line 92 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 4] Line 93 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. 
+ [body line for header 4] Line 94 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 4] Line 95 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 4] Line 96 - 
+ [body line for header 4] Line 97 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 4] Line 98 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 4] Line 99 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+ sit amet, consectetur adipiscing elit. 
+ Sticky Header 5
+ [body line for header 5] Line 100 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 5] Line 101 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 5] Line 102 - 
+ [body line for header 5] Line 103 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 5] Line 104 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 5] Line 105 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 5] Line 106 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 5] Line 107 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 5] Line 108 - 
+ [body line for header 5] Line 109 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 5] last element matching header (sticky footer naturally here)
+ [body line for header 5] Line 110 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 5] Line 111 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 5] Line 112 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 5] Line 113 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 5] Line 114 - 
+ [body line for header 5] Line 115 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 5] Line 116 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 5] Line 117 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 5] Line 118 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 5] Line 119 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ ┌──────────────────────────────────┐
+│ │Sticky Inner Header 6 (sticky top)│
+│ └──────────────────────────────────┘
+│[body line for header 6] 43                                                                                                                                          │
+│[body line for header 6] 44                                                                                                                                          │
+│[body line for header 6] 45                                                                                                                                          │
+│[body line for header 6] 46                                                                                                                                          │
+│[body line for header 6] 47                                                                                                                                          │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+ Sticky Header 7
+ [body line for header 7] Line 140 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 7] Line 141 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 7] Line 142 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 7] Line 143 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 7] Line 144 - 
+ [body line for header 7] Line 145 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 7] Line 146 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 7] Line 147 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 7] Line 148 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 7] Line 149 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 7] last element matching header (sticky footer naturally here)
+ [body line for header 7] Line 150 - 
+ [body line for header 7] Line 151 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 7] Line 152 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 7] Line 153 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 7] Line 154 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 7] Line 155 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 7] Line 156 - 
+ [body line for header 7] Line 157 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 7] Line 158 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 7] Line 159 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. 
+ Sticky Header 8
+
+ [body line for header 8] Line 161 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 8] Line 162 - 
+ [body line for header 8] Line 163 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 8] Line 164 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 8] Line 165 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 8] Line 166 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 8] Line 167 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 8] Line 168 - 
+ [body line for header 8] Line 169 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 8] last element matching header (sticky footer naturally here)
+ [body line for header 8] Line 170 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 8] Line 171 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit.                                                                                                                         █
+ [body line for header 8] Line 172 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.                █
+ [body line for header 8] Line 173 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 8] Line 174 - 
+ [body line for header 8] Line 175 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 8] Line 176 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 8] Line 177 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 8] Line 178 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 8] Line 179 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ ┌──────────────────────────────────┐
+│ │Sticky Inner Header 9 (sticky top)│
+│ └──────────────────────────────────┘
+│[body line for header 9] 43                                                                                                                                         █│
+│[body line for header 9] 44                                                                                                                                          │
+│[body line for header 9] 45                                                                                                                                          │
+│[body line for header 9] 46                                                                                                                                          │
+│[body line for header 9] 47                                                                                                                                          │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+ Sticky Header 10
+ [body line for header 10] Line 200 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+ [body line for header 10] Line 201 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+ dolor sit amet, consectetur adipiscing elit. 
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ Sticky Footer 10 (sticky bottom)
+This is a demo showing a scrollable box with sticky headers.
+Press up/down arrow or w/s to scroll vertically (w/s for 30 lines, Shift for 10).
+Press 'space' to add a block, 'c' to clear list.
+Press 'b' to toggle scrollbar (on), 't' to toggle border.
+Press 'f' to collapse footer, 'a' to toggle alternate buffer + sticky headers (current: off)
+Press 'h' to toggle sticky headers in backbuffer (current: off)
+Press 'v' to toggle stable scrollback (on)
+ScrollTop: 200, Size: 40, Content: 742, Added Scroll: 0

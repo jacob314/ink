@@ -15,10 +15,12 @@ import {
 	setTextNodeValue,
 	createNode,
 	setAttribute,
+	setCachedRender,
 	type DOMNodeAttribute,
 	type TextNode,
 	type ElementNames,
 	type DOMElement,
+	type CachedRender,
 } from './dom.js';
 import applyStyles, {type Styles} from './styles.js';
 import {type OutputTransformer} from './render-node-to-output.js';
@@ -185,7 +187,7 @@ export default createReconciler<
 			}
 
 			if (key === 'sticky') {
-				node.internalSticky = value as boolean;
+				node.internalSticky = value as boolean | 'top' | 'bottom';
 				continue;
 			}
 
@@ -217,6 +219,16 @@ export default createReconciler<
 
 			if (key === 'opaque') {
 				node.internal_opaque = value as boolean;
+				continue;
+			}
+
+			if (key === 'scrollbar') {
+				node.internal_scrollbar = value as boolean;
+				continue;
+			}
+
+			if (key === 'cachedRender') {
+				setCachedRender(node, value as CachedRender);
 				continue;
 			}
 
@@ -302,7 +314,7 @@ export default createReconciler<
 				}
 
 				if (key === 'sticky') {
-					node.internalSticky = Boolean(value);
+					node.internalSticky = value as boolean | 'top' | 'bottom';
 					continue;
 				}
 
@@ -328,6 +340,16 @@ export default createReconciler<
 
 				if (key === 'opaque') {
 					node.internal_opaque = Boolean(value);
+					continue;
+				}
+
+				if (key === 'scrollbar') {
+					node.internal_scrollbar = value as boolean;
+					continue;
+				}
+
+				if (key === 'cachedRender') {
+					setCachedRender(node, value as CachedRender);
 					continue;
 				}
 
