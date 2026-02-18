@@ -838,8 +838,8 @@ export class TerminalBufferWorker {
 		let myClip = {
 			x: absX,
 			y: absY,
-			w: Math.round(region.width),
-			h: Math.round(height),
+			w: Math.round(region.width) - (region.marginRight ?? 0),
+			h: Math.round(height) - (region.marginBottom ?? 0),
 		};
 		if (clip) {
 			const x1 = Math.max(myClip.x, clip.x);

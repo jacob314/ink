@@ -1,8 +1,8 @@
 Line 1
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ ┌──────────────────────────────────┐
-│ │Sticky Inner Header 0 (sticky top)│
-│ └──────────────────────────────────┘
+│ ┌──────────────────────────────────┐                                                                                                                                │
+│ │Sticky Inner Header 0 (sticky top)│                                                                                                                                │
+│ └──────────────────────────────────┘                                                                                                                                │
 │[body line for header 0] 43                                                                                                                                          │
 │[body line for header 0] 44                                                                                                                                          │
 │[body line for header 0] 45                                                                                                                                          │
@@ -74,9 +74,9 @@ Line 1
  [body line for header 2] Line 58 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
  [body line for header 2] Line 59 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ ┌──────────────────────────────────┐
-│ │Sticky Inner Header 3 (sticky top)│
-│ └──────────────────────────────────┘
+│ ┌──────────────────────────────────┐                                                                                                                                │
+│ │Sticky Inner Header 3 (sticky top)│                                                                                                                                │
+│ └──────────────────────────────────┘                                                                                                                                │
 │[body line for header 3] 43                                                                                                                                          │
 │[body line for header 3] 44                                                                                                                                          │
 │[body line for header 3] 45                                                                                                                                          │
@@ -148,9 +148,9 @@ Line 1
  [body line for header 5] Line 118 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
  [body line for header 5] Line 119 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ ┌──────────────────────────────────┐
-│ │Sticky Inner Header 6 (sticky top)│
-│ └──────────────────────────────────┘
+│ ┌──────────────────────────────────┐                                                                                                                                │
+│ │Sticky Inner Header 6 (sticky top)│                                                                                                                                │
+│ └──────────────────────────────────┘                                                                                                                                │
 │[body line for header 6] 43                                                                                                                                          │
 │[body line for header 6] 44                                                                                                                                          │
 │[body line for header 6] 45                                                                                                                                          │
@@ -222,9 +222,9 @@ Line 1
  [body line for header 8] Line 178 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
  [body line for header 8] Line 179 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ ┌──────────────────────────────────┐
-│ │Sticky Inner Header 9 (sticky top)│
-│ └──────────────────────────────────┘
+│ ┌──────────────────────────────────┐                                                                                                                                │
+│ │Sticky Inner Header 9 (sticky top)│                                                                                                                                │
+│ └──────────────────────────────────┘                                                                                                                                │
 │[body line for header 9] 43                                                                                                                                         █│
 │[body line for header 9] 44                                                                                                                                          │
 │[body line for header 9] 45                                                                                                                                          │
