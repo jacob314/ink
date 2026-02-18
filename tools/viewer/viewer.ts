@@ -40,6 +40,11 @@ const main = async () => {
 			description: 'Enable alternate buffer mode',
 			default: false,
 		})
+		.option('backbufferUpdateDelay', {
+			type: 'number',
+			description:
+				'Delay in ms before rerendering the backbuffer if it is dirty',
+		})
 		.option('maxScrollback', {
 			type: 'number',
 			description: 'Max scrollback length',
@@ -60,6 +65,7 @@ const main = async () => {
 	const exitImmediately = argv.exit;
 	const isAlternateBufferEnabled = argv.alternateBuffer;
 	const maxScrollbackLength = argv.maxScrollback;
+	const {backbufferUpdateDelay} = argv;
 
 	const replayData = loadReplay(fs.readFileSync(filename, 'utf8'));
 
@@ -77,7 +83,7 @@ const main = async () => {
 
 	// Initialize the worker out of process
 	const workerUrl = new URL(
-		'../../src/worker/worker-entry.js',
+		'../../src/worker/worker-entry.ts',
 		import.meta.url,
 	);
 
@@ -122,6 +128,7 @@ const main = async () => {
 		stickyHeadersInBackbuffer,
 		animatedScroll,
 		maxScrollbackLength,
+		backbufferUpdateDelay,
 	});
 
 	let currentFrame = 0;
