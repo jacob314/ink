@@ -4,6 +4,8 @@ import type {StyledChar, AnsiCode} from '@alcalzone/ansi-tokenize';
 // Constants for binary format
 const hasStylesMask = 0b0000_0010;
 const fullWidthMask = 0b0000_0001;
+const isRepeatedCharMask = 0b0000_0100;
+const isAsciiMixedMask = 0b0000_1000;
 
 export class Serializer {
 	// eslint-disable-next-line @typescript-eslint/ban-types
@@ -86,11 +88,35 @@ export class Serializer {
 		this.writeUint32(spanLength);
 
 		const firstChar = line[start]!;
+		let isRepeatedChar = true;
+		let isAsciiMixed = true;
+
+		for (let i = start; i < end; i++) {
+			const char = line[i]!;
+			if (
+				char.value !== firstChar.value ||
+				char.fullWidth !== firstChar.fullWidth
+			) {
+				isRepeatedChar = false;
+			}
+
+			if (char.fullWidth || char.value.length !== 1) {
+				isAsciiMixed = false;
+			}
+		}
 
 		let flags = 0;
 		if (firstChar.styles.length > 0) {
 			// eslint-disable-next-line no-bitwise
 			flags |= hasStylesMask;
+		}
+
+		if (isRepeatedChar) {
+			// eslint-disable-next-line no-bitwise
+			flags |= isRepeatedCharMask;
+		} else if (isAsciiMixed) {
+			// eslint-disable-next-line no-bitwise
+			flags |= isAsciiMixedMask;
 		}
 
 		this.writeUint8(flags);
@@ -103,16 +129,34 @@ export class Serializer {
 			}
 		}
 
-		for (let i = start; i < end; i++) {
-			const char = line[i]!;
+		if (isRepeatedChar) {
 			let charFlags = 0;
-			if (char.fullWidth) {
+			if (firstChar.fullWidth) {
 				// eslint-disable-next-line no-bitwise
 				charFlags |= fullWidthMask;
 			}
 
 			this.writeUint8(charFlags);
-			this.writeString(char.value || '');
+			this.writeString(firstChar.value || '');
+		} else if (isAsciiMixed) {
+			let concat = '';
+			for (let i = start; i < end; i++) {
+				concat += line[i]!.value;
+			}
+
+			this.writeString(concat);
+		} else {
+			for (let i = start; i < end; i++) {
+				const char = line[i]!;
+				let charFlags = 0;
+				if (char.fullWidth) {
+					// eslint-disable-next-line no-bitwise
+					charFlags |= fullWidthMask;
+				}
+
+				this.writeUint8(charFlags);
+				this.writeString(char.value || '');
+			}
 		}
 	}
 
@@ -181,6 +225,10 @@ export class Deserializer {
 		const flags = this.readUint8();
 		// eslint-disable-next-line no-bitwise
 		const hasStyles = (flags & hasStylesMask) !== 0;
+		// eslint-disable-next-line no-bitwise
+		const isRepeatedChar = (flags & isRepeatedCharMask) !== 0;
+		// eslint-disable-next-line no-bitwise
+		const isAsciiMixed = (flags & isAsciiMixedMask) !== 0;
 
 		const styles: AnsiCode[] = [];
 
@@ -191,18 +239,45 @@ export class Deserializer {
 			}
 		}
 
-		for (let i = 0; i < spanLength; i++) {
+		if (isRepeatedChar) {
 			const charFlags = this.readUint8();
 			// eslint-disable-next-line no-bitwise
 			const fullWidth = (charFlags & fullWidthMask) !== 0;
 			const value = this.readString();
 
-			line.push({
-				type: 'char',
-				value,
-				fullWidth,
-				styles,
-			});
+			for (let i = 0; i < spanLength; i++) {
+				line.push({
+					type: 'char',
+					value,
+					fullWidth,
+					styles,
+				});
+			}
+		} else if (isAsciiMixed) {
+			const value = this.readString();
+
+			for (let i = 0; i < spanLength; i++) {
+				line.push({
+					type: 'char',
+					value: value[i]!,
+					fullWidth: false,
+					styles,
+				});
+			}
+		} else {
+			for (let i = 0; i < spanLength; i++) {
+				const charFlags = this.readUint8();
+				// eslint-disable-next-line no-bitwise
+				const fullWidth = (charFlags & fullWidthMask) !== 0;
+				const value = this.readString();
+
+				line.push({
+					type: 'char',
+					value,
+					fullWidth,
+					styles,
+				});
+			}
 		}
 	}
 
