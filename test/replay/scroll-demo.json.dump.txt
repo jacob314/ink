@@ -21,7 +21,6 @@
           "width": 181,
           "height": 77,
           "isScrollable": false,
-          "stickyHeaders": [],
           "lines": {
             "totalLength": 77,
             "updates": [
@@ -109,7 +108,8 @@
                 ]
               }
             ]
-          }
+          },
+          "stickyHeaders": []
         },
         {
           "id": 412,
@@ -128,25 +128,6 @@
           "overflowToBackbuffer": true,
           "marginRight": 0,
           "marginBottom": 0,
-          "stickyHeaders": [
-            {
-              "nodeId": 9,
-              "lines": [
-                "This is the first line of box 1"
-              ],
-              "styledOutput": [
-                "This is the first line of box 1"
-              ],
-              "x": 1,
-              "y": 0,
-              "naturalRow": 7,
-              "startRow": 7,
-              "endRow": 8,
-              "scrollContainerId": 412,
-              "isStuckOnly": false,
-              "type": "top"
-            }
-          ],
           "lines": {
             "totalLength": 280,
             "updates": [
@@ -437,7 +418,26 @@
                 ]
               }
             ]
-          }
+          },
+          "stickyHeaders": [
+            {
+              "nodeId": 9,
+              "lines": [
+                "This is the first line of box 1"
+              ],
+              "styledOutput": [
+                "This is the first line of box 1"
+              ],
+              "x": 1,
+              "y": 0,
+              "naturalRow": 7,
+              "startRow": 7,
+              "endRow": 8,
+              "scrollContainerId": 412,
+              "isStuckOnly": false,
+              "type": "top"
+            }
+          ]
         }
       ]
     }

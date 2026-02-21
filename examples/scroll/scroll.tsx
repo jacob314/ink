@@ -130,11 +130,15 @@ function ScrollableContent({
 	rows: customRows,
 	itemCount = 30,
 	useStatic: customUseStatic = false,
+	initialScrollTop = 0,
+	exportFilename = '',
 }: {
 	readonly columns?: number;
 	readonly rows?: number;
 	readonly itemCount?: number;
 	readonly useStatic?: boolean;
+	readonly initialScrollTop?: number;
+	readonly exportFilename?: string;
 } = {}) {
 	const useStatic = customUseStatic ?? false;
 
@@ -175,7 +179,7 @@ function ScrollableContent({
 
 	const [scrollMode, setScrollMode] = useState<ScrollMode>('vertical');
 	const [scrollState, dispatch] = useReducer(scrollReducer, {
-		scrollTop: 0,
+		scrollTop: initialScrollTop,
 		scrollLeft: 0,
 	});
 	const {scrollTop, scrollLeft} = scrollState;
@@ -183,11 +187,27 @@ function ScrollableContent({
 		ScrollbarBoundingBox | undefined
 	>(undefined);
 	const [showScrollbars, setShowScrollbars] = useState(true);
-	const {options, setOptions} = useContext(AppContext);
+	const {options, setOptions, dumpCurrentFrame} = useContext(AppContext);
 	const reference = useRef<DOMElement>(null);
 	const {columns: terminalColumns, rows: terminalRows} = useTerminalSize();
 	const columns = customColumns ?? terminalColumns;
 	const termRows = customRows ?? terminalRows;
+
+	useEffect(() => {
+		if (exportFilename) {
+			const timeout = setTimeout(() => {
+				dumpCurrentFrame(exportFilename);
+				console.log('Dumping frame to:', exportFilename);
+				setTimeout(() => {
+					// eslint-disable-next-line unicorn/no-process-exit
+					process.exit(0);
+				}, 500);
+			}, 100);
+			return () => {
+				clearTimeout(timeout);
+			};
+		}
+	}, [exportFilename, dumpCurrentFrame]);
 
 	const [size, setSize] = useState({
 		innerHeight: 0,
