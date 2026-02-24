@@ -254,6 +254,10 @@ export default class Ink {
 	}
 
 	resized = () => {
+		const terminalWidth = this.options.stdout.columns ?? 80;
+		const terminalHeight = this.options.stdout.rows ?? 24;
+
+		this.terminalBuffer?.resize(terminalWidth, terminalHeight);
 		this.calculateLayout();
 		this.onRender();
 	};

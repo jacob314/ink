@@ -25,6 +25,7 @@ export default class TerminalBuffer {
 	private readonly worker?: ChildProcess;
 	private readonly workerInstance?: TerminalBufferWorker;
 	private readonly resizeListener?: () => void;
+	private readonly stdout: NodeJS.WriteStream;
 
 	// Track previous state of all regions by ID
 	private lastRegions = new Map<string | number, Region>();
@@ -33,8 +34,8 @@ export default class TerminalBuffer {
 	private lastOptions?: InkOptions;
 	private optionsChanged = false;
 
-	private readonly columns: number;
-	private readonly rows: number;
+	private columns: number;
+	private rows: number;
 
 	private recording: 'none' | 'single' | 'sequence' = 'none';
 	private recordedFrames: Array<{
@@ -71,10 +72,13 @@ export default class TerminalBuffer {
 		};
 		this.columns = columns;
 		this.rows = rows;
+
+		this.stdout = options?.stdout ?? process.stdout;
+
 		if (options?.renderInProcess) {
 			this.workerInstance = new TerminalBufferWorker(columns, rows, {
 				debugRainbowEnabled: options?.debugRainbowEnabled,
-				stdout: options?.stdout,
+				stdout: this.stdout,
 				isAlternateBufferEnabled: options?.isAlternateBufferEnabled,
 				stickyHeadersInBackbuffer: options?.stickyHeadersInBackbuffer,
 				animatedScroll: options?.animatedScroll,
@@ -85,21 +89,6 @@ export default class TerminalBuffer {
 					options?.forceScrollToBottomOnBackbufferRefresh,
 			});
 			void this.workerInstance.render();
-
-			this.resizeListener = () => {
-				if (
-					this.workerInstance &&
-					process.stdout.columns &&
-					process.stdout.rows
-				) {
-					this.workerInstance.resize(
-						process.stdout.columns,
-						process.stdout.rows,
-					);
-				}
-			};
-
-			process.stdout.on('resize', this.resizeListener);
 		} else {
 			const workerUrl = new URL('worker/worker-entry.js', import.meta.url);
 
@@ -129,6 +118,37 @@ export default class TerminalBuffer {
 				forceScrollToBottomOnBackbufferRefresh:
 					options?.forceScrollToBottomOnBackbufferRefresh,
 			});
+		}
+
+		this.resizeListener = () => {
+			if (this.stdout.columns && this.stdout.rows) {
+				this.resize(this.stdout.columns, this.stdout.rows);
+			}
+		};
+
+		this.stdout.on('resize', this.resizeListener);
+	}
+
+	resize(columns: number, rows: number) {
+		if (this.columns === columns && this.rows === rows) {
+			return;
+		}
+
+		this.columns = columns;
+		this.rows = rows;
+
+		if (this.workerInstance) {
+			this.workerInstance.resize(columns, rows);
+		} else if (this.worker?.connected) {
+			try {
+				this.worker.send({
+					type: 'resize',
+					columns,
+					rows,
+				});
+			} catch (error) {
+				console.error('Failed to send resize message to worker:', error);
+			}
 		}
 	}
 
@@ -378,7 +398,7 @@ export default class TerminalBuffer {
 		}
 
 		if (this.resizeListener) {
-			process.stdout.off('resize', this.resizeListener);
+			this.stdout.off('resize', this.resizeListener);
 		}
 	}
 

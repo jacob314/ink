@@ -87,6 +87,14 @@ const main = () => {
 				break;
 			}
 
+			case 'resize': {
+				if (buffer) {
+					buffer.resize(message.columns as number, message.rows as number);
+				}
+
+				break;
+			}
+
 			case 'dumpCurrentFrame': {
 				if (buffer) {
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
