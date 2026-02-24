@@ -10,10 +10,14 @@ const createStdout = (columns?: number): FakeStdout => {
 	const stdout = new EventEmitter() as unknown as FakeStdout;
 	stdout.columns = columns ?? 100;
 
-	const write = spy();
-	stdout.write = write;
+	let output = '';
+	const write = spy((data: string) => {
+		output += data;
+		return true;
+	});
+	stdout.write = write as unknown as typeof stdout.write;
 
-	stdout.get = () => (write.lastCall?.args[0] as string) ?? '';
+	stdout.get = () => output;
 
 	return stdout;
 };

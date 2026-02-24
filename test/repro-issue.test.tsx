@@ -155,5 +155,5 @@ test('repro issue: sticky headers and spurious renders', async t => {
 		'Header 4 (sticky top) should not be visible when stickyHeadersInBackbuffer is off',
 	);
 
-	env.unmount();
+	await env.unmount();
 });

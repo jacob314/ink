@@ -718,6 +718,7 @@ function renderNodeToOutput(
 						marginBottom,
 						scrollbarThumbColor: node.style.scrollbarThumbColor,
 						nodeId: node.internal_id,
+						node,
 						stableScrollback: node.style.stableScrollback,
 					});
 

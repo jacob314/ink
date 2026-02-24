@@ -224,7 +224,7 @@ const render = (
 	return {
 		rerender: instance.render,
 		unmount() {
-			instance.unmount();
+			return instance.unmount();
 		},
 		waitUntilExit: instance.waitUntilExit,
 		cleanup: () => instances.delete(inkOptions.stdout),

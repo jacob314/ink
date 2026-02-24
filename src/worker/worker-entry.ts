@@ -4,6 +4,20 @@ import {TerminalBufferWorker} from './render-worker.js';
 let buffer: TerminalBufferWorker;
 
 const main = () => {
+	const safeSend = (message: any) => {
+		if (process.connected && process.send) {
+			try {
+				process.send(message, undefined, undefined, error => {
+					if (error) {
+						// Error is often EPIPE when parent disconnects
+					}
+				});
+			} catch {
+				// Ignore
+			}
+		}
+	};
+
 	process.on('message', async (message: any) => {
 		switch (message.type) {
 			case 'init': {
@@ -53,7 +67,7 @@ const main = () => {
 			case 'render': {
 				if (buffer) {
 					await buffer.render();
-					process.send?.({type: 'renderDone'});
+					safeSend({type: 'renderDone'});
 				}
 
 				break;
@@ -62,7 +76,7 @@ const main = () => {
 			case 'done': {
 				if (buffer) {
 					buffer.done();
-					process.send?.({type: 'doneConfirmed'});
+					safeSend({type: 'doneConfirmed'});
 				}
 
 				break;
@@ -70,7 +84,7 @@ const main = () => {
 
 			case 'getLinesUpdated': {
 				if (buffer) {
-					process.send?.({
+					safeSend({
 						type: 'linesUpdated',
 						count: buffer.getLinesUpdated(),
 					});
@@ -99,7 +113,7 @@ const main = () => {
 			case 'waitForIdle': {
 				if (buffer) {
 					await buffer.waitForIdle();
-					process.send?.({type: 'idle'});
+					safeSend({type: 'idle'});
 				}
 
 				break;

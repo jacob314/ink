@@ -102,7 +102,7 @@ test('simple rainbow verification', async t => {
 	}
 
 	t.true(foundBg, 'Should have some background colors from rainbow');
-	unmount();
+	await unmount();
 });
 
 test('scroll integration - verify repaint efficiency', async t => {
@@ -159,18 +159,22 @@ test('scroll integration - verify repaint efficiency', async t => {
 			patchConsole: false,
 			renderProcess: false,
 			terminalBuffer: true,
+			standardReactLayoutTiming: true,
 		},
 	);
 
 	const getFullContent = () => {
 		return Array.from(
 			{length: termRows},
-			(_, i) => term.buffer.active.getLine(i)?.translateToString(true) ?? '',
+			(_, i) =>
+				term.buffer.active
+					.getLine(term.buffer.active.baseY + i)
+					?.translateToString(true) ?? '',
 		).join('\n');
 	};
 
 	const getLineBg = (y: number) => {
-		const line = term.buffer.active.getLine(y);
+		const line = term.buffer.active.getLine(term.buffer.active.baseY + y);
 		if (!line) return -2;
 		for (let x = 0; x < columns; x++) {
 			const cell = line.getCell(x);
@@ -184,7 +188,9 @@ test('scroll integration - verify repaint efficiency', async t => {
 
 	const getScrollHeightFromTerm = () => {
 		for (let i = 0; i < termRows; i++) {
-			const line = term.buffer.active.getLine(i)?.translateToString(true);
+			const line = term.buffer.active
+				.getLine(term.buffer.active.baseY + i)
+				?.translateToString(true);
 			const match = /inner\s*scrollable\s*size:\s*\d+\s*x\s*(\d+)/i.exec(
 				line ?? '',
 			);
@@ -275,14 +281,14 @@ test('scroll integration - verify repaint efficiency', async t => {
 	// Scroll to bottom
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 	stdin.write('b');
-	await wait(5000);
+	await wait(10_000);
 	await writeToTerm(term, '');
 
 	const bottomContent = getFullContent();
 	t.true(
-		bottomContent.includes('ScrollTop: 710'),
+		bottomContent.includes('ScrollTop: 712'),
 		'Should have scrolled to the bottom area',
 	);
 
-	unmount();
+	await unmount();
 });

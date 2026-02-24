@@ -89,8 +89,10 @@ export async function waitForTerminalState(
 		// 1. Check Cursor Position
 		// worker.cursorY is relative to the screen. xterm cursorY is also relative to viewport.
 		if (
-			buffer.cursorX !== expected.cursorX ||
-			buffer.cursorY !== expected.cursorY
+			expected.cursorX >= 0 &&
+			expected.cursorY >= 0 &&
+			(buffer.cursorX !== expected.cursorX ||
+				buffer.cursorY !== expected.cursorY)
 		) {
 			// eslint-disable-next-line no-await-in-loop
 			await new Promise(resolve => {

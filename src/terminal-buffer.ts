@@ -311,17 +311,50 @@ export default class TerminalBuffer {
 		}
 	}
 
-	done() {
+	done(): Promise<void> | void {
 		if (this.workerInstance) {
 			this.workerInstance.done();
 		} else if (this.worker?.connected) {
-			try {
-				this.worker.send({
-					type: 'done',
-				});
-			} catch {
-				// Silently fail on exit errors as the worker might already be gone
-			}
+			return new Promise(resolve => {
+				let finished = false;
+
+				const timer = setTimeout(() => {
+					if (finished) return;
+					finished = true;
+					this.worker?.off('message', handler);
+					this.worker?.disconnect();
+					resolve();
+				}, 500);
+
+				const handler = (message: any) => {
+					if (finished) return;
+					if (message.type === 'doneConfirmed') {
+						finished = true;
+						clearTimeout(timer);
+						this.worker?.off('message', handler);
+						// Defer disconnect to avoid Node.js internal errors
+						setTimeout(() => {
+							this.worker?.disconnect();
+						}, 0);
+						resolve();
+					}
+				};
+
+				this.worker?.on('message', handler);
+
+				try {
+					this.worker?.send({
+						type: 'done',
+					});
+				} catch {
+					if (!finished) {
+						finished = true;
+						clearTimeout(timer);
+						this.worker?.off('message', handler);
+						resolve();
+					}
+				}
+			});
 		}
 	}
 
@@ -570,19 +603,32 @@ export default class TerminalBuffer {
 				const element = nodeIdToElement.get(current.nodeId);
 				if (element) {
 					const scrollTop = current.scrollTop ?? 0;
-					for (const chunk of lineUpdates) {
-						if (chunk.start < scrollTop) {
-							element.internalIsScrollbackDirty = true;
+
+					let invalidated = false;
+
+					// Detect history invalidation: any change in existing lines BEFORE scrollTop,
+					// or content length decreasing to less than scrollTop.
+					const linesToCompare = Math.min(
+						last.lines.length,
+						current.lines.length,
+						scrollTop,
+					);
+					for (let i = 0; i < linesToCompare; i++) {
+						if (!this.linesEqual(last.lines[i], current.lines[i])) {
+							invalidated = true;
 							break;
 						}
 					}
 
-					// Also check if lines were removed from the end of the content but still within the scrollback
 					if (
-						!element.internalIsScrollbackDirty &&
-						current.lines.length < last.lines.length &&
-						current.lines.length < scrollTop
+						!invalidated &&
+						current.lines.length < scrollTop &&
+						current.lines.length < last.lines.length
 					) {
+						invalidated = true;
+					}
+
+					if (invalidated) {
 						element.internalIsScrollbackDirty = true;
 					}
 				}

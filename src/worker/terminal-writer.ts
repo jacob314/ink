@@ -21,8 +21,8 @@ import {
 import {platform} from './platform.js';
 
 const synchronizeOutput = true;
-const isVsCode = process.env['TERM_PROGRAM'] === 'vscode';
-const isIterm = process.env['TERM_PROGRAM'] === 'iTerm.app';
+const isVsCode = () => process.env['TERM_PROGRAM'] === 'vscode';
+const isIterm = () => process.env['TERM_PROGRAM'] === 'iTerm.app';
 
 export const rainbowColors = [
 	'ansi256(17)',
@@ -545,10 +545,10 @@ export class TerminalWriter {
 	}
 
 	clear(_options?: {readonly keepTrackingMaps?: boolean}) {
-		if (isVsCode && this.forceScrollToBottomOnBackbufferRefresh) {
+		if (isVsCode() && this.forceScrollToBottomOnBackbufferRefresh) {
 			this.writeHelper(ris);
 		} else {
-			if (isIterm) {
+			if (isIterm()) {
 				this.writeHelper(itermClearScrollback);
 			}
 

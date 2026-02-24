@@ -50,6 +50,8 @@ export class TerminalBufferWorker {
 	screen: RenderLine[] = [];
 	backbuffer: RenderLine[] = [];
 
+	private isRendering = false;
+	private needsRender = false;
 	private renderPromise?: Promise<void>;
 
 	private readonly sceneManager = new SceneManager();
@@ -290,6 +292,7 @@ export class TerminalBufferWorker {
 		) {
 			this.stickyHeadersInBackbuffer = options.stickyHeadersInBackbuffer;
 			this.forceNextRender = true;
+			this.terminalWriter.backbufferDirtyCurrentFrame = true;
 		}
 
 		if (
@@ -526,6 +529,14 @@ export class TerminalBufferWorker {
 	}
 
 	async render() {
+		if (this.isRendering) {
+			this.needsRender = true;
+			return;
+		}
+
+		this.isRendering = true;
+		this.needsRender = false;
+
 		const renderTask = this._render();
 		this.renderPromise = renderTask;
 		try {
@@ -533,6 +544,11 @@ export class TerminalBufferWorker {
 		} finally {
 			if (this.renderPromise === renderTask) {
 				this.renderPromise = undefined;
+			}
+
+			this.isRendering = false;
+			if (this.needsRender) {
+				void this.render();
 			}
 		}
 	}
@@ -773,15 +789,22 @@ export class TerminalBufferWorker {
 			};
 
 			const rootBackbufferHeight = cameraY;
-			composeToBackbuffer(
-				this.sceneManager.root!,
-				rootRegion,
-				rootBackbufferHeight,
-				0,
-			);
+			if (this.stickyHeadersInBackbuffer) {
+				composeToBackbuffer(
+					this.sceneManager.root!,
+					rootRegion,
+					rootBackbufferHeight,
+					0,
+				);
+			}
 
 			for (const region of this.sceneManager.regions.values()) {
-				if (region.overflowToBackbuffer && region.isScrollable) {
+				if (
+					region.id !== rootRegion.id &&
+					region.overflowToBackbuffer &&
+					region.isScrollable &&
+					region.lines.length > 0
+				) {
 					const scrollTop = region.scrollTop ?? 0;
 					const regionBackbufferHeight = scrollTop;
 					const node = this.findNodeForRegion(region.id);

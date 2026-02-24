@@ -177,6 +177,7 @@ export default class Output {
 		marginBottom?: number;
 		scrollbarThumbColor?: string;
 		nodeId?: number;
+		node?: DOMElement;
 		stableScrollback?: boolean;
 	}) {
 		const {
@@ -195,6 +196,7 @@ export default class Output {
 			marginBottom,
 			scrollbarThumbColor,
 			nodeId,
+			node,
 			stableScrollback,
 		} = options;
 
@@ -227,6 +229,7 @@ export default class Output {
 			stickyHeaders: [],
 			children: [],
 			nodeId,
+			node,
 			stableScrollback,
 		};
 

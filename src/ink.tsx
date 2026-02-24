@@ -127,6 +127,8 @@ export default class Ink {
 		};
 
 		this.rootNode = dom.createNode('ink-root');
+		this.rootNode.internal_terminalBuffer = options.terminalBuffer;
+
 		this.rootNode.onComputeLayout = this.calculateLayout;
 
 		this.isScreenReaderEnabled =
@@ -184,7 +186,7 @@ export default class Ink {
 				},
 			);
 
-			this.rootNode.internalTerminalBuffer = this.terminalBuffer;
+			this.rootNode.internal_terminalBuffer = Boolean(this.terminalBuffer);
 		}
 
 		this.log = logUpdate.create(options.stdout, {
@@ -365,15 +367,59 @@ export default class Ink {
 		this.options.onRender?.({renderTime: performance.now() - startTime});
 
 		if (this.terminalBuffer && root) {
-			const appliedChanges = this.terminalBuffer.update(
+			this.terminalBuffer.update(
 				0,
 				Number.MAX_SAFE_INTEGER,
 				root,
 				cursorPosition,
 			);
-			if (appliedChanges) {
-				void this.terminalBuffer.render();
+
+			// If history was invalidated, we need to recalculate scroll positions
+			// and update terminalBuffer one more time.
+			let needsRerender = false;
+			const checkDirty = (node: dom.DOMElement) => {
+				if (node.internalIsScrollbackDirty) {
+					needsRerender = true;
+					return;
+				}
+
+				for (const child of node.childNodes) {
+					if (child.nodeName !== '#text') {
+						checkDirty(child);
+					}
+				}
+			};
+
+			checkDirty(this.rootNode);
+
+			if (needsRerender) {
+				this.calculateLayout();
+				const secondRender = render(this.rootNode, {
+					isScreenReaderEnabled: this.isScreenReaderEnabled,
+					selection: this.selection,
+					selectionStyle: this.options.selectionStyle,
+					skipScrollbars: true,
+				});
+				this.terminalBuffer.update(
+					0,
+					Number.MAX_SAFE_INTEGER,
+					secondRender.root!,
+					secondRender.cursorPosition,
+				);
+
+				const resetDirtyFlags = (node: dom.DOMElement) => {
+					node.internalIsScrollbackDirty = false;
+					for (const child of node.childNodes) {
+						if (child.nodeName !== '#text') {
+							resetDirtyFlags(child);
+						}
+					}
+				};
+
+				resetDirtyFlags(this.rootNode);
 			}
+
+			void this.terminalBuffer.render();
 
 			return;
 		}
@@ -615,7 +661,7 @@ export default class Ink {
 	}
 
 	// eslint-disable-next-line @typescript-eslint/ban-types
-	unmount(error?: Error | number | null): void {
+	async unmount(error?: Error | number | null): Promise<void> {
 		if (this.isUnmounted) {
 			return;
 		}
@@ -644,7 +690,7 @@ export default class Ink {
 			this.log.done();
 
 			if (this.terminalBuffer) {
-				this.terminalBuffer.done();
+				await this.terminalBuffer.done();
 			}
 		}
 

@@ -102,6 +102,11 @@ export class ScrollOptimizer {
 		const direction = scrollTop > lastScrollTop ? 'up' : 'down';
 		const linesToScroll = Math.abs(scrollTop - lastScrollTop);
 
+		if (linesToScroll >= adjustedEnd - adjustedStart) {
+			this.lastRegionScrollTops.set(region.id, scrollTop);
+			return [];
+		}
+
 		const operations: ScrollOperation[] = [];
 
 		if (

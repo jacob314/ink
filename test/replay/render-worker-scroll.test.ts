@@ -23,8 +23,8 @@ const testCases = [
 ];
 
 for (const {name, stickyHeaders, width, alternateBuffer} of testCases) {
-	test(`Scroll snapshot: cli-snapshot.json (${name})`, async t => {
-		const replayFile = 'cli-snapshot.json';
+	test(`Scroll snapshot: sticky-scroll-demo.json (${name})`, async t => {
+		const replayFile = 'sticky-scroll-demo.json';
 		const replay = loadReplayData(replayDir, replayFile);
 
 		const columns = width ?? replay.columns;

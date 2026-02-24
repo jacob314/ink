@@ -94,6 +94,22 @@ export function calculateScroll(node: DOMElement): void {
 		);
 	}
 
+	if (node.internal_terminalBuffer) {
+		node.internal_scrollState = {
+			scrollHeight,
+			actualScrollHeight,
+			scrollWidth,
+			scrollTop: node.style.scrollTop ?? 0,
+			scrollLeft: node.style.scrollLeft ?? 0,
+			clientHeight,
+			clientWidth:
+				yogaNode.getComputedWidth() -
+				yogaNode.getComputedBorder(Yoga.EDGE_LEFT) -
+				yogaNode.getComputedBorder(Yoga.EDGE_RIGHT),
+		};
+		return;
+	}
+
 	const scrollTop = Math.max(
 		0,
 		Math.min(node.style.scrollTop ?? 0, scrollHeight - clientHeight),
