@@ -28,6 +28,8 @@ type Props = {
 	readonly options: InkOptions;
 	readonly setOptions: (options: Partial<InkOptions>) => void;
 	readonly dumpCurrentFrame: (filename: string) => void;
+	readonly startRecording: (filename: string) => void;
+	readonly stopRecording: () => void;
 };
 
 type State = {
@@ -81,6 +83,8 @@ export default class App extends PureComponent<Props, State> {
 					options: this.props.options,
 					setOptions: this.props.setOptions,
 					dumpCurrentFrame: this.props.dumpCurrentFrame,
+					startRecording: this.props.startRecording,
+					stopRecording: this.props.stopRecording,
 				}}
 			>
 				<StdinContext.Provider

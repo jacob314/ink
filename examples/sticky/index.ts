@@ -25,6 +25,19 @@ if (exportIndex !== -1) {
 	}
 }
 
+let recordFilename = '';
+const recordIndex = arguments_.indexOf('--record');
+if (recordIndex !== -1) {
+	if (
+		arguments_.length > recordIndex + 1 &&
+		!arguments_[recordIndex + 1]!.startsWith('--')
+	) {
+		recordFilename = arguments_[recordIndex + 1]!;
+	} else {
+		recordFilename = 'recording.json';
+	}
+}
+
 let initialItems = 0;
 const itemsToAddIndex = arguments_.indexOf('--items');
 if (itemsToAddIndex !== -1 && arguments_.length > itemsToAddIndex + 1) {
@@ -49,6 +62,7 @@ export const instance = render(
 		initialItems,
 		initialScroll,
 		exportFilename,
+		recordFilename,
 	}),
 	{
 		renderProcess: true,

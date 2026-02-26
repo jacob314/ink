@@ -90,11 +90,13 @@ function ScrollableContent({
 	initialItems = 0,
 	initialScroll = 0,
 	exportFilename = '',
+	recordFilename = '',
 }: {
 	readonly useStatic?: boolean;
 	readonly initialItems?: number;
 	readonly initialScroll?: number;
 	readonly exportFilename?: string;
+	readonly recordFilename?: string;
 } = {}) {
 	const [listItems, setListItems] = useState<Array<{id: number; text: string}>>(
 		() => {
@@ -118,6 +120,7 @@ function ScrollableContent({
 	const [stableScrollback, setStableScrollback] = useState(true);
 	const [isFooterExpanded, setIsFooterExpanded] = useState(true);
 	const [shouldScrollToBottom, setShouldScrollToBottom] = useState(false);
+	const [isRecording, setIsRecording] = useState(false);
 	const [scrollState, dispatch] = useReducer(scrollReducer, {
 		scrollTop: initialScroll,
 	});
@@ -129,7 +132,8 @@ function ScrollableContent({
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 	const rows = (stdout as any)?.rows ?? terminalRows;
 	const reference = useRef<DOMElement>(null);
-	const {options, setOptions, dumpCurrentFrame} = useContext(AppContext);
+	const {options, setOptions, dumpCurrentFrame, startRecording, stopRecording} =
+		useContext(AppContext);
 
 	const [size, setSize] = useState({
 		innerHeight: 0,
@@ -181,6 +185,13 @@ function ScrollableContent({
 			};
 		}
 	}, [exportFilename, dumpCurrentFrame]);
+
+	useEffect(() => {
+		if (recordFilename) {
+			startRecording(recordFilename);
+			setIsRecording(true);
+		}
+	}, [recordFilename, startRecording]);
 
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 	const boxWidth = columns;
@@ -435,6 +446,18 @@ function ScrollableContent({
 			return;
 		}
 
+		if (input === 'r') {
+			if (isRecording) {
+				stopRecording();
+				setIsRecording(false);
+			} else {
+				startRecording('recording.json');
+				setIsRecording(true);
+			}
+
+			return;
+		}
+
 		if (key.upArrow || input === 'w') {
 			dispatch({type: 'up', delta: input === 'w' ? 100 : key.shift ? 10 : 1});
 			return;
@@ -514,6 +537,10 @@ function ScrollableContent({
 									? 'on'
 									: 'off'}
 								)
+							</Text>
+							<Text>
+								Press 'e' to export current frame, 'r' to toggle recording (
+								{isRecording ? 'ON' : 'OFF'})
 							</Text>
 						</>
 					) : (

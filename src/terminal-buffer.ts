@@ -3,6 +3,7 @@ import {fork, type ChildProcess} from 'node:child_process';
 import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import {Serializer} from './serialization.js';
 import {TerminalBufferWorker} from './worker/render-worker.js';
+import {type DOMElement} from './dom.js';
 import {
 	type Region,
 	type RegionUpdate,
@@ -10,12 +11,6 @@ import {
 	flattenRegion,
 } from './output.js';
 import {type InkOptions} from './components/AppContext.js';
-import {type DOMElement} from './dom.js';
-import {
-	saveReplay,
-	serializeReplayUpdate,
-	type ReplayData,
-} from './worker/replay.js';
 
 const debugEdits = false;
 
@@ -37,12 +32,14 @@ export default class TerminalBuffer {
 	private columns: number;
 	private rows: number;
 
-	private recording: 'none' | 'single' | 'sequence' = 'none';
+	private recording: 'none' | 'sequence' = 'none';
 	private recordedFrames: Array<{
 		tree: RegionNode;
 		updates: RegionUpdate[];
 		cursorPosition?: {row: number; col: number};
+		timestamp: number;
 	}> = [];
+	private recordingStartTime = 0;
 
 	constructor(
 		columns: number,
@@ -185,26 +182,43 @@ export default class TerminalBuffer {
 		}
 	}
 
-	startRecording(type: 'single' | 'sequence') {
-		this.recording = type;
+	startRecording(filename: string) {
+		this.recording = 'sequence';
 		this.recordedFrames = [];
+		this.recordingStartTime = Date.now();
+
+		if (this.workerInstance) {
+			this.workerInstance.startRecording(filename);
+		} else if (this.worker?.connected) {
+			try {
+				this.worker.send({
+					type: 'startRecording',
+					filename,
+				});
+			} catch (error) {
+				console.error(
+					'Failed to send startRecording message to worker:',
+					error,
+				);
+			}
+		}
 	}
 
-	stopRecording(filename: string) {
+	stopRecording() {
 		if (this.recording === 'none') return;
 
-		const data: ReplayData = {
-			type: this.recording,
-			columns: this.columns,
-			rows: this.rows,
-			frames: this.recordedFrames.map(f => ({
-				tree: f.tree,
-				updates: f.updates.map(u => serializeReplayUpdate(u, this.serializer)),
-				cursorPosition: f.cursorPosition,
-			})),
-		};
+		if (this.workerInstance) {
+			this.workerInstance.stopRecording();
+		} else if (this.worker?.connected) {
+			try {
+				this.worker.send({
+					type: 'stopRecording',
+				});
+			} catch (error) {
+				console.error('Failed to send stopRecording message to worker:', error);
+			}
+		}
 
-		saveReplay(data, filename);
 		this.recording = 'none';
 		this.recordedFrames = [];
 	}
@@ -268,7 +282,7 @@ export default class TerminalBuffer {
 		// Update local state to current frame
 		this.lastRegions = currentRegionsMap;
 
-		if (this.recording !== 'none') {
+		if (this.recording !== 'none' && this.workerInstance) {
 			if (this.recordedFrames.length === 0) {
 				const fullUpdates: RegionUpdate[] = [];
 				for (const r of currentRegionsMap.values()) {
@@ -279,9 +293,15 @@ export default class TerminalBuffer {
 					tree,
 					updates: fullUpdates,
 					cursorPosition,
+					timestamp: 0,
 				});
 			} else if (this.recording === 'sequence') {
-				this.recordedFrames.push({tree, updates, cursorPosition});
+				this.recordedFrames.push({
+					tree,
+					updates,
+					cursorPosition,
+					timestamp: Date.now() - this.recordingStartTime,
+				});
 			}
 		}
 

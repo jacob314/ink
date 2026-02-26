@@ -561,6 +561,8 @@ export default class Ink {
 					options={this.optionsState}
 					setOptions={this.setOptions}
 					dumpCurrentFrame={this.dumpCurrentFrame}
+					startRecording={this.startRecording}
+					stopRecording={this.stopRecording}
 					onExit={this.unmount}
 					onRerender={this.onRerender}
 				>
@@ -684,6 +686,26 @@ export default class Ink {
 		} else {
 			console.error(
 				'dumpCurrentFrame is only supported when terminalBuffer is true',
+			);
+		}
+	}
+
+	startRecording(filename: string): void {
+		if (this.terminalBuffer) {
+			this.terminalBuffer.startRecording(filename);
+		} else {
+			console.error(
+				'startRecording is only supported when terminalBuffer is true',
+			);
+		}
+	}
+
+	stopRecording(): void {
+		if (this.terminalBuffer) {
+			this.terminalBuffer.stopRecording();
+		} else {
+			console.error(
+				'stopRecording is only supported when terminalBuffer is true',
 			);
 		}
 	}
