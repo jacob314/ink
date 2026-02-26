@@ -87,6 +87,15 @@ const main = () => {
 				break;
 			}
 
+			case 'clear': {
+				if (buffer) {
+					buffer.clear();
+					process.send?.({type: 'clearDone'});
+				}
+
+				break;
+			}
+
 			case 'resize': {
 				if (buffer) {
 					buffer.resize(message.columns as number, message.rows as number);
@@ -99,6 +108,23 @@ const main = () => {
 				if (buffer) {
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 					buffer.dumpCurrentFrame(message.filename);
+				}
+
+				break;
+			}
+
+			case 'startRecording': {
+				if (buffer) {
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+					buffer.startRecording(message.filename);
+				}
+
+				break;
+			}
+
+			case 'stopRecording': {
+				if (buffer) {
+					buffer.stopRecording();
 				}
 
 				break;

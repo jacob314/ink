@@ -44,6 +44,19 @@ export type Props = {
 	 * @param filename The path/name for the JSON file (e.g., 'snapshot.json').
 	 */
 	readonly dumpCurrentFrame: (filename: string) => void;
+
+	/**
+	 * Starts recording internal rendering states (frames) to a sequence.
+	 * Only supported when `terminalBuffer` is enabled.
+	 * @param filename The path/name for the JSON file where the sequence will be saved when stopped.
+	 */
+	readonly startRecording: (filename: string) => void;
+
+	/**
+	 * Stops recording and saves the collected frames to the filename specified in `startRecording`.
+	 * Only supported when `terminalBuffer` is enabled.
+	 */
+	readonly stopRecording: () => void;
 };
 
 /**
@@ -56,6 +69,8 @@ export const AppContext = createContext<Props>({
 	options: {},
 	setOptions() {},
 	dumpCurrentFrame() {},
+	startRecording() {},
+	stopRecording() {},
 });
 
 AppContext.displayName = 'AppContext';

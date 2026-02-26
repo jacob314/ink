@@ -18,6 +18,7 @@ The example also supports several command-line arguments to customize its initia
 - `--items <number>`: Populates the list with a specific number of item groups on startup (each group adds 20 lines). This is equivalent to pressing the `space` bar the specified number of times.
 - `--scroll-down <number>`: Automatically scrolls down the specified number of lines on startup.
 - `--export [filename]`: Triggers a render, exports the current frame to the specified filename (defaults to `snapshot.json`), and then exits automatically. This is useful for testing or debugging.
+- `--record [filename]`: Starts recording all frames to the specified filename (defaults to `recording.json`) and saves it when the process exits.
 
 ### Examples
 
@@ -25,6 +26,12 @@ The example also supports several command-line arguments to customize its initia
 
 ```bash
 npm run example examples/sticky/index.ts -- --items 50
+```
+
+**Record a session to a custom file:**
+
+```bash
+npm run example examples/sticky/index.ts -- --record custom-recording.json
 ```
 
 **Start with 10 groups, scrolled down 50 lines, and export to custom file immediately:**
@@ -52,5 +59,6 @@ While running interactively, you can use the following keys:
 - `h`: Toggle sticky headers in the backbuffer.
 - `v`: Toggle stable scrollback.
 - `e`: Export the current frame to `snapshot.json`.
+- `r`: Toggle recording to `recording.json`.
 - `up arrow` / `w`: Scroll up (Hold `Shift` with arrows or use `w` for larger jumps).
 - `down arrow` / `s`: Scroll down (Hold `Shift` with arrows or use `s` for larger jumps).

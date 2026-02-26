@@ -168,7 +168,7 @@ const main = async () => {
 				// eslint-disable-next-line unicorn/no-process-exit
 				process.exit(0);
 			}, 100);
-		} else if (message.type === 'renderDone') {
+		} else if (message.type === 'renderDone' || message.type === 'clearDone') {
 			const resolve = renderQueue.shift();
 			if (resolve) {
 				resolve();
@@ -180,6 +180,13 @@ const main = async () => {
 		return new Promise<void>(resolve => {
 			renderQueue.push(resolve);
 			worker.send({type: 'render'});
+		});
+	};
+
+	const clearAndWait = async () => {
+		return new Promise<void>(resolve => {
+			renderQueue.push(resolve);
+			worker.send({type: 'clear'});
 		});
 	};
 
@@ -260,12 +267,45 @@ const main = async () => {
 				}
 			} else if (key.name === 'right' || key.name === 'space') {
 				// Sequence replay
-				currentFrame = Math.min(replayData.frames.length - 1, currentFrame + 1);
-				await renderFrame(currentFrame);
+				if (currentFrame < replayData.frames.length - 1) {
+					currentFrame++;
+					await renderFrame(currentFrame);
+				}
 			} else if (key.name === 'left') {
-				currentFrame = Math.max(0, currentFrame - 1);
-				// We must replay from start to currentFrame because updates are stateful diffs
-				for (let i = 0; i <= currentFrame; i++) {
+				if (currentFrame > 0) {
+					currentFrame--;
+					await clearAndWait();
+					
+					// Reconstruct state up to the current frame
+					for (let i = 0; i <= currentFrame; i++) {
+						const frame = replayData.frames[i]!;
+						sendUpdate(frame.tree, frame.updates, frame.cursorPosition);
+					}
+					
+					// Render once after reconstructing state
+					await renderAndWait();
+				}
+			} else if (_string === 'p') {
+				// Play the whole recording
+				currentFrame = 0;
+				await clearAndWait();
+				const startWallTime = Date.now();
+				const startTimestamp = replayData.frames[0]?.timestamp ?? 0;
+
+				for (let i = 0; i < replayData.frames.length; i++) {
+					currentFrame = i;
+					const frame = replayData.frames[i]!;
+					const elapsedSinceStart = frame.timestamp - startTimestamp;
+					const targetWallTime = startWallTime + elapsedSinceStart;
+					const now = Date.now();
+
+					if (targetWallTime > now) {
+						// eslint-disable-next-line no-await-in-loop
+						await new Promise(resolve =>
+							setTimeout(resolve, targetWallTime - now),
+						);
+					}
+
 					// eslint-disable-next-line no-await-in-loop
 					await renderFrame(i);
 				}

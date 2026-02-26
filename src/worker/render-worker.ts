@@ -11,6 +11,7 @@ import {
 	type ReplayData,
 	type LoadedReplayData,
 	serializeReplayUpdate,
+	type ReplayFrame,
 } from './replay.js';
 import {
 	type RenderLine,
@@ -45,6 +46,11 @@ export class TerminalBufferWorker {
 	resized = false;
 	cursorPosition?: {row: number; col: number};
 	forceNextRender = false;
+
+	isRecording = false;
+	recordingFilename = '';
+	recordedFrames: ReplayFrame[] = [];
+	recordingStartTime = 0;
 
 	// Ground truth on what lines should be rendered (composed frame)
 	screen: RenderLine[] = [];
@@ -175,6 +181,29 @@ export class TerminalBufferWorker {
 		return this.sceneManager;
 	}
 
+	public startRecording(filename: string) {
+		this.isRecording = true;
+		this.recordingFilename = filename;
+		this.recordedFrames = [];
+		this.recordingStartTime = Date.now();
+	}
+
+	public stopRecording() {
+		if (!this.isRecording) return;
+
+		const data: ReplayData = {
+			type: 'sequence',
+			columns: this.columns,
+			rows: this.rows,
+			frames: this.recordedFrames,
+		};
+
+		saveReplay(data, this.recordingFilename);
+
+		this.isRecording = false;
+		this.recordedFrames = [];
+	}
+
 	public dumpCurrentFrame(filename: string) {
 		const {root} = this.sceneManager;
 		if (!root) return;
@@ -224,6 +253,7 @@ export class TerminalBufferWorker {
 					tree: root,
 					updates: updates.map(u => serializeReplayUpdate(u, serializer)),
 					cursorPosition: this.cursorPosition,
+					timestamp: 0,
 				},
 			],
 		};
@@ -239,6 +269,7 @@ export class TerminalBufferWorker {
 					tree: root,
 					updates,
 					cursorPosition: this.cursorPosition,
+					timestamp: 0,
 				},
 			],
 		};
@@ -350,6 +381,16 @@ export class TerminalBufferWorker {
 		this.cursorPosition = cursorPosition;
 
 		this.updatesReceived++;
+
+		if (this.isRecording) {
+			const serializer = new Serializer();
+			this.recordedFrames.push({
+				tree,
+				updates: updates.map(u => serializeReplayUpdate(u, serializer)),
+				cursorPosition,
+				timestamp: Date.now() - this.recordingStartTime,
+			});
+		}
 
 		if (this.animatedScroll) {
 			if (this.updatesReceived > 2 && updates.length > 0) {
@@ -546,6 +587,10 @@ export class TerminalBufferWorker {
 	}
 
 	done() {
+		if (this.isRecording) {
+			this.stopRecording();
+		}
+
 		this.animationController.stop();
 		this.terminalWriter.done();
 
@@ -562,6 +607,26 @@ export class TerminalBufferWorker {
 
 	resetLinesUpdated() {
 		this.terminalWriter.resetLinesUpdated();
+	}
+
+	clear() {
+		this.animationController.stop();
+		this.sceneManager.regions.clear();
+		this.sceneManager.root = undefined;
+		this.sceneManager.regionWasAtEnd.clear();
+
+		this.scrollOptimizer.maxRegionScrollTops.clear();
+		this.scrollOptimizer.lastRegionScrollTops.clear();
+
+		this.screen = [];
+		this.backbuffer = [];
+		this.updatesReceived = 0;
+		this.forceNextRender = false;
+		this.cursorPosition = undefined;
+
+		this.primaryTerminalWriter.clear();
+		this.alternateTerminalWriter.clear();
+		this.terminalWriter.flush();
 	}
 
 	private async _render() {

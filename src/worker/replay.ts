@@ -15,6 +15,7 @@ export type ReplayFrame = {
 	tree: RegionNode;
 	updates: ReplayRegionUpdate[];
 	cursorPosition?: {row: number; col: number};
+	timestamp: number;
 };
 
 export type ReplayRegionUpdate = Omit<
@@ -138,6 +139,7 @@ export type LoadedReplayFrame = {
 	tree: RegionNode;
 	updates: RegionUpdate[];
 	cursorPosition?: {row: number; col: number};
+	timestamp: number;
 };
 
 type RawReplayData = {
@@ -148,6 +150,7 @@ type RawReplayData = {
 		tree: RegionNode;
 		updates: ReplayRegionUpdate[];
 		cursorPosition?: {row: number; col: number};
+		timestamp: number;
 	}>;
 };
 
