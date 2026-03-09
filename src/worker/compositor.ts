@@ -1,7 +1,10 @@
+import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import {type Region} from '../output.js';
 import {type StickyHeader} from '../dom.js';
 import {calculateScrollbarThumb} from '../measure-element.js';
 import {renderScrollbar} from '../render-scrollbar.js';
+import {toStyledCharacters} from '../measure-text.js';
+import colorize from '../colorize.js';
 import {type Canvas, type Rect} from './canvas.js';
 
 export type CompositionOptions = {
@@ -18,6 +21,9 @@ export type CompositionOptions = {
  * Handles rendering of various UI elements onto a Canvas.
  */
 export class Compositor {
+	private static lastBackgroundColor?: string;
+	private static lastBackgroundStyles: StyledChar['styles'] = [];
+
 	constructor(private readonly options: CompositionOptions) {}
 
 	drawContent(
@@ -29,6 +35,8 @@ export class Compositor {
 	) {
 		const scrollTop = region.scrollTop ?? 0;
 		const scrollLeft = region.scrollLeft ?? 0;
+
+		const isOpaque = Boolean(region.opaque) || Boolean(region.backgroundColor);
 
 		for (let sy = clip.y; sy < clip.y + clip.h; sy++) {
 			if (sy < 0 || sy >= canvas.height) {
@@ -58,8 +66,27 @@ export class Compositor {
 				const dx = sx - absX;
 				const contentX = scrollLeft + dx;
 
-				const char = line[contentX];
+				let char = line[contentX];
 				if (char) {
+					const isEmpty = char.value === ' ' && char.styles.length === 0;
+
+					if (isEmpty) {
+						if (!isOpaque) {
+							continue;
+						}
+
+						if (region.backgroundColor) {
+							// Apply background to empty char
+							char = {
+								...char,
+								styles: [
+									...char.styles,
+									...this.getBackgroundStyles(region.backgroundColor),
+								],
+							};
+						}
+					}
+
 					canvas.setChar(sx, sy, char);
 				}
 			}
@@ -212,6 +239,9 @@ export class Compositor {
 				setChar(x, y, char) {
 					canvas.setChar(x, y, char);
 				},
+				getExistingChar(x, y) {
+					return canvas.getChar(x, y);
+				},
 			});
 		}
 
@@ -239,6 +269,9 @@ export class Compositor {
 				color: region.scrollbarThumbColor,
 				setChar(x, y, char) {
 					canvas.setChar(x, y, char);
+				},
+				getExistingChar(x, y) {
+					return canvas.getChar(x, y);
 				},
 			});
 		}
@@ -367,5 +400,19 @@ export class Compositor {
 		}
 
 		return stuckHeight;
+	}
+
+	private getBackgroundStyles(color: string) {
+		if (color === Compositor.lastBackgroundColor) {
+			return Compositor.lastBackgroundStyles;
+		}
+
+		const styled = toStyledCharacters(colorize(' ', color, 'background'))[0];
+		const styles = styled?.styles ?? [];
+
+		Compositor.lastBackgroundColor = color;
+		Compositor.lastBackgroundStyles = styles;
+
+		return styles;
 	}
 }

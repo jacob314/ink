@@ -92,6 +92,9 @@ export class SceneManager {
 				region.marginBottom = update.marginBottom;
 			if (update.scrollbarThumbColor !== undefined)
 				region.scrollbarThumbColor = update.scrollbarThumbColor;
+			if (update.backgroundColor !== undefined)
+				region.backgroundColor = update.backgroundColor;
+			if (update.opaque !== undefined) region.opaque = update.opaque;
 			if (update.stickyHeaders !== undefined)
 				region.stickyHeaders = update.stickyHeaders;
 

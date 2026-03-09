@@ -717,6 +717,8 @@ function renderNodeToOutput(
 						marginRight,
 						marginBottom,
 						scrollbarThumbColor: node.style.scrollbarThumbColor,
+						backgroundColor: node.style.backgroundColor,
+						opaque: node.internal_opaque,
 						nodeId: node.internal_id,
 						stableScrollback: node.style.stableScrollback,
 					});

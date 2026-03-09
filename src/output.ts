@@ -58,6 +58,8 @@ export type Region = {
 	marginRight?: number;
 	marginBottom?: number;
 	scrollbarThumbColor?: string;
+	backgroundColor?: string;
+	opaque?: boolean;
 
 	stickyHeaders: StickyHeader[];
 	children: Region[];
@@ -90,6 +92,8 @@ export type RegionUpdate = {
 	marginRight?: number;
 	marginBottom?: number;
 	scrollbarThumbColor?: string;
+	backgroundColor?: string;
+	opaque?: boolean;
 	stickyHeaders?: StickyHeader[];
 	lines?: {
 		updates: Array<{
@@ -176,6 +180,8 @@ export default class Output {
 		marginRight?: number;
 		marginBottom?: number;
 		scrollbarThumbColor?: string;
+		backgroundColor?: string;
+		opaque?: boolean;
 		nodeId?: number;
 		stableScrollback?: boolean;
 	}) {
@@ -194,6 +200,8 @@ export default class Output {
 			marginRight,
 			marginBottom,
 			scrollbarThumbColor,
+			backgroundColor,
+			opaque,
 			nodeId,
 			stableScrollback,
 		} = options;
@@ -224,6 +232,8 @@ export default class Output {
 			marginRight,
 			marginBottom,
 			scrollbarThumbColor,
+			backgroundColor,
+			opaque,
 			stickyHeaders: [],
 			children: [],
 			nodeId,

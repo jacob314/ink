@@ -22,6 +22,7 @@ export type DrawOptions = {
 	axis: 'vertical' | 'horizontal';
 	color?: string;
 	setChar: (x: number, y: number, char: StyledChar) => void;
+	getExistingChar?: (x: number, y: number) => StyledChar | undefined;
 };
 
 export const renderScrollbar = ({
@@ -32,8 +33,26 @@ export const renderScrollbar = ({
 	axis,
 	color,
 	setChar,
+	getExistingChar,
 }: DrawOptions) => {
 	const {startIndex, endIndex, thumbStartHalf, thumbEndHalf} = thumb;
+
+	const applyBackground = (char: StyledChar, existingChar?: StyledChar) => {
+		if (!existingChar) return char;
+
+		const backgroundStyle = existingChar.styles.find(s =>
+			s.code.includes(';4') || (s.code.startsWith('\u001B[4') && !s.code.startsWith('\u001B[49')),
+		);
+
+		if (backgroundStyle) {
+			return {
+				...char,
+				styles: [...backgroundStyle ? [backgroundStyle] : [], ...char.styles],
+			};
+		}
+
+		return char;
+	};
 
 	if (axis === 'vertical') {
 		for (let i = startIndex; i < endIndex; i++) {
@@ -58,9 +77,13 @@ export const renderScrollbar = ({
 				}
 
 				const charString = color ? colorize(char, color, 'foreground') : char;
-				const styled = toStyledCharacters(charString)[0];
+				let styled = toStyledCharacters(charString)[0];
 
 				if (styled) {
+					if (getExistingChar && (char === '▀' || char === '▄')) {
+						const existing = getExistingChar(drawX, drawY);
+						styled = applyBackground(styled, existing);
+					}
 					setChar(drawX, drawY, styled);
 				}
 			}
@@ -88,9 +111,13 @@ export const renderScrollbar = ({
 				}
 
 				const charString = color ? colorize(char, color, 'foreground') : char;
-				const styled = toStyledCharacters(charString)[0];
+				let styled = toStyledCharacters(charString)[0];
 
 				if (styled) {
+					if (getExistingChar && (char === '▌' || char === '▐')) {
+						const existing = getExistingChar(drawX, drawY);
+						styled = applyBackground(styled, existing);
+					}
 					setChar(drawX, drawY, styled);
 				}
 			}
