@@ -440,6 +440,8 @@ export default class TerminalBuffer {
 		update.marginRight = current.marginRight;
 		update.marginBottom = current.marginBottom;
 		update.scrollbarThumbColor = current.scrollbarThumbColor;
+		update.backgroundColor = current.backgroundColor;
+		update.opaque = current.opaque;
 		update.stickyHeaders = current.stickyHeaders;
 
 		const serialized = this.serializer.serialize(current.lines);
@@ -484,6 +486,8 @@ export default class TerminalBuffer {
 			update.marginRight = current.marginRight;
 			update.marginBottom = current.marginBottom;
 			update.scrollbarThumbColor = current.scrollbarThumbColor;
+			update.backgroundColor = current.backgroundColor;
+			update.opaque = current.opaque;
 			update.stickyHeaders = current.stickyHeaders;
 
 			// Send all lines
@@ -580,6 +584,16 @@ export default class TerminalBuffer {
 
 		if (current.scrollbarThumbColor !== last.scrollbarThumbColor) {
 			update.scrollbarThumbColor = current.scrollbarThumbColor;
+			hasChanges = true;
+		}
+
+		if (current.backgroundColor !== last.backgroundColor) {
+			update.backgroundColor = current.backgroundColor;
+			hasChanges = true;
+		}
+
+		if (current.opaque !== last.opaque) {
+			update.opaque = current.opaque;
 			hasChanges = true;
 		}
 

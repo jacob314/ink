@@ -10,12 +10,14 @@ import {
 	type DOMNode,
 	setCachedRender,
 	type StickyHeader,
+	isNodeSelectable,
 } from './dom.js';
 import Output from './output.js';
 import {
 	measureStyledChars,
 	splitStyledCharsByNewline,
 	toStyledCharacters,
+	inkCharacterWidth,
 } from './measure-text.js';
 
 // If parent container is `<Box>`, text nodes will be treated as separate nodes in
@@ -277,12 +279,36 @@ export const renderToStatic = (
 	const rootRegion = staticOutput.get();
 	const {lines: styledOutput} = rootRegion;
 
+	const spans = rootRegion.selectableSpans;
+	const sortedSpans = [...spans].sort((a, b) =>
+		a.y === b.y ? a.startX - b.startX : a.y - b.y,
+	);
+	let selectableText = '';
+	let currentY = sortedSpans[0]?.y ?? 0;
+	let currentX = sortedSpans[0]?.startX ?? 0;
+
+	for (const span of sortedSpans) {
+		if (span.y > currentY) {
+			selectableText += '\n'.repeat(span.y - currentY);
+			currentX = 0;
+			currentY = span.y;
+		}
+
+		if (span.startX > currentX) {
+			selectableText += ' '.repeat(span.startX - currentX);
+		}
+
+		selectableText += span.text;
+		currentX = span.endX;
+	}
+
 	setCachedRender(node, {
 		output: styledOutput,
 		width,
 		height,
 		stickyHeaders: cachedStickyHeaders,
 		root: rootRegion,
+		selectableText,
 	});
 };
 
@@ -385,28 +411,100 @@ function renderNodeToOutput(
 		}
 
 		if (node.cachedRender) {
-			if (node.cachedRender.root) {
-				output.addRegionTree(node.cachedRender.root, x, y);
-			} else {
-				let index = 0;
-				let endIndex = node.cachedRender.output.length;
+			let handledSelection = false;
 
-				if (clip) {
-					const clipY1 = clip.y1 ?? -Infinity;
-					const clipY2 = clip.y2 ?? Infinity;
+			if (selectionMap && selectionMap.has(node) && node.cachedRender.root) {
+				const range = selectionMap.get(node)!;
+				// We don't want to use Output constructor, just clone it:
+				// Wait, Output.addRegionTree needs a Region object.
+				const clonedRegionObj = {
+					...node.cachedRender.root,
+					lines: node.cachedRender.root.lines.map(line =>
+						line.map(char => ({...char, styles: [...char.styles]})),
+					),
+					selectableSpans: node.cachedRender.root.selectableSpans.map(span => ({
+						...span,
+					})),
+					stickyHeaders: node.cachedRender.root.stickyHeaders.map(header => ({
+						...header,
+					})),
+					children: node.cachedRender.root.children.map(child => ({...child})), // Shallow is ok for children here unless they have selection? Wait, StaticRender doesn't have nested StaticRenders usually.
+				};
 
-					index = Math.max(0, Math.ceil(clipY1 - y));
-					endIndex = Math.min(endIndex, Math.ceil(clipY2 - y));
+				const spans = clonedRegionObj.selectableSpans;
+				spans.sort((a, b) => (a.y === b.y ? a.startX - b.startX : a.y - b.y));
+
+				let currentOffset = 0;
+				let currentY = spans[0]?.y ?? 0;
+				let currentX = spans[0]?.startX ?? 0;
+
+				for (const span of spans) {
+					if (span.y > currentY) {
+						currentOffset += span.y - currentY;
+						currentX = 0;
+						currentY = span.y;
+					}
+
+					if (span.startX > currentX) {
+						currentOffset += span.startX - currentX;
+						currentX = span.startX;
+					}
+
+					let spanCharX = span.startX;
+					for (const char of span.text) {
+						const charLen = char.length;
+						const charWidth = inkCharacterWidth(char);
+
+						if (currentOffset >= range.start && currentOffset < range.end) {
+							const line = clonedRegionObj.lines[span.y];
+							if (line?.[spanCharX]) {
+								if (selectionStyle) {
+									line[spanCharX] = selectionStyle(line[spanCharX]!);
+								} else {
+									line[spanCharX]!.styles.push({
+										type: 'ansi',
+										code: '\u001B[7m',
+										endCode: '\u001B[27m',
+									});
+								}
+							}
+						}
+
+						currentOffset += charLen;
+						spanCharX += charWidth;
+					}
+
+					currentX = span.endX;
 				}
 
-				for (; index < endIndex; index++) {
-					const line = node.cachedRender.output[index];
+				output.addRegionTree(clonedRegionObj, x, y);
+				handledSelection = true;
+			}
 
-					if (line) {
-						output.write(x, y + index, line, {
-							transformers: newTransformers,
-							lineIndex: index,
-						});
+			if (!handledSelection) {
+				if (node.cachedRender.root) {
+					output.addRegionTree(node.cachedRender.root, x, y);
+				} else {
+					let index = 0;
+					let endIndex = node.cachedRender.output.length;
+
+					if (clip) {
+						const clipY1 = clip.y1 ?? -Infinity;
+						const clipY2 = clip.y2 ?? Infinity;
+
+						index = Math.max(0, Math.ceil(clipY1 - y));
+						endIndex = Math.min(endIndex, Math.ceil(clipY2 - y));
+					}
+
+					for (; index < endIndex; index++) {
+						const line = node.cachedRender.output[index];
+
+						if (line) {
+							output.write(x, y + index, line, {
+								transformers: newTransformers,
+								lineIndex: index,
+							});
+						}
 					}
 				}
 			}
@@ -487,6 +585,7 @@ function renderNodeToOutput(
 						isTerminalCursorFocused:
 							node.internal_terminalCursorFocus && index === cursorLineIndex,
 						terminalCursorPosition: relativeCursorPosition,
+						isSelectable: isNodeSelectable(node),
 					});
 				}
 			}
@@ -717,6 +816,8 @@ function renderNodeToOutput(
 						marginRight,
 						marginBottom,
 						scrollbarThumbColor: node.style.scrollbarThumbColor,
+						backgroundColor: node.style.backgroundColor,
+						opaque: node.internal_opaque,
 						nodeId: node.internal_id,
 						stableScrollback: node.style.stableScrollback,
 					});

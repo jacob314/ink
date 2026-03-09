@@ -58,6 +58,8 @@ export type Region = {
 	marginRight?: number;
 	marginBottom?: number;
 	scrollbarThumbColor?: string;
+	backgroundColor?: string;
+	opaque?: boolean;
 
 	stickyHeaders: StickyHeader[];
 	children: Region[];
@@ -65,6 +67,12 @@ export type Region = {
 	stableScrollback?: boolean;
 	nodeId?: number;
 	node?: DOMElement;
+	selectableSpans: Array<{
+		y: number;
+		startX: number;
+		endX: number;
+		text: string;
+	}>;
 };
 
 export type RegionNode = {
@@ -90,6 +98,8 @@ export type RegionUpdate = {
 	marginRight?: number;
 	marginBottom?: number;
 	scrollbarThumbColor?: string;
+	backgroundColor?: string;
+	opaque?: boolean;
 	stickyHeaders?: StickyHeader[];
 	lines?: {
 		updates: Array<{
@@ -130,6 +140,7 @@ export default class Output {
 			stickyHeaders: [],
 			children: [],
 			node,
+			selectableSpans: [],
 		};
 
 		this.initLines(this.root, width, height);
@@ -176,6 +187,8 @@ export default class Output {
 		marginRight?: number;
 		marginBottom?: number;
 		scrollbarThumbColor?: string;
+		backgroundColor?: string;
+		opaque?: boolean;
 		nodeId?: number;
 		stableScrollback?: boolean;
 	}) {
@@ -194,6 +207,8 @@ export default class Output {
 			marginRight,
 			marginBottom,
 			scrollbarThumbColor,
+			backgroundColor,
+			opaque,
 			nodeId,
 			stableScrollback,
 		} = options;
@@ -224,10 +239,13 @@ export default class Output {
 			marginRight,
 			marginBottom,
 			scrollbarThumbColor,
+			backgroundColor,
+			opaque,
 			stickyHeaders: [],
 			children: [],
 			nodeId,
 			stableScrollback,
+			selectableSpans: [],
 		};
 
 		this.initLines(region, bufferWidth, bufferHeight);
@@ -259,6 +277,7 @@ export default class Output {
 			preserveBackgroundColor?: boolean;
 			isTerminalCursorFocused?: boolean;
 			terminalCursorPosition?: number;
+			isSelectable?: boolean;
 		},
 	): void {
 		const {
@@ -267,6 +286,7 @@ export default class Output {
 			preserveBackgroundColor = false,
 			isTerminalCursorFocused = false,
 			terminalCursorPosition,
+			isSelectable = false,
 		} = options;
 
 		if (items.length === 0 && !isTerminalCursorFocused) {
@@ -311,6 +331,7 @@ export default class Output {
 				transformers,
 				lineIndex,
 				preserveBackgroundColor,
+				isSelectable,
 			);
 		}
 	}
@@ -369,7 +390,7 @@ export default class Output {
 		for (let row = 0; row < region.lines.length; row++) {
 			const line = region.lines[row];
 			if (line) {
-				this.applyWrite(x, y + row, line, [], 0, false);
+				this.applyWrite(x, y + row, line, [], 0, false, false);
 			}
 		}
 
@@ -394,6 +415,10 @@ export default class Output {
 			...region,
 			x: region.x + x,
 			y: region.y + y,
+			lines: region.lines.map(line =>
+				line.map(char => ({...char, styles: [...char.styles]})),
+			),
+			selectableSpans: region.selectableSpans.map(span => ({...span})),
 			stickyHeaders: region.stickyHeaders.map(header => ({
 				...header,
 				x: header.x,
@@ -483,6 +508,7 @@ export default class Output {
 		transformers: OutputTransformer[],
 		lineIndex: number,
 		_preserveBackgroundColor: boolean,
+		isSelectable: boolean,
 	) {
 		const region = this.getActiveRegion();
 		const {lines} = region;
@@ -533,6 +559,8 @@ export default class Output {
 
 		let offsetX = x;
 		let relativeX = 0;
+		let spanStartX = -1;
+		let spanText = '';
 
 		for (const character of chars) {
 			const characterWidth = inkCharacterWidth(character.value);
@@ -547,6 +575,11 @@ export default class Output {
 				}
 
 				currentLine[offsetX] = character;
+
+				if (isSelectable) {
+					if (spanStartX === -1) spanStartX = offsetX;
+					spanText += character.value;
+				}
 
 				if (characterWidth > 1) {
 					this.clearRange(
@@ -578,6 +611,15 @@ export default class Output {
 			}
 
 			relativeX += characterWidth;
+		}
+
+		if (isSelectable && spanStartX !== -1) {
+			region.selectableSpans.push({
+				y,
+				startX: spanStartX,
+				endX: offsetX,
+				text: spanText,
+			});
 		}
 
 		if (toX !== undefined) {

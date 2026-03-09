@@ -36,6 +36,7 @@ export type CachedRender = {
 	key?: unknown;
 	stickyHeaders?: StickyHeader[];
 	root?: Region;
+	selectableText?: string;
 };
 
 export type StickyHeader = {

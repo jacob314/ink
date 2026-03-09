@@ -37,15 +37,16 @@ export class SceneManager {
 				// We'll let the caller handle the animation logic, but we track if it was at the end.
 				// This is used for scrollbar thumb calculation during animations.
 				// Actually, the current logic in render-worker.ts does this:
-				// const currentEffectiveScrollTop = this.targetScrollTops.get(region.id) ?? region.scrollTop ?? 0;
-				// const wasAtEnd = currentEffectiveScrollTop >= (region.scrollHeight ?? 0) - (region.height ?? 0);
-				// this.regionWasAtEnd.set(region.id, wasAtEnd);
+				// const currentEffectiveScrollTop = this.targetScrollTops.get(r.id) ?? r.scrollTop ?? 0;
+				// const wasAtEnd = currentEffectiveScrollTop >= (r.scrollHeight ?? 0) - (r.height ?? 0);
+				// this.regionWasAtEnd.set(r.id, wasAtEnd);
 				// I'll keep regionWasAtEnd in SceneManager but the 'currentEffectiveScrollTop'
 				// might need to be passed in or handled by the caller.
 			} else {
 				// Initialize new region
 				region = {
 					id: update.id,
+					selectableSpans: [],
 					x: 0,
 					y: 0,
 					width: 0,
@@ -61,48 +62,49 @@ export class SceneManager {
 			}
 
 			// Apply properties
-			if (update.x !== undefined) region.x = update.x;
-			if (update.y !== undefined) region.y = update.y;
-			if (update.width !== undefined) region.width = update.width;
-			if (update.height !== undefined) region.height = update.height;
+			const r = region;
+			if (update.x !== undefined) r.x = update.x;
+			if (update.y !== undefined) r.y = update.y;
+			if (update.width !== undefined) r.width = update.width;
+			if (update.height !== undefined) r.height = update.height;
 
 			if (update.scrollTop !== undefined) {
-				options.onScrollUpdate(region.id, update.scrollTop, isNew);
+				options.onScrollUpdate(r.id, update.scrollTop, isNew);
 			}
 
-			if (update.scrollLeft !== undefined)
-				region.scrollLeft = update.scrollLeft;
+			if (update.scrollLeft !== undefined) r.scrollLeft = update.scrollLeft;
 			if (update.scrollHeight !== undefined)
-				region.scrollHeight = update.scrollHeight;
-			if (update.scrollWidth !== undefined)
-				region.scrollWidth = update.scrollWidth;
+				r.scrollHeight = update.scrollHeight;
+			if (update.scrollWidth !== undefined) r.scrollWidth = update.scrollWidth;
 			if (update.isScrollable !== undefined)
-				region.isScrollable = update.isScrollable;
+				r.isScrollable = update.isScrollable;
 			if (update.isVerticallyScrollable !== undefined)
-				region.isVerticallyScrollable = update.isVerticallyScrollable;
+				r.isVerticallyScrollable = update.isVerticallyScrollable;
 			if (update.isHorizontallyScrollable !== undefined)
-				region.isHorizontallyScrollable = update.isHorizontallyScrollable;
+				r.isHorizontallyScrollable = update.isHorizontallyScrollable;
 			if (update.scrollbarVisible !== undefined)
-				region.scrollbarVisible = update.scrollbarVisible;
+				r.scrollbarVisible = update.scrollbarVisible;
 			if (update.overflowToBackbuffer !== undefined)
-				region.overflowToBackbuffer = update.overflowToBackbuffer;
-			if (update.marginRight !== undefined)
-				region.marginRight = update.marginRight;
+				r.overflowToBackbuffer = update.overflowToBackbuffer;
+			if (update.marginRight !== undefined) r.marginRight = update.marginRight;
 			if (update.marginBottom !== undefined)
-				region.marginBottom = update.marginBottom;
+				r.marginBottom = update.marginBottom;
 			if (update.scrollbarThumbColor !== undefined)
-				region.scrollbarThumbColor = update.scrollbarThumbColor;
+				r.scrollbarThumbColor = update.scrollbarThumbColor;
+			if (update.backgroundColor !== undefined)
+				r.backgroundColor = update.backgroundColor;
+			if (update.opaque !== undefined) r.opaque = update.opaque;
 			if (update.stickyHeaders !== undefined)
-				region.stickyHeaders = update.stickyHeaders;
+				r.stickyHeaders = update.stickyHeaders;
 
 			// Apply line updates
 			if (update.lines) {
-				while (region.lines.length < update.lines.totalLength) {
-					region.lines.push([]);
+				while (r.lines.length < update.lines.totalLength) {
+					r.lines.push([]);
 				}
 
-				if (region.lines.length > update.lines.totalLength) {
-					region.lines.length = update.lines.totalLength;
+				if (r.lines.length > update.lines.totalLength) {
+					r.lines.length = update.lines.totalLength;
 				}
 
 				for (const chunk of update.lines.updates) {
@@ -110,7 +112,7 @@ export class SceneManager {
 					const chunkLines = deserializer.deserialize();
 
 					for (const [i, line] of chunkLines.entries()) {
-						region.lines[chunk.start + i] = line!;
+						r.lines[chunk.start + i] = line!;
 					}
 				}
 			}

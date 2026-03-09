@@ -44,6 +44,22 @@ export class Canvas {
 	) {}
 
 	/**
+	 * Returns the character at the given coordinates.
+	 */
+	getChar(x: number, y: number): StyledChar | undefined {
+		if (y < 0 || y >= this.height || x < 0 || x >= this.width) {
+			return undefined;
+		}
+
+		const line = this.lines[y];
+		if (!line) {
+			return undefined;
+		}
+
+		return line.styledChars[x];
+	}
+
+	/**
 	 * Sets a character at the given coordinates, respecting clipping.
 	 */
 	setChar(x: number, y: number, char: StyledChar, clip?: Rect) {

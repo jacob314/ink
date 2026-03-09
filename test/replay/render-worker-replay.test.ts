@@ -3,11 +3,9 @@ import path from 'node:path';
 import process from 'node:process';
 import {fileURLToPath} from 'node:url';
 import test from 'ava';
-import {
-	createWorkerAndTerminal,
-	captureTerminalState,
-	loadReplayData,
-} from '../helpers/replay-lib.js';
+import {loadReplayData} from '../helpers/replay-lib.js';
+import {createXtermRenderer, type XtermStdout} from '../helpers/render.js';
+import {TerminalBufferWorker} from '../../src/worker/render-worker.js';
 
 const scriptFilename = fileURLToPath(import.meta.url);
 const replayDir = path.dirname(scriptFilename);
@@ -21,7 +19,12 @@ for (const replayFile of replayFiles) {
 	test(`Replay snapshot: ${replayFile}`, async t => {
 		const replay = loadReplayData(replayDir, replayFile);
 		const {columns, rows} = replay;
-		const {worker, term, getOutput} = createWorkerAndTerminal(columns, rows);
+		const {stdout, writeQueue} = createXtermRenderer(columns, rows);
+
+		const worker = new TerminalBufferWorker(columns, rows, {
+			stdout: stdout as unknown as NodeJS.WriteStream,
+			isAlternateBufferEnabled: false,
+		});
 
 		for (const frame of replay.frames) {
 			worker.update(frame.tree, frame.updates, frame.cursorPosition);
@@ -29,11 +32,14 @@ for (const replayFile of replayFiles) {
 			await worker.render();
 		}
 
-		const fullText = await captureTerminalState(term, getOutput());
+		// Ensure all writes are processed
+		await writeQueue.promise;
+
+		const svg = stdout.generateSvg();
 
 		const snapshotPath = path.join(
 			replayDir,
-			`${replayFile.replace('.json', '')}.snapshot.txt`,
+			`${replayFile.replace('.json', '')}.snapshot.svg`,
 		);
 
 		const isUpdatingSnapshots =
@@ -42,11 +48,11 @@ for (const replayFile of replayFiles) {
 			Boolean(process.env['UPDATE_SNAPSHOTS']);
 
 		if (isUpdatingSnapshots || !fs.existsSync(snapshotPath)) {
-			fs.writeFileSync(snapshotPath, fullText, 'utf8');
+			fs.writeFileSync(snapshotPath, svg, 'utf8');
 			t.pass();
 		} else {
 			const expected = fs.readFileSync(snapshotPath, 'utf8');
-			t.is(fullText, expected);
+			t.is(svg, expected);
 		}
 	});
 }
