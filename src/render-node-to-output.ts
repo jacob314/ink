@@ -683,7 +683,7 @@ function renderNodeToOutput(
 
 						if (
 							stickyType === 'bottom' &&
-							Math.floor(stickyNodeBottom) > Math.floor(viewportBottom) + 1 &&
+							Math.floor(stickyNodeBottom) > Math.floor(viewportBottom) &&
 							parentTop < viewportBottom
 						) {
 							activeBottomStickyNode = stickyNodeInfo;
@@ -887,14 +887,19 @@ function renderNodeToOutput(
 
 							parentHeight = cached.parentHeight!;
 
-							stickyOffsetX =
-								x + currentBorderLeft + staticRenderPosLeft + cached.relativeX!;
+							stickyOffsetX = x + staticRenderPosLeft + cached.relativeX!;
 
 							stickyNodeId = cached.nodeId;
 						} else {
 							stickyNodeTop = getRelativeTop(stickyNode, node);
 
-							stickyNodeHeight = stickyNode.yogaNode!.getComputedHeight();
+							const naturalHeight = stickyNode.yogaNode!.getComputedHeight();
+							const alternateStickyNode = stickyNode.childNodes.find(
+								childNode => (childNode as DOMElement).internalStickyAlternate,
+							) as DOMElement | undefined;
+							const stuckHeight =
+								alternateStickyNode?.yogaNode?.getComputedHeight() ?? 0;
+							stickyNodeHeight = Math.max(naturalHeight, stuckHeight);
 
 							const parent = stickyNode.parentNode!;
 
@@ -908,8 +913,7 @@ function renderNodeToOutput(
 								parentHeight = 1_000_000;
 							}
 
-							stickyOffsetX =
-								x + currentBorderLeft + getRelativeLeft(stickyNode, node);
+							stickyOffsetX = x + getRelativeLeft(stickyNode, node);
 
 							stickyNodeId = stickyNode.internal_id;
 						}
@@ -924,13 +928,8 @@ function renderNodeToOutput(
 
 						if (type === 'top') {
 							const maxStickyTop =
-								y +
-								currentBorderTop -
-								currentScrollTop +
-								parentBottom -
-								stickyNodeHeight;
-							const naturalStickyY =
-								y + currentBorderTop - currentScrollTop + stickyNodeTop;
+								y - currentScrollTop + parentBottom - stickyNodeHeight;
+							const naturalStickyY = y - currentScrollTop + stickyNodeTop;
 							const stuckStickyY = y + currentBorderTop;
 
 							finalStickyY = Math.min(
@@ -954,7 +953,7 @@ function renderNodeToOutput(
 
 								if (nextNodeTop !== undefined) {
 									const nextNodeTopInViewport =
-										y + currentBorderTop - currentScrollTop + nextNodeTop;
+										y - currentScrollTop + nextNodeTop;
 									if (nextNodeTopInViewport < finalStickyY + stickyNodeHeight) {
 										finalStickyY = nextNodeTopInViewport - stickyNodeHeight;
 									}
@@ -962,10 +961,8 @@ function renderNodeToOutput(
 							}
 						} else {
 							// Bottom sticky
-							const minStickyTop =
-								y + currentBorderTop - currentScrollTop + parentTop;
-							const naturalStickyY =
-								y + currentBorderTop - currentScrollTop + stickyNodeTop;
+							const minStickyTop = y - currentScrollTop + parentTop;
+							const naturalStickyY = y - currentScrollTop + stickyNodeTop;
 							const stuckStickyY =
 								y + currentBorderTop + currentClientHeight - stickyNodeHeight;
 
@@ -994,11 +991,7 @@ function renderNodeToOutput(
 
 								if (nextNodeTop !== undefined && nextNodeHeight !== undefined) {
 									const nextNodeBottomInViewport =
-										y +
-										currentBorderTop -
-										currentScrollTop +
-										nextNodeTop +
-										nextNodeHeight;
+										y - currentScrollTop + nextNodeTop + nextNodeHeight;
 									if (nextNodeBottomInViewport > finalStickyY) {
 										finalStickyY = nextNodeBottomInViewport;
 									}
@@ -1021,9 +1014,8 @@ function renderNodeToOutput(
 							const alternateStickyNode = stickyNode.childNodes.find(
 								childNode => (childNode as DOMElement).internalStickyAlternate,
 							) as DOMElement | undefined;
-							const stuckHeight =
-								alternateStickyNode?.yogaNode?.getComputedHeight() ?? 0;
-							const maxHeaderHeight = Math.max(naturalHeight, stuckHeight);
+
+							const maxHeaderHeight = stickyNodeHeight;
 
 							const renderHeader = (isSticky: boolean) => {
 								const stickyOutput = new Output({

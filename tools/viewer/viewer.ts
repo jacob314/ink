@@ -275,13 +275,13 @@ const main = async () => {
 				if (currentFrame > 0) {
 					currentFrame--;
 					await clearAndWait();
-					
+
 					// Reconstruct state up to the current frame
 					for (let i = 0; i <= currentFrame; i++) {
 						const frame = replayData.frames[i]!;
 						sendUpdate(frame.tree, frame.updates, frame.cursorPosition);
 					}
-					
+
 					// Render once after reconstructing state
 					await renderAndWait();
 				}

@@ -4,7 +4,7 @@ import test from 'ava';
 test('viewer should accept debugRainbow argument without crashing', t => {
 	try {
 		const output = execSync(
-			'npx tsx examples/viewer/viewer.ts test/replay/snapshot.json --debugRainbow < /dev/null',
+			'npx tsx tools/viewer/viewer.ts test/replay/snapshot.json --debugRainbow < /dev/null',
 			{encoding: 'utf8'},
 		);
 		t.pass();
@@ -17,7 +17,7 @@ test('viewer should accept debugRainbow argument without crashing', t => {
 test('viewer should accept no-animatedScroll argument without crashing', t => {
 	try {
 		const output = execSync(
-			'npx tsx examples/viewer/viewer.ts test/replay/snapshot.json --no-animatedScroll < /dev/null',
+			'npx tsx tools/viewer/viewer.ts test/replay/snapshot.json --no-animatedScroll < /dev/null',
 			{encoding: 'utf8'},
 		);
 		t.pass();

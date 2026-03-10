@@ -40,14 +40,16 @@ export const renderScrollbar = ({
 	const applyBackground = (char: StyledChar, existingChar?: StyledChar) => {
 		if (!existingChar) return char;
 
-		const backgroundStyle = existingChar.styles.find(s =>
-			s.code.includes(';4') || (s.code.startsWith('\u001B[4') && !s.code.startsWith('\u001B[49')),
+		const backgroundStyle = existingChar.styles.find(
+			s =>
+				s.code.includes(';4') ||
+				(s.code.startsWith('\u001B[4') && !s.code.startsWith('\u001B[49')),
 		);
 
 		if (backgroundStyle) {
 			return {
 				...char,
-				styles: [...backgroundStyle ? [backgroundStyle] : [], ...char.styles],
+				styles: [...(backgroundStyle ? [backgroundStyle] : []), ...char.styles],
 			};
 		}
 
@@ -84,6 +86,7 @@ export const renderScrollbar = ({
 						const existing = getExistingChar(drawX, drawY);
 						styled = applyBackground(styled, existing);
 					}
+
 					setChar(drawX, drawY, styled);
 				}
 			}
@@ -118,6 +121,7 @@ export const renderScrollbar = ({
 						const existing = getExistingChar(drawX, drawY);
 						styled = applyBackground(styled, existing);
 					}
+
 					setChar(drawX, drawY, styled);
 				}
 			}

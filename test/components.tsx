@@ -143,7 +143,7 @@ test('fail when text nodes are not within <Text> component', t => {
 	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
-		override async render() {
+		override render() {
 			return this.props.children;
 		}
 
@@ -172,7 +172,7 @@ test('fail when text node is not within <Text> component', t => {
 	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
-		override async render() {
+		override render() {
 			return this.props.children;
 		}
 
@@ -198,7 +198,7 @@ test('fail when <Box> is inside <Text> component', t => {
 	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
-		override async render() {
+		override render() {
 			return this.props.children;
 		}
 
@@ -419,7 +419,6 @@ test('render only new items in static output on final render', t => {
 // See https://github.com/chalk/wrap-ansi/issues/27
 test('ensure wrap-ansi doesn’t trim leading whitespace', t => {
 	const output = renderToString(<Text color="red">{' ERROR '}</Text>);
-
 	t.is(output, chalk.red(' ERROR '));
 });
 

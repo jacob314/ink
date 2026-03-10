@@ -39,6 +39,7 @@ export default class TerminalBuffer {
 		cursorPosition?: {row: number; col: number};
 		timestamp: number;
 	}> = [];
+
 	private recordingStartTime = 0;
 
 	constructor(

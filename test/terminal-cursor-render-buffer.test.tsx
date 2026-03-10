@@ -129,9 +129,14 @@ test('terminal cursor position with scrolling in terminalBuffer', async t => {
 	// Cursor position 5 in "Line 7 with cursor" should be col 5.
 
 	t.is(
-		term.buffer.active.baseY + term.buffer.active.cursorY,
+		term.buffer.active.cursorY,
 		4,
 		'Cursor row should be 4 (relative to visible screen)',
+	);
+	t.is(
+		term.buffer.active.baseY + term.buffer.active.cursorY,
+		6,
+		'Absolute cursor row should be 6',
 	);
 	t.is(term.buffer.active.cursorX, 5, 'Cursor column should be 5');
 

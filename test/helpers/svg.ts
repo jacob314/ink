@@ -8,11 +8,12 @@ export function generateSvgForTerminal(terminal: Terminal): string {
 		isPalette: boolean,
 		isDefault: boolean,
 		colorCode: number,
-	): string | null => {
+	): string | undefined => {
 		if (isDefault) return null;
 		if (isRGB) {
 			return `#${colorCode.toString(16).padStart(6, '0')}`;
 		}
+
 		if (isPalette) {
 			if (colorCode >= 0 && colorCode <= 15) {
 				return (
@@ -33,40 +34,56 @@ export function generateSvgForTerminal(terminal: Terminal): string {
 						'#ff00ff',
 						'#00ffff',
 						'#ffffff',
-					][colorCode] || null
+					][colorCode] ?? null
 				);
-			} else if (colorCode >= 16 && colorCode <= 231) {
+			}
+
+			if (colorCode >= 16 && colorCode <= 231) {
 				const v = [0, 95, 135, 175, 215, 255];
 				const c = colorCode - 16;
 				const b = v[c % 6];
 				const g = v[Math.floor(c / 6) % 6];
 				const r = v[Math.floor(c / 36) % 6];
 				return `#${[r, g, b].map(x => x?.toString(16).padStart(2, '0')).join('')}`;
-			} else if (colorCode >= 232 && colorCode <= 255) {
+			}
+
+			if (colorCode >= 232 && colorCode <= 255) {
 				const gray = 8 + (colorCode - 232) * 10;
 				const hex = gray.toString(16).padStart(2, '0');
 				return `#${hex}${hex}${hex}`;
 			}
 		}
+
 		return null;
 	};
 
 	const escapeXml = (unsafe: string): string =>
 		// eslint-disable-next-line no-control-regex
-		unsafe.replace(/[<>&'"\x00-\x08\x0B-\x0C\x0E-\x1F]/g, c => {
+		unsafe.replaceAll(/[<>&'"\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, c => {
 			switch (c) {
-				case '<':
+				case '<': {
 					return '&lt;';
-				case '>':
+				}
+
+				case '>': {
 					return '&gt;';
-				case '&':
+				}
+
+				case '&': {
 					return '&amp;';
-				case "'":
+				}
+
+				case "'": {
 					return '&apos;';
-				case '"':
+				}
+
+				case '"': {
 					return '&quot;';
-				default:
+				}
+
+				default: {
 					return '';
+				}
 			}
 		});
 
@@ -100,8 +117,8 @@ export function generateSvgForTerminal(terminal: Terminal): string {
 		const line = activeBuffer.getLine(y);
 		if (!line) continue;
 
-		let currentFgHex: string | null = null;
-		let currentBgHex: string | null = null;
+		let currentFgHex: string | undefined = null;
+		let currentBgHex: string | undefined = null;
 		let currentIsBold = false;
 		let currentIsItalic = false;
 		let currentIsUnderline = false;
@@ -109,31 +126,30 @@ export function generateSvgForTerminal(terminal: Terminal): string {
 		let currentBlockText = '';
 		let currentBlockNumCells = 0;
 
+		// eslint-disable-next-line @typescript-eslint/no-loop-func
 		const finalizeBlock = (_endCol: number) => {
-			if (currentBlockStartCol !== -1) {
-				if (currentBlockText.length > 0) {
-					const xPos = currentBlockStartCol * charWidth;
-					const yPos = y * charHeight;
+			if (currentBlockStartCol !== -1 && currentBlockText.length > 0) {
+				const xPos = currentBlockStartCol * charWidth;
+				const yPos = y * charHeight;
 
-					if (currentBgHex) {
-						const rectWidth = currentBlockNumCells * charWidth;
-						svg += `    <rect x="${xPos}" y="${yPos}" width="${rectWidth}" height="${charHeight}" fill="${currentBgHex}" />\n`;
-					}
-					if (currentBlockText.trim().length > 0 || currentIsUnderline) {
-						const fill = currentFgHex || '#ffffff'; // Default text color
-						const textWidth = currentBlockNumCells * charWidth;
+				if (currentBgHex) {
+					const rectWidth = currentBlockNumCells * charWidth;
+					svg += `    <rect x="${xPos}" y="${yPos}" width="${rectWidth}" height="${charHeight}" fill="${currentBgHex}" />\n`;
+				}
 
-						let extraAttrs = '';
-						if (currentIsBold) extraAttrs += ' font-weight="bold"';
-						if (currentIsItalic) extraAttrs += ' font-style="italic"';
-						if (currentIsUnderline)
-							extraAttrs += ' text-decoration="underline"';
+				if (currentBlockText.trim().length > 0 || currentIsUnderline) {
+					const fill = currentFgHex ?? '#ffffff'; // Default text color
+					const textWidth = currentBlockNumCells * charWidth;
 
-						// Use textLength to ensure the block fits exactly into its designated cells
-						const textElement = `<text x="${xPos}" y="${yPos + 2}" fill="${fill}" textLength="${textWidth}" lengthAdjust="spacingAndGlyphs"${extraAttrs}>${escapeXml(currentBlockText)}</text>`;
+					let extraAttrs = '';
+					if (currentIsBold) extraAttrs += ' font-weight="bold"';
+					if (currentIsItalic) extraAttrs += ' font-style="italic"';
+					if (currentIsUnderline) extraAttrs += ' text-decoration="underline"';
 
-						svg += `    ${textElement}\n`;
-					}
+					// Use textLength to ensure the block fits exactly into its designated cells
+					const textElement = `<text x="${xPos}" y="${yPos + 2}" fill="${fill}" textLength="${textWidth}" lengthAdjust="spacingAndGlyphs"${extraAttrs}>${escapeXml(currentBlockText)}</text>`;
+
+					svg += `    ${textElement}\n`;
 				}
 			}
 		};
@@ -145,27 +161,27 @@ export function generateSvgForTerminal(terminal: Terminal): string {
 			if (cellWidth === 0) continue; // Skip continuation cells of wide characters
 
 			let fgHex = getHexColor(
-				!!cell.isFgRGB(),
-				!!cell.isFgPalette(),
-				!!cell.isFgDefault(),
+				Boolean(cell.isFgRGB()),
+				Boolean(cell.isFgPalette()),
+				Boolean(cell.isFgDefault()),
 				cell.getFgColor(),
 			);
 			let bgHex = getHexColor(
-				!!cell.isBgRGB(),
-				!!cell.isBgPalette(),
-				!!cell.isBgDefault(),
+				Boolean(cell.isBgRGB()),
+				Boolean(cell.isBgPalette()),
+				Boolean(cell.isBgDefault()),
 				cell.getBgColor(),
 			);
 
 			if (cell.isInverse()) {
 				const tempFgHex = fgHex;
-				fgHex = bgHex || '#000000';
-				bgHex = tempFgHex || '#ffffff';
+				fgHex = bgHex ?? '#000000';
+				bgHex = tempFgHex ?? '#ffffff';
 			}
 
-			const isBold = !!cell.isBold();
-			const isItalic = !!cell.isItalic();
-			const isUnderline = !!cell.isUnderline();
+			const isBold = Boolean(cell.isBold());
+			const isItalic = Boolean(cell.isItalic());
+			const isUnderline = Boolean(cell.isUnderline());
 
 			let chars = cell.getChars();
 			if (chars === '') chars = ' '.repeat(cellWidth);
@@ -192,6 +208,7 @@ export function generateSvgForTerminal(terminal: Terminal): string {
 				currentBlockNumCells += cellWidth;
 			}
 		}
+
 		finalizeBlock(line.length);
 	}
 
