@@ -447,6 +447,7 @@ function ScrollableContent({
 				scrollTop={scrollTop}
 				scrollLeft={scrollLeft}
 				scrollbar={showScrollbars}
+				stableScrollback={!options?.isAlternateBufferEnabled}
 			>
 				<Box
 					flexDirection="column"

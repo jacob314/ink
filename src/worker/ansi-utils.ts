@@ -5,7 +5,6 @@ export const exitSynchronizedOutput = '\u001B[?2026l';
 export const resetScrollRegion = '\u001B[r';
 
 export const ris = '\u001Bc';
-export const itermClearScrollback = '\u001B]1337;ClearScrollback\u0007';
 export const clearScrollbackStandard = '\u001B[3J';
 export const homeEraseDown = '\u001B[H\u001B[J';
 

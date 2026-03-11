@@ -73,6 +73,6 @@ export const instance = render(
 		animatedScroll: true,
 		backbufferUpdateDelay: 100,
 		maxFps: 10_000,
-		// DebugRainbow: true,
+		debugRainbow: true,
 	},
 );

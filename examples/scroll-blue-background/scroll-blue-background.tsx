@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import process from 'node:process';
 import React, {
 	useReducer,
 	useRef,
@@ -12,7 +13,6 @@ import React, {
 	useState,
 	useContext,
 } from 'react';
-import process from 'node:process';
 import {
 	Box,
 	Text,
@@ -125,6 +125,7 @@ function ScrollableContent({
 	});
 
 	const items = Array.from({length: 100}).map((_, i) => (
+		// eslint-disable-next-line react/no-array-index-key
 		<Text key={i}>
 			This is line {i + 1} of arbitrary text in the scrollable region.
 		</Text>
@@ -138,16 +139,16 @@ function ScrollableContent({
 			</Text>
 			<Box
 				ref={reference}
+				opaque
+				scrollbar
 				height={30}
 				width={30}
 				flexDirection="column"
 				overflowY="scroll"
 				overflowX="hidden"
-				opaque
 				backgroundColor="blue"
 				scrollTop={scrollTop}
 				marginTop={1}
-				scrollbar
 				paddingRight={1}
 			>
 				<Box flexDirection="column" flexShrink={0} width={50}>

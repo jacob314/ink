@@ -9,7 +9,6 @@ import {
 	exitSynchronizedOutput,
 	resetScrollRegion,
 	ris,
-	itermClearScrollback,
 	clearScrollbackStandard,
 	homeEraseDown,
 	getMoveCursorDownCode,
@@ -547,11 +546,9 @@ export class TerminalWriter {
 			this.forceScrollToBottomOnBackbufferRefresh
 		) {
 			this.writeHelper(ris);
+		} else if (process.env['TERM_PROGRAM'] === 'iTerm.app') {
+			this.writeHelper(ansiEscapes.clearTerminal);
 		} else {
-			if (process.env['TERM_PROGRAM'] === 'iTerm.app') {
-				this.writeHelper(itermClearScrollback);
-			}
-
 			this.writeHelper(clearScrollbackStandard);
 			this.writeHelper(homeEraseDown);
 		}
