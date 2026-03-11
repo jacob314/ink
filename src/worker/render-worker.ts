@@ -186,6 +186,60 @@ export class TerminalBufferWorker {
 		this.recordingFilename = filename;
 		this.recordedFrames = [];
 		this.recordingStartTime = Date.now();
+
+		const {root} = this.sceneManager;
+		if (root) {
+			const serializer = new Serializer();
+			const updates: RegionUpdate[] = [];
+			for (const region of this.sceneManager.regions.values()) {
+				const update: RegionUpdate = {
+					id: region.id,
+					x: region.x,
+					y: region.y,
+					width: region.width,
+					height: region.height,
+					scrollTop: region.scrollTop,
+					scrollLeft: region.scrollLeft,
+					scrollHeight: region.scrollHeight,
+					scrollWidth: region.scrollWidth,
+					isScrollable: region.isScrollable,
+					isVerticallyScrollable: region.isVerticallyScrollable,
+					isHorizontallyScrollable: region.isHorizontallyScrollable,
+					scrollbarVisible: region.scrollbarVisible,
+					overflowToBackbuffer: region.overflowToBackbuffer,
+					marginRight: region.marginRight,
+					marginBottom: region.marginBottom,
+					scrollbarThumbColor: region.scrollbarThumbColor,
+					backgroundColor: region.backgroundColor,
+					opaque: region.opaque,
+					stickyHeaders: region.stickyHeaders,
+				};
+
+				if (region.lines.length > 0) {
+					update.lines = {
+						updates: [
+							{
+								start: 0,
+								end: region.lines.length,
+								data: serializer.serialize(
+									region.lines,
+								) as unknown as Uint8Array,
+							},
+						],
+						totalLength: region.lines.length,
+					};
+				}
+
+				updates.push(update);
+			}
+
+			this.recordedFrames.push({
+				tree: structuredClone(root),
+				updates: updates.map(u => serializeReplayUpdate(u, serializer)),
+				cursorPosition: this.cursorPosition,
+				timestamp: 0,
+			});
+		}
 	}
 
 	public stopRecording() {
@@ -637,6 +691,14 @@ export class TerminalBufferWorker {
 		const rootRegion = this.sceneManager.getRootRegion();
 		if (!rootRegion) {
 			return;
+		}
+
+		if (rootRegion.width === 0) {
+			rootRegion.width = this.columns;
+		}
+
+		if (rootRegion.height === 0) {
+			rootRegion.height = this.rows;
 		}
 
 		this.forceNextRender = false;

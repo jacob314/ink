@@ -95,6 +95,25 @@ const main = async () => {
 		},
 	});
 
+	let workerInitialized = false;
+
+	const initWorker = () => {
+		if (workerInitialized) return;
+		workerInitialized = true;
+		worker.send({
+			type: 'init',
+			isReplay: true,
+			columns: replayData.columns,
+			rows: replayData.rows,
+			debugRainbowEnabled,
+			isAlternateBufferEnabled,
+			stickyHeadersInBackbuffer,
+			animatedScroll,
+			maxScrollbackLength,
+			backbufferUpdateDelay,
+		});
+	};
+
 	onExit(() => {
 		if (process.stdin.isTTY) {
 			process.stdin.setRawMode(false);
@@ -103,11 +122,11 @@ const main = async () => {
 
 		process.stdout.write(ansiEscapes.cursorShow);
 
-		if (isAlternateBufferEnabled) {
+		if (isAlternateBufferEnabled && workerInitialized) {
 			process.stdout.write(ansiEscapes.exitAlternativeScreen);
 		}
 
-		if (worker && worker.connected) {
+		if (worker?.connected) {
 			worker.kill();
 		}
 	});
@@ -119,19 +138,8 @@ const main = async () => {
 		}
 	});
 
-	worker.send({
-		type: 'init',
-		columns: replayData.columns,
-		rows: replayData.rows,
-		debugRainbowEnabled,
-		isAlternateBufferEnabled,
-		stickyHeadersInBackbuffer,
-		animatedScroll,
-		maxScrollbackLength,
-		backbufferUpdateDelay,
-	});
-
 	let currentFrame = 0;
+	let currentPlaybackAbortController: AbortController | undefined;
 
 	const sendUpdate = (
 		tree: ReplayFrame['tree'],
@@ -151,7 +159,7 @@ const main = async () => {
 				process.exit(1);
 			}
 
-			throw error;
+			throw error instanceof Error ? error : new Error(String(error));
 		}
 	};
 
@@ -198,6 +206,7 @@ const main = async () => {
 	};
 
 	if (exitImmediately) {
+		initWorker();
 		await renderFrame(0);
 
 		worker.send({type: 'done'});
@@ -211,6 +220,29 @@ const main = async () => {
 			process.exit(0);
 		}, 100);
 	} else {
+		const isSequence =
+			replayData.type === 'sequence' || replayData.frames.length > 1;
+
+		if (isSequence) {
+			const frameCount = replayData.frames.length;
+			const startTimestamp = replayData.frames[0]?.timestamp ?? 0;
+			const endTimestamp = replayData.frames[frameCount - 1]?.timestamp ?? 0;
+			const durationSec = ((endTimestamp - startTimestamp) / 1000).toFixed(2);
+
+			process.stdout.write(ansiEscapes.clearTerminal);
+			process.stdout.write(ansiEscapes.cursorHide);
+			console.log('--- Ink Replay Viewer ---');
+			console.log(`Recording length: ${durationSec}s`);
+			console.log(`Frames: ${frameCount}`);
+			console.log('');
+			console.log('Controls:');
+			console.log('  r         : Start playing the recording');
+			console.log('  p         : Start playing the recording');
+			console.log('  right/space : Step forward one frame');
+			console.log('  left      : Step backward one frame');
+			console.log('  ctrl+c    : Exit');
+		}
+
 		readline.emitKeypressEvents(process.stdin);
 		if (process.stdin.isTTY) {
 			process.stdin.setRawMode(true);
@@ -218,16 +250,25 @@ const main = async () => {
 
 		process.stdin.on('keypress', async (_string, key) => {
 			if (key.ctrl && key.name === 'c') {
-				worker.send({type: 'done'});
+				if (workerInitialized) {
+					worker.send({type: 'done'});
+				} else {
+					// eslint-disable-next-line unicorn/no-process-exit
+					process.exit(0);
+				}
+
+				return;
 			}
 
 			if (_string === 't') {
 				stickyHeadersInBackbuffer = !stickyHeadersInBackbuffer;
-				worker.send({
-					type: 'updateOptions',
-					options: {stickyHeadersInBackbuffer},
-				});
-				await renderAndWait();
+				if (workerInitialized) {
+					worker.send({
+						type: 'updateOptions',
+						options: {stickyHeadersInBackbuffer},
+					});
+					await renderAndWait();
+				}
 			}
 
 			if (replayData.type === 'single') {
@@ -242,7 +283,7 @@ const main = async () => {
 							scrollRegionUpdate.scrollTop ?? 0;
 					}
 
-					let scrollTop: number = (scrollRegionUpdate as any)._localScrollTop;
+					let scrollTop = (scrollRegionUpdate as any)._localScrollTop as number;
 					const {scrollHeight = 0, height = 0} = scrollRegionUpdate;
 					const maxScroll = Math.max(0, scrollHeight - height);
 
@@ -263,16 +304,33 @@ const main = async () => {
 						[{id: scrollRegionUpdate.id, scrollTop}],
 						frame.cursorPosition,
 					);
-					await renderAndWait();
+					if (workerInitialized) {
+						await renderAndWait();
+					}
 				}
 			} else if (key.name === 'right' || key.name === 'space') {
+				if (currentPlaybackAbortController) {
+					currentPlaybackAbortController.abort();
+					currentPlaybackAbortController = undefined;
+				}
+
 				// Sequence replay
+				if (!workerInitialized) {
+					initWorker();
+					await renderFrame(0);
+				}
+
 				if (currentFrame < replayData.frames.length - 1) {
 					currentFrame++;
 					await renderFrame(currentFrame);
 				}
 			} else if (key.name === 'left') {
-				if (currentFrame > 0) {
+				if (currentPlaybackAbortController) {
+					currentPlaybackAbortController.abort();
+					currentPlaybackAbortController = undefined;
+				}
+
+				if (workerInitialized && currentFrame > 0) {
 					currentFrame--;
 					await clearAndWait();
 
@@ -285,14 +343,27 @@ const main = async () => {
 					// Render once after reconstructing state
 					await renderAndWait();
 				}
-			} else if (_string === 'p') {
+			} else if (_string === 'p' || _string === 'r') {
+				if (currentPlaybackAbortController) {
+					currentPlaybackAbortController.abort();
+				}
+
+				currentPlaybackAbortController = new AbortController();
+				const {signal} = currentPlaybackAbortController;
+
 				// Play the whole recording
+				if (!workerInitialized) {
+					initWorker();
+				}
+
 				currentFrame = 0;
 				await clearAndWait();
 				const startWallTime = Date.now();
 				const startTimestamp = replayData.frames[0]?.timestamp ?? 0;
 
 				for (let i = 0; i < replayData.frames.length; i++) {
+					if (signal.aborted) break;
+
 					currentFrame = i;
 					const frame = replayData.frames[i]!;
 					const elapsedSinceStart = frame.timestamp - startTimestamp;
@@ -301,20 +372,40 @@ const main = async () => {
 
 					if (targetWallTime > now) {
 						// eslint-disable-next-line no-await-in-loop
-						await new Promise(resolve =>
-							setTimeout(resolve, targetWallTime - now),
-						);
+						await new Promise(resolve => {
+							const timeout = setTimeout(() => {
+								resolve(undefined);
+							}, targetWallTime - now);
+
+							signal.addEventListener(
+								'abort',
+								() => {
+									clearTimeout(timeout);
+									resolve(undefined);
+								},
+								{once: true},
+							);
+						});
 					}
+
+					if (signal.aborted) break;
 
 					// eslint-disable-next-line no-await-in-loop
 					await renderFrame(i);
 				}
+
+				if (currentPlaybackAbortController?.signal === signal) {
+					currentPlaybackAbortController = undefined;
+				}
 			}
 		});
 
-		// Execute initial render
-		await renderFrame(0);
+		if (!isSequence) {
+			// Execute initial render for single frame
+			initWorker();
+			await renderFrame(0);
+		}
 	}
 };
 
-main();
+await main();
