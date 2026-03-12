@@ -187,7 +187,9 @@ function ScrollableContent({
 		ScrollbarBoundingBox | undefined
 	>(undefined);
 	const [showScrollbars, setShowScrollbars] = useState(true);
-	const {options, setOptions, dumpCurrentFrame} = useContext(AppContext);
+	const [isRecording, setIsRecording] = useState(false);
+	const {options, setOptions, dumpCurrentFrame, startRecording, stopRecording} =
+		useContext(AppContext);
 	const reference = useRef<DOMElement>(null);
 	const {columns: terminalColumns, rows: terminalRows} = useTerminalSize();
 	const columns = customColumns ?? terminalColumns;
@@ -309,6 +311,22 @@ function ScrollableContent({
 			setOptions({
 				stickyHeadersInBackbuffer: !options?.stickyHeadersInBackbuffer,
 			});
+			return;
+		}
+
+		if (input === 'r') {
+			if (isRecording) {
+				stopRecording();
+				setIsRecording(false);
+			} else {
+				startRecording('scroll_recording.json');
+				setIsRecording(true);
+			}
+			return;
+		}
+
+		if (input === 'e') {
+			dumpCurrentFrame('scroll_snapshot.json');
 			return;
 		}
 
@@ -482,6 +500,11 @@ function ScrollableContent({
 					Press 'h' to toggle sticky headers in backbuffer (current:{' '}
 					{options?.stickyHeadersInBackbuffer ? 'on' : 'off'})
 				</Text>
+				<Text>
+					Press 'r' to toggle recording (current:{' '}
+					{isRecording ? 'recording to scroll_recording.json' : 'off'})
+				</Text>
+				<Text>Press 'e' to dump current frame to scroll_snapshot.json</Text>
 				<Text>ScrollTop: {scrollTop}</Text>
 				<Text>ScrollLeft: {scrollLeft}</Text>
 				<Text>
