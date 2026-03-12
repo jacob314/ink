@@ -226,29 +226,30 @@ export const renderToStatic = (
 		const stuckLines = alternateStickyNode ? renderHeader(true) : undefined;
 		const parent = stickyNode.parentNode;
 		const parentYogaNode = parent?.yogaNode;
-		const naturalRow = getRelativeTop(stickyNode, node);
+		const currentBorderTop = node.yogaNode?.getComputedBorder(Yoga.EDGE_TOP) ?? 0;
+		const naturalRow = getRelativeTop(stickyNode, node) - currentBorderTop;
 
 		const headerObj = {
 			nodeId: stickyNode.internal_id,
 			lines: naturalLines,
 			stuckLines,
 			styledOutput: stuckLines ?? naturalLines,
-			x: getRelativeLeft(stickyNode, node),
-			y: getRelativeTop(stickyNode, node),
+			x: getRelativeLeft(stickyNode, node) - (node.yogaNode?.getComputedBorder(Yoga.EDGE_LEFT) ?? 0),
+			y: getRelativeTop(stickyNode, node) - currentBorderTop,
 			naturalRow,
 			startRow: naturalRow,
 			endRow: naturalRow + naturalHeight,
 			scrollContainerId: -1,
 			isStuckOnly: true,
 
-			relativeX: getRelativeLeft(stickyNode, node),
-			relativeY: getRelativeTop(stickyNode, node),
+			relativeX: getRelativeLeft(stickyNode, node) - (node.yogaNode?.getComputedBorder(Yoga.EDGE_LEFT) ?? 0),
+			relativeY: getRelativeTop(stickyNode, node) - currentBorderTop,
 			height: maxHeaderHeight,
 			// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 			type: (stickyNode.internalSticky === 'bottom' ? 'bottom' : 'top') as
 				| 'top'
 				| 'bottom',
-			parentRelativeTop: parent ? getRelativeTop(parent, node) : 0,
+			parentRelativeTop: parent ? getRelativeTop(parent, node) - currentBorderTop : 0,
 			parentHeight: parentYogaNode
 				? parentYogaNode.getComputedHeight()
 				: 1_000_000,
@@ -825,10 +826,7 @@ function renderNodeToOutput(
 					const childOffsetX = -borderLeft;
 					const childOffsetY = -borderTop;
 
-					const allNodesToSkip = [
-						...(nodesToSkip ?? []),
-						...activeStickyNodes.map(a => a.stickyNode),
-					];
+					const allNodesToSkip = nodesToSkip;
 
 					for (const childNode of node.childNodes) {
 						renderNodeToOutput(childNode as DOMElement, output, {
@@ -922,7 +920,7 @@ function renderNodeToOutput(
 						const currentClientHeight =
 							node.internal_scrollState?.clientHeight ?? 0;
 
-						const parentBottom = parentTop + parentHeight;
+						const parentBottom = parentTop + parentHeight - (stickyNode.parentNode?.yogaNode?.getComputedBorder(Yoga.EDGE_BOTTOM) ?? 0);
 
 						let finalStickyY = 0;
 
@@ -961,7 +959,7 @@ function renderNodeToOutput(
 							}
 						} else {
 							// Bottom sticky
-							const minStickyTop = y - currentScrollTop + parentTop;
+							const minStickyTop = y - currentScrollTop + parentTop + (stickyNode.parentNode?.yogaNode?.getComputedBorder(Yoga.EDGE_TOP) ?? 0);
 							const naturalStickyY = y - currentScrollTop + stickyNodeTop;
 							const stuckStickyY =
 								y + currentBorderTop + currentClientHeight - stickyNodeHeight;
@@ -1041,7 +1039,7 @@ function renderNodeToOutput(
 							stuckLines = alternateStickyNode ? renderHeader(true) : undefined;
 						}
 
-						const naturalRow = stickyNodeTop;
+						const naturalRow = stickyNodeTop - currentBorderTop;
 
 						const headerObj = {
 							nodeId: stickyNodeId,
@@ -1054,7 +1052,7 @@ function renderNodeToOutput(
 
 							x: stickyOffsetX - (x + currentBorderLeft),
 
-							y: stickyOffsetY - (y + currentBorderTop),
+							y: type === 'top' ? 0 : currentClientHeight - stickyNodeHeight,
 
 							naturalRow,
 
@@ -1085,10 +1083,7 @@ function renderNodeToOutput(
 			(node.nodeName as string) === 'ink-box'
 		) {
 			if (!(verticallyScrollable || horizontallyScrollable)) {
-				const allNodesToSkip = [
-					...(nodesToSkip ?? []),
-					...activeStickyNodes.map(a => a.stickyNode),
-				];
+				const allNodesToSkip = nodesToSkip;
 				for (const childNode of node.childNodes) {
 					renderNodeToOutput(childNode as DOMElement, output, {
 						offsetX: childrenOffsetX,

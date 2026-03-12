@@ -46,10 +46,6 @@ export class Compositor {
 			const dy = sy - absY;
 			const contentY = Math.round(scrollTop + dy);
 
-			if (this.shouldSkipNaturalLine(region, contentY, sy, absY, scrollTop)) {
-				continue;
-			}
-
 			const line = region.lines[contentY];
 			if (!line) {
 				continue;
@@ -123,11 +119,11 @@ export class Compositor {
 
 			if (this.options.stickyHeadersInBackbuffer) {
 				if (header.type === 'top') {
-					if (headerY < header.y && absY + region.height > header.y) {
-						headerY = header.y;
+					if (headerY < absY + header.y && absY + region.height > absY + header.y) {
+						headerY = absY + header.y;
 					}
 				} else if (header.type === 'bottom') {
-					const stuckPos = this.options.canvasHeight - region.height + header.y;
+					const stuckPos = this.options.canvasHeight - (header.stuckLines ?? header.lines).length;
 					if (headerY > stuckPos && absY < stuckPos + headerH) {
 						headerY = stuckPos;
 					}
@@ -286,7 +282,7 @@ export class Compositor {
 			header.type === 'bottom'
 				? Math.round(header.naturalRow - scrollTop + header.lines.length) >=
 					Math.round(header.y + (header.stuckLines ?? header.lines).length)
-				: Math.round(header.naturalRow - scrollTop) <= Math.round(header.y);
+				: Math.round(header.naturalRow - scrollTop) <= Math.round(header.type === 'top' ? 0 : header.y);
 
 		if (!isStuckState) {
 			return false;
@@ -297,58 +293,6 @@ export class Compositor {
 		}
 
 		return true;
-	}
-
-	shouldSkipNaturalLine(
-		region: Region,
-		contentY: number,
-		renderRow: number,
-		absY: number,
-		scrollTop: number,
-	): boolean {
-		if (this.options.skipStickyHeaders) {
-			return false;
-		}
-
-		for (const header of region.stickyHeaders) {
-			const useStuckPosition = this.isHeaderStuck(header, absY, scrollTop);
-
-			if (useStuckPosition) {
-				const linesToRender = header.stuckLines ?? header.lines;
-				let headerY = Math.round(absY + header.y);
-
-				if (this.options.stickyHeadersInBackbuffer) {
-					if (header.type === 'top') {
-						if (headerY < header.y && absY + region.height > header.y) {
-							headerY = header.y;
-						}
-					} else if (header.type === 'bottom') {
-						const stuckPos =
-							this.options.canvasHeight - region.height + header.y;
-						if (headerY > stuckPos && absY < stuckPos + linesToRender.length) {
-							headerY = stuckPos;
-						}
-					}
-				}
-
-				if (
-					renderRow >= headerY &&
-					renderRow < headerY + linesToRender.length
-				) {
-					return true;
-				}
-
-				if (
-					!header.isStuckOnly &&
-					contentY >= header.startRow &&
-					contentY < header.endRow
-				) {
-					return true;
-				}
-			}
-		}
-
-		return false;
 	}
 
 	calculateActualStuckTopHeight(
