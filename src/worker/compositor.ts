@@ -104,7 +104,12 @@ export class Compositor {
 		const borderTop = region.borderTop ?? 0;
 
 		for (const header of region.stickyHeaders) {
-			const useStuckPosition = this.isHeaderStuck(header, absY, scrollTop, region);
+			const useStuckPosition = this.isHeaderStuck(
+				header,
+				absY,
+				scrollTop,
+				region,
+			);
 
 			// ONLY draw if stuck. Natural versions are already in the background buffer.
 			if (!useStuckPosition) {
@@ -128,6 +133,19 @@ export class Compositor {
 					if (headerY > stuckPos && absY < stuckPos + headerH) {
 						headerY = stuckPos;
 					}
+				}
+			}
+
+			// Clamp to maxStuckY / minStuckY
+			if (header.type === 'top' && header.maxStuckY !== undefined) {
+				const absoluteMaxStuckY = absY + borderTop + header.maxStuckY;
+				if (headerY > absoluteMaxStuckY) {
+					headerY = absoluteMaxStuckY;
+				}
+			} else if (header.type === 'bottom' && header.minStuckY !== undefined) {
+				const absoluteMinStuckY = absY + borderTop + header.minStuckY;
+				if (headerY < absoluteMinStuckY) {
+					headerY = absoluteMinStuckY;
 				}
 			}
 
@@ -356,8 +374,11 @@ export class Compositor {
 			if (this.isHeaderStuck(header, absY, scrollTop, region)) {
 				const linesToRender = header.stuckLines ?? header.lines;
 				const footerRowInRegion =
-					(region.height - borderBottom) - linesToRender.length - stuckHeight;
-				if (Math.round(absY + borderBottom + header.y) === Math.round(absY + borderBottom + footerRowInRegion)) {
+					region.height - borderBottom - linesToRender.length - stuckHeight;
+				if (
+					Math.round(absY + borderBottom + header.y) ===
+					Math.round(absY + borderBottom + footerRowInRegion)
+				) {
 					stuckHeight += linesToRender.length;
 				} else {
 					break;

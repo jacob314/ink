@@ -60,6 +60,8 @@ export type StickyHeader = {
 	parentHeight?: number;
 	type?: 'top' | 'bottom';
 	node?: DOMElement;
+	maxStuckY?: number;
+	minStuckY?: number;
 };
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
