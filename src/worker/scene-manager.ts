@@ -95,7 +95,8 @@ export class SceneManager {
 				r.backgroundColor = update.backgroundColor;
 			if (update.opaque !== undefined) r.opaque = update.opaque;
 			if (update.borderTop !== undefined) r.borderTop = update.borderTop;
-			if (update.borderBottom !== undefined) r.borderBottom = update.borderBottom;
+			if (update.borderBottom !== undefined)
+				r.borderBottom = update.borderBottom;
 			if (update.stickyHeaders !== undefined)
 				r.stickyHeaders = update.stickyHeaders;
 

@@ -49,7 +49,7 @@ for (const {name, stickyHeaders, width, alternateBuffer} of testCases) {
 
 		// Initial render
 		worker.update(frame.tree, frame.updates, frame.cursorPosition);
-		
+
 		// Find the scrollable region
 		const scene = worker.getSceneManager();
 		const regions = [...scene.regions.values()];
@@ -63,12 +63,15 @@ for (const {name, stickyHeaders, width, alternateBuffer} of testCases) {
 		}
 
 		// Force scrollTop to 0 for initial render to avoid pushing history
-		worker.update(frame.tree, [{id: scrollRegion.id, scrollTop: 0}], frame.cursorPosition);
+		worker.update(
+			frame.tree,
+			[{id: scrollRegion.id, scrollTop: 0}],
+			frame.cursorPosition,
+		);
 		await worker.render();
 		await worker.waitForIdle();
 		await writeToTerm(term, getOutput());
 		clearOutput();
-
 
 		const {scrollHeight, height} = scrollRegion;
 		const maxScroll = Math.max(0, scrollHeight - height);

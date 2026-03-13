@@ -1,6 +1,7 @@
 # Ink Worker Rendering Pipeline Design
 
 ## Overview
+
 The `@src/worker/**` directory contains the modern, high-performance rendering pipeline for Ink. It runs in a separate worker process to decouple UI rendering from the main thread's layout calculations and React reconciliation. This architecture provides smooth animations, efficient scrollback management, and optimized terminal updates via line-diffing and hardware scrolling.
 
 ## Architecture
@@ -11,15 +12,15 @@ The worker pipeline consists of several key components that work together to tra
 graph TD
     Main[Main Thread: React & Yoga] -->|IPC: Updates| WorkerEntry[worker-entry.ts]
     WorkerEntry --> |Parsed Updates| RenderWorker[render-worker.ts: TerminalBufferWorker]
-    
+
     RenderWorker --> SceneManager[scene-manager.ts: SceneManager]
     RenderWorker --> Animation[animation-controller.ts: AnimationController]
     RenderWorker --> ScrollOpt[scroll-optimizer.ts: ScrollOptimizer]
     RenderWorker --> Compositor[compositor.ts: Compositor]
-    
+
     Compositor --> Canvas[canvas.ts: Canvas]
     SceneManager -.-> |Region Tree| Compositor
-    
+
     RenderWorker --> TerminalWriter[terminal-writer.ts: TerminalWriter]
     TerminalWriter --> Stdout[process.stdout]
 ```
@@ -52,27 +53,31 @@ You can record a test or example by accessing the `internalTerminalBuffer` from 
 
 ```tsx
 // tools/viewer/record-test.tsx
-import { render, Box, Text } from 'ink';
-import React, { useEffect, useRef } from 'react';
+import {render, Box, Text} from 'ink';
+import React, {useEffect, useRef} from 'react';
 
 function App() {
-    const ref = useRef<any>(null);
+	const ref = useRef<any>(null);
 
-    useEffect(() => {
-        const tb = ref.current?.parentNode?.internalTerminalBuffer;
-        if (tb) {
-            // Start recording a sequence of frames
-            tb.startRecording('sequence');
-            
-            setTimeout(() => {
-                // Stop and save to replay.json
-                tb.stopRecording('test-replay.json');
-                process.exit(0);
-            }, 1000);
-        }
-    }, []);
+	useEffect(() => {
+		const tb = ref.current?.parentNode?.internalTerminalBuffer;
+		if (tb) {
+			// Start recording a sequence of frames
+			tb.startRecording('sequence');
 
-    return <Box ref={ref}><Text>Hello World</Text></Box>;
+			setTimeout(() => {
+				// Stop and save to replay.json
+				tb.stopRecording('test-replay.json');
+				process.exit(0);
+			}, 1000);
+		}
+	}, []);
+
+	return (
+		<Box ref={ref}>
+			<Text>Hello World</Text>
+		</Box>
+	);
 }
 ```
 
@@ -87,6 +92,7 @@ npx tsx tools/viewer/viewer.ts test-replay.json
 ```
 
 **Viewer Controls:**
+
 - **Sequence Replays** (multiple frames over time):
   - `Space` / `Right Arrow`: Advance to the next frame.
   - `Left Arrow`: Rewind to the previous frame (this re-simulates the worker state from the start).
@@ -96,6 +102,7 @@ npx tsx tools/viewer/viewer.ts test-replay.json
 - `Ctrl+C`: Exit.
 
 **Flags:**
+
 - `--debugRainbow`: Enables a rainbow mode where every frame is rendered with a different background color. Extremely useful for visualizing which areas of the screen are actually being updated by `TerminalWriter` vs. being skipped because they didn't change.
 - `--no-animatedScroll`: Disables smooth scrolling if you want to inspect instant jumps.
 

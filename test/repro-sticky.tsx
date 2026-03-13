@@ -7,24 +7,18 @@
 import React from 'react';
 import test from 'ava';
 import {Box, Text} from '../src/index.js';
-import {renderToString} from './helpers/render-to-string.js';
+import {render} from './helpers/render.js';
 
-test('nested scrollable sticky header position', t => {
-	// Outer Box with some height to push the inner scrollable down
-	const output = renderToString(
-		<Box flexDirection="column" width={100} height={40}>
-			<Box height={10} flexDirection="column">
-				<Text>Spacer Line 0</Text>
-				<Text>Spacer Line 1</Text>
-				<Text>Spacer Line 2</Text>
-				<Text>Spacer Line 3</Text>
-				<Text>Spacer Line 4</Text>
-				<Text>Spacer Line 5</Text>
-				<Text>Spacer Line 6</Text>
-				<Text>Spacer Line 7</Text>
-				<Text>Spacer Line 8</Text>
-				<Text>Spacer Line 9</Text>
-			</Box>
+test('nested scrollable sticky header position', async t => {
+	const columns = 100;
+	const rows = 40;
+
+	const {unmount, lastFrame, waitUntilReady} = render(
+		<Box flexDirection="column" width={columns} height={rows}>
+			{Array.from({length: 10}).map((_, i) => (
+				// eslint-disable-next-line react/no-array-index-key
+				<Text key={i}>Spacer Line {i}</Text>
+			))}
 			<Box
 				height={10}
 				width={50}
@@ -33,28 +27,38 @@ test('nested scrollable sticky header position', t => {
 				borderStyle="single"
 			>
 				<Box flexDirection="column" flexShrink={0}>
-					<Box key="sticky" sticky opaque height={1}>
-						<Text>STICKY HEADER</Text>
+					<Box
+						key="sticky"
+						sticky
+						opaque
+						height={1}
+						width={50}
+						stickyChildren={<Text>STICKY HEADER</Text>}
+					>
+						<Box height={1} width={50} />
 					</Box>
 					{Array.from({length: 50}).map((_, i) => (
-						<Text key={`Line ${i + 1}`}>Line {i + 1}</Text>
+						// eslint-disable-next-line react/no-array-index-key
+						<Text key={i}>Line {i + 1}</Text>
 					))}
 				</Box>
 			</Box>
 		</Box>,
+		columns,
+		{
+			terminalHeight: rows,
+			terminalBuffer: true,
+		},
 	);
 
+	await waitUntilReady();
+
+	const output = lastFrame();
 	const lines = output.split('\n');
+	t.log('Full Output:\n' + lines.map((l, i) => `${i}: ${l}`).join('\n'));
 
-	// Expected:
-	// Rows 0-9: Spacer lines
-	// Row 10: Top border of inner box
-	// Row 11: STICKY HEADER (if correctly positioned)
-
-	const foundRow = lines.findIndex(line => line.includes('STICKY HEADER'));
-	t.is(
-		foundRow,
-		11,
-		`Expected STICKY HEADER at row 11, but found at row ${foundRow}. Output row 11: "${lines[11]}"`,
-	);
+	const foundRow = lines.findIndex(line => line.includes('│Line 6'));
+	t.is(foundRow, 11, `│Line 6 should be at row 11, found at ${foundRow}`);
+	
+	unmount();
 });

@@ -783,7 +783,6 @@ export class TerminalBufferWorker {
 					this.stickyHeadersInBackbuffer,
 				);
 
-
 				for (const op of operations) {
 					if (op.scrollToBackbuffer) {
 						if (debugWorker) {
@@ -807,6 +806,21 @@ export class TerminalBufferWorker {
 		}
 
 		// 2. Compose Frame
+		if (this.terminalWriter.isFirstRender) {
+			for (const region of this.sceneManager.regions.values()) {
+				if (region.overflowToBackbuffer) {
+					this.scrollOptimizer.updateMaxPushed(
+						region.id,
+						region.scrollTop ?? 0,
+					);
+				}
+			}
+
+			if (rootRegion.overflowToBackbuffer) {
+				this.scrollOptimizer.updateMaxPushed(rootRegion.id, cameraY);
+			}
+		}
+
 		this.composeScene();
 
 		if (this.terminalWriter.isFirstRender) {
@@ -1003,6 +1017,7 @@ export class TerminalBufferWorker {
 						clip: myClip,
 						offsetY: absY - (region.scrollTop ?? 0),
 						offsetX: absX - (region.scrollLeft ?? 0),
+						isExpanded: inExpandedContext,
 					},
 					options,
 				);
@@ -1069,7 +1084,6 @@ export class TerminalBufferWorker {
 				skipScrollbars: true,
 			},
 		);
-
 
 		const linesScrollingOut = canvas
 			.getLines()

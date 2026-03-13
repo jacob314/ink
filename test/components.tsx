@@ -140,84 +140,39 @@ test('number', t => {
 });
 
 test('fail when text nodes are not within <Text> component', t => {
-	let error: Error | undefined;
-
-	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
-		override async render() {
-			return this.props.children;
-		}
-
-		override componentDidCatch(reactError: Error) {
-			error = reactError;
-		}
-	}
-
-	renderToString(
-		<ErrorBoundary>
-			<Box>
-				Hello
-				<Text>World</Text>
-			</Box>
-		</ErrorBoundary>,
+	const output = renderToString(
+		<Box>
+			Hello
+			<Text>World</Text>
+		</Box>,
 	);
 
-	t.truthy(error);
-	t.is(
-		error?.message,
-		'Text string "Hello" must be rendered inside <Text> component',
+	t.true(
+		output.includes(
+			'Text string "Hello" must be rendered inside <Text> component',
+		),
 	);
 });
 
 test('fail when text node is not within <Text> component', t => {
-	let error: Error | undefined;
+	const output = renderToString(<Box>Hello World</Box>);
 
-	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
-		override async render() {
-			return this.props.children;
-		}
-
-		override componentDidCatch(reactError: Error) {
-			error = reactError;
-		}
-	}
-
-	renderToString(
-		<ErrorBoundary>
-			<Box>Hello World</Box>
-		</ErrorBoundary>,
-	);
-
-	t.truthy(error);
-	t.is(
-		error?.message,
-		'Text string "Hello World" must be rendered inside <Text> component',
+	t.true(
+		output.includes(
+			'Text string "Hello World" must be rendered inside <Text> component',
+		),
 	);
 });
 
 test('fail when <Box> is inside <Text> component', t => {
-	let error: Error | undefined;
-
-	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
-		override async render() {
-			return this.props.children;
-		}
-
-		override componentDidCatch(reactError: Error) {
-			error = reactError;
-		}
-	}
-
-	renderToString(
-		<ErrorBoundary>
-			<Text>
-				Hello World
-				<Box />
-			</Text>
-		</ErrorBoundary>,
+	const output = renderToString(
+		<Text>
+			Hello World
+			<Box />
+		</Text>,
 	);
 
-	t.truthy(error);
-	t.is((error as any).message, '<Box> can’t be nested inside <Text> component');
+	t.true(output.includes('<Box> can’t be nested inside <Text> component'));
 });
 
 test('remesure text dimensions on text change', t => {
@@ -418,8 +373,8 @@ test('render only new items in static output on final render', t => {
 
 // See https://github.com/chalk/wrap-ansi/issues/27
 test('ensure wrap-ansi doesn’t trim leading whitespace', t => {
-	const output = renderToString(<Text color="red">{' ERROR '}</Text>);
-	t.is(output, chalk.red(' ERROR '));
+	const output = renderToString(<Text color="red">{' ERROR'}</Text>);
+	t.is(output, chalk.red(' ERROR'));
 });
 
 test('replace child node with text', t => {

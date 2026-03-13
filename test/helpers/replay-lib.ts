@@ -158,7 +158,10 @@ export async function waitForTerminalState(
 	const buffer = term.buffer.active;
 
 	let diff = '';
-	if (buffer.cursorX !== expected.cursorX || buffer.cursorY !== expected.cursorY) {
+	if (
+		buffer.cursorX !== expected.cursorX ||
+		buffer.cursorY !== expected.cursorY
+	) {
 		diff += `Cursor mismatch: xterm(${buffer.cursorX}, ${buffer.cursorY}) vs expected(${expected.cursorX}, ${expected.cursorY})\n`;
 	}
 
@@ -166,7 +169,8 @@ export async function waitForTerminalState(
 		const workerBackbufferLen = expected.backbuffer.length;
 		for (let i = 0; i < workerBackbufferLen; i++) {
 			const expectedLine = getPlainText(expected.backbuffer[i]);
-			const xtermLine = buffer.getLine(i)?.translateToString(true).trimEnd() ?? '';
+			const xtermLine =
+				buffer.getLine(i)?.translateToString(true).trimEnd() ?? '';
 			if (expectedLine !== xtermLine) {
 				diff += `Backbuffer line ${i} mismatch:\n  xterm:    '${xtermLine}'\n  expected: '${expectedLine}'\n`;
 				break;
@@ -176,7 +180,11 @@ export async function waitForTerminalState(
 
 	for (let i = 0; i < worker.rows; i++) {
 		const expectedLine = getPlainText(expected.screen[i]);
-		const xtermLine = buffer.getLine(buffer.baseY + i)?.translateToString(true).trimEnd() ?? '';
+		const xtermLine =
+			buffer
+				.getLine(buffer.baseY + i)
+				?.translateToString(true)
+				.trimEnd() ?? '';
 		if (expectedLine !== xtermLine) {
 			diff += `Screen line ${i} mismatch:\n  xterm:    '${xtermLine}'\n  expected: '${expectedLine}'\n`;
 			break;

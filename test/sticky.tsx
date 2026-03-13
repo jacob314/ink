@@ -117,6 +117,14 @@ test('parameterized sticky header states', t => {
 				</Box>,
 			);
 
+			if (
+				name === 'h1_stuck' &&
+				scrollTop === 1 &&
+				borderVariation.name === 'without-border'
+			) {
+				console.log('WORKING STICKY OUTPUT:\n' + output);
+			}
+
 			t.snapshot(
 				output,
 				`${name} (scrollTop: ${scrollTop}) - ${description} - ${borderVariation.name}`,

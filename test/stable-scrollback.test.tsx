@@ -139,7 +139,7 @@ function TestComponent2({items, stable, refCb}: TestComponent2Props) {
 	);
 }
 
-test('stableScrollback resets when history is invalidated (prepends)', t => {
+test('stableScrollback resets when history is invalidated (prepends)', async t => {
 	let rootRef: DOMElement | undefined;
 
 	const initialItems = Array.from({length: 100}, (_, i) => String(i));
@@ -185,6 +185,9 @@ test('stableScrollback resets when history is invalidated (prepends)', t => {
 	// BUT during the render phase, TerminalBuffer will detect the change in history and set internalIsScrollbackDirty = true.
 
 	// So we need one more rerender or wait for the effect to propagate.
+	await new Promise(resolve => {
+		setTimeout(resolve, 100);
+	});
 	rerender(
 		<TestComponent2
 			stable

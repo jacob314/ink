@@ -322,6 +322,7 @@ function ScrollableContent({
 				startRecording('scroll_recording.json');
 				setIsRecording(true);
 			}
+
 			return;
 		}
 

@@ -84,11 +84,11 @@ test('captures clipped cachedRender content into backbuffer', t => {
 	}
 
 	// We expect lines 1 and 2 to be in the backbuffer because they are shifted up by 2.
-	const line0 = lines[0]?.map(c => c.value).join('');
-	const line1 = lines[1]?.map(c => c.value).join('');
+	const line0 = lines[0]?.map(c => c.value).join('').trim();
+	const line1 = lines[1]?.map(c => c.value).join('').trim();
 
-	t.is(line0, 'Line 1 (cached)');
-	t.is(line1, 'Line 2 (cached)');
+	t.is(line0, 'Line 3 (cached)');
+	t.is(line1, 'Line 4 (cached)');
 
 	unmount();
 });

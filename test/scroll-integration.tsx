@@ -20,8 +20,6 @@ const writeToTerm = async (term: any, data: string): Promise<void> =>
 		});
 	});
 
-test.skip('simple rainbow verification', async t => {});
-
 test('scroll integration - verify repaint efficiency', async t => {
 	t.timeout(30_000);
 	const columns = 100;
@@ -196,7 +194,8 @@ test('scroll integration - verify repaint efficiency', async t => {
 	await writeToTerm(term, '');
 
 	const bottomContent = getFullContent();
-	t.true(bottomContent.includes('ScrollTop: 714'),
+	t.true(
+		bottomContent.includes('ScrollTop: 714'),
 		'Should have scrolled to the bottom area',
 	);
 

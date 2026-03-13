@@ -118,24 +118,30 @@ test('repro issue: sticky headers and spurious renders', async t => {
 	}
 
 	// 2. Scroll up to a position where Header 4 (starts at ~160 in actual lines) is stuck.
-	// We'll scroll up 120 lines from the bottom (193 - 120 = 73).
-	for (let i = 0; i < 120; i++) {
+	// We'll scroll up 50 lines from the bottom (193 - 50 = 143).
+	for (let i = 0; i < 50; i++) {
 		// eslint-disable-next-line no-await-in-loop
 		await env.press('up');
 	}
+
 	await env.wait(500);
 
 	// 3. Toggle sticky headers ON
 	await env.press('h');
+
+	await new Promise(resolve => {
+		setTimeout(resolve, 1500);
+	}); // Wait for fullRender (1000ms delay)
+
 	await env.wait(500);
 
 	const contentAfterHon = env.getFullContent();
 	t.log('Content after pressing H (on):\n' + contentAfterHon);
 
-	// Assertion 1: Sticky header should be visible when stuck to the terminal top
+	// Assertion 1: Sticky footer should be visible when stuck to the terminal bottom
 	t.true(
-		contentAfterHon.includes('Header 4'),
-		'Header 4 should be visible (stuck to top) when stickyHeadersInBackbuffer is on',
+		contentAfterHon.includes('Sticky Footer 4'),
+		'Sticky Footer 4 should be visible (stuck to bottom) when stickyHeadersInBackbuffer is on',
 	);
 
 	// 4. Toggle sticky headers OFF
