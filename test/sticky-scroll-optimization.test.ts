@@ -20,8 +20,14 @@ const createStyledChar = (char: string) => ({
 	styles: [],
 });
 
-const createStyledLine = (text: string) =>
-	[...text].map(char => createStyledChar(char));
+const createStyledLine = (text: string, width = 80) => {
+	const chars = [...text].map(char => createStyledChar(char));
+	while (chars.length < width) {
+		chars.push(createStyledChar(' '));
+	}
+
+	return chars;
+};
 
 const writeToTerm = async (term: Terminal, data: string): Promise<void> =>
 	new Promise(resolve => {

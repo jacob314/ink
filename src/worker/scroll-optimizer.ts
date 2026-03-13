@@ -44,6 +44,7 @@ export class ScrollOptimizer {
 			absY: number,
 			scrollTop: number,
 		) => number,
+		stickyHeadersInBackbuffer: boolean,
 	): ScrollOperation[] {
 		if (!region.isScrollable) {
 			this.lastRegionScrollTops.delete(region.id);
@@ -86,7 +87,10 @@ export class ScrollOptimizer {
 		const adjustedStart = Math.round(
 			Math.max(
 				start,
-				absY + (region.overflowToBackbuffer ? 0 : actualStuckTopHeight),
+				absY +
+					(region.overflowToBackbuffer && !stickyHeadersInBackbuffer
+						? 0
+						: actualStuckTopHeight),
 			),
 		);
 		const adjustedEnd = Math.round(

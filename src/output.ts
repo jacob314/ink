@@ -60,6 +60,8 @@ export type Region = {
 	scrollbarThumbColor?: string;
 	backgroundColor?: string;
 	opaque?: boolean;
+	borderTop?: number;
+	borderBottom?: number;
 
 	stickyHeaders: StickyHeader[];
 	children: Region[];
@@ -100,6 +102,8 @@ export type RegionUpdate = {
 	scrollbarThumbColor?: string;
 	backgroundColor?: string;
 	opaque?: boolean;
+	borderTop?: number;
+	borderBottom?: number;
 	stickyHeaders?: StickyHeader[];
 	lines?: {
 		updates: Array<{
@@ -191,6 +195,8 @@ export default class Output {
 		opaque?: boolean;
 		nodeId?: number;
 		stableScrollback?: boolean;
+		borderTop?: number;
+		borderBottom?: number;
 	}) {
 		const {
 			id,
@@ -211,6 +217,8 @@ export default class Output {
 			opaque,
 			nodeId,
 			stableScrollback,
+			borderTop,
+			borderBottom,
 		} = options;
 
 		// Create new region
@@ -241,6 +249,8 @@ export default class Output {
 			scrollbarThumbColor,
 			backgroundColor,
 			opaque,
+			borderTop,
+			borderBottom,
 			stickyHeaders: [],
 			children: [],
 			nodeId,

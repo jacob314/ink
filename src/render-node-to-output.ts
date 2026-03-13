@@ -781,6 +781,7 @@ function renderNodeToOutput(
 
 					const borderLeft = yogaNode.getComputedBorder(Yoga.EDGE_LEFT);
 					const borderTop = yogaNode.getComputedBorder(Yoga.EDGE_TOP);
+					const borderBottom = yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM);
 
 					let marginRight = 0;
 					let marginBottom = 0;
@@ -821,6 +822,8 @@ function renderNodeToOutput(
 						opaque: node.internal_opaque,
 						nodeId: node.internal_id,
 						stableScrollback: node.style.stableScrollback,
+						borderTop,
+						borderBottom,
 					});
 
 					const childOffsetX = -borderLeft;
@@ -838,7 +841,7 @@ function renderNodeToOutput(
 							skipStaticElements,
 							nodesToSkip: allNodesToSkip,
 							isStickyRender,
-							skipStickyHeaders: true,
+							skipStickyHeaders: false,
 							selectionMap,
 							selectionStyle,
 						});
@@ -1052,7 +1055,7 @@ function renderNodeToOutput(
 
 							x: stickyOffsetX - (x + currentBorderLeft),
 
-							y: type === 'top' ? 0 : currentClientHeight - stickyNodeHeight,
+							y: finalStickyY - (y + yogaNode.getComputedBorder(Yoga.EDGE_TOP)),
 
 							naturalRow,
 

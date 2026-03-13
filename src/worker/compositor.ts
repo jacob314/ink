@@ -101,29 +101,30 @@ export class Compositor {
 		}
 
 		const scrollTop = region.scrollTop ?? 0;
+		const borderTop = region.borderTop ?? 0;
 
 		for (const header of region.stickyHeaders) {
-			const useStuckPosition = this.isHeaderStuck(header, absY, scrollTop);
+			const useStuckPosition = this.isHeaderStuck(header, absY, scrollTop, region);
 
-			if (!useStuckPosition && header.isStuckOnly) {
+			// ONLY draw if stuck. Natural versions are already in the background buffer.
+			if (!useStuckPosition) {
 				continue;
 			}
 
-			const linesToRender = useStuckPosition
-				? (header.stuckLines ?? header.lines)
-				: header.lines;
+			const linesToRender = header.stuckLines ?? header.lines;
 
-			let headerY =
-				absY + (useStuckPosition ? header.y : header.naturalRow - scrollTop);
+			let headerY = absY + borderTop + header.y;
 			const headerH = linesToRender.length;
 
 			if (this.options.stickyHeadersInBackbuffer) {
 				if (header.type === 'top') {
-					if (headerY < absY + header.y && absY + region.height > absY + header.y) {
-						headerY = absY + header.y;
+					if (headerY < 0 && absY + region.height > 0) {
+						headerY = 0;
 					}
 				} else if (header.type === 'bottom') {
-					const stuckPos = this.options.canvasHeight - (header.stuckLines ?? header.lines).length;
+					const stuckPos =
+						this.options.canvasHeight -
+						(header.stuckLines ?? header.lines).length;
 					if (headerY > stuckPos && absY < stuckPos + headerH) {
 						headerY = stuckPos;
 					}
@@ -136,14 +137,26 @@ export class Compositor {
 				// If header is within the region's clip (standard behavior)
 				const withinRegionClip = sy >= clip.y && sy < clip.y + clip.h;
 
-				// If header is above the region (due to overflowToBackbuffer) and we want sticky headers there
+				// If header is above/below the region and we want sticky headers there
 				const aboveRegionAndStickyEnabled =
+					header.type === 'top' &&
 					absY < 0 &&
 					this.options.stickyHeadersInBackbuffer &&
 					sy >= 0 &&
 					sy < Math.min(canvas.height, absY + region.height);
 
-				if (!withinRegionClip && !aboveRegionAndStickyEnabled) {
+				const belowRegionAndStickyEnabled =
+					header.type === 'bottom' &&
+					absY + region.height > this.options.canvasHeight &&
+					this.options.stickyHeadersInBackbuffer &&
+					sy >= Math.max(0, absY) &&
+					sy < this.options.canvasHeight;
+
+				if (
+					!withinRegionClip &&
+					!aboveRegionAndStickyEnabled &&
+					!belowRegionAndStickyEnabled
+				) {
 					continue;
 				}
 
@@ -277,19 +290,26 @@ export class Compositor {
 		header: StickyHeader,
 		absY: number,
 		scrollTop: number,
+		region: Region,
 	): boolean {
+		const borderTop = region.borderTop ?? 0;
+
 		const isStuckState =
 			header.type === 'bottom'
 				? Math.round(header.naturalRow - scrollTop + header.lines.length) >=
 					Math.round(header.y + (header.stuckLines ?? header.lines).length)
-				: Math.round(header.naturalRow - scrollTop) <= Math.round(header.type === 'top' ? 0 : header.y);
+				: Math.round(header.naturalRow - scrollTop) <= Math.round(header.y);
 
 		if (!isStuckState) {
 			return false;
 		}
 
 		if (header.type === 'top') {
-			return (this.options.stickyHeadersInBackbuffer ?? false) || absY > 0;
+			return (
+				(this.options.stickyHeadersInBackbuffer ?? false) ||
+				absY + borderTop > 0 ||
+				!region.overflowToBackbuffer
+			);
 		}
 
 		return true;
@@ -301,18 +321,19 @@ export class Compositor {
 		scrollTop: number,
 	): number {
 		let stuckHeight = 0;
+		const borderTop = region.borderTop ?? 0;
 		const topHeaders = [...region.stickyHeaders]
 			.filter(h => h.type === 'top')
 			.sort((a, b) => a.y - b.y);
 
 		for (const header of topHeaders) {
 			if (
-				this.isHeaderStuck(header, absY, scrollTop) &&
-				Math.abs(Math.round(header.y) - stuckHeight) < 0.5
+				this.isHeaderStuck(header, absY, scrollTop, region) &&
+				Math.abs(Math.round(absY + borderTop + header.y) - stuckHeight) < 0.5
 			) {
 				const linesToRender = header.stuckLines ?? header.lines;
 				stuckHeight += linesToRender.length;
-			} else if (this.isHeaderStuck(header, absY, scrollTop)) {
+			} else if (this.isHeaderStuck(header, absY, scrollTop, region)) {
 				break;
 			}
 		}
@@ -326,16 +347,17 @@ export class Compositor {
 		scrollTop: number,
 	): number {
 		let stuckHeight = 0;
+		const borderBottom = region.borderBottom ?? 0;
 		const bottomHeaders = [...region.stickyHeaders]
 			.filter(h => h.type === 'bottom')
 			.sort((a, b) => b.y - a.y);
 
 		for (const header of bottomHeaders) {
-			if (this.isHeaderStuck(header, absY, scrollTop)) {
+			if (this.isHeaderStuck(header, absY, scrollTop, region)) {
 				const linesToRender = header.stuckLines ?? header.lines;
 				const footerRowInRegion =
-					region.height - linesToRender.length - stuckHeight;
-				if (Math.round(header.y) === Math.round(footerRowInRegion)) {
+					(region.height - borderBottom) - linesToRender.length - stuckHeight;
+				if (Math.round(absY + borderBottom + header.y) === Math.round(absY + borderBottom + footerRowInRegion)) {
 					stuckHeight += linesToRender.length;
 				} else {
 					break;

@@ -778,9 +778,11 @@ export class TerminalBufferWorker {
 							region.scrollTop = originalScrollTop;
 						}
 					},
-					(r, y, s) => compositor.calculateActualStuckTopHeight(r, y, s),
-					(r, y, s) => compositor.calculateActualStuckBottomHeight(r, y, s),
+					(r, s, a) => compositor.calculateActualStuckTopHeight(r, s, a),
+					(r, s, a) => compositor.calculateActualStuckBottomHeight(r, s, a),
+					this.stickyHeadersInBackbuffer,
 				);
+
 
 				for (const op of operations) {
 					if (op.scrollToBackbuffer) {
@@ -886,7 +888,10 @@ export class TerminalBufferWorker {
 							overrideHeight: height,
 							isExpanded: true,
 						},
-						{skipScrollbars: true},
+						{
+							skipStickyHeaders: true,
+							skipScrollbars: true,
+						},
 					);
 				} finally {
 					region.scrollTop = originalScrollTop;
@@ -1060,10 +1065,11 @@ export class TerminalBufferWorker {
 			canvas,
 			{clip: undefined, offsetY: -start},
 			{
-				skipStickyHeaders: !this.stickyHeadersInBackbuffer,
+				skipStickyHeaders: true,
 				skipScrollbars: true,
 			},
 		);
+
 
 		const linesScrollingOut = canvas
 			.getLines()
