@@ -75,7 +75,7 @@ const createTestEnv = (
 			}
 		}
 
-		await delay(100);
+		await delay(10);
 	};
 
 	const getLine = (row: number) => {
@@ -117,12 +117,12 @@ test('repro issue: sticky headers and spurious renders', async t => {
 		await env.wait(200);
 	}
 
-	// 2. Scroll down 10 lines
-	for (let i = 0; i < 10; i++) {
+	// 2. Scroll up to a position where Header 4 (starts at ~160 in actual lines) is stuck.
+	// We'll scroll up 120 lines from the bottom (193 - 120 = 73).
+	for (let i = 0; i < 120; i++) {
 		// eslint-disable-next-line no-await-in-loop
-		await env.press('down');
+		await env.press('up');
 	}
-
 	await env.wait(500);
 
 	// 3. Toggle sticky headers ON
@@ -133,11 +133,6 @@ test('repro issue: sticky headers and spurious renders', async t => {
 	t.log('Content after pressing H (on):\n' + contentAfterHon);
 
 	// Assertion 1: Sticky header should be visible when stuck to the terminal top
-	// Header 4 is at row 80 in items.
-	// Each block is 20 lines. Header 0: 0-19, Header 1: 20-39, Header 2: 40-59, Header 3: 60-79, Header 4: 80-99.
-	// We scrolled down 10 lines from the bottom (which was at row 100+ after 5 space presses).
-	// Content height is ~180. We scrolled to ~170.
-	// Header 4 is definitely above us.
 	t.true(
 		contentAfterHon.includes('Header 4'),
 		'Header 4 should be visible (stuck to top) when stickyHeadersInBackbuffer is on',

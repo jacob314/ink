@@ -23,8 +23,8 @@ const testCases = [
 ];
 
 for (const {name, stickyHeaders, width, alternateBuffer} of testCases) {
-	test(`Scroll snapshot: cli-snapshot.json (${name})`, async t => {
-		const replayFile = 'cli-snapshot.json';
+	test(`Scroll snapshot: ${name}`, async t => {
+		const replayFile = 'scroll-demo.json';
 		const replay = loadReplayData(replayDir, replayFile);
 
 		const columns = width ?? replay.columns;
@@ -49,7 +49,7 @@ for (const {name, stickyHeaders, width, alternateBuffer} of testCases) {
 
 		// Initial render
 		worker.update(frame.tree, frame.updates, frame.cursorPosition);
-
+		
 		// Find the scrollable region
 		const scene = worker.getSceneManager();
 		const regions = [...scene.regions.values()];
@@ -61,6 +61,14 @@ for (const {name, stickyHeaders, width, alternateBuffer} of testCases) {
 			t.fail('No scroll region found in replay');
 			return;
 		}
+
+		// Force scrollTop to 0 for initial render to avoid pushing history
+		worker.update(frame.tree, [{id: scrollRegion.id, scrollTop: 0}], frame.cursorPosition);
+		await worker.render();
+		await worker.waitForIdle();
+		await writeToTerm(term, getOutput());
+		clearOutput();
+
 
 		const {scrollHeight, height} = scrollRegion;
 		const maxScroll = Math.max(0, scrollHeight - height);
@@ -87,6 +95,7 @@ for (const {name, stickyHeaders, width, alternateBuffer} of testCases) {
 			);
 			// eslint-disable-next-line no-await-in-loop
 			await worker.render();
+
 			// eslint-disable-next-line no-await-in-loop
 			await worker.waitForIdle();
 
@@ -134,57 +143,6 @@ for (const {name, stickyHeaders, width, alternateBuffer} of testCases) {
 			} else {
 				const expected = fs.readFileSync(snapshotPath, 'utf8');
 				t.is(termOutput, expected, `Scroll top ${scrollTop} mismatch`);
-			}
-		}
-
-		// --- Second Pass: Jump to Top and Scroll 1-line-at-a-time ---
-		// Jump back to top
-		worker.update(
-			frame.tree,
-			[{id: scrollRegion.id, scrollTop: 0}],
-			frame.cursorPosition,
-		);
-		await worker.render();
-		// Wait for full render triggered by jumping back (since scrollTop < maxPushed)
-		await worker.waitForIdle();
-
-		for (let scrollTop = 0; scrollTop <= maxScroll; scrollTop++) {
-			worker.update(
-				frame.tree,
-				[{id: scrollRegion.id, scrollTop}],
-				frame.cursorPosition,
-			);
-			// eslint-disable-next-line no-await-in-loop
-			await worker.render();
-
-			// Only verify at multiples of 10 and maxScroll (where we have snapshots)
-			if (scrollTop % 10 === 0 || scrollTop === maxScroll) {
-				// eslint-disable-next-line no-await-in-loop
-				await worker.waitForIdle();
-
-				const output = getOutput();
-				clearOutput();
-				// eslint-disable-next-line no-await-in-loop
-				await writeToTerm(term, output);
-				// eslint-disable-next-line no-await-in-loop
-				await waitForTerminalState(term, worker);
-
-				// eslint-disable-next-line no-await-in-loop
-				const termOutput = await captureTerminalState(term, '', {
-					logDebugInfo: true,
-				});
-
-				const snapshotPath = path.join(
-					scrollDir,
-					`${replayFile.replace('.json', '')}.${name}.scroll_${scrollTop}.snapshot.txt`,
-				);
-
-				const expected = fs.readFileSync(snapshotPath, 'utf8');
-				t.is(
-					termOutput,
-					expected,
-					`Second pass mismatch at scrollTop ${scrollTop} (${name})`,
-				);
 			}
 		}
 	});

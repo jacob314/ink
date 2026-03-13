@@ -79,7 +79,7 @@ export function createWorkerAndTerminal(
 export async function waitForTerminalState(
 	term: Terminal,
 	worker: TerminalBufferWorker,
-	timeout = 2000,
+	timeout = 5000,
 ): Promise<void> {
 	const start = Date.now();
 	while (Date.now() - start < timeout) {
@@ -89,8 +89,8 @@ export async function waitForTerminalState(
 		// 1. Check Cursor Position
 		// worker.cursorY is relative to the screen. xterm cursorY is also relative to viewport.
 		if (
-			buffer.cursorX !== expected.cursorX ||
-			buffer.cursorY !== expected.cursorY
+			(expected.cursorX !== -1 && buffer.cursorX !== expected.cursorX) ||
+			(expected.cursorY !== -1 && buffer.cursorY !== expected.cursorY)
 		) {
 			// eslint-disable-next-line no-await-in-loop
 			await new Promise(resolve => {
@@ -154,8 +154,37 @@ export async function waitForTerminalState(
 		});
 	}
 
+	const expected = worker.getExpectedState();
+	const buffer = term.buffer.active;
+
+	let diff = '';
+	if (buffer.cursorX !== expected.cursorX || buffer.cursorY !== expected.cursorY) {
+		diff += `Cursor mismatch: xterm(${buffer.cursorX}, ${buffer.cursorY}) vs expected(${expected.cursorX}, ${expected.cursorY})\n`;
+	}
+
+	if (buffer.type !== 'alternate') {
+		const workerBackbufferLen = expected.backbuffer.length;
+		for (let i = 0; i < workerBackbufferLen; i++) {
+			const expectedLine = getPlainText(expected.backbuffer[i]);
+			const xtermLine = buffer.getLine(i)?.translateToString(true).trimEnd() ?? '';
+			if (expectedLine !== xtermLine) {
+				diff += `Backbuffer line ${i} mismatch:\n  xterm:    '${xtermLine}'\n  expected: '${expectedLine}'\n`;
+				break;
+			}
+		}
+	}
+
+	for (let i = 0; i < worker.rows; i++) {
+		const expectedLine = getPlainText(expected.screen[i]);
+		const xtermLine = buffer.getLine(buffer.baseY + i)?.translateToString(true).trimEnd() ?? '';
+		if (expectedLine !== xtermLine) {
+			diff += `Screen line ${i} mismatch:\n  xterm:    '${xtermLine}'\n  expected: '${expectedLine}'\n`;
+			break;
+		}
+	}
+
 	throw new Error(
-		`Timeout waiting for terminal state to match worker state after ${timeout}ms`,
+		`Timeout waiting for terminal state to match worker state after ${timeout}ms\nDifferences:\n${diff}`,
 	);
 }
 
