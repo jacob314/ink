@@ -7,6 +7,7 @@
     <text x="0" y="2" fill="#ffffff" textLength="1629" lengthAdjust="spacingAndGlyphs">Line 1                                                                                                                                                                               </text>
     <text x="0" y="19" fill="#00cdcd" textLength="1629" lengthAdjust="spacingAndGlyphs">┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐</text>
     <text x="0" y="36" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="9" y="36" fill="#ffffff" textLength="1611" lengthAdjust="spacingAndGlyphs">                                                                                                                                                                                  █</text>
     <text x="1620" y="36" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
     <text x="0" y="53" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
     <text x="9" y="53" fill="#7f7f7f" textLength="234" lengthAdjust="spacingAndGlyphs">[body line for header 0] 1</text>

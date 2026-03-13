@@ -67,12 +67,25 @@ export type Props = Except<Styles, 'textWrap'> & {
 	/**
 	 * Make the element sticky.
 	 */
-	readonly sticky?: boolean;
+	readonly sticky?: boolean | 'top' | 'bottom';
 
 	/**
 	 * Content to render when the element is sticky.
 	 */
 	readonly stickyChildren?: ReactNode;
+
+	/**
+	 * Whether to render scrollbars if the element is scrollable.
+	 * @default true
+	 */
+	readonly scrollbar?: boolean;
+
+	/**
+	 * Keep the scrollback history stable when content shrinks.
+	 * Only applies when `overflowToBackbuffer` is also enabled.
+	 * @default false
+	 */
+	readonly stableScrollback?: boolean;
 };
 
 /**
@@ -90,6 +103,8 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 			'aria-state': ariaState,
 			sticky,
 			opaque,
+			scrollbar = true,
+			stableScrollback = false,
 			...style
 		},
 		ref,
@@ -110,6 +125,7 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 					flexShrink: 1,
 					...style,
 					backgroundColor,
+					stableScrollback,
 					overflowX: style.overflowX ?? style.overflow ?? 'visible',
 					overflowY: style.overflowY ?? style.overflow ?? 'visible',
 				}}
@@ -119,6 +135,8 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 				}}
 				sticky={sticky}
 				opaque={opaque}
+				scrollbar={scrollbar}
+				stableScrollback={stableScrollback}
 			>
 				{isScreenReaderEnabled && label ? label : children}
 				{sticky && stickyChildren && !isScreenReaderEnabled && (

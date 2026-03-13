@@ -31,6 +31,17 @@ const getPlainTextFromDomNode = (node: DOMNode): PlainTextResultWithMap => {
 		return result;
 	}
 
+	if (node.nodeName === 'ink-static-render') {
+		const text = node.cachedRender?.selectableText ?? '';
+		const styledChars = toStyledCharacters(text);
+		result.styledChars.push(...styledChars);
+		result.charOffsetMap.set(node, {
+			start: 0,
+			end: styledChars.length,
+		});
+		return result;
+	}
+
 	const {state} = processLayout(node, {
 		initialState: (): PlainTextResultWithMap => ({
 			styledChars: [],
@@ -150,6 +161,10 @@ const getRangeCharacterOffsets = (
 		}
 
 		if (node.nodeName === '#text') {
+			return nodeRange.start + offset;
+		}
+
+		if (node.nodeName === 'ink-static-render') {
 			return nodeRange.start + offset;
 		}
 

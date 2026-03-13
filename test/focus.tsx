@@ -107,7 +107,7 @@ function Item({label, autoFocus, disabled = false}: ItemProps) {
 	);
 }
 
-test('dont focus on register when auto focus is off', async t => {
+test.serial('dont focus on register when auto focus is off', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	render(<Test />, {
@@ -124,7 +124,7 @@ test('dont focus on register when auto focus is off', async t => {
 	);
 });
 
-test('focus the first component to register', async t => {
+test.serial('focus the first component to register', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	render(<Test autoFocus />, {
@@ -141,7 +141,7 @@ test('focus the first component to register', async t => {
 	);
 });
 
-test('unfocus active component on Esc', async t => {
+test.serial('unfocus active component on Esc', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	render(<Test />, {
@@ -159,7 +159,7 @@ test('unfocus active component on Esc', async t => {
 	);
 });
 
-test('switch focus to first component on Tab', async t => {
+test.serial('switch focus to first component on Tab', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	render(<Test />, {
@@ -178,7 +178,7 @@ test('switch focus to first component on Tab', async t => {
 	);
 });
 
-test('switch focus to the next component on Tab', async t => {
+test.serial('switch focus to the next component on Tab', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	render(<Test />, {
@@ -198,35 +198,38 @@ test('switch focus to the next component on Tab', async t => {
 	);
 });
 
-test('switch focus to the first component if currently focused component is the last one on Tab', async t => {
-	const stdout = createStdout();
-	const stdin = createStdin();
-	render(<Test autoFocus />, {
-		stdout,
-		stdin,
-		debug: true,
-	});
+test.serial(
+	'switch focus to the first component if currently focused component is the last one on Tab',
+	async t => {
+		const stdout = createStdout();
+		const stdin = createStdin();
+		render(<Test autoFocus />, {
+			stdout,
+			stdin,
+			debug: true,
+		});
 
-	await delay(100);
-	emitReadable(stdin, '\t');
-	emitReadable(stdin, '\t');
-	await delay(100);
+		await delay(100);
+		emitReadable(stdin, '\t');
+		emitReadable(stdin, '\t');
+		await delay(100);
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['First', 'Second', 'Third ✔'].join('\n'),
-	);
+		t.is(
+			(stdout.write as any).lastCall.args[0],
+			['First', 'Second', 'Third ✔'].join('\n'),
+		);
 
-	emitReadable(stdin, '\t');
-	await delay(100);
+		emitReadable(stdin, '\t');
+		await delay(100);
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['First ✔', 'Second', 'Third'].join('\n'),
-	);
-});
+		t.is(
+			(stdout.write as any).lastCall.args[0],
+			['First ✔', 'Second', 'Third'].join('\n'),
+		);
+	},
+);
 
-test('skip disabled component on Tab', async t => {
+test.serial('skip disabled component on Tab', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	render(<Test autoFocus disableSecond />, {
@@ -245,7 +248,7 @@ test('skip disabled component on Tab', async t => {
 	);
 });
 
-test('switch focus to the previous component on Shift+Tab', async t => {
+test.serial('switch focus to the previous component on Shift+Tab', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	render(<Test autoFocus />, {
@@ -272,26 +275,29 @@ test('switch focus to the previous component on Shift+Tab', async t => {
 	);
 });
 
-test('switch focus to the last component if currently focused component is the first one on Shift+Tab', async t => {
-	const stdout = createStdout();
-	const stdin = createStdin();
-	render(<Test autoFocus />, {
-		stdout,
-		stdin,
-		debug: true,
-	});
+test.serial(
+	'switch focus to the last component if currently focused component is the first one on Shift+Tab',
+	async t => {
+		const stdout = createStdout();
+		const stdin = createStdin();
+		render(<Test autoFocus />, {
+			stdout,
+			stdin,
+			debug: true,
+		});
 
-	await delay(100);
-	emitReadable(stdin, '\u001B[Z');
-	await delay(100);
+		await delay(100);
+		emitReadable(stdin, '\u001B[Z');
+		await delay(100);
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['First', 'Second', 'Third ✔'].join('\n'),
-	);
-});
+		t.is(
+			(stdout.write as any).lastCall.args[0],
+			['First', 'Second', 'Third ✔'].join('\n'),
+		);
+	},
+);
 
-test('skip disabled component on Shift+Tab', async t => {
+test.serial('skip disabled component on Shift+Tab', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	render(<Test autoFocus disableSecond />, {
@@ -311,7 +317,7 @@ test('skip disabled component on Shift+Tab', async t => {
 	);
 });
 
-test('reset focus when focused component unregisters', async t => {
+test.serial('reset focus when focused component unregisters', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	const {rerender} = render(<Test autoFocus />, {
@@ -327,31 +333,37 @@ test('reset focus when focused component unregisters', async t => {
 	t.is((stdout.write as any).lastCall.args[0], ['Second', 'Third'].join('\n'));
 });
 
-test('focus first component after focused component unregisters', async t => {
-	const stdout = createStdout();
-	const stdin = createStdin();
-	const {rerender} = render(<Test autoFocus />, {
-		stdout,
-		stdin,
-		debug: true,
-	});
+test.serial(
+	'focus first component after focused component unregisters',
+	async t => {
+		const stdout = createStdout();
+		const stdin = createStdin();
+		const {rerender} = render(<Test autoFocus />, {
+			stdout,
+			stdin,
+			debug: true,
+		});
 
-	await delay(100);
-	rerender(<Test autoFocus showFirst={false} />);
-	await delay(100);
+		await delay(100);
+		rerender(<Test autoFocus showFirst={false} />);
+		await delay(100);
 
-	t.is((stdout.write as any).lastCall.args[0], ['Second', 'Third'].join('\n'));
+		t.is(
+			(stdout.write as any).lastCall.args[0],
+			['Second', 'Third'].join('\n'),
+		);
 
-	emitReadable(stdin, '\t');
-	await delay(100);
+		emitReadable(stdin, '\t');
+		await delay(100);
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['Second ✔', 'Third'].join('\n'),
-	);
-});
+		t.is(
+			(stdout.write as any).lastCall.args[0],
+			['Second ✔', 'Third'].join('\n'),
+		);
+	},
+);
 
-test('toggle focus management', async t => {
+test.serial('toggle focus management', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	const {rerender} = render(<Test autoFocus />, {
@@ -382,7 +394,7 @@ test('toggle focus management', async t => {
 	);
 });
 
-test('manually focus next component', async t => {
+test.serial('manually focus next component', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	const {rerender} = render(<Test autoFocus />, {
@@ -401,7 +413,7 @@ test('manually focus next component', async t => {
 	);
 });
 
-test('manually focus previous component', async t => {
+test.serial('manually focus previous component', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	const {rerender} = render(<Test autoFocus />, {
@@ -420,39 +432,45 @@ test('manually focus previous component', async t => {
 	);
 });
 
-test('doesnt crash when focusing next on unmounted children', async t => {
-	const stdout = createStdout();
-	const stdin = createStdin();
-	const {rerender} = render(<Test autoFocus />, {
-		stdout,
-		stdin,
-		debug: true,
-	});
+test.serial(
+	'doesnt crash when focusing next on unmounted children',
+	async t => {
+		const stdout = createStdout();
+		const stdin = createStdin();
+		const {rerender} = render(<Test autoFocus />, {
+			stdout,
+			stdin,
+			debug: true,
+		});
 
-	await delay(100);
-	rerender(<Test focusNext unmountChildren />);
-	await delay(100);
+		await delay(100);
+		rerender(<Test focusNext unmountChildren />);
+		await delay(100);
 
-	t.is((stdout.write as any).lastCall.args[0], '');
-});
+		t.is((stdout.write as any).lastCall.args[0], '');
+	},
+);
 
-test('doesnt crash when focusing previous on unmounted children', async t => {
-	const stdout = createStdout();
-	const stdin = createStdin();
-	const {rerender} = render(<Test autoFocus />, {
-		stdout,
-		stdin,
-		debug: true,
-	});
+test.serial(
+	'doesnt crash when focusing previous on unmounted children',
+	async t => {
+		const stdout = createStdout();
+		const stdin = createStdin();
+		const {rerender} = render(<Test autoFocus />, {
+			stdout,
+			stdin,
+			debug: true,
+		});
 
-	await delay(100);
-	rerender(<Test focusPrevious unmountChildren />);
-	await delay(100);
+		await delay(100);
+		rerender(<Test focusPrevious unmountChildren />);
+		await delay(100);
 
-	t.is((stdout.write as any).lastCall.args[0], '');
-});
+		t.is((stdout.write as any).lastCall.args[0], '');
+	},
+);
 
-test('focuses first non-disabled component', async t => {
+test.serial('focuses first non-disabled component', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	render(<Test autoFocus disableFirst disableSecond />, {
@@ -469,7 +487,7 @@ test('focuses first non-disabled component', async t => {
 	);
 });
 
-test('skips disabled elements when wrapping around', async t => {
+test.serial('skips disabled elements when wrapping around', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	render(<Test autoFocus disableFirst />, {
@@ -490,21 +508,24 @@ test('skips disabled elements when wrapping around', async t => {
 	);
 });
 
-test('skips disabled elements when wrapping around from the front', async t => {
-	const stdout = createStdout();
-	const stdin = createStdin();
-	render(<Test autoFocus disableThird />, {
-		stdout,
-		stdin,
-		debug: true,
-	});
+test.serial(
+	'skips disabled elements when wrapping around from the front',
+	async t => {
+		const stdout = createStdout();
+		const stdin = createStdin();
+		render(<Test autoFocus disableThird />, {
+			stdout,
+			stdin,
+			debug: true,
+		});
 
-	await delay(100);
-	emitReadable(stdin, '\u001B[Z');
-	await delay(100);
+		await delay(100);
+		emitReadable(stdin, '\u001B[Z');
+		await delay(100);
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['First', 'Second ✔', 'Third'].join('\n'),
-	);
-});
+		t.is(
+			(stdout.write as any).lastCall.args[0],
+			['First', 'Second ✔', 'Third'].join('\n'),
+		);
+	},
+);

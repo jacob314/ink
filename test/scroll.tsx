@@ -649,3 +649,21 @@ for (const {name, props} of maxDimensionsScrollTests) {
 		t.snapshot(output);
 	});
 }
+
+test('scrollbar hidden when scrollbar=false', t => {
+	const output = renderToString(
+		<Box
+			width={15}
+			height={5}
+			overflow="scroll"
+			borderStyle="round"
+			scrollbar={false}
+		>
+			<Box width={100} height={100} flexShrink={0}>
+				<Text>Scroll me</Text>
+			</Box>
+		</Box>,
+	);
+
+	t.snapshot(output);
+});

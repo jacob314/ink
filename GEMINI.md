@@ -4,6 +4,8 @@ This repository contains the source code for **Ink**, a library for building com
 
 **Do not edit package.json unless specifically instructed to that file.**
 
+Always usee src/debug-log.ts for debug logging in console.log|debug|warn|error. Using the console will interfere with Ink output.
+
 ## Repository Structure
 
 - **`src/`**: Contains the core logic of the library.
@@ -52,6 +54,7 @@ npm test
 - `hooks › useInput - pasted carriage return`
 - `exit › exit with thrown error`
 - `hooks › useStdout - write to stdout`
+- unicode-marks > width may get measured as 12 instead of 16 locally.
 
 ### Linting and Formatting
 
