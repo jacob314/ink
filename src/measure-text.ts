@@ -140,7 +140,10 @@ export function toStyledCharacters(text: string): StyledChar[] {
 			// - Variation selectors (U+FE00-FE0F)
 			// - Combining enclosing keycap (U+20E3)
 			// - And many other combining marks across Unicode
-			const isUnicodeMark = /\p{Mark}/u.test(nextCharacter.value);
+			const isUnicodeMark =
+				/\p{Mark}/u.test(nextCharacter.value) ||
+				nextCharacter.value === '\u0E33' || // Thai Sara Am
+				nextCharacter.value === '\u0EB3'; // Lao Sara Am
 
 			// Skin tone modifiers (emoji modifiers, not in Mark category)
 			const isSkinToneModifier =
