@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="853" viewBox="0 0 920 853">
+  <style>
+    text { font-family: Consolas, "Courier New", monospace; font-size: 14px; dominant-baseline: text-before-edge; white-space: pre; }
+  </style>
+  <rect width="920" height="853" fill="#000000" />
+  <g transform="translate(10, 10)">
+    <text x="0" y="2" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">┌────────────────────────────┐                                                                      </text>
+    <text x="0" y="19" fill="#ffffff" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <rect x="9" y="17" width="99" height="17" fill="#ffffff" />
+    <text x="9" y="19" fill="#000000" textLength="99" lengthAdjust="spacingAndGlyphs">Hello World</text>
+    <text x="108" y="19" fill="#ffffff" textLength="792" lengthAdjust="spacingAndGlyphs">                 │                                                                      </text>
+    <text x="0" y="36" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">│┌──────────────────────────┐│                                                                      </text>
+    <text x="0" y="53" fill="#ffffff" textLength="18" lengthAdjust="spacingAndGlyphs">││</text>
+    <rect x="18" y="51" width="126" height="17" fill="#ffffff" />
+    <text x="18" y="53" fill="#000000" textLength="126" lengthAdjust="spacingAndGlyphs">This is a test</text>
+    <text x="144" y="53" fill="#ffffff" textLength="756" lengthAdjust="spacingAndGlyphs">            ││                                                                      </text>
+    <text x="0" y="70" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">│└──────────────────────────┘│                                                                      </text>
+    <text x="0" y="87" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">┌────────────────────────────┐                                                                      </text>
+    <text x="0" y="104" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">│Hello World                 │                                                                      </text>
+    <text x="0" y="121" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">│┌──────────────────────────┐│                                                                      </text>
+    <text x="0" y="138" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">││This is a test            ││                                                                      </text>
+    <text x="0" y="155" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">│└──────────────────────────┘│                                                                      </text>
+    <text x="0" y="172" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">│Row ARow B                  │                                                                      </text>
+    <text x="0" y="189" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">│This is a very long text    │                                                                      </text>
+    <text x="0" y="206" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">│that is intended to wrap    │                                                                      </text>
+    <text x="0" y="223" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">│because the container width │                                                                      </text>
+    <text x="0" y="240" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">│is fixed to 20 characters.  │                                                                      </text>
+    <text x="0" y="257" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">│This is a very long text    │                                                                      </text>
+    <text x="0" y="274" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">│that is intended to wrap    │                                                                      </text>
+    <text x="0" y="291" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">│because the container width │                                                                      </text>
+    <text x="0" y="308" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">│is fixed to 20 ch           │                                                                      </text>
+    <text x="0" y="325" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">│                            │                                                                      </text>
+    <text x="0" y="342" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">│┌──────────────────────────┐│                                                                      </text>
+    <text x="0" y="359" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">││1  const greeting =       ││                                                                      </text>
+    <text x="0" y="376" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">││   &quot;Hello&quot;;               ││                                                                      </text>
+    <text x="0" y="393" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">││2  const name = &quot;World&quot;;  ││                                                                      </text>
+    <text x="0" y="410" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">││3  console.log(           ││                                                                      </text>
+    <text x="0" y="427" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">││4    greeting + &quot;, &quot; +    ││                                                                      </text>
+    <text x="0" y="444" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">││   name + &quot; (wrap)&quot;       ││                                                                      </text>
+    <text x="0" y="461" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">││5  );                     ││                                                                      </text>
+    <text x="0" y="478" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">│└──────────────────────────┘│                                                                      </text>
+    <text x="0" y="495" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">└────────────────────────────┘                                                                      </text>
+    <text x="0" y="529" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">Cursor: 0, 26                                                                                       </text>
+    <text x="0" y="546" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">Full Text Length: 372                                                                               </text>
+    <text x="0" y="563" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">Full Text JSON: &quot;Hello World\n\n This is a test\n\nRow ARow B\nThis is a very long text\nthat is    </text>
+    <text x="0" y="580" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">intended to wrap\nbecause the container width\nis fixed to 20 characters.\nThis is a very long      </text>
+    <text x="0" y="597" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">text\nthat is intended to wrap\nbecause the container width\nis fixed to 20 ch\n\n\n    const       </text>
+    <text x="0" y="614" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">greeting =\n    \&quot;Hello\&quot;;\n    const name = \&quot;World\&quot;;\n    console.log(\n      greeting + \&quot;, \&quot;  </text>
+    <text x="0" y="631" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">+\n    name + \&quot; (wrap)\&quot;\n    );&quot;                                                                  </text>
+    <text x="0" y="648" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">anchorPoint: 372, undefined                                                                         </text>
+    <text x="0" y="665" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">focusPoint: 372, undefined                                                                          </text>
+    <text x="0" y="682" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">┌──────────────────────────────────────────────────────────────────────────────────────────────────┐</text>
+    <text x="0" y="699" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">│Selected Text:                                                                                    │</text>
+    <text x="0" y="716" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────────────────────────────────────────┘</text>
+    <text x="0" y="750" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">Press &apos;t&apos; to toggle selection visibility.                                                           </text>
+    <text x="0" y="767" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">Press &apos;m&apos; to toggle StaticRender (current: ON).                                                     </text>
+    <text x="0" y="784" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">Press &apos;space&apos; to toggle line number selection.                                                      </text>
+    <text x="0" y="801" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">Press &apos;s&apos; to select character under cursor.                                                         </text>
+    <text x="0" y="818" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">Use Arrow keys to move cursor. Shift+Arrow to select.                                               </text>
+  </g>
+</svg>
