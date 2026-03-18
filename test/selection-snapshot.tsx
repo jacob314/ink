@@ -8,20 +8,21 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import {fileURLToPath} from 'node:url';
-import React from 'react';
+import React, {act} from 'react';
 import test from 'ava';
 import chalk from 'chalk';
 import Selection, {
 	type SelectionReference,
 } from '../examples/selection/selection.js';
 import {render} from './helpers/render.js';
+import {waitFor} from './helpers/wait-for.js';
 
 process.env['FORCE_COLOR'] = '3';
 chalk.level = 3;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-test('selection example renders correctly', async t => {
+test.serial('selection example renders correctly', async t => {
 	const ref = React.createRef<SelectionReference>();
 
 	const {unmount, generateSvg, waitUntilReady} = await render(
@@ -57,40 +58,58 @@ test('selection example renders correctly', async t => {
 	await unmount();
 });
 
-test('selection with StaticRender example renders correctly', async t => {
-	const ref = React.createRef<SelectionReference>();
+test.serial(
+	'selection with StaticRender example renders correctly',
+	async t => {
+		const ref = React.createRef<SelectionReference>();
 
-	const {unmount, generateSvg, waitUntilReady, stdin} = await render(
-		<Selection ref={ref} />,
-		40,
-		{
-			terminalHeight: 60,
-		},
-	);
+		const {unmount, generateSvg, waitUntilReady, stdin, lastFrame} =
+			await render(<Selection ref={ref} />, 40, {
+				terminalHeight: 60,
+			});
 
-	await waitUntilReady();
+		// Wait for the render helper to settle its own queues
+		await waitUntilReady();
 
-	// Toggle StaticRender by sending 'm' key
-	stdin.write('m');
+		// Toggle StaticRender by sending 'm' key.
+		// We do NOT wrap this in act() because XtermStdin.write() internally wraps
+		// its emit calls in act().
+		stdin.write('m');
 
-	// Wait for render to update
-	await waitUntilReady();
+		// Wait for the component to rerender and update the last frame
+		let attempts = 0;
+		while (!lastFrame().includes('(current: ON)') && attempts < 50) {
+			// eslint-disable-next-line no-await-in-loop
+			await act(async () => {
+				await new Promise(resolve => {
+					setTimeout(resolve, 50);
+				});
+			});
+			// eslint-disable-next-line no-await-in-loop
+			await waitUntilReady();
+			attempts++;
+		}
 
-	const svg = generateSvg();
-	const snapshotPath = path.join(
-		__dirname,
-		'snapshots',
-		'selection-snapshot',
-		'selection-static-render.svg',
-	);
+		if (!lastFrame().includes('(current: ON)')) {
+			throw new Error('StaticRender did not toggle to ON! ' + lastFrame());
+		}
 
-	if (process.env['UPDATE_SNAPSHOTS'] ?? !fs.existsSync(snapshotPath)) {
-		fs.writeFileSync(snapshotPath, svg, 'utf8');
-		t.pass();
-	} else {
-		const expected = fs.readFileSync(snapshotPath, 'utf8');
-		t.is(svg, expected);
-	}
+		const svg = generateSvg();
+		const snapshotPath = path.join(
+			__dirname,
+			'snapshots',
+			'selection-snapshot',
+			'selection-static-render.svg',
+		);
 
-	await unmount();
-});
+		if (process.env['UPDATE_SNAPSHOTS'] ?? !fs.existsSync(snapshotPath)) {
+			fs.writeFileSync(snapshotPath, svg, 'utf8');
+			t.pass();
+		} else {
+			const expected = fs.readFileSync(snapshotPath, 'utf8');
+			t.is(svg, expected);
+		}
+
+		await unmount();
+	},
+);
