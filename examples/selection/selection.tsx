@@ -1,6 +1,6 @@
 import React, {
 	useRef,
-	useEffect,
+	useLayoutEffect,
 	useReducer,
 	forwardRef,
 	useImperativeHandle,
@@ -349,7 +349,7 @@ const Selection = forwardRef<SelectionReference>((_, reference) => {
 		}
 	});
 
-	useEffect(() => {
+	useLayoutEffect(() => {
 		if (boxReference.current) {
 			const node = boxReference.current;
 			const text = getText(node);
@@ -375,7 +375,7 @@ const Selection = forwardRef<SelectionReference>((_, reference) => {
 		}
 	});
 
-	useEffect(() => {
+	useLayoutEffect(() => {
 		if (!selection || !boxReference.current) {
 			return;
 		}
