@@ -1,5 +1,5 @@
 import React, {useLayoutEffect, useState, useRef, type ReactNode} from 'react';
-import {type DOMElement} from '../dom.js';
+import {type DOMElement, type CachedRender} from '../dom.js';
 import {renderToStatic} from '../render-node-to-output.js';
 import {type Styles} from '../styles.js';
 
@@ -10,21 +10,25 @@ export type Props = {
 };
 
 export default function StaticRender({children, width, style}: Props) {
-	const [isChildrenSaved, setIsChildrenSaved] = useState(false);
+	const [cachedRender, setCachedRender] = useState<CachedRender | undefined>();
 	const ref = useRef<DOMElement>(null);
 
 	useLayoutEffect(() => {
-		if (ref.current && !isChildrenSaved) {
-			renderToStatic(ref.current, {
+		if (ref.current && !cachedRender) {
+			const result = renderToStatic(ref.current, {
 				calculateLayout: true,
 			});
-			setIsChildrenSaved(true);
+			setCachedRender(result);
 		}
-	}, [children, isChildrenSaved]);
+	}, [children, cachedRender]);
 
 	return (
-		<ink-static-render ref={ref} style={{...style, width}}>
-			{isChildrenSaved ? null : children}
+		<ink-static-render
+			ref={ref}
+			style={{...style, width}}
+			cachedRender={cachedRender}
+		>
+			{cachedRender ? null : children}
 		</ink-static-render>
 	);
 }

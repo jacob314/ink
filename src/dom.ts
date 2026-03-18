@@ -386,16 +386,6 @@ const markNodeAsDirty = (node?: DOMNode): void => {
 	// Mark closest Yoga node as dirty to measure text dimensions again
 	const yogaNode = findClosestYogaNode(node);
 	yogaNode?.markDirty();
-
-	let current: DOMNode | undefined = node;
-
-	while (current) {
-		if (current.nodeName === 'ink-static-render') {
-			setCachedRender(current, undefined);
-		}
-
-		current = current.parentNode;
-	}
 };
 
 export const setTextNodeValue = (node: TextNode, text: string): void => {

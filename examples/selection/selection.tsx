@@ -358,7 +358,7 @@ const Selection = forwardRef<SelectionReference>((_, reference) => {
 				dispatch({type: 'UPDATE_TEXT', fullText: text});
 			}
 
-			if (!state.hasInitialized && text.length > 0) {
+			if ((!state.hasInitialized || !state.anchorPoint) && text.length > 0) {
 				const layout = measureElement(node);
 				let cursor = {x: 0, y: 0};
 				if (layout.height > 0) {

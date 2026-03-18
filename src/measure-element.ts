@@ -507,8 +507,8 @@ export const getText = (node: DOMNode): string => {
 			a.y === b.y ? a.startX - b.startX : a.y - b.y,
 		);
 		let text = '';
-		let currentY = sortedSpans[0]!.y;
-		let currentX = sortedSpans[0]!.startX;
+		let currentY = 0;
+		let currentX = 0;
 
 		for (const span of sortedSpans) {
 			if (span.y > currentY) {

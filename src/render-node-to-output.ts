@@ -8,9 +8,9 @@ import renderBackground from './render-background.js';
 import {
 	type DOMElement,
 	type DOMNode,
-	setCachedRender,
 	type StickyHeader,
 	isNodeSelectable,
+	type CachedRender,
 } from './dom.js';
 import Output from './output.js';
 import {
@@ -182,7 +182,7 @@ export const renderToStatic = (
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
 		selectionStyle?: (char: StyledChar) => StyledChar;
 	} = {},
-) => {
+): CachedRender => {
 	if (options.calculateLayout && node.yogaNode) {
 		node.yogaNode.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
 	}
@@ -298,8 +298,8 @@ export const renderToStatic = (
 		a.y === b.y ? a.startX - b.startX : a.y - b.y,
 	);
 	let selectableText = '';
-	let currentY = sortedSpans[0]?.y ?? 0;
-	let currentX = sortedSpans[0]?.startX ?? 0;
+	let currentY = 0;
+	let currentX = 0;
 
 	for (const span of sortedSpans) {
 		if (span.y > currentY) {
@@ -316,14 +316,14 @@ export const renderToStatic = (
 		currentX = span.endX;
 	}
 
-	setCachedRender(node, {
+	return {
 		output: styledOutput,
 		width,
 		height,
 		stickyHeaders: cachedStickyHeaders,
 		root: rootRegion,
 		selectableText,
-	});
+	};
 };
 
 // After nodes are laid out, render each to output object, which later gets rendered to terminal
@@ -449,8 +449,8 @@ function renderNodeToOutput(
 				spans.sort((a, b) => (a.y === b.y ? a.startX - b.startX : a.y - b.y));
 
 				let currentOffset = 0;
-				let currentY = spans[0]?.y ?? 0;
-				let currentX = spans[0]?.startX ?? 0;
+				let currentY = 0;
+				let currentX = 0;
 
 				for (const span of spans) {
 					if (span.y > currentY) {
