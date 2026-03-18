@@ -397,7 +397,7 @@ function renderNodeToOutput(
 
 			const clipLeft = clip.x1 ?? -Infinity;
 			const clipRight = clip.x2 ?? Infinity;
-			const clipTop = output.getActiveRegion().overflowToBackbuffer
+			const clipTop = clip.overflowToBackbuffer
 				? -Infinity
 				: (clip.y1 ?? -Infinity);
 			const clipBottom = clip.y2 ?? Infinity;
@@ -1113,7 +1113,13 @@ function renderNodeToOutput(
 					output.endChildRegion();
 				}
 
-				output.clip({x1, x2, y1, y2});
+				output.clip({
+					x1,
+					x2,
+					y1,
+					y2,
+					overflowToBackbuffer: node.style.overflowToBackbuffer,
+				});
 				clipped = true;
 			}
 		}
