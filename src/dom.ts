@@ -58,6 +58,8 @@ export type StickyHeader = {
 	height?: number;
 	parentRelativeTop?: number;
 	parentHeight?: number;
+	parentBorderTop?: number;
+	parentBorderBottom?: number;
 	type?: 'top' | 'bottom';
 	node?: DOMElement;
 	maxStuckY?: number;
