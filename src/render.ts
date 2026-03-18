@@ -5,6 +5,7 @@ import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import Ink, {type Options as InkOptions, type RenderMetrics} from './ink.js';
 import instances from './instances.js';
 import {type Selection} from './selection.js';
+import {type DOMElement} from './dom.js';
 
 export type RenderOptions = {
 	/**
@@ -187,6 +188,11 @@ export type Instance = {
 	 * @param filename The path/name for the JSON file (e.g., 'snapshot.json').
 	 */
 	dumpCurrentFrame: (filename: string) => void;
+
+	/**
+	 * Internal root node of the Ink tree.
+	 */
+	rootNode: DOMElement;
 };
 
 /**
@@ -232,6 +238,7 @@ const render = (
 		recalculateLayout: instance.recalculateLayout,
 		getSelection: instance.getSelection,
 		dumpCurrentFrame: instance.dumpCurrentFrame,
+		rootNode: instance.rootNode,
 	};
 };
 

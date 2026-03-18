@@ -93,6 +93,7 @@ const rainbowColors = [
 ];
 
 export default class Ink {
+	public readonly rootNode: dom.DOMElement;
 	private readonly options: Options;
 	private readonly log: LogUpdate;
 	private readonly throttledLog: LogUpdate;
@@ -106,7 +107,6 @@ export default class Ink {
 	private lastOutputHeight: number;
 	private lastCursorPosition?: {row: number; col: number} | undefined;
 	private readonly container: FiberRoot;
-	private readonly rootNode: dom.DOMElement;
 	private node: ReactNode;
 	// This variable is used only in debug mode to store full static output
 	// so that it's rerendered every time, not just new static parts, like in non-debug mode
