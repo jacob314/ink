@@ -387,7 +387,9 @@ export const collectSortedFragments = (
 
 		if (
 			currentNode.nodeName === 'ink-box' ||
-			currentNode.nodeName === 'ink-root'
+			currentNode.nodeName === 'ink-root' ||
+			(currentNode.nodeName === 'ink-static-render' &&
+				!currentNode.cachedRender)
 		) {
 			if (
 				!currentNode.yogaNode ||
@@ -507,13 +509,17 @@ export const getText = (node: DOMNode): string => {
 			a.y === b.y ? a.startX - b.startX : a.y - b.y,
 		);
 		let text = '';
-		let currentY = 0;
+		let currentY = sortedSpans[0]!.y;
 		let currentX = 0;
+		let lastSpan: (typeof spans)[0] | undefined;
 
 		for (const span of sortedSpans) {
 			if (span.y > currentY) {
-				text += '\n'.repeat(span.y - currentY);
-				currentX = 0;
+				if (span.node === undefined || span.node !== lastSpan?.node) {
+					text += '\n'.repeat(span.y - currentY);
+					currentX = 0;
+				}
+
 				currentY = span.y;
 			}
 
@@ -523,6 +529,7 @@ export const getText = (node: DOMNode): string => {
 
 			text += span.text;
 			currentX = span.endX;
+			lastSpan = span;
 		}
 
 		return text;
@@ -544,7 +551,11 @@ export const getText = (node: DOMNode): string => {
 		return plainText;
 	}
 
-	if (node.nodeName === 'ink-box' || node.nodeName === 'ink-root') {
+	if (
+		node.nodeName === 'ink-box' ||
+		node.nodeName === 'ink-root' ||
+		(node.nodeName === 'ink-static-render' && !node.cachedRender)
+	) {
 		if (!node.yogaNode) {
 			return '';
 		}
@@ -986,12 +997,40 @@ const findNodeInSquashed = (
 
 			currentOffset += length;
 		} else if (node.nodeName === 'ink-static-render' && node.cachedRender) {
-			const {length} = getText(node);
-			if (offset >= currentOffset && offset <= currentOffset + length) {
+			const {selectableText: length} = node.cachedRender;
+			if (
+				length &&
+				offset >= currentOffset &&
+				offset <= currentOffset + length.length
+			) {
+				const spans = node.cachedRender.root?.selectableSpans ?? [];
+				const sortedSpans = [...spans].sort((a, b) =>
+					a.y === b.y ? a.startX - b.startX : a.y - b.y,
+				);
+
+				let spanOffset = 0;
+				for (const span of sortedSpans) {
+					const spanLength = span.text.length;
+					if (
+						offset - currentOffset >= spanOffset &&
+						offset - currentOffset < spanOffset + spanLength
+					) {
+						if (span.node) {
+							return {node: span.node, offset: offset - currentOffset};
+						}
+
+						break;
+					}
+
+					spanOffset += spanLength;
+				}
+
 				return {node, offset: offset - currentOffset};
 			}
 
-			currentOffset += length;
+			if (length) {
+				currentOffset += length.length;
+			}
 		} else if (
 			node.nodeName === 'ink-text' ||
 			node.nodeName === 'ink-virtual-text'
@@ -1019,6 +1058,28 @@ export const findNodeAtOffset = (
 	}
 
 	if (node.nodeName === 'ink-static-render' && node.cachedRender) {
+		const spans = node.cachedRender.root?.selectableSpans ?? [];
+		const sortedSpans = [...spans].sort((a, b) =>
+			a.y === b.y ? a.startX - b.startX : a.y - b.y,
+		);
+
+		let currentOffset = 0;
+		for (const span of sortedSpans) {
+			const spanLength = span.text.length;
+			if (
+				targetOffset >= currentOffset &&
+				targetOffset < currentOffset + spanLength
+			) {
+				if (span.node) {
+					return {node: span.node, offset: targetOffset};
+				}
+
+				break;
+			}
+
+			currentOffset += spanLength;
+		}
+
 		return {node, offset: Math.min(targetOffset, getText(node).length)};
 	}
 
@@ -1168,15 +1229,43 @@ export const hitTest = (
 
 				currentOffset += length;
 			} else if (n.nodeName === 'ink-static-render' && n.cachedRender) {
-				const {length} = getText(n);
+				const {selectableText: length} = n.cachedRender;
 				if (
+					length &&
 					offsetInSquashed >= currentOffset &&
-					offsetInSquashed <= currentOffset + length
+					offsetInSquashed <= currentOffset + length.length
 				) {
+					const spans = n.cachedRender.root?.selectableSpans ?? [];
+					const sortedSpans = [...spans].sort((a, b) =>
+						a.y === b.y ? a.startX - b.startX : a.y - b.y,
+					);
+
+					let spanOffset = 0;
+					for (const span of sortedSpans) {
+						const spanLength = span.text.length;
+						if (
+							offsetInSquashed - currentOffset >= spanOffset &&
+							offsetInSquashed - currentOffset < spanOffset + spanLength
+						) {
+							if (span.node) {
+								return {
+									node: span.node,
+									offset: offsetInSquashed - currentOffset,
+								};
+							}
+
+							break;
+						}
+
+						spanOffset += spanLength;
+					}
+
 					return {node: n, offset: offsetInSquashed - currentOffset};
 				}
 
-				currentOffset += length;
+				if (length) {
+					currentOffset += length.length;
+				}
 			} else {
 				for (const child of n.childNodes) {
 					const result = findNode(child);

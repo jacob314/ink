@@ -298,13 +298,17 @@ export const renderToStatic = (
 		a.y === b.y ? a.startX - b.startX : a.y - b.y,
 	);
 	let selectableText = '';
-	let currentY = 0;
+	let currentY = sortedSpans[0]?.y ?? 0;
 	let currentX = 0;
+	let lastSpan: (typeof spans)[0] | undefined;
 
 	for (const span of sortedSpans) {
 		if (span.y > currentY) {
-			selectableText += '\n'.repeat(span.y - currentY);
-			currentX = 0;
+			if (span.node === undefined || span.node !== lastSpan?.node) {
+				selectableText += '\n'.repeat(span.y - currentY);
+				currentX = 0;
+			}
+
 			currentY = span.y;
 		}
 
@@ -314,6 +318,7 @@ export const renderToStatic = (
 
 		selectableText += span.text;
 		currentX = span.endX;
+		lastSpan = span;
 	}
 
 	return {
@@ -600,6 +605,7 @@ function renderNodeToOutput(
 							node.internal_terminalCursorFocus && index === cursorLineIndex,
 						terminalCursorPosition: relativeCursorPosition,
 						isSelectable: isNodeSelectable(node),
+						node,
 					});
 				}
 			}

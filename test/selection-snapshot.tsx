@@ -75,6 +75,11 @@ test('selection with StaticRender example renders correctly', async t => {
 
 	// Wait for render to update
 	await waitUntilReady();
+	// Small additional wait to ensure StaticRender cached its result
+	await new Promise(resolve => {
+		setTimeout(resolve, 100);
+	});
+	await waitUntilReady();
 
 	const svg = generateSvg();
 	const snapshotPath = path.join(
@@ -91,6 +96,10 @@ test('selection with StaticRender example renders correctly', async t => {
 		const expected = fs.readFileSync(snapshotPath, 'utf8');
 		t.is(svg, expected);
 	}
+
+	// Verify selection is not empty
+	t.truthy(ref.current?.getSelectedText());
+	t.is(ref.current?.getSelectedText(), ref.current?.getSelectionToString());
 
 	await unmount();
 });

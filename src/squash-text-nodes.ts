@@ -48,6 +48,16 @@ export const squashTextNodesWithMap = (
 				end: startOffset + nodeText.length,
 			});
 			offsetRef.current += nodeText.length;
+		} else if (
+			childNode.nodeName === 'ink-static-render' &&
+			childNode.cachedRender?.selectableText
+		) {
+			nodeText = childNode.cachedRender.selectableText;
+			map.set(childNode, {
+				start: startOffset,
+				end: startOffset + nodeText.length,
+			});
+			offsetRef.current += nodeText.length;
 		} else {
 			if (
 				childNode.nodeName === 'ink-text' ||

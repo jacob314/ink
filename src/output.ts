@@ -74,6 +74,7 @@ export type Region = {
 		startX: number;
 		endX: number;
 		text: string;
+		node?: DOMElement;
 	}>;
 };
 
@@ -291,6 +292,7 @@ export default class Output {
 			isTerminalCursorFocused?: boolean;
 			terminalCursorPosition?: number;
 			isSelectable?: boolean;
+			node?: DOMElement;
 		},
 	): void {
 		const {
@@ -300,6 +302,7 @@ export default class Output {
 			isTerminalCursorFocused = false,
 			terminalCursorPosition,
 			isSelectable = false,
+			node,
 		} = options;
 
 		if (items.length === 0 && !isTerminalCursorFocused) {
@@ -345,6 +348,7 @@ export default class Output {
 				lineIndex,
 				preserveBackgroundColor,
 				isSelectable,
+				node,
 			);
 		}
 	}
@@ -522,6 +526,7 @@ export default class Output {
 		lineIndex: number,
 		_preserveBackgroundColor: boolean,
 		isSelectable: boolean,
+		node?: DOMElement,
 	) {
 		const region = this.getActiveRegion();
 		const {lines} = region;
@@ -632,6 +637,7 @@ export default class Output {
 				startX: spanStartX,
 				endX: offsetX,
 				text: spanText,
+				node,
 			});
 		}
 
