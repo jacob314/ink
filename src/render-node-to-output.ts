@@ -834,6 +834,7 @@ function renderNodeToOutput(
 						backgroundColor: node.style.backgroundColor,
 						opaque: node.internal_opaque,
 						nodeId: node.internal_id,
+						node,
 						stableScrollback: node.style.stableScrollback,
 						borderTop,
 						borderBottom,

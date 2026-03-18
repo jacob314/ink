@@ -194,6 +194,7 @@ export default class Output {
 		backgroundColor?: string;
 		opaque?: boolean;
 		nodeId?: number;
+		node?: DOMElement;
 		stableScrollback?: boolean;
 		borderTop?: number;
 		borderBottom?: number;
@@ -216,6 +217,7 @@ export default class Output {
 			backgroundColor,
 			opaque,
 			nodeId,
+			node,
 			stableScrollback,
 			borderTop,
 			borderBottom,
@@ -254,6 +256,7 @@ export default class Output {
 			stickyHeaders: [],
 			children: [],
 			nodeId,
+			node,
 			stableScrollback,
 			selectableSpans: [],
 		};
