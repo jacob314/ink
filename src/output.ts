@@ -18,6 +18,23 @@ Handles the positioning and saving of the output of each node in the tree. Also 
 Used to generate the final output of all nodes before writing it to actual output stream (e.g. stdout)
 */
 
+export function clampCursorColumn(line: StyledChar[], col: number): number {
+	let currentLineCol = 0;
+	let lastContentCol = 0;
+
+	for (const char of line) {
+		const charWidth = char.fullWidth ? 2 : 1;
+
+		if (char.value !== ' ' || char.styles.length > 0) {
+			lastContentCol = currentLineCol + charWidth;
+		}
+
+		currentLineCol += charWidth;
+	}
+
+	return col > lastContentCol ? lastContentCol : col;
+}
+
 type Options = {
 	width: number;
 	height: number;
@@ -31,6 +48,14 @@ type Clip = {
 	y2: number | undefined;
 };
 
+/**
+ * Represents a rendered rectangular area in the terminal.
+ * You can think of it a bit like a `<div>` element rendered in a web browser.
+ * Regions can be nested to support complex layouts, including scrollable areas,
+ * clipped views, and floating elements (like sticky headers).
+ * Each region contains its own localized buffer of rendered lines and maintains
+ * its own coordinates, dimensions, scroll state, borders, background colors, and children.
+ */
 export type Region = {
 	id: number | string;
 	x: number; // Position relative to parent region's content start
@@ -468,22 +493,7 @@ export default class Output {
 			const line = region.lines[row];
 
 			if (line) {
-				let currentLineCol = 0;
-				let lastContentCol = 0;
-
-				for (const char of line) {
-					const charWidth = char.fullWidth ? 2 : 1;
-
-					if (char.value !== ' ' || char.styles.length > 0) {
-						lastContentCol = currentLineCol + charWidth;
-					}
-
-					currentLineCol += charWidth;
-				}
-
-				if (col > lastContentCol) {
-					region.cursorPosition.col = lastContentCol;
-				}
+				region.cursorPosition.col = clampCursorColumn(line, col);
 			}
 		}
 
@@ -718,6 +728,12 @@ export default class Output {
 	}
 }
 
+/**
+ * Flattens a hierarchy of nested regions into a single 2D array of styled characters
+ * that represents the final visual output to be written to the terminal.
+ * This effectively renders the nested region tree (much like compositing layers
+ * in a web browser) into a single screen buffer.
+ */
 export function flattenRegion(
 	root: Region,
 	options?: {
@@ -748,6 +764,12 @@ export function flattenRegion(
 	return lines;
 }
 
+/**
+ * Recursively traverses a Region and its children, drawing its content
+ * into the given `targetLines` buffer while applying coordinate offsets
+ * and clipping boundaries. Handles scroll offsets, scrollbars, and floating
+ * elements like sticky headers.
+ */
 function composeRegion(
 	region: Region,
 	targetLines: StyledChar[][],

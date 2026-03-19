@@ -55,6 +55,28 @@ const applyPaddingToStyledChars = (
 	return lines;
 };
 
+const applySelectionStyle = (
+	char: StyledChar,
+	selectionStyle?: (char: StyledChar) => StyledChar,
+): StyledChar => {
+	if (selectionStyle) {
+		return selectionStyle(char);
+	}
+
+	const newChar = {
+		...char,
+		styles: [...char.styles],
+	};
+
+	newChar.styles.push({
+		type: 'ansi',
+		code: '\u001B[7m',
+		endCode: '\u001B[27m',
+	});
+
+	return newChar;
+};
+
 const applySelectionToStyledChars = (
 	styledChars: StyledChar[],
 	selectionState: {range: {start: number; end: number}; currentOffset: number},
@@ -70,23 +92,7 @@ const applySelectionToStyledChars = (
 		const globalOffset = currentOffset + charCodeUnitOffset;
 
 		if (globalOffset >= start && globalOffset < end) {
-			if (selectionStyle) {
-				newStyledChars.push(selectionStyle(char));
-			} else {
-				// 7 is the ANSI code for inverse (reverse video)
-				const newChar = {
-					...char,
-					styles: [...char.styles],
-				};
-
-				newChar.styles.push({
-					type: 'ansi',
-					code: '\u001B[7m',
-					endCode: '\u001B[27m',
-				});
-
-				newStyledChars.push(newChar);
-			}
+			newStyledChars.push(applySelectionStyle(char, selectionStyle));
 		} else {
 			newStyledChars.push(char);
 		}
@@ -474,15 +480,10 @@ function renderNodeToOutput(
 						if (currentOffset >= range.start && currentOffset < range.end) {
 							const line = clonedRegionObj.lines[span.y];
 							if (line?.[spanCharX]) {
-								if (selectionStyle) {
-									line[spanCharX] = selectionStyle(line[spanCharX]!);
-								} else {
-									line[spanCharX]!.styles.push({
-										type: 'ansi',
-										code: '\u001B[7m',
-										endCode: '\u001B[27m',
-									});
-								}
+								line[spanCharX] = applySelectionStyle(
+									line[spanCharX]!,
+									selectionStyle,
+								);
 							}
 						}
 

@@ -2,7 +2,11 @@ import {type StyledChar, styledCharsToString} from '@alcalzone/ansi-tokenize';
 import renderNodeToOutput, {
 	renderNodeToScreenReaderOutput,
 } from './render-node-to-output.js';
-import Output, {type Region, flattenRegion} from './output.js';
+import Output, {
+	type Region,
+	flattenRegion,
+	clampCursorColumn,
+} from './output.js';
 import {
 	type DOMElement,
 	type DOMNode,
@@ -379,22 +383,7 @@ function regionToOutput(
 		const line = lines[row];
 
 		if (line) {
-			let currentLineCol = 0;
-			let lastContentCol = 0;
-
-			for (const char of line) {
-				const charWidth = char.fullWidth ? 2 : 1;
-
-				if (char.value !== ' ' || char.styles.length > 0) {
-					lastContentCol = currentLineCol + charWidth;
-				}
-
-				currentLineCol += charWidth;
-			}
-
-			if (col > lastContentCol) {
-				context.cursorPosition.col = lastContentCol;
-			}
+			context.cursorPosition.col = clampCursorColumn(line, col);
 		}
 	}
 

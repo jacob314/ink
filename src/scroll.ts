@@ -75,6 +75,11 @@ export function calculateScroll(node: DOMElement): void {
 		yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM);
 
 	if (node.style.stableScrollback && node.style.overflowToBackbuffer) {
+		// When stableScrollback is enabled, we track the maximum scroll position ever reached
+		// (unless the buffer is cleared). This avoids needing to clear the entire scrollback
+		// buffer in order to change the content rendered to it. It ensures that even if child
+		// nodes are removed from the DOM, the scrollable area doesn't shrink, allowing users
+		// to still scroll up and view content that has 'fallen off' into the virtual backbuffer.
 		const actualMaxScrollTop = Math.max(0, actualScrollHeight - clientHeight);
 
 		if (node.internalIsScrollbackDirty) {
