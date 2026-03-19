@@ -4,13 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, {
-	useState,
-	useLayoutEffect,
-	useCallback,
-	useEffect,
-	useRef,
-} from 'react';
+import React, {useState, useLayoutEffect, useCallback, useRef} from 'react';
 import {
 	Box,
 	Text,
@@ -18,7 +12,6 @@ import {
 	getBoundingBox,
 	getInnerHeight,
 	type DOMElement,
-	Static,
 } from '../../src/index.js';
 
 const items = Array.from({length: 100}).map((_, i) => ({
@@ -26,13 +19,6 @@ const items = Array.from({length: 100}).map((_, i) => ({
 	header: `Item ${i}`,
 	content: ' - Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
 }));
-
-type Rect = {
-	width: number;
-	height: number;
-	x: number;
-	y: number;
-};
 
 function ScrollIntoView() {
 	const [selected, setSelected] = useState(10);
@@ -95,7 +81,9 @@ function ScrollIntoView() {
 			<Box flexDirection="column" padding={1}>
 				<Text>Use up/down arrows to scroll. Selected: {selected}</Text>
 				<Box
-					ref={setContainer}
+					ref={node => {
+						setContainer(node);
+					}}
 					borderStyle="round"
 					overflowY="scroll"
 					height={10}

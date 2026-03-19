@@ -20,7 +20,7 @@ const restoreCursorPosition = '\u001B[u';
 const requestCursorPosition = '\u001B[6n';
 
 const debugSkipMeasurement = false;
-const isAppleTerminal = process.env.TERM_PROGRAM === 'Apple_Terminal';
+const isAppleTerminal = process.env['TERM_PROGRAM'] === 'Apple_Terminal';
 const measureEverything1 = false;
 
 class MeasurementEngine {
@@ -78,7 +78,7 @@ class MeasurementEngine {
 	}
 
 	private async _handleReport(reportMatch: RegExpExecArray) {
-		const column = Number.parseInt(reportMatch[1], 10);
+		const column = Number.parseInt(reportMatch[1]!, 10);
 		let width = column - 1;
 
 		if (debugMode) {

@@ -1,3 +1,9 @@
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import test from 'ava';
 import React from 'react';
 import stripAnsi from 'strip-ansi';

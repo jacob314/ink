@@ -22,7 +22,7 @@ function AriaExample() {
 				</Box>
 			</Box>
 			<Box marginTop={1}>
-				<Text aria-hidden="true">This text is hidden from screen readers.</Text>
+				<Text aria-hidden>This text is hidden from screen readers.</Text>
 			</Box>
 		</Box>
 	);

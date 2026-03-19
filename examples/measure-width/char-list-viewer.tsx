@@ -19,7 +19,7 @@ import {toStyledCharacters} from '../../src/measure-text.js';
 import {testChars} from './char-list.js';
 import {createStringWidth, log} from './measure-text.js';
 
-const isAppleTerminal = process.env.TERM_PROGRAM === 'Apple_Terminal';
+const isAppleTerminal = process.env['TERM_PROGRAM'] === 'Apple_Terminal';
 
 const truncationModes = [
 	undefined,
