@@ -39,7 +39,7 @@ render(<Counter />);`;
 function TextWrap() {
 	const [width, setWidth] = useState(60);
 
-	useInput((input, key) => {
+	useInput((_, key) => {
 		if (key.leftArrow) {
 			setWidth(w => Math.max(1, w - 1));
 		}
