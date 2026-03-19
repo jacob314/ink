@@ -22,7 +22,8 @@ export type ElementNames =
 	| 'ink-root'
 	| 'ink-box'
 	| 'ink-text'
-	| 'ink-virtual-text';
+	| 'ink-virtual-text'
+	| 'ink-static-render';
 
 export type NodeNames = ElementNames | TextName;
 
@@ -34,7 +35,17 @@ export type DOMElement = {
 	internal_transform?: OutputTransformer;
 	internal_terminalCursorFocus?: boolean;
 	internal_terminalCursorPosition?: number;
-
+	internalOnBeforeRender?: (node: DOMElement) => void;
+	cachedRender?: {
+		root?: {
+			selectableSpans: Array<{
+				y: number;
+				startX: number;
+				endX: number;
+				text: string;
+			}>;
+		};
+	};
 	internal_accessibility?: {
 		role?:
 			| 'button'
@@ -86,11 +97,11 @@ export type ScrollState = {
 	scrollTop: number;
 	scrollLeft: number;
 	scrollHeight: number;
+	actualScrollHeight: number;
 	scrollWidth: number;
 	clientHeight: number;
 	clientWidth: number;
 };
-
 export type TextNode = {
 	nodeName: TextName;
 	nodeValue: string;
