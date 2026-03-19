@@ -117,6 +117,14 @@ test('parameterized sticky header states', t => {
 				</Box>,
 			);
 
+			if (
+				name === 'h1_stuck' &&
+				scrollTop === 1 &&
+				borderVariation.name === 'without-border'
+			) {
+				console.log('WORKING STICKY OUTPUT:\n' + output);
+			}
+
 			t.snapshot(
 				output,
 				`${name} (scrollTop: ${scrollTop}) - ${description} - ${borderVariation.name}`,
@@ -259,6 +267,61 @@ test('sticky header ignores parent padding when stuck', t => {
 					<Text>Item 3</Text>
 					<Text>Item 4</Text>
 					<Text>Item 5</Text>
+				</Box>
+			</Box>,
+		);
+
+		t.snapshot(output, `scrollTop: ${scrollTop} - ${description}`);
+	}
+});
+
+test('sticky footer transition boundary', t => {
+	const scenarios = [
+		{
+			scrollTop: 5,
+			description: 'Footer 1 line below bottom (should be stuck)',
+		},
+		{
+			scrollTop: 6,
+			description: 'Footer exactly at bottom (should be natural)',
+		},
+		{
+			scrollTop: 7,
+			description: 'Footer 1 line above bottom (should be natural)',
+		},
+	];
+
+	for (const {scrollTop, description} of scenarios) {
+		const lines = Array.from({length: 10}).map((_, i) => ({
+			id: `line-${i}`,
+			text: `Line ${i}`,
+		}));
+
+		const output = renderToString(
+			<Box
+				height={5}
+				width={30}
+				overflowY="scroll"
+				flexDirection="column"
+				scrollTop={scrollTop}
+			>
+				<Box flexDirection="column" flexShrink={0}>
+					{lines.map(line => (
+						<Text key={line.id}>{line.text}</Text>
+					))}
+					<Box
+						opaque
+						sticky="bottom"
+						width="100%"
+						stickyChildren={
+							<Box opaque flexDirection="column">
+								<Text>STUCK FOOTER LINE 1</Text>
+								<Text>STUCK FOOTER LINE 2</Text>
+							</Box>
+						}
+					>
+						<Text>NATURAL FOOTER</Text>
+					</Box>
 				</Box>
 			</Box>,
 		);

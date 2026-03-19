@@ -8,7 +8,7 @@ const renderBackground = (
 	node: DOMNode,
 	output: Output,
 ): void => {
-	if (!(node as DOMElement).internal_opaque && !node.style.backgroundColor) {
+	if (!(node as DOMElement).internalOpaque && !node.style.backgroundColor) {
 		return;
 	}
 

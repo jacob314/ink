@@ -1,9 +1,14 @@
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {type StyledChar, styledCharsToString} from '@alcalzone/ansi-tokenize';
 import renderNodeToOutput, {
 	renderNodeToScreenReaderOutput,
 } from './render-node-to-output.js';
-import Output from './output.js';
-import {type DOMElement, type DOMNode, isNodeSelectable} from './dom.js';
+import Output, {type Region, flattenRegion} from './output.js';
+import {
+	type DOMElement,
+	type DOMNode,
+	isNodeSelectable,
+	type StickyHeader,
+} from './dom.js';
 import {type Selection} from './selection.js';
 
 type Result = {
@@ -12,6 +17,9 @@ type Result = {
 	staticOutput: string;
 	styledOutput: StyledChar[][];
 	cursorPosition?: {row: number; col: number};
+	backbufferContent: StyledChar[][];
+	stickyHeaders: StickyHeader[];
+	root?: Region;
 };
 
 const calculateSelectionMap = (
@@ -137,6 +145,63 @@ const calculateSelectionMap = (
 			if (foundEndInNode) {
 				hasFoundEnd = true;
 			}
+		} else if (node.nodeName === 'ink-static-render') {
+			if (!isNodeSelectable(node)) {
+				return;
+			}
+
+			// For StaticRender, the node itself is returned by hitTest and behaves like a text node.
+			// However, if the user clicked inside it, startContainer or endContainer might be this node itself,
+			// or it could be spanned by a selection outside it.
+			const localLength = node.cachedRender?.selectableText?.length ?? 0;
+			let nodeStartIndex = -1;
+			let nodeEndIndex = -1;
+			let foundStartInNode = false;
+			let foundEndInNode = false;
+
+			if (startContainer === node) {
+				foundStartInNode = true;
+				nodeStartIndex = startOffset;
+			}
+
+			if (endContainer === node) {
+				foundEndInNode = true;
+				nodeEndIndex = endOffset;
+			}
+
+			// Also check if its parent contains it as start/end, though hitTest usually sets the node itself
+			if (node.parentNode) {
+				const index = node.parentNode.childNodes.indexOf(node);
+				if (startContainer === node.parentNode && startOffset === index) {
+					foundStartInNode = true;
+					nodeStartIndex = 0;
+				}
+
+				if (endContainer === node.parentNode && endOffset === index + 1) {
+					foundEndInNode = true;
+					nodeEndIndex = localLength;
+				}
+			}
+
+			if (
+				(hasFoundStart || foundStartInNode) &&
+				(!hasFoundEnd || foundEndInNode)
+			) {
+				const start = foundStartInNode ? nodeStartIndex : 0;
+				const end = foundEndInNode ? nodeEndIndex : localLength;
+
+				if (start !== -1 && end !== -1 && start < end) {
+					map.set(node, {start, end});
+				}
+			}
+
+			if (foundStartInNode) {
+				hasFoundStart = true;
+			}
+
+			if (foundEndInNode) {
+				hasFoundEnd = true;
+			}
 		} else {
 			const {childNodes} = node as DOMElement;
 			if (childNodes) {
@@ -172,10 +237,30 @@ const calculateSelectionMap = (
 
 const renderer = (
 	node: DOMElement,
-	isScreenReaderEnabled: boolean,
-	selection?: Selection,
-	selectionStyle?: (char: StyledChar) => StyledChar,
+	options: {
+		isScreenReaderEnabled: boolean;
+		selection?: Selection;
+		selectionStyle?: (char: StyledChar) => StyledChar;
+		skipScrollbars?: boolean;
+	},
 ): Result => {
+	const {isScreenReaderEnabled, selection, selectionStyle, skipScrollbars} =
+		options;
+
+	const callBeforeRender = (n: DOMElement) => {
+		if (typeof n.internalOnBeforeRender === 'function') {
+			n.internalOnBeforeRender(n);
+		}
+
+		for (const child of n.childNodes) {
+			if (child.nodeName !== '#text') {
+				callBeforeRender(child);
+			}
+		}
+	};
+
+	callBeforeRender(node);
+
 	if (node.yogaNode) {
 		if (isScreenReaderEnabled) {
 			const output = renderNodeToScreenReaderOutput(node, {
@@ -197,12 +282,15 @@ const renderer = (
 				outputHeight,
 				staticOutput: staticOutput ? `${staticOutput}\n` : '',
 				styledOutput: [],
+				backbufferContent: [],
+				stickyHeaders: [],
 			};
 		}
 
 		const output = new Output({
 			width: node.yogaNode.getComputedWidth(),
 			height: node.yogaNode.getComputedHeight(),
+			node,
 		});
 
 		const selectionMap = selection
@@ -213,6 +301,7 @@ const renderer = (
 			skipStaticElements: true,
 			selectionStyle,
 			selectionMap,
+			nodesToSkip: undefined,
 		});
 
 		let staticOutput;
@@ -221,6 +310,7 @@ const renderer = (
 			staticOutput = new Output({
 				width: node.staticNode.yogaNode.getComputedWidth(),
 				height: node.staticNode.yogaNode.getComputedHeight(),
+				node: node.staticNode,
 			});
 
 			renderNodeToOutput(node.staticNode, staticOutput, {
@@ -229,24 +319,38 @@ const renderer = (
 				selectionMap: selection
 					? calculateSelectionMap(node.staticNode, selection)
 					: undefined,
+				nodesToSkip: undefined,
 			});
 		}
+
+		const rootRegion = output.get();
 
 		const {
 			output: generatedOutput,
 			height: outputHeight,
 			styledOutput,
 			cursorPosition,
-		} = output.get();
+		} = regionToOutput(rootRegion, {skipScrollbars});
 
 		return {
 			output: generatedOutput,
 			outputHeight,
 			// Newline at the end is needed, because static output doesn't have one, so
 			// interactive output will override last line of static output
-			staticOutput: staticOutput ? `${staticOutput.get().output}\n` : '',
+			// staticOutput has .lines now.
+			staticOutput: staticOutput
+				? `${regionToOutput(staticOutput.get()).output}\n`
+				: '',
 			styledOutput,
 			cursorPosition,
+			backbufferContent: [], // Backbuffer not supported in region tree yet? Or attached to root?
+			// rootRegion has 'lines'.
+			// styledOutput is rootRegion.lines? No, lines is StyledChar[][].
+			// We need to flatten if we want to support legacy return.
+			// For now, let's just use rootRegion.lines as styledOutput.
+			// scrollRegions: [], // Derived from tree
+			stickyHeaders: [], // Derived from tree
+			root: rootRegion,
 		};
 	}
 
@@ -255,7 +359,59 @@ const renderer = (
 		outputHeight: 0,
 		staticOutput: '',
 		styledOutput: [],
+		backbufferContent: [],
+		stickyHeaders: [],
+		root: undefined,
 	};
 };
+
+function regionToOutput(
+	region: Region,
+	options?: {
+		skipScrollbars?: boolean;
+	},
+) {
+	const context: {cursorPosition?: {row: number; col: number}} = {};
+	const lines = flattenRegion(region, {context, ...options});
+
+	if (context.cursorPosition) {
+		const {row, col} = context.cursorPosition;
+		const line = lines[row];
+
+		if (line) {
+			let currentLineCol = 0;
+			let lastContentCol = 0;
+
+			for (const char of line) {
+				const charWidth = char.fullWidth ? 2 : 1;
+
+				if (char.value !== ' ' || char.styles.length > 0) {
+					lastContentCol = currentLineCol + charWidth;
+				}
+
+				currentLineCol += charWidth;
+			}
+
+			if (col > lastContentCol) {
+				context.cursorPosition.col = lastContentCol;
+			}
+		}
+	}
+
+	// Flatten the root region for legacy string output
+	const generatedOutput = lines
+		.map(line => {
+			const lineWithoutEmptyItems = line.filter(item => item !== undefined);
+			return styledCharsToString(lineWithoutEmptyItems).trimEnd();
+		})
+		.join('\n');
+
+	return {
+		output: generatedOutput,
+		height: lines.length,
+		styledOutput: lines,
+		cursorPosition: context.cursorPosition,
+	};
+}
 
 export default renderer;
