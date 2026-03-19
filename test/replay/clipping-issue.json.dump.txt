@@ -1,0 +1,2035 @@
+{
+  "type": "single",
+  "columns": 117,
+  "rows": 33,
+  "frames": [
+    {
+      "tree": {
+        "id": "root",
+        "children": [
+          {
+            "id": 22,
+            "children": [
+              {
+                "id": 17071,
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      "updates": [
+        {
+          "id": "root",
+          "x": 0,
+          "y": 0,
+          "width": 117,
+          "height": 33,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 34,
+            "updates": [
+              {
+                "start": 0,
+                "end": 34,
+                "text": [
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────",
+                  " Shift+Tab to accept edits                                                                                     |⌐■_■|",
+                  " workspace (/directory)    branch                    context    diff     tokens          /model",
+                  " render_cache_cli_buddy    render_cache_cli_buddy    1% used    +14 -0   56.7k tokens    gemini-3.1-pro-preview    …",
+                  "",
+                  ""
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 22,
+          "x": 0,
+          "y": 0,
+          "width": 117,
+          "height": 27,
+          "scrollTop": 94,
+          "scrollLeft": 0,
+          "scrollHeight": 121,
+          "scrollWidth": 117,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "overflowToBackbuffer": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 121,
+            "updates": [
+              {
+                "start": 0,
+                "end": 121,
+                "text": [
+                  "",
+                  "  ▝▜▄     Gemini CLI v0.36.0-nightly.20260317.2f90b4653",
+                  "    ▝▜▄",
+                  "   ▗▟▀    Authenticated with gemini-api-key /auth",
+                  "  ▝▀",
+                  "",
+                  "",
+                  "ℹ You have 1 extension with an update available. Run \"/extensions update conductor\".",
+                  "▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀",
+                  " > write a poem about cats to a file named cats.txt",
+                  "▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄",
+                  " Thinking...",
+                  " │",
+                  " │ Defining the Approach",
+                  " │ I'm solidifying the framework. I recognize the user's desire for a poem about cats saved to `cats.txt`, and I've",
+                  " │ locked in on `write_file` as the necessary tool to achieve this goal. Now, I'm working through the specific",
+                  " │ parameters I'll need to define to make that tool sing.",
+                  "",
+                  "╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────╮",
+                  "│ ✓  WriteFile Writing to cats.txt                                                                             │",
+                  "│                                                                                                              │",
+                  "│                                                                                                              │",
+                  "│                                                                                                              │",
+                  "│                                                                                                              │",
+                  "│                                                                                                              │",
+                  "│                                                                                                              │",
+                  "│                                                                                                              │",
+                  "│                                                                                                              │",
+                  "│                                                                                                              │",
+                  "│                                                                                                              │",
+                  "│                                                                                                              │",
+                  "│                                                                                                              │",
+                  "│                                                                                                              │",
+                  "│                                                                                                              │",
+                  "│                                                                                                              │",
+                  "╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────╯",
+                  "✦ I've written a poem about cats and saved it to cats.txt. Let me know if you'd like me to read it back to you or",
+                  "  make any changes!",
+                  "▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀",
+                  " > ask me my favorite animal using the AskQuestion tool",
+                  "▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄",
+                  " Thinking...",
+                  " │",
+                  " │ Initiating the Inquiry",
+                  " │ I have identified the user's primary goal: eliciting their favorite animal. The next step was to select the",
+                  " │ correct tool, and I've locked in on the `ask_user` tool, specifically `default_api:ask_user`. Now, the crucial",
+                  " │ part - crafting a clear and concise question; I'm starting with, \"What is your favorite...\"",
+                  "",
+                  "╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────╮",
+                  "│ -  Ask User                                                                                                  │",
+                  "│                                                                                                              │",
+                  "╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────╯",
+                  "",
+                  "ℹ Request cancelled.",
+                  "▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀",
+                  " > give me 5 multiple choice questions to choose from",
+                  "▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄",
+                  " Thinking...",
+                  " │",
+                  " │ Clarifying User Intent",
+                  " │ I'm now zeroing in on the user's need for multiple-choice questions. I realized the `ask_user` tool's limitations",
+                  " │ - the maximum is 4 choices, not 5. I'll need to work around this; I have a couple of possible approaches in mind.",
+                  " │ I need to make a judgement call to proceed.",
+                  " │",
+                  " │ Addressing the Limit",
+                  " │ I've carefully reviewed the schema. The critical constraint is the `maxItems: 4` for the `questions` array within",
+                  " │ the `ask_user` tool. I'm choosing to provide four multiple-choice questions initially, while also providing",
+                  " │ context on why there are not five. It seems safest, given the constraint, to proceed that way first and ask for",
+                  " │ more later, if needed. I'm preparing the tool call now.",
+                  " │",
+                  " │ Crafting Questions for User",
+                  " │ I'm now generating four multiple-choice questions. I've drafted them around general topics. I'm focusing on",
+                  " │ \"Environment\", \"Time\", \"Superpower\", and \"Vacation\". I'm structuring these as an `ask_user` call, following the",
+                  " │ schema. I've added labels and descriptions to the options for better clarity.",
+                  " │",
+                  " │ Formulating New Questions",
+                  " │ I'm now putting together the next set of multiple-choice questions for the user. I've focused on traits and",
+                  " │ hypothetical situations for this round. I am also planning the structure of a tool call with questions about a",
+                  " │ \"time\" preference, traits, and animal preferences. I've designed each option to have a concise label and more",
+                  " │ descriptive text to help the user.",
+                  "",
+                  "╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────╮",
+                  "│ -  Ask User                                                                                                  │",
+                  "│                                                                                                              │",
+                  "╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────╯",
+                  "",
+                  "ℹ Request cancelled.",
+                  "▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀",
+                  " > 1 - In shadows they creep, on velvet paws,ts.txt",
+                  "▄▄ 2 - With twitching tails and hidden claws.▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄",
+                  " T 3 - A purr that rumbles, soft and deep,",
+                  " │ 4 - Before they curl up fast asleep.",
+                  " │ 1 + Softly walking down the hall,",
+                  " │ 2 + Chasing shadows on the wall.t seems the user wants another cat poem written to `cats.txt`, even though we've",
+                  " │ 3 + Whiskers twitch and ears stand high, assumption that a fresh poem is desired. I'll get that done immediately.",
+                  "   4 + Watching every bird fly by.",
+                  "╭──5─  ────────────────────────────────────────────────────────────────────────────────────────────────────────────╮",
+                  "│  6 - Eyes of emerald, gold, or blue,                                                                             │",
+                  "│  7 - Always watching, judging you.                                                                               │",
+                  "│  8 - Masters of the sunlit square,                                                                               │",
+                  "│  9 - Sleeping softly on the chair.                                                                               │",
+                  "│ 10 - irst 14 lines hidden (Ctrl+O to show) ...                                                                   │",
+                  "│ 11 - Fierce little hunters of the night,                                                                         │",
+                  "│ 12 - Batting at a speck of light.                                                                                │",
+                  "│ 13 - Mysterious, aloof, and grand,                                                                               │",
+                  "│ 14 - The tiny rulers of the land.                                                                                │",
+                  "│  6 + Purring like a tiny drum,                                                                                   │",
+                  "│  7 + Waiting for the food to come.                                                                               │",
+                  "│  8 + A sudden pounce, a sleepy yawn,                                                                             │",
+                  "│  9 + Napping on the sunny lawn.                                                                                  │",
+                  "│ Apply this change?                                                                                               │",
+                  "│                                                                                                                  │",
+                  "│ ● 1. Allow once                                                                                                  │",
+                  "│   2. Allow for this session                                                                                      │",
+                  "│   3. Allow for this file in all future sessions                                                                  │",
+                  "│   4. Modify with external editor                                                                                 │",
+                  "│   5. No, suggest changes (esc)                                                                                   │",
+                  "│                                                                                                                  │",
+                  "╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯",
+                  " Press Ctrl+O to show more lines",
+                  ""
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 8652,
+          "x": 2,
+          "y": 22,
+          "width": 79,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 79,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 8898,
+          "x": 2,
+          "y": 22,
+          "width": 80,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 80,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 9048,
+          "x": 2,
+          "y": 22,
+          "width": 81,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 81,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 9198,
+          "x": 2,
+          "y": 22,
+          "width": 82,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 82,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 9348,
+          "x": 2,
+          "y": 22,
+          "width": 83,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 83,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 9498,
+          "x": 2,
+          "y": 21,
+          "width": 87,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 87,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 9648,
+          "x": 2,
+          "y": 21,
+          "width": 91,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 91,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 9804,
+          "x": 2,
+          "y": 21,
+          "width": 92,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 92,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 9954,
+          "x": 2,
+          "y": 21,
+          "width": 94,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 94,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 10104,
+          "x": 2,
+          "y": 21,
+          "width": 95,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 95,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 10254,
+          "x": 2,
+          "y": 21,
+          "width": 96,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 96,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 10404,
+          "x": 2,
+          "y": 21,
+          "width": 97,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 97,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 10554,
+          "x": 2,
+          "y": 21,
+          "width": 98,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 98,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 10704,
+          "x": 2,
+          "y": 21,
+          "width": 99,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 99,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 10854,
+          "x": 2,
+          "y": 21,
+          "width": 98,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 98,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 11004,
+          "x": 2,
+          "y": 21,
+          "width": 99,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 99,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 11154,
+          "x": 2,
+          "y": 21,
+          "width": 100,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 100,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 11304,
+          "x": 2,
+          "y": 21,
+          "width": 101,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 101,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 11454,
+          "x": 2,
+          "y": 21,
+          "width": 102,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 102,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 11610,
+          "x": 2,
+          "y": 21,
+          "width": 103,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 103,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 11760,
+          "x": 2,
+          "y": 21,
+          "width": 104,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 104,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 11910,
+          "x": 2,
+          "y": 21,
+          "width": 103,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 103,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 12060,
+          "x": 2,
+          "y": 21,
+          "width": 102,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 102,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 12210,
+          "x": 2,
+          "y": 21,
+          "width": 101,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 101,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 12366,
+          "x": 2,
+          "y": 21,
+          "width": 100,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 100,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 12516,
+          "x": 2,
+          "y": 21,
+          "width": 99,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 99,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 12666,
+          "x": 2,
+          "y": 21,
+          "width": 100,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 100,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 12816,
+          "x": 2,
+          "y": 21,
+          "width": 101,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 101,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 12966,
+          "x": 2,
+          "y": 21,
+          "width": 100,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 100,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 13116,
+          "x": 2,
+          "y": 21,
+          "width": 101,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 101,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 13266,
+          "x": 2,
+          "y": 21,
+          "width": 102,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 102,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 13422,
+          "x": 2,
+          "y": 21,
+          "width": 103,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 103,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 15131,
+          "x": 2,
+          "y": 21,
+          "width": 102,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 102,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 15372,
+          "x": 2,
+          "y": 21,
+          "width": 101,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 101,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 15619,
+          "x": 2,
+          "y": 21,
+          "width": 102,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 102,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 15866,
+          "x": 2,
+          "y": 21,
+          "width": 103,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 103,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 16107,
+          "x": 2,
+          "y": 21,
+          "width": 104,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 104,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 16348,
+          "x": 2,
+          "y": 21,
+          "width": 105,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 105,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 16589,
+          "x": 2,
+          "y": 21,
+          "width": 106,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 106,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 16830,
+          "x": 2,
+          "y": 21,
+          "width": 107,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 107,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 17071,
+          "x": 2,
+          "y": 21,
+          "width": 108,
+          "height": 14,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 14,
+          "scrollWidth": 108,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#5e6065",
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  " 1 In shadows they creep, on velvet paws,",
+                  " 2 With twitching tails and hidden claws.",
+                  " 3 A purr that rumbles, soft and deep,",
+                  " 4 Before they curl up fast asleep.",
+                  " 5",
+                  " 6 Eyes of emerald, gold, or blue,",
+                  " 7 Always watching, judging you.",
+                  " 8 Masters of the sunlit square,",
+                  " 9 Sleeping softly on the chair.",
+                  "10",
+                  "11 Fierce little hunters of the night,",
+                  "12 Batting at a speck of light.",
+                  "13 Mysterious, aloof, and grand,",
+                  "14 The tiny rulers of the land."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        }
+      ]
+    }
+  ]
+}

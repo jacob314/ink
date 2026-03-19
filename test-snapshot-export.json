@@ -1,0 +1,35 @@
+{
+  "type": "single",
+  "columns": 80,
+  "rows": 24,
+  "frames": [
+    {
+      "tree": {
+        "id": "root",
+        "children": []
+      },
+      "updates": [
+        {
+          "id": "root",
+          "x": 0,
+          "y": 0,
+          "width": 80,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "data": "AQAAAAEAAABQAAAACFAASGVsbG8gU25hcHNob3QgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA="
+              }
+            ]
+          },
+          "stickyHeaders": []
+        }
+      ],
+      "timestamp": 0
+    }
+  ]
+}

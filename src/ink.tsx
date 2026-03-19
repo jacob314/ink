@@ -23,6 +23,7 @@ import {calculateScroll} from './scroll.js';
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
 import ResizeObserver, {ResizeObserverEntry} from './resize-observer.js';
 import {Selection} from './selection.js';
+import TerminalBuffer from './terminal-buffer.js';
 
 const noop = () => {};
 
@@ -98,6 +99,7 @@ export default class Ink {
 	private readonly throttledLog: LogUpdate;
 	private readonly isScreenReaderEnabled: boolean;
 	private readonly selection: Selection;
+	private readonly terminalBuffer?: TerminalBuffer;
 	private optionsState: InkOptions;
 
 	// Ignore last render after unmounting a tree to prevent empty output before exit
@@ -173,6 +175,26 @@ export default class Ink {
 			: this.onRender; // Original unthrottled method
 		this.rootNode.onImmediateRender = renderMethod;
 
+		if (options.renderProcess === true || options.terminalBuffer === true) {
+			this.terminalBuffer = new TerminalBuffer(
+				options.stdout.columns ?? 80,
+				options.stdout.rows ?? 24,
+				{
+					debugRainbowEnabled: options.debugRainbow,
+					renderInProcess: !options.renderProcess && options.terminalBuffer,
+					stdout: options.stdout,
+					isAlternateBufferEnabled: options.isAlternateBufferEnabled,
+					stickyHeadersInBackbuffer: options.stickyHeadersInBackbuffer,
+					animatedScroll: options.animatedScroll,
+					animationInterval: options.animationInterval,
+					backbufferUpdateDelay: options.backbufferUpdateDelay,
+					maxScrollbackLength: options.maxScrollbackLength,
+					forceScrollToBottomOnBackbufferRefresh:
+						options.forceScrollToBottomOnBackbufferRefresh,
+				},
+			);
+		}
+
 		this.log = logUpdate.create(options.stdout, {
 			alternateBuffer: options.alternateBuffer,
 			alternateBufferAlreadyActive: options.alternateBufferAlreadyActive,
@@ -240,6 +262,10 @@ export default class Ink {
 	}
 
 	resized = () => {
+		const terminalWidth = this.options.stdout.columns ?? 80;
+		const terminalHeight = this.options.stdout.rows ?? 24;
+
+		this.terminalBuffer?.resize(terminalWidth, terminalHeight);
 		this.calculateLayout();
 		this.onRender();
 	};
@@ -334,13 +360,35 @@ export default class Ink {
 			this.frameIndex++;
 		}
 
-		const {output, outputHeight, staticOutput, styledOutput, cursorPosition} =
-			render(this.rootNode, {
-				isScreenReaderEnabled: this.isScreenReaderEnabled,
-				selection: this.selection,
-				selectionStyle: this.options.selectionStyle,
-				skipScrollbars: false,
-			});
+		const {
+			output,
+			outputHeight,
+			staticOutput,
+			styledOutput,
+			cursorPosition,
+			root,
+		} = render(this.rootNode, {
+			isScreenReaderEnabled: this.isScreenReaderEnabled,
+			selection: this.selection,
+			selectionStyle: this.options.selectionStyle,
+			skipScrollbars: Boolean(this.terminalBuffer),
+		});
+
+		if (this.terminalBuffer && root) {
+			const appliedChanges = this.terminalBuffer.update(
+				0,
+				Number.MAX_SAFE_INTEGER,
+				root,
+				cursorPosition,
+			);
+			if (appliedChanges) {
+				void this.terminalBuffer.render();
+			}
+
+			this.callOnRender(startTime, output, staticOutput);
+
+			return;
+		}
 
 		// If <Static> output isn't empty, it means new children have been added to it
 		const hasStaticOutput = staticOutput && staticOutput !== '\n';
@@ -502,6 +550,8 @@ export default class Ink {
 			...options,
 		};
 
+		this.terminalBuffer?.updateOptions(this.optionsState);
+
 		this.lastOutput = '';
 		if (this.node) {
 			this.render(this.node);
@@ -614,6 +664,10 @@ export default class Ink {
 			this.options.stdout.write(this.lastOutput + '\n');
 		} else if (!this.options.debug) {
 			this.log.done();
+
+			if (this.terminalBuffer) {
+				this.terminalBuffer.done();
+			}
 		}
 
 		this.isUnmounted = true;
@@ -642,11 +696,35 @@ export default class Ink {
 		return this.exitPromise;
 	}
 
-	dumpCurrentFrame = (_filename: string) => {};
+	dumpCurrentFrame(filename: string): void {
+		if (this.terminalBuffer) {
+			this.terminalBuffer.dumpCurrentFrame(filename);
+		} else {
+			console.error(
+				'dumpCurrentFrame is only supported when terminalBuffer is true',
+			);
+		}
+	}
 
-	startRecording = (_filename: string) => {};
+	startRecording(filename: string): void {
+		if (this.terminalBuffer) {
+			this.terminalBuffer.startRecording(filename);
+		} else {
+			console.error(
+				'startRecording is only supported when terminalBuffer is true',
+			);
+		}
+	}
 
-	stopRecording = () => {};
+	stopRecording(): void {
+		if (this.terminalBuffer) {
+			this.terminalBuffer.stopRecording();
+		} else {
+			console.error(
+				'stopRecording is only supported when terminalBuffer is true',
+			);
+		}
+	}
 
 	clear(): void {
 		if (!isInCi && !this.options.debug) {
