@@ -62,17 +62,23 @@ function ScrollableContent({
 	const {dumpCurrentFrame} = useContext(AppContext);
 
 	useEffect(() => {
+		let innerTimeout: NodeJS.Timeout;
+
 		if (exportFilename) {
 			const timeout = setTimeout(() => {
 				dumpCurrentFrame(exportFilename);
 				console.log('Dumping frame to:', exportFilename);
-				setTimeout(() => {
+				innerTimeout = setTimeout(() => {
 					// eslint-disable-next-line unicorn/no-process-exit
 					process.exit(0);
 				}, 500);
 			}, 100);
+
 			return () => {
 				clearTimeout(timeout);
+				if (innerTimeout) {
+					clearTimeout(innerTimeout);
+				}
 			};
 		}
 
