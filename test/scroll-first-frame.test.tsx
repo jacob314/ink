@@ -1,8 +1,8 @@
 import test from 'ava';
 import React from 'react';
-import delay from 'delay';
 import {render} from '../src/index.js';
 import ScrollableContent from '../examples/scroll/scroll.js';
+import {waitFor} from './helpers/wait-for.js';
 import createStdout from './helpers/create-stdout.js';
 
 test('scrollbar is shown on the VERY first frame in ScrollableContent', async t => {
@@ -26,8 +26,7 @@ test('scrollbar is shown on the VERY first frame in ScrollableContent', async t 
 		renderProcess: false,
 	});
 
-	// Wait a tiny bit
-	await delay(100);
+	await waitFor(() => firstFrame !== '');
 
 	t.truthy(firstFrame, 'Should have written at least one frame');
 

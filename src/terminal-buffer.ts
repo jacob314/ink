@@ -3,6 +3,7 @@ import {fork, type ChildProcess} from 'node:child_process';
 import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import {Serializer} from './serialization.js';
 import {TerminalBufferWorker} from './worker/render-worker.js';
+import {linesEqual} from './worker/terminal-writer.js';
 import {type DOMElement} from './dom.js';
 import {
 	type Region,
@@ -672,8 +673,7 @@ export default class TerminalBuffer {
 			const newLine = newLines[i];
 			const oldLine = oldLines[i];
 
-			const areEqual = this.linesEqual(oldLine, newLine);
-
+			const areEqual = linesEqual(oldLine, newLine);
 			if (areEqual) {
 				if (chunkStart !== -1) {
 					updates.push({
@@ -732,50 +732,5 @@ export default class TerminalBuffer {
 				console.error('Failed to send edits to worker:', error);
 			}
 		}
-	}
-
-	private linesEqual(
-		lineA: StyledChar[] | undefined,
-		lineB: StyledChar[] | undefined,
-	): boolean {
-		if (lineA === lineB) {
-			return true;
-		}
-
-		if (!lineA || !lineB) {
-			return false;
-		}
-
-		if (lineA.length !== lineB.length) {
-			return false;
-		}
-
-		for (const [i, charA] of lineA.entries()) {
-			const charB = lineB[i];
-
-			if (
-				charA.value !== charB!.value ||
-				charA.fullWidth !== charB!.fullWidth
-			) {
-				return false;
-			}
-
-			if (charA.styles.length !== charB!.styles.length) {
-				return false;
-			}
-
-			for (const [j, styleA] of charA.styles.entries()) {
-				const styleB = charB!.styles[j];
-
-				if (
-					styleA.code !== styleB!.code ||
-					styleA.endCode !== styleB!.endCode
-				) {
-					return false;
-				}
-			}
-		}
-
-		return true;
 	}
 }

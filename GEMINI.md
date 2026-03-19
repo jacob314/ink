@@ -54,6 +54,7 @@ npm test
 - `hooks › useInput - pasted carriage return`
 - `exit › exit with thrown error`
 - `hooks › useStdout - write to stdout`
+- `unicode-marks › Thai text with sara am`
 - unicode-marks > width may get measured as 12 instead of 16 locally.
 
 ### Linting and Formatting

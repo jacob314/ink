@@ -1,7 +1,7 @@
 import test from 'ava';
 import React from 'react';
-import delay from 'delay';
 import {Box, Text, render} from '../src/index.js';
+import {waitFor} from './helpers/wait-for.js';
 import {renderToString} from './helpers/render-to-string.js';
 import createStdout from './helpers/create-stdout.js';
 import {enableTestColors, disableTestColors} from './helpers/force-colors.js';
@@ -16,6 +16,7 @@ test.after(() => {
 
 test('scrollbar is shown on the first frame', async t => {
 	const stdout = createStdout();
+	const write = stdout.write as any; // eslint-disable-line @typescript-eslint/no-unsafe-assignment
 
 	render(
 		<Box width={20} height={5} overflowY="scroll">
@@ -42,7 +43,7 @@ test('scrollbar is shown on the first frame', async t => {
 	);
 
 	// Wait a bit for the worker to process the first frame
-	await delay(100);
+	await waitFor(() => write.callCount > 0);
 
 	const output = stdout.get();
 

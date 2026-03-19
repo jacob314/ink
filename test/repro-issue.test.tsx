@@ -2,9 +2,9 @@ import {PassThrough} from 'node:stream';
 import test from 'ava';
 import React from 'react';
 import xtermHeadless from '@xterm/headless';
-import delay from 'delay';
 import {render} from '../src/index.js';
 import ScrollableContent from '../examples/sticky/sticky.js';
+import {waitFor} from './helpers/wait-for.js';
 
 const {Terminal: XtermTerminal} = xtermHeadless;
 
@@ -19,11 +19,13 @@ const createTestEnv = (
 		allowProposedApi: true,
 	});
 
+	let writeCount = 0;
 	const stdout = {
 		columns,
 		rows,
 		write(chunk: string) {
 			term.write(chunk);
+			writeCount++;
 			return true;
 		},
 		on() {},
@@ -54,6 +56,7 @@ const createTestEnv = (
 	});
 
 	const press = async (key: string) => {
+		const currentCount = writeCount;
 		switch (key) {
 			case 'up': {
 				stdin.push('\u001B[A');
@@ -75,7 +78,7 @@ const createTestEnv = (
 			}
 		}
 
-		await delay(10);
+		await waitFor(() => writeCount > currentCount);
 	};
 
 	const getLine = (row: number) => {
@@ -102,7 +105,6 @@ const createTestEnv = (
 		press,
 		getLine,
 		getFullContent,
-		wait: delay,
 	};
 };
 
@@ -113,8 +115,6 @@ test('repro issue: sticky headers and spurious renders', async t => {
 	for (let i = 0; i < 5; i++) {
 		// eslint-disable-next-line no-await-in-loop
 		await env.press('space');
-		// eslint-disable-next-line no-await-in-loop
-		await env.wait(200);
 	}
 
 	// 2. Scroll up to a position where Header 4 (starts at ~160 in actual lines) is stuck.
@@ -124,16 +124,13 @@ test('repro issue: sticky headers and spurious renders', async t => {
 		await env.press('up');
 	}
 
-	await env.wait(500);
-
 	// 3. Toggle sticky headers ON
 	await env.press('h');
 
+	// Wait for the backbuffer delay to expire (1000ms by default in terminal-writer)
 	await new Promise(resolve => {
 		setTimeout(resolve, 1500);
-	}); // Wait for fullRender (1000ms delay)
-
-	await env.wait(500);
+	});
 
 	const contentAfterHon = env.getFullContent();
 	t.log('Content after pressing H (on):\n' + contentAfterHon);
@@ -146,7 +143,11 @@ test('repro issue: sticky headers and spurious renders', async t => {
 
 	// 4. Toggle sticky headers OFF
 	await env.press('h');
-	await env.wait(500);
+
+	await new Promise(resolve => {
+		setTimeout(resolve, 1500);
+	});
+
 	const contentAfterHoff = env.getFullContent();
 	t.log('Content after pressing H (off):\n' + contentAfterHoff);
 

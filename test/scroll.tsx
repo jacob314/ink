@@ -7,9 +7,9 @@
 import EventEmitter from 'node:events';
 import React, {useState} from 'react';
 import test from 'ava';
-import {spy, stub} from 'sinon';
-import delay from 'delay';
+import {restore, spy, stub} from 'sinon';
 import {Box, Text, render, useInput} from '../src/index.js';
+import {waitFor} from './helpers/wait-for.js';
 import {renderToString} from './helpers/render-to-string.js';
 import createStdout from './helpers/create-stdout.js';
 import {enableTestColors, disableTestColors} from './helpers/force-colors.js';
@@ -22,6 +22,9 @@ test.after(() => {
 	disableTestColors();
 });
 
+test.afterEach(() => {
+	restore();
+});
 const tallText = Array.from({length: 20})
 	.map((_, i) => `line ${i}`)
 	.join('\n');
@@ -580,18 +583,21 @@ test('interactive scroll', async t => {
 		debug: true,
 	});
 
-	await delay(100);
-	const initialRender = (stdout.write as any).lastCall.args[0] as string;
+	const write = stdout.write as any; // eslint-disable-line @typescript-eslint/no-unsafe-assignment
+	await waitFor(() => write.callCount > 0);
+	const initialRender = write.lastCall.args[0] as string;
 	t.snapshot(initialRender, 'initial render');
 
+	let {callCount} = write; // eslint-disable-line @typescript-eslint/no-unsafe-assignment
 	emitReadable(stdin, '\u001B[B'); // Down arrow
-	await delay(100);
-	const afterScrollDown = (stdout.write as any).lastCall.args[0] as string;
+	await waitFor(() => write.callCount > callCount);
+	const afterScrollDown = write.lastCall.args[0] as string;
 	t.snapshot(afterScrollDown, 'after scrolling down');
 
+	callCount = write.callCount; // eslint-disable-line @typescript-eslint/no-unsafe-assignment
 	emitReadable(stdin, '\u001B[C'); // Right arrow
-	await delay(100);
-	const afterScrollRight = (stdout.write as any).lastCall.args[0] as string;
+	await waitFor(() => write.callCount > callCount);
+	const afterScrollRight = write.lastCall.args[0] as string;
 	t.snapshot(afterScrollRight, 'after scrolling right');
 });
 

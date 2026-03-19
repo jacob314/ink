@@ -2,8 +2,8 @@ import {PassThrough} from 'node:stream';
 import test from 'ava';
 import React from 'react';
 import xtermHeadless from '@xterm/headless';
-import delay from 'delay';
 import {render, Box, Text} from '../src/index.js';
+import {waitFor} from './helpers/wait-for.js';
 
 const {Terminal: XtermTerminal} = xtermHeadless;
 
@@ -11,11 +11,13 @@ test('sticky header should not overlap with bottom border when pushed out', asyn
 	const rows = 5;
 	const columns = 20;
 	const term = new XtermTerminal({cols: columns, rows, allowProposedApi: true});
+	let writeCount = 0;
 	const stdout = {
 		columns,
 		rows,
 		write(chunk: string) {
 			term.write(chunk);
+			writeCount++;
 			return true;
 		},
 		on() {},
@@ -63,13 +65,14 @@ test('sticky header should not overlap with bottom border when pushed out', asyn
 			.getLine(term.buffer.active.baseY + row)
 			?.translateToString(true) ?? '';
 
-	await delay(200);
+	await waitFor(() => writeCount > 0);
 
 	// Inner box height: 1 (top border) + 1 (sticky) + 2 (content) + 1 (bottom border) = 5.
 	// Scrollable container height: 1.
 	// maxScrollTop = 5 - 1 = 4.
 	// If scrollTop = 4, then terminal row 0 should show content row 4 (bottom border).
 
+	const prevWriteCount = writeCount;
 	rerender(
 		<Box flexDirection="column" height={rows} width={columns}>
 			<Box
@@ -92,8 +95,11 @@ test('sticky header should not overlap with bottom border when pushed out', asyn
 		</Box>,
 	);
 
-	await delay(200);
-
+	await waitFor(() => writeCount > prevWriteCount);
+	// Ensure worker has processed everything, not just the first chunk
+	await new Promise(resolve => {
+		setTimeout(resolve, 20);
+	});
 	const firstLine = getLine(0);
 	t.log('Terminal row 0: "' + firstLine + '"');
 
