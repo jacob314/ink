@@ -3,12 +3,12 @@ import * as path from 'node:path';
 import url from 'node:url';
 import {createRequire} from 'node:module';
 import test from 'ava';
+import type * as nodePty from 'node-pty';
 import {run} from './helpers/run.js';
 
 const require = createRequire(import.meta.url);
 
-// eslint-disable-next-line @typescript-eslint/consistent-type-imports
-const {spawn} = require('node-pty') as typeof import('node-pty');
+const {spawn} = require('node-pty') as typeof nodePty;
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 

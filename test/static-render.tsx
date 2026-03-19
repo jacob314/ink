@@ -7,8 +7,9 @@
 import test from 'ava';
 import React from 'react';
 import stripAnsi from 'strip-ansi';
-import delay from 'delay';
+import type {SinonStub} from 'sinon';
 import {StaticRender, Text, Box, render} from '../src/index.js';
+import {waitFor} from './helpers/wait-for.js';
 import createStdout from './helpers/create-stdout.js';
 
 test('StaticRender renders children', async t => {
@@ -20,12 +21,11 @@ test('StaticRender renders children', async t => {
 		{stdout},
 	);
 
-	await delay(500);
+	const write = stdout.write as unknown as SinonStub;
+	await waitFor(() => write.callCount > 0);
 
-	t.log('Call count:', (stdout.write as any).callCount);
-	const output = stripAnsi(
-		((stdout.write as any).lastCall?.args[0] as string) || '',
-	);
+	t.log('Call count:', write.callCount);
+	const output = stripAnsi((write.lastCall?.args[0] as string) || '');
 	t.is(output.trim(), 'Hello Static');
 	unmount();
 });
@@ -42,9 +42,10 @@ test('StaticRender with Box and multiple children', async t => {
 		{stdout},
 	);
 
-	await delay(100);
+	const write = stdout.write as unknown as SinonStub;
+	await waitFor(() => write.callCount > 0);
 
-	const output = stripAnsi((stdout.write as any).lastCall.args[0] as string);
+	const output = stripAnsi(write.lastCall.args[0] as string);
 	t.is(
 		output.trim(),
 		`Line 1
@@ -70,11 +71,10 @@ test('StaticRender respects style prop', async t => {
 		{stdout},
 	);
 
-	await delay(100);
+	const write = stdout.write as unknown as SinonStub;
+	await waitFor(() => write.callCount > 0);
 
-	const output = stripAnsi(
-		(stdout.write as any).lastCall.args[0] as string,
-	).trimEnd();
+	const output = stripAnsi(write.lastCall.args[0] as string).trimEnd();
 	t.is(output, '  Indented');
 	unmount();
 });

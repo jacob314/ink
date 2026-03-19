@@ -11,6 +11,7 @@ export const renderToString: (
 		stdout,
 		debug: true,
 		isScreenReaderEnabled: options?.isScreenReaderEnabled,
+		animatedScroll: false,
 	});
 
 	const output = stdout.get();

@@ -11,14 +11,14 @@ import ansiEscapes from 'ansi-escapes';
 import stripAnsi from 'strip-ansi';
 import boxen from 'boxen';
 import delay from 'delay';
+import type * as nodePty from 'node-pty';
 import {render, Box, Text, useInput, Static} from '../src/index.js';
 import {type RenderMetrics} from '../src/ink.js';
 import createStdout from './helpers/create-stdout.js';
 
 const require = createRequire(import.meta.url);
 
-// eslint-disable-next-line @typescript-eslint/consistent-type-imports
-const {spawn} = require('node-pty') as typeof import('node-pty');
+const {spawn} = require('node-pty') as typeof nodePty;
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
