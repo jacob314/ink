@@ -17,6 +17,7 @@ import * as dom from './dom.js';
 import logUpdate, {type LogUpdate, positionImeCursor} from './log-update.js';
 import instances from './instances.js';
 import App from './components/App.js';
+import {type InkOptions} from './components/AppContext.js';
 import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
 import {calculateScroll} from './scroll.js';
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
@@ -96,6 +97,7 @@ export default class Ink {
 	private lastCursorPosition?: {row: number; col: number} | undefined;
 	private readonly container: FiberRoot;
 	private readonly rootNode: dom.DOMElement;
+	private node?: ReactNode;
 	// This variable is used only in debug mode to store full static output
 	// so that it's rerendered every time, not just new static parts, like in non-debug mode
 	private fullStaticOutput: string;
@@ -104,12 +106,19 @@ export default class Ink {
 	private readonly unsubscribeResize?: () => void;
 	private readonly unsubscribeSelection?: () => void;
 	private frameIndex = 0;
+	private optionsState: Partial<InkOptions>;
 
 	constructor(options: Options) {
 		autoBind(this);
 
 		this.options = options;
-
+		this.optionsState = {
+			isAlternateBufferEnabled: options.alternateBuffer,
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+			animatedScroll: (options as any).animatedScroll,
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+			stickyHeadersInBackbuffer: (options as any).stickyHeadersInBackbuffer,
+		};
 		this.rootNode = dom.createNode('ink-root');
 		this.rootNode.onComputeLayout = this.calculateLayout;
 
@@ -221,6 +230,21 @@ export default class Ink {
 	getSelection(): Selection {
 		return this.selection;
 	}
+
+	setOptions = (options: Partial<InkOptions>) => {
+		this.optionsState = {...this.optionsState, ...options};
+		if (this.node) {
+			this.render(this.node);
+		} else {
+			this.onRerender();
+		}
+	};
+
+	dumpCurrentFrame = (_filename: string) => {};
+
+	startRecording = (_filename: string) => {};
+
+	stopRecording = () => {};
 
 	resolveExitPromise: () => void = () => {};
 	rejectExitPromise: (reason?: Error) => void = () => {};
@@ -471,6 +495,7 @@ export default class Ink {
 	};
 
 	render(node: ReactNode): void {
+		this.node = node;
 		const tree = (
 			<AccessibilityContext.Provider
 				value={{isScreenReaderEnabled: this.isScreenReaderEnabled}}
@@ -483,6 +508,11 @@ export default class Ink {
 					writeToStderr={this.writeToStderr}
 					exitOnCtrlC={this.options.exitOnCtrlC}
 					selection={this.selection}
+					options={this.optionsState as InkOptions}
+					setOptions={this.setOptions}
+					dumpCurrentFrame={this.dumpCurrentFrame}
+					startRecording={this.startRecording}
+					stopRecording={this.stopRecording}
 					onExit={this.unmount}
 					onRerender={this.onRerender}
 				>

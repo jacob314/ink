@@ -80,7 +80,11 @@ export const renderNodeToScreenReaderOutput = (
 
 	if (node.nodeName === 'ink-text') {
 		output = squashTextNodes(node);
-	} else if (node.nodeName === 'ink-box' || node.nodeName === 'ink-root') {
+	} else if (
+		node.nodeName === 'ink-box' ||
+		node.nodeName === 'ink-root' ||
+		node.nodeName === 'ink-static-render'
+	) {
 		const separator =
 			node.style.flexDirection === 'row' ||
 			node.style.flexDirection === 'row-reverse'
@@ -378,7 +382,11 @@ const renderNodeToOutput = (
 			}
 		}
 
-		if (node.nodeName === 'ink-root' || node.nodeName === 'ink-box') {
+		if (
+			node.nodeName === 'ink-root' ||
+			node.nodeName === 'ink-box' ||
+			node.nodeName === 'ink-static-render'
+		) {
 			for (const childNode of node.childNodes) {
 				renderNodeToOutput(childNode as DOMElement, output, {
 					offsetX: childrenOffsetX,
@@ -746,5 +754,7 @@ const applySelectionToStyledChars = (
 
 	return newStyledChars;
 };
+
+export const renderToStatic = (_node: any, _options: any = {}) => {};
 
 export default renderNodeToOutput;

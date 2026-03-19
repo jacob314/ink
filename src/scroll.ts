@@ -87,6 +87,7 @@ export function calculateScroll(node: DOMElement): void {
 
 	node.internal_scrollState = {
 		scrollHeight,
+		actualScrollHeight: scrollHeight,
 		scrollWidth,
 		scrollTop,
 		scrollLeft,

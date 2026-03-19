@@ -170,6 +170,16 @@ export function calculateScrollbarThumb(options: {
 }
 
 /**
+ * Get how much scroll height was added by stableScrollback.
+ */
+export const getAddedScrollHeight = (node: DOMElement): number => {
+	const scrollHeight = node.internal_scrollState?.scrollHeight ?? 0;
+	const actualScrollHeight = node.internal_scrollState?.actualScrollHeight ?? 0;
+
+	return Math.max(0, scrollHeight - actualScrollHeight);
+};
+
+/**
  * Get the bounding box of the vertical scrollbar.
  */
 export const getVerticalScrollbarBoundingBox = (
@@ -349,7 +359,8 @@ export const collectSortedFragments = (
 
 		if (
 			currentNode.nodeName === 'ink-text' ||
-			currentNode.nodeName === 'ink-virtual-text'
+			currentNode.nodeName === 'ink-virtual-text' ||
+			(currentNode.nodeName === 'ink-static-render' && currentNode.cachedRender)
 		) {
 			if (currentSelectable) {
 				const text = getText(currentNode);
@@ -482,6 +493,39 @@ export const collectSortedFragments = (
 export const getText = (node: DOMNode): string => {
 	if (node.nodeName === '#text') {
 		return node.nodeValue;
+	}
+
+	if (
+		node.nodeName === 'ink-static-render' &&
+		node.cachedRender?.root?.selectableSpans
+	) {
+		const spans = node.cachedRender.root.selectableSpans;
+		if (spans.length === 0) return '';
+
+		// Spans are already sorted during rendering, but let's be safe
+		const sortedSpans = [...spans].sort((a, b) =>
+			a.y === b.y ? a.startX - b.startX : a.y - b.y,
+		);
+		let text = '';
+		let currentY = sortedSpans[0]!.y;
+		let currentX = sortedSpans[0]!.startX;
+
+		for (const span of sortedSpans) {
+			if (span.y > currentY) {
+				text += '\n'.repeat(span.y - currentY);
+				currentX = 0;
+				currentY = span.y;
+			}
+
+			if (span.startX > currentX) {
+				text += ' '.repeat(span.startX - currentX);
+			}
+
+			text += span.text;
+			currentX = span.endX;
+		}
+
+		return text;
 	}
 
 	if (node.nodeName === 'ink-text' || node.nodeName === 'ink-virtual-text') {
@@ -809,6 +853,77 @@ export const getTextOffset = (
 		return 0;
 	}
 
+	if (
+		node.nodeName === 'ink-static-render' &&
+		node.cachedRender?.root?.selectableSpans
+	) {
+		const spans = node.cachedRender.root.selectableSpans;
+		if (spans.length === 0) return 0;
+		const sortedSpans = [...spans].sort((a, b) =>
+			a.y === b.y ? a.startX - b.startX : a.y - b.y,
+		);
+
+		let textOffset = 0;
+		let currentY = sortedSpans[0]!.y;
+		let currentX = sortedSpans[0]!.startX;
+
+		let bestDist = Infinity;
+		let bestOffset = 0;
+
+		for (const span of sortedSpans) {
+			if (span.y > currentY) {
+				textOffset += span.y - currentY;
+				currentX = 0;
+				currentY = span.y;
+			}
+
+			if (span.startX > currentX) {
+				textOffset += span.startX - currentX;
+				currentX = span.startX;
+			}
+
+			// Check distance
+			if (y === span.y && x >= span.startX && x <= span.endX) {
+				// Exact hit
+				let charOffset = 0;
+				let cx = span.startX;
+				for (const char of span.text) {
+					const w = inkCharacterWidth(char);
+					if (x < cx + w) {
+						if (options?.snapToChar === 'end' && x >= cx) {
+							charOffset += char.length;
+						}
+
+						return textOffset + charOffset;
+					}
+
+					cx += w;
+					charOffset += char.length;
+				}
+
+				return textOffset + charOffset;
+			}
+
+			// Update best match
+			const dy = Math.abs(y - span.y);
+			const dx =
+				x < span.startX ? span.startX - x : x > span.endX ? x - span.endX : 0;
+			const dist = dy * 1000 + dx;
+			if (dist < bestDist) {
+				bestDist = dist;
+				bestOffset =
+					y < span.y || (y === span.y && x < span.startX)
+						? textOffset
+						: textOffset + span.text.length;
+			}
+
+			textOffset += span.text.length;
+			currentX = span.endX;
+		}
+
+		return bestOffset;
+	}
+
 	if (node.nodeName === 'ink-text' || node.nodeName === 'ink-virtual-text') {
 		return getTextOffsetForTextNode(node, x, y, options);
 	}
@@ -857,14 +972,21 @@ export const getTextOffset = (
 const findNodeInSquashed = (
 	root: DOMNode,
 	offset: number,
-): {node: TextNode; offset: number} | undefined => {
+): {node: DOMNode; offset: number} | undefined => {
 	let currentOffset = 0;
 
 	const findNode = (
 		node: DOMNode,
-	): {node: TextNode; offset: number} | undefined => {
+	): {node: DOMNode; offset: number} | undefined => {
 		if (node.nodeName === '#text') {
 			const {length} = node.nodeValue;
+			if (offset >= currentOffset && offset <= currentOffset + length) {
+				return {node, offset: offset - currentOffset};
+			}
+
+			currentOffset += length;
+		} else if (node.nodeName === 'ink-static-render' && node.cachedRender) {
+			const {length} = getText(node);
 			if (offset >= currentOffset && offset <= currentOffset + length) {
 				return {node, offset: offset - currentOffset};
 			}
@@ -891,9 +1013,13 @@ const findNodeInSquashed = (
 export const findNodeAtOffset = (
 	node: DOMNode,
 	targetOffset: number,
-): {node: TextNode; offset: number} | undefined => {
+): {node: TextNode | DOMNode; offset: number} | undefined => {
 	if (node.nodeName === '#text') {
 		return {node, offset: Math.min(targetOffset, node.nodeValue.length)};
+	}
+
+	if (node.nodeName === 'ink-static-render' && node.cachedRender) {
+		return {node, offset: Math.min(targetOffset, getText(node).length)};
 	}
 
 	if (node.nodeName === 'ink-text' || node.nodeName === 'ink-virtual-text') {
@@ -1033,6 +1159,16 @@ export const hitTest = (
 		): {node: DOMNode; offset: number} | undefined => {
 			if (n.nodeName === '#text') {
 				const {length} = n.nodeValue;
+				if (
+					offsetInSquashed >= currentOffset &&
+					offsetInSquashed <= currentOffset + length
+				) {
+					return {node: n, offset: offsetInSquashed - currentOffset};
+				}
+
+				currentOffset += length;
+			} else if (n.nodeName === 'ink-static-render' && n.cachedRender) {
+				const {length} = getText(n);
 				if (
 					offsetInSquashed >= currentOffset &&
 					offsetInSquashed <= currentOffset + length
