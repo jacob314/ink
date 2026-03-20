@@ -6,7 +6,7 @@
 
 import fs from 'node:fs';
 import process from 'node:process';
-import {loadReplay, createHumanReadableDump} from '../src/worker/replay.js';
+import {loadReplay, createHumanReadableDump} from '../src/replay.js';
 
 const filename = process.argv[2];
 if (!filename) {

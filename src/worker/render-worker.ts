@@ -24,7 +24,7 @@ import {
 	type LoadedReplayData,
 	serializeReplayUpdate,
 	type ReplayFrame,
-} from './replay.js';
+} from '../replay.js';
 import {
 	type RenderLine,
 	TerminalWriter,

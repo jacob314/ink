@@ -6,7 +6,7 @@ import yargs from 'yargs';
 import {hideBin} from 'yargs/helpers';
 import onExit from 'signal-exit';
 import ansiEscapes from 'ansi-escapes';
-import {loadReplay, type ReplayFrame} from '../../src/worker/replay.js';
+import {loadReplay, type ReplayFrame} from '../../src/replay.js';
 import {type RegionUpdate} from '../../src/output.js';
 
 const main = async () => {

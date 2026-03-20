@@ -6,9 +6,9 @@
 
 import fs from 'node:fs';
 import {Buffer} from 'node:buffer';
-import {type RegionNode, type RegionUpdate} from '../output.js';
-import {type Serializer, Deserializer} from '../serialization.js';
-import {type StickyHeader} from '../dom.js';
+import {type RegionNode, type RegionUpdate} from './output.js';
+import {type Serializer, Deserializer} from './serialization.js';
+import {type StickyHeader} from './dom.js';
 
 export type ReplayData = {
 	type: 'single' | 'sequence';

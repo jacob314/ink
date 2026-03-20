@@ -3,7 +3,7 @@ import path from 'node:path';
 import xtermHeadless, {type Terminal} from '@xterm/headless';
 import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import {TerminalBufferWorker} from '../../src/worker/render-worker.js';
-import {loadReplay} from '../../src/worker/replay.js';
+import {loadReplay} from '../../src/replay.js';
 import {type RenderLine} from '../../src/worker/terminal-writer.js';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention

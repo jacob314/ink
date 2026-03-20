@@ -8,4 +8,4 @@ RWS=${3:-77}
 stty cols "$COLS" rows "$RWS"
 node --loader ts-node/esm examples/sticky/index.ts --export "$FILENAME" --items 12 --scroll-down 40 --columns "$COLS" --rows "$RWS"
 sleep 1
-npx tsx src/worker/dump-replay.ts "$FILENAME"
+npx tsx tools/dump-replay.ts "$FILENAME"
