@@ -49,37 +49,7 @@ Debugging complex terminal layouts, z-indexes, clipping, and scrolling can be di
 
 ### Recording a Session
 
-You can record a test or example by accessing the `internalTerminalBuffer` from a ref and calling `startRecording`.
-
-```tsx
-// tools/viewer/record-test.tsx
-import {render, Box, Text} from 'ink';
-import React, {useEffect, useRef} from 'react';
-
-function App() {
-	const ref = useRef<any>(null);
-
-	useEffect(() => {
-		const tb = ref.current?.parentNode?.internalTerminalBuffer;
-		if (tb) {
-			// Start recording a sequence of frames
-			tb.startRecording('sequence');
-
-			setTimeout(() => {
-				// Stop and save to replay.json
-				tb.stopRecording('test-replay.json');
-				process.exit(0);
-			}, 1000);
-		}
-	}, []);
-
-	return (
-		<Box ref={ref}>
-			<Text>Hello World</Text>
-		</Box>
-	);
-}
-```
+You can record a test or example by following the example recording functionality in examples/sticky.
 
 This dumps the exact `RegionNode` trees and `RegionUpdate` payloads sent from the main thread into a `test-replay.json` file.
 

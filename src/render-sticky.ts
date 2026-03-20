@@ -136,19 +136,19 @@ export function identifyActiveStickyNodes(
 		let parentHeight: number;
 
 		if (cached && anchor) {
-			const staticRenderPos = getRelativeTop(anchor, node);
+			const staticRenderPos = getRelativeTop(anchor, node) ?? 0;
 			stickyNodeTop = staticRenderPos + cached.relativeY!;
 			stickyNodeHeight = cached.height!;
 			parentTop = staticRenderPos + cached.parentRelativeTop!;
 			parentHeight = cached.parentHeight!;
 		} else {
 			if (!stickyNode.yogaNode) continue;
-			stickyNodeTop = getRelativeTop(stickyNode, node);
+			stickyNodeTop = getRelativeTop(stickyNode, node) ?? 0;
 			stickyNodeHeight = stickyNode.yogaNode.getComputedHeight();
 
 			const parent = stickyNode.parentNode!;
 			if (parent?.yogaNode) {
-				parentTop = getRelativeTop(parent, node);
+				parentTop = getRelativeTop(parent, node) ?? 0;
 				parentHeight = parent.yogaNode.getComputedHeight();
 			} else {
 				parentTop = 0;
@@ -282,8 +282,8 @@ export function renderActiveStickyNodes(
 		const currentBorderLeft = yogaNode.getComputedBorder(Yoga.EDGE_LEFT);
 
 		if (cached && anchor) {
-			const staticRenderPosTop = getRelativeTop(anchor, node);
-			const staticRenderPosLeft = getRelativeLeft(anchor, node);
+			const staticRenderPosTop = getRelativeTop(anchor, node) ?? 0;
+			const staticRenderPosLeft = getRelativeLeft(anchor, node) ?? 0;
 			stickyNodeTop = staticRenderPosTop + cached.relativeY!;
 			stickyNodeHeight = cached.height!;
 			parentTop = staticRenderPosTop + cached.parentRelativeTop!;
@@ -291,7 +291,7 @@ export function renderActiveStickyNodes(
 			stickyOffsetX = x + staticRenderPosLeft + cached.relativeX!;
 			stickyNodeId = cached.nodeId;
 		} else {
-			stickyNodeTop = getRelativeTop(stickyNode, node);
+			stickyNodeTop = getRelativeTop(stickyNode, node) ?? 0;
 			const naturalHeight = stickyNode.yogaNode!.getComputedHeight();
 			const alternateStickyNode = stickyNode.childNodes.find(
 				childNode => (childNode as DOMElement).internalStickyAlternate,
@@ -303,14 +303,14 @@ export function renderActiveStickyNodes(
 			const parent = stickyNode.parentNode!;
 
 			if (parent?.yogaNode) {
-				parentTop = getRelativeTop(parent, node);
+				parentTop = getRelativeTop(parent, node) ?? 0;
 				parentHeight = parent.yogaNode.getComputedHeight();
 			} else {
 				parentTop = 0;
 				parentHeight = Number.MAX_SAFE_INTEGER;
 			}
 
-			stickyOffsetX = x + getRelativeLeft(stickyNode, node);
+			stickyOffsetX = x + (getRelativeLeft(stickyNode, node) ?? 0);
 			stickyNodeId = stickyNode.internalId;
 		}
 
@@ -337,14 +337,12 @@ export function renderActiveStickyNodes(
 				let nextNodeTop: number | undefined;
 
 				if (nextStickyNodeInfo.cached && nextStickyNodeInfo.anchor) {
-					const staticRenderPosTop = getRelativeTop(
-						nextStickyNodeInfo.anchor,
-						node,
-					);
+					const staticRenderPosTop =
+						getRelativeTop(nextStickyNodeInfo.anchor, node) ?? 0;
 					nextNodeTop =
 						staticRenderPosTop + nextStickyNodeInfo.cached.relativeY!;
 				} else if (nextStickyNodeInfo.node?.yogaNode) {
-					nextNodeTop = getRelativeTop(nextStickyNodeInfo.node, node);
+					nextNodeTop = getRelativeTop(nextStickyNodeInfo.node, node) ?? 0;
 				}
 
 				if (nextNodeTop !== undefined) {
@@ -380,15 +378,13 @@ export function renderActiveStickyNodes(
 
 				if (nextStickyNodeInfo.cached && nextStickyNodeInfo.anchor) {
 					nextNodeHeight = nextStickyNodeInfo.cached.height;
-					const staticRenderPosTop = getRelativeTop(
-						nextStickyNodeInfo.anchor,
-						node,
-					);
+					const staticRenderPosTop =
+						getRelativeTop(nextStickyNodeInfo.anchor, node) ?? 0;
 					nextNodeTop =
 						staticRenderPosTop + nextStickyNodeInfo.cached.relativeY!;
 				} else if (nextStickyNodeInfo.node?.yogaNode) {
 					nextNodeHeight = nextStickyNodeInfo.node.yogaNode.getComputedHeight();
-					nextNodeTop = getRelativeTop(nextStickyNodeInfo.node, node);
+					nextNodeTop = getRelativeTop(nextStickyNodeInfo.node, node) ?? 0;
 				}
 
 				if (nextNodeTop !== undefined && nextNodeHeight !== undefined) {

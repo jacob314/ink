@@ -1228,7 +1228,10 @@ export const hitTest = (
 
 export default measureElement;
 
-export function getRelativeTop(node: DOMElement, ancestor: DOMElement): number {
+export function getRelativeTop(
+	node: DOMElement,
+	ancestor?: DOMElement,
+): number | undefined {
 	if (!node.yogaNode || node === ancestor) {
 		return 0;
 	}
@@ -1244,13 +1247,17 @@ export function getRelativeTop(node: DOMElement, ancestor: DOMElement): number {
 		parent = parent.parentNode;
 	}
 
+	if (ancestor !== undefined && parent !== ancestor) {
+		return undefined;
+	}
+
 	return top;
 }
 
 export function getRelativeLeft(
 	node: DOMElement,
-	ancestor: DOMElement,
-): number {
+	ancestor?: DOMElement,
+): number | undefined {
 	if (!node.yogaNode || node === ancestor) {
 		return 0;
 	}
@@ -1264,6 +1271,10 @@ export function getRelativeLeft(
 		}
 
 		parent = parent.parentNode;
+	}
+
+	if (ancestor !== undefined && parent !== ancestor) {
+		return undefined;
 	}
 
 	return left;

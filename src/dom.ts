@@ -115,7 +115,6 @@ export type DOMElement = {
 	internal_lastMeasuredSize?: {width: number; height: number};
 	internalMaxScrollTop?: number;
 	internalIsScrollbackDirty?: boolean;
-	internalTerminalBuffer?: any;
 	internalId: number;
 } & InkNode;
 

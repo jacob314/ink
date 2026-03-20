@@ -15,7 +15,11 @@ export const debugLog = (message: string) => {
 	if (isFirstRun) {
 		try {
 			logStream = fs.createWriteStream(logFilePath, {flags: 'w'});
-		} catch {}
+		} catch (error) {
+			process.stderr.write(
+				`[debug-log] Failed to start writing to debug file ${logFilePath} in debugLog: ${String(error)}\n`,
+			);
+		}
 
 		isFirstRun = false;
 	}
@@ -23,7 +27,11 @@ export const debugLog = (message: string) => {
 	if (logStream) {
 		try {
 			logStream.write(message + '\n');
-		} catch {}
+		} catch (error) {
+			process.stderr.write(
+				`[debug-log] Failed to write to debug file ${logFilePath} in debugLog: ${String(error)}\n`,
+			);
+		}
 	}
 };
 
@@ -38,5 +46,9 @@ export const clearDebugLog = () => {
 
 	try {
 		logStream = fs.createWriteStream(logFilePath, {flags: 'w'});
-	} catch {}
+	} catch (error) {
+		process.stderr.write(
+			`[debug-log] Failed to start writing to debug file ${logFilePath} in clearDebugLog: ${String(error)}\n`,
+		);
+	}
 };

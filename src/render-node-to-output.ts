@@ -50,7 +50,7 @@ export const renderToStatic = (
 		const parentYogaNode = parent?.yogaNode;
 		const currentBorderTop =
 			node.yogaNode?.getComputedBorder(Yoga.EDGE_TOP) ?? 0;
-		const naturalRow = getRelativeTop(stickyNode, node) - currentBorderTop;
+		const naturalRow = getRelativeTop(stickyNode, node) ?? 0 - currentBorderTop;
 		const stickyType: 'top' | 'bottom' =
 			stickyNode.internalSticky === 'bottom' ? 'bottom' : 'top';
 
@@ -60,9 +60,9 @@ export const renderToStatic = (
 			stuckLines,
 			styledOutput: stuckLines ?? naturalLines,
 			x:
-				getRelativeLeft(stickyNode, node) -
-				(node.yogaNode?.getComputedBorder(Yoga.EDGE_LEFT) ?? 0),
-			y: getRelativeTop(stickyNode, node) - currentBorderTop,
+				getRelativeLeft(stickyNode, node) ??
+				0 - (node.yogaNode?.getComputedBorder(Yoga.EDGE_LEFT) ?? 0),
+			y: getRelativeTop(stickyNode, node) ?? 0 - currentBorderTop,
 			naturalRow,
 			startRow: naturalRow,
 			endRow: naturalRow + naturalHeight,
@@ -70,13 +70,13 @@ export const renderToStatic = (
 			isStuckOnly: true,
 
 			relativeX:
-				getRelativeLeft(stickyNode, node) -
-				(node.yogaNode?.getComputedBorder(Yoga.EDGE_LEFT) ?? 0),
-			relativeY: getRelativeTop(stickyNode, node) - currentBorderTop,
+				getRelativeLeft(stickyNode, node) ??
+				0 - (node.yogaNode?.getComputedBorder(Yoga.EDGE_LEFT) ?? 0),
+			relativeY: getRelativeTop(stickyNode, node) ?? 0 - currentBorderTop,
 			height: maxHeaderHeight,
 			type: stickyType,
 			parentRelativeTop: parent
-				? getRelativeTop(parent, node) - currentBorderTop
+				? (getRelativeTop(parent, node) ?? 0 - currentBorderTop)
 				: 0,
 			parentHeight: parentYogaNode
 				? parentYogaNode.getComputedHeight()
