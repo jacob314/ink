@@ -302,7 +302,6 @@ const renderer = (
 			skipStaticElements: true,
 			selectionStyle,
 			selectionMap,
-			nodesToSkip: undefined,
 		});
 
 		let staticOutput;
@@ -320,7 +319,6 @@ const renderer = (
 				selectionMap: selection
 					? calculateSelectionMap(node.staticNode, selection)
 					: undefined,
-				nodesToSkip: undefined,
 			});
 		}
 

@@ -15,6 +15,7 @@ import type * as nodePty from 'node-pty';
 import {render, Box, Text, useInput, Static} from '../src/index.js';
 import {type RenderMetrics} from '../src/ink.js';
 import createStdout from './helpers/create-stdout.js';
+import {waitFor} from './helpers/wait-for.js';
 
 const require = createRequire(import.meta.url);
 
@@ -319,25 +320,9 @@ test.serial('throttle renders to maxFps', t => {
 
 test.serial('outputs renderTime when onRender is passed', async t => {
 	const metrics: RenderMetrics[] = [];
-	let resolveRender: () => void = () => {};
-	let renderPromise = new Promise<void>(resolve => {
-		resolveRender = resolve;
-	});
 
 	const onRender = (m: RenderMetrics) => {
 		metrics.push(m);
-		const currentResolve = resolveRender;
-		renderPromise = new Promise<void>(resolve => {
-			resolveRender = resolve;
-		});
-		currentResolve();
-	};
-
-	const waitForRender = async (predicate: () => boolean) => {
-		while (!predicate()) {
-			// eslint-disable-next-line no-await-in-loop
-			await renderPromise;
-		}
 	};
 
 	const stdin = createStdin();
@@ -356,8 +341,8 @@ test.serial('outputs renderTime when onRender is passed', async t => {
 		},
 	);
 
-	await waitForRender(() => metrics.some(m => m.output.includes('Test')));
-	t.true(metrics.some(m => m.staticOutput?.includes('Static 1')));
+	await waitFor(() => Boolean(metrics.some(m => m.output.includes('Test'))));
+	t.is(Boolean(metrics.some(m => m.staticOutput?.includes('Static 1'))), true);
 
 	// Manual rerender
 	metrics.length = 0;
@@ -367,7 +352,7 @@ test.serial('outputs renderTime when onRender is passed', async t => {
 		</Box>,
 	);
 
-	await waitForRender(() => metrics.some(m => m.output.includes('Updated')));
+	await waitFor(() => Boolean(metrics.some(m => m.output.includes('Updated'))));
 
 	unmount();
 });

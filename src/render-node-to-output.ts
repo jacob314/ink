@@ -51,6 +51,8 @@ export const renderToStatic = (
 		const currentBorderTop =
 			node.yogaNode?.getComputedBorder(Yoga.EDGE_TOP) ?? 0;
 		const naturalRow = getRelativeTop(stickyNode, node) - currentBorderTop;
+		const stickyType: 'top' | 'bottom' =
+			stickyNode.internalSticky === 'bottom' ? 'bottom' : 'top';
 
 		const headerObj = {
 			nodeId: stickyNode.internalId,
@@ -72,16 +74,13 @@ export const renderToStatic = (
 				(node.yogaNode?.getComputedBorder(Yoga.EDGE_LEFT) ?? 0),
 			relativeY: getRelativeTop(stickyNode, node) - currentBorderTop,
 			height: maxHeaderHeight,
-			// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-			type: (stickyNode.internalSticky === 'bottom' ? 'bottom' : 'top') as
-				| 'top'
-				| 'bottom',
+			type: stickyType,
 			parentRelativeTop: parent
 				? getRelativeTop(parent, node) - currentBorderTop
 				: 0,
 			parentHeight: parentYogaNode
 				? parentYogaNode.getComputedHeight()
-				: 1_000_000,
+				: Number.MAX_SAFE_INTEGER,
 			parentBorderTop: parentYogaNode
 				? parentYogaNode.getComputedBorder(Yoga.EDGE_TOP)
 				: 0,
@@ -105,7 +104,6 @@ export const renderToStatic = (
 			offsetY: 0,
 			transformers: undefined,
 			skipStaticElements: options.skipStaticElements ?? false,
-			nodesToSkip: undefined,
 			isStickyRender: options.isStickyRender,
 			selectionMap: options.selectionMap,
 			selectionStyle: options.selectionStyle,
@@ -130,17 +128,12 @@ function renderNodeToOutput(
 		absoluteOffsetY?: number;
 		transformers?: OutputTransformer[];
 		skipStaticElements: boolean;
-		nodesToSkip?: DOMElement[];
 		isStickyRender?: boolean;
 		skipStickyHeaders?: boolean;
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
 		selectionStyle?: (char: StyledChar) => StyledChar;
 	},
 ) {
-	if (options.nodesToSkip?.includes(node)) {
-		return;
-	}
-
 	const {
 		offsetX = 0,
 		offsetY = 0,
@@ -148,7 +141,6 @@ function renderNodeToOutput(
 		absoluteOffsetY = 0,
 		transformers = [],
 		skipStaticElements,
-		nodesToSkip,
 		isStickyRender = false,
 		skipStickyHeaders = false,
 		selectionMap,
@@ -242,7 +234,6 @@ function renderNodeToOutput(
 			height,
 			newTransformers,
 			skipStaticElements,
-			nodesToSkip,
 			isStickyRender,
 			skipStickyHeaders,
 			selectionMap,

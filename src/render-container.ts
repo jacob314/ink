@@ -36,7 +36,6 @@ export function handleContainerNode(
 		height: number;
 		newTransformers: OutputTransformer[];
 		skipStaticElements: boolean;
-		nodesToSkip?: DOMElement[];
 		isStickyRender: boolean;
 		skipStickyHeaders: boolean;
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
@@ -50,7 +49,6 @@ export function handleContainerNode(
 		height,
 		newTransformers,
 		skipStaticElements,
-		nodesToSkip,
 		isStickyRender,
 		skipStickyHeaders,
 		selectionMap,
@@ -194,8 +192,6 @@ export function handleContainerNode(
 				const childOffsetX = -borderLeft;
 				const childOffsetY = -borderTop;
 
-				const allNodesToSkip = nodesToSkip;
-
 				for (const childNode of node.childNodes) {
 					renderNodeToOutput(childNode as DOMElement, output, {
 						offsetX: childOffsetX,
@@ -204,7 +200,6 @@ export function handleContainerNode(
 						absoluteOffsetY: y + borderTop - scrollTop,
 						transformers: newTransformers,
 						skipStaticElements,
-						nodesToSkip: allNodesToSkip,
 						isStickyRender,
 						skipStickyHeaders: false,
 						selectionMap,
@@ -239,7 +234,6 @@ export function handleContainerNode(
 		(node.nodeName as string) === 'ink-box'
 	) {
 		if (!(verticallyScrollable || horizontallyScrollable)) {
-			const allNodesToSkip = nodesToSkip;
 			for (const childNode of node.childNodes) {
 				renderNodeToOutput(childNode as DOMElement, output, {
 					offsetX: childrenOffsetX,
@@ -248,7 +242,6 @@ export function handleContainerNode(
 					absoluteOffsetY: y,
 					transformers: newTransformers,
 					skipStaticElements,
-					nodesToSkip: allNodesToSkip,
 					isStickyRender,
 					skipStickyHeaders,
 					selectionMap,

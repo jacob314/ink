@@ -102,7 +102,6 @@ export function renderStickyNode(
 			offsetY: -stickyNode.yogaNode!.getComputedTop(),
 			transformers: options.transformers,
 			skipStaticElements: options.skipStaticElements,
-			nodesToSkip: undefined,
 			isStickyRender: isSticky,
 			selectionMap: options.selectionMap,
 			selectionStyle: options.selectionStyle,
@@ -153,7 +152,7 @@ export function identifyActiveStickyNodes(
 				parentHeight = parent.yogaNode.getComputedHeight();
 			} else {
 				parentTop = 0;
-				parentHeight = 1_000_000;
+				parentHeight = Number.MAX_SAFE_INTEGER;
 			}
 		}
 
@@ -308,7 +307,7 @@ export function renderActiveStickyNodes(
 				parentHeight = parent.yogaNode.getComputedHeight();
 			} else {
 				parentTop = 0;
-				parentHeight = 1_000_000;
+				parentHeight = Number.MAX_SAFE_INTEGER;
 			}
 
 			stickyOffsetX = x + getRelativeLeft(stickyNode, node);
