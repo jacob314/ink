@@ -43,30 +43,40 @@ function MixedContent({useStatic}: Readonly<{useStatic: boolean}>) {
 	return content;
 }
 
-test('StaticRender output matches normal output for mixed children (simple stdout)', async t => {
-	const columns = 80;
-	// 1. Render without static
-	const stdoutNormal = createStdout(columns);
-	const {unmount: unmountNormal} = render(<MixedContent useStatic={false} />, {
-		stdout: stdoutNormal,
-		patchConsole: false,
-	});
-	await delay(500);
-	const outputNormal = stripAnsi(stdoutNormal.get()).trim();
-	unmountNormal();
+test.serial(
+	'StaticRender output matches normal output for mixed children (simple stdout)',
+	async t => {
+		const columns = 80;
+		// 1. Render without static
+		const stdoutNormal = createStdout(columns);
+		const {unmount: unmountNormal} = render(
+			<MixedContent useStatic={false} />,
+			{
+				stdout: stdoutNormal,
+				patchConsole: false,
+			},
+		);
+		await delay(500);
+		const outputNormal = stripAnsi(stdoutNormal.get()).trim();
+		unmountNormal();
 
-	// 2. Render with static
-	const stdoutStatic = createStdout(columns);
-	const {unmount: unmountStatic} = render(<MixedContent useStatic />, {
-		stdout: stdoutStatic,
-		patchConsole: false,
-	});
-	await delay(500);
-	const outputStatic = stripAnsi(stdoutStatic.get()).trim();
-	unmountStatic();
+		// 2. Render with static
+		const stdoutStatic = createStdout(columns);
+		const {unmount: unmountStatic} = render(<MixedContent useStatic />, {
+			stdout: stdoutStatic,
+			patchConsole: false,
+		});
+		await delay(500);
+		const outputStatic = stripAnsi(stdoutStatic.get()).trim();
+		unmountStatic();
 
-	t.log('Normal Output:\n' + outputNormal);
-	t.log('Static Output:\n' + outputStatic);
+		t.log('Normal Output:\n' + outputNormal);
+		t.log('Static Output:\n' + outputStatic);
 
-	t.is(outputStatic, outputNormal, 'Static output should match normal output');
-});
+		t.is(
+			outputStatic,
+			outputNormal,
+			'Static output should match normal output',
+		);
+	},
+);

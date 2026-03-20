@@ -1,3 +1,4 @@
+import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import Yoga, {type Node as YogaNode} from 'yoga-layout';
 import {
 	measureStyledChars,
@@ -9,6 +10,7 @@ import {wrapOrTruncateStyledChars} from './text-wrap.js';
 import squashTextNodes from './squash-text-nodes.js';
 import {type OutputTransformer} from './render-node-to-output.js';
 import type ResizeObserver from './resize-observer.js';
+import {type Region} from './output.js';
 
 type InkNode = {
 	parentNode: DOMElement | undefined;
@@ -27,6 +29,33 @@ export type ElementNames =
 
 export type NodeNames = ElementNames | TextName;
 
+export type StickyHeader = {
+	nodeId: number;
+	lines: StyledChar[][]; // Natural (scrolling) version
+	stuckLines?: StyledChar[][]; // Alternate (sticky) version
+	styledOutput: StyledChar[][]; // Legacy property
+	x: number; // Stuck X position relative to region
+	y: number; // Stuck Y position relative to region
+	naturalRow: number; // Natural row offset relative to content start
+	startRow: number; // Content-relative start row (same as naturalRow)
+	endRow: number; // Content-relative end row
+	scrollContainerId: number | string;
+	isStuckOnly: boolean; // If true, natural 'lines' are already in background content
+
+	// Metadata for cached headers
+	relativeX?: number; // Relative to StaticRender
+	relativeY?: number; // Relative to StaticRender
+	height?: number;
+	parentRelativeTop?: number;
+	parentHeight?: number;
+	parentBorderTop?: number;
+	parentBorderBottom?: number;
+	type?: 'top' | 'bottom';
+	node?: DOMElement;
+	maxStuckY?: number;
+	minStuckY?: number;
+};
+
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export type DOMElement = {
 	nodeName: ElementNames;
@@ -36,16 +65,8 @@ export type DOMElement = {
 	internal_terminalCursorFocus?: boolean;
 	internal_terminalCursorPosition?: number;
 	internalOnBeforeRender?: (node: DOMElement) => void;
-	cachedRender?: {
-		root?: {
-			selectableSpans: Array<{
-				y: number;
-				startX: number;
-				endX: number;
-				text: string;
-			}>;
-		};
-	};
+	cachedRender?: Region;
+
 	internal_accessibility?: {
 		role?:
 			| 'button'
@@ -86,11 +107,15 @@ export type DOMElement = {
 	onRender?: () => void;
 	onImmediateRender?: () => void;
 	internal_scrollState?: ScrollState;
-	internalSticky?: boolean;
+	internalSticky?: boolean | 'top' | 'bottom';
 	internalStickyAlternate?: boolean;
-	internal_opaque?: boolean;
+	internalOpaque?: boolean;
+	internalScrollbar?: boolean;
 	resizeObservers?: Set<ResizeObserver>;
 	internal_lastMeasuredSize?: {width: number; height: number};
+	internalMaxScrollTop?: number;
+	internalIsScrollbackDirty?: boolean;
+	internalId: number;
 } & InkNode;
 
 export type ScrollState = {
@@ -119,6 +144,8 @@ export type DOMNode<T = {nodeName: NodeNames}> = T extends {
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export type DOMNodeAttribute = boolean | string | number;
 
+let idCounter = 0;
+
 export const createNode = (nodeName: ElementNames): DOMElement => {
 	const node: DOMElement = {
 		nodeName,
@@ -131,6 +158,11 @@ export const createNode = (nodeName: ElementNames): DOMElement => {
 		internal_accessibility: {},
 		internalSticky: false,
 		internalStickyAlternate: false,
+		internalOpaque: false,
+		internalScrollbar: true,
+		internalMaxScrollTop: 0,
+		internalIsScrollbackDirty: false,
+		internalId: idCounter++,
 	};
 
 	if (nodeName === 'ink-text') {
@@ -208,13 +240,13 @@ export const removeChildNode = (
 
 	removeNode.parentNode = undefined;
 
+	if (node.nodeName === 'ink-text' || node.nodeName === 'ink-virtual-text') {
+		markNodeAsDirty(node);
+	}
+
 	const index = node.childNodes.indexOf(removeNode);
 	if (index >= 0) {
 		node.childNodes.splice(index, 1);
-	}
-
-	if (node.nodeName === 'ink-text' || node.nodeName === 'ink-virtual-text') {
-		markNodeAsDirty(node);
 	}
 };
 
@@ -286,6 +318,19 @@ const findClosestYogaNode = (node?: DOMNode): YogaNode | undefined => {
 	}
 
 	return node.yogaNode ?? findClosestYogaNode(node.parentNode);
+};
+
+export const setCachedRender = (node: DOMElement, cachedRender: Region) => {
+	node.cachedRender = cachedRender;
+
+	if (node.yogaNode) {
+		node.yogaNode.setWidth(cachedRender.width);
+		node.yogaNode.setHeight(cachedRender.height);
+
+		while (node.yogaNode.getChildCount() > 0) {
+			node.yogaNode.removeChild(node.yogaNode.getChild(0));
+		}
+	}
 };
 
 const markNodeAsDirty = (node?: DOMNode): void => {

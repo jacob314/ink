@@ -299,7 +299,7 @@ const Selection = forwardRef<SelectionReference, SelectionProperties>(
 					const length =
 						hit.node.nodeName === '#text'
 							? hit.node.nodeValue.length
-							: (hit.node.cachedRender?.root?.selectableSpans
+							: (hit.node.cachedRender?.selectableSpans
 									?.map(s => s.text)
 									.join('').length ?? 0);
 					// If we're at the end of the node, select the previous character

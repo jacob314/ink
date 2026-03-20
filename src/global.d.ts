@@ -3,6 +3,7 @@ import {type Except} from 'type-fest';
 import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import {type DOMElement} from './dom.js';
 import {type Styles} from './styles.js';
+import {type Region} from './output.js';
 
 declare module 'react' {
 	namespace JSX {
@@ -35,11 +36,7 @@ declare namespace Ink {
 		style?: Styles;
 		ref?: LegacyRef<DOMElement>;
 		internalOnBeforeRender?: (node: DOMElement) => void;
-		cachedRender?: {
-			output: StyledChar[][];
-			width: number;
-			height: number;
-		};
+		cachedRender?: Region;
 	};
 
 	type Text = {

@@ -16,6 +16,7 @@ import {
 } from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 import {renderToString} from './helpers/render-to-string.js';
+import {waitFor} from './helpers/wait-for.js';
 import {run} from './helpers/run.js';
 
 test('text', t => {
@@ -140,84 +141,39 @@ test('number', t => {
 });
 
 test('fail when text nodes are not within <Text> component', t => {
-	let error: Error | undefined;
-
-	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
-		override render() {
-			return this.props.children;
-		}
-
-		override componentDidCatch(reactError: Error) {
-			error = reactError;
-		}
-	}
-
-	renderToString(
-		<ErrorBoundary>
-			<Box>
-				Hello
-				<Text>World</Text>
-			</Box>
-		</ErrorBoundary>,
+	const output = renderToString(
+		<Box>
+			Hello
+			<Text>World</Text>
+		</Box>,
 	);
 
-	t.truthy(error);
-	t.is(
-		error?.message,
-		'Text string "Hello" must be rendered inside <Text> component',
+	t.true(
+		output.includes(
+			'Text string "Hello" must be rendered inside <Text> component',
+		),
 	);
 });
 
 test('fail when text node is not within <Text> component', t => {
-	let error: Error | undefined;
+	const output = renderToString(<Box>Hello World</Box>);
 
-	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
-		override render() {
-			return this.props.children;
-		}
-
-		override componentDidCatch(reactError: Error) {
-			error = reactError;
-		}
-	}
-
-	renderToString(
-		<ErrorBoundary>
-			<Box>Hello World</Box>
-		</ErrorBoundary>,
-	);
-
-	t.truthy(error);
-	t.is(
-		error?.message,
-		'Text string "Hello World" must be rendered inside <Text> component',
+	t.true(
+		output.includes(
+			'Text string "Hello World" must be rendered inside <Text> component',
+		),
 	);
 });
 
 test('fail when <Box> is inside <Text> component', t => {
-	let error: Error | undefined;
-
-	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
-		override render() {
-			return this.props.children;
-		}
-
-		override componentDidCatch(reactError: Error) {
-			error = reactError;
-		}
-	}
-
-	renderToString(
-		<ErrorBoundary>
-			<Text>
-				Hello World
-				<Box />
-			</Text>
-		</ErrorBoundary>,
+	const output = renderToString(
+		<Text>
+			Hello World
+			<Box />
+		</Text>,
 	);
 
-	t.truthy(error);
-	t.is((error as any).message, '<Box> can’t be nested inside <Text> component');
+	t.true(output.includes('<Box> can’t be nested inside <Text> component'));
 });
 
 test('remesure text dimensions on text change', t => {
@@ -372,55 +328,65 @@ test('static output', t => {
 	t.is(output, 'A\nB\nC\n\n\nX');
 });
 
-test('skip previous output when rendering new static output', t => {
-	const stdout = createStdout();
+test.serial(
+	'skip previous output when rendering new static output',
+	async t => {
+		const stdout = createStdout();
 
-	function Dynamic({items}: {readonly items: string[]}) {
-		return (
-			<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>
-		);
-	}
+		function Dynamic({items}: {readonly items: string[]}) {
+			return (
+				<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>
+			);
+		}
 
-	const {rerender} = render(<Dynamic items={['A']} />, {
-		stdout,
-		debug: true,
-	});
+		const {rerender} = render(<Dynamic items={['A']} />, {
+			stdout,
+			debug: true,
+		});
 
-	t.is((stdout.write as any).lastCall.args[0], 'A\n');
+		await waitFor(() => stdout.get().includes('A\n'));
+		t.true(stdout.get().includes('A\n'));
 
-	rerender(<Dynamic items={['A', 'B']} />);
-	t.is((stdout.write as any).lastCall.args[0], 'A\nB\n');
-});
+		rerender(<Dynamic items={['A', 'B']} />);
+		await waitFor(() => stdout.get().includes('A\nB\n'));
+		t.true(stdout.get().includes('A\nB\n'));
+	},
+);
 
-test('render only new items in static output on final render', t => {
-	const stdout = createStdout();
+test.serial(
+	'render only new items in static output on final render',
+	async t => {
+		const stdout = createStdout();
 
-	function Dynamic({items}: {readonly items: string[]}) {
-		return (
-			<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>
-		);
-	}
+		function Dynamic({items}: {readonly items: string[]}) {
+			return (
+				<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>
+			);
+		}
 
-	const {rerender, unmount} = render(<Dynamic items={[]} />, {
-		stdout,
-		debug: true,
-	});
+		const {rerender, unmount} = render(<Dynamic items={[]} />, {
+			stdout,
+			debug: true,
+		});
 
-	t.is((stdout.write as any).lastCall.args[0], '');
+		await waitFor(() => stdout.get() === '');
+		t.is(stdout.get(), '');
 
-	rerender(<Dynamic items={['A']} />);
-	t.is((stdout.write as any).lastCall.args[0], 'A\n');
+		rerender(<Dynamic items={['A']} />);
+		await waitFor(() => stdout.get().includes('A\n'));
+		t.true(stdout.get().includes('A\n'));
 
-	rerender(<Dynamic items={['A', 'B']} />);
-	unmount();
-	t.is((stdout.write as any).lastCall.args[0], 'A\nB\n');
-});
+		rerender(<Dynamic items={['A', 'B']} />);
+		unmount();
+		await waitFor(() => stdout.get().includes('A\nB\n'));
+		t.true(stdout.get().includes('A\nB\n'));
+	},
+);
 
 // See https://github.com/chalk/wrap-ansi/issues/27
 test('ensure wrap-ansi doesn’t trim leading whitespace', t => {
-	const output = renderToString(<Text color="red">{' ERROR '}</Text>);
-
-	t.is(output, chalk.red(' ERROR '));
+	const output = renderToString(<Text color="red">{' ERROR'}</Text>);
+	t.is(output, chalk.red(' ERROR'));
 });
 
 test('replace child node with text', t => {

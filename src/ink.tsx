@@ -59,10 +59,19 @@ export type Options = {
 	maxFps?: number;
 	alternateBuffer?: boolean;
 	alternateBufferAlreadyActive?: boolean;
+	isAlternateBufferEnabled?: boolean;
+	stickyHeadersInBackbuffer?: boolean;
 	incrementalRendering?: boolean;
 	debugRainbow?: boolean;
+	animatedScroll?: boolean;
+	animationInterval?: number;
+	backbufferUpdateDelay?: number;
+	maxScrollbackLength?: number;
+	forceScrollToBottomOnBackbufferRefresh?: boolean;
 	selectionStyle?: (char: StyledChar) => StyledChar;
 	standardReactLayoutTiming?: boolean;
+	renderProcess?: boolean;
+	terminalBuffer?: boolean;
 };
 
 const rainbowColors = [
@@ -89,6 +98,7 @@ export default class Ink {
 	private readonly throttledLog: LogUpdate;
 	private readonly isScreenReaderEnabled: boolean;
 	private readonly selection: Selection;
+	private optionsState: InkOptions;
 
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	private isUnmounted: boolean;
@@ -97,7 +107,7 @@ export default class Ink {
 	private lastCursorPosition?: {row: number; col: number} | undefined;
 	private readonly container: FiberRoot;
 	private readonly rootNode: dom.DOMElement;
-	private node?: ReactNode;
+	private node: ReactNode;
 	// This variable is used only in debug mode to store full static output
 	// so that it's rerendered every time, not just new static parts, like in non-debug mode
 	private fullStaticOutput: string;
@@ -106,19 +116,24 @@ export default class Ink {
 	private readonly unsubscribeResize?: () => void;
 	private readonly unsubscribeSelection?: () => void;
 	private frameIndex = 0;
-	private optionsState: Partial<InkOptions>;
 
 	constructor(options: Options) {
 		autoBind(this);
 
 		this.options = options;
+
 		this.optionsState = {
-			isAlternateBufferEnabled: options.alternateBuffer,
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-			animatedScroll: (options as any).animatedScroll,
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-			stickyHeadersInBackbuffer: (options as any).stickyHeadersInBackbuffer,
+			isAlternateBufferEnabled:
+				options.isAlternateBufferEnabled ?? options.alternateBuffer,
+			stickyHeadersInBackbuffer: options.stickyHeadersInBackbuffer,
+			animatedScroll: options.animatedScroll,
+			animationInterval: options.animationInterval,
+			backbufferUpdateDelay: options.backbufferUpdateDelay,
+			maxScrollbackLength: options.maxScrollbackLength,
+			forceScrollToBottomOnBackbufferRefresh:
+				options.forceScrollToBottomOnBackbufferRefresh,
 		};
+
 		this.rootNode = dom.createNode('ink-root');
 		this.rootNode.onComputeLayout = this.calculateLayout;
 
@@ -156,6 +171,8 @@ export default class Ink {
 		this.rootNode.onImmediateRender = options.standardReactLayoutTiming
 			? renderMethod
 			: this.onRender; // Original unthrottled method
+		this.rootNode.onImmediateRender = renderMethod;
+
 		this.log = logUpdate.create(options.stdout, {
 			alternateBuffer: options.alternateBuffer,
 			alternateBufferAlreadyActive: options.alternateBufferAlreadyActive,
@@ -231,21 +248,6 @@ export default class Ink {
 		return this.selection;
 	}
 
-	setOptions = (options: Partial<InkOptions>) => {
-		this.optionsState = {...this.optionsState, ...options};
-		if (this.node) {
-			this.render(this.node);
-		} else {
-			this.onRerender();
-		}
-	};
-
-	dumpCurrentFrame = (_filename: string) => {};
-
-	startRecording = (_filename: string) => {};
-
-	stopRecording = () => {};
-
 	resolveExitPromise: () => void = () => {};
 	rejectExitPromise: (reason?: Error) => void = () => {};
 	unsubscribeExit: () => void = () => {};
@@ -253,7 +255,7 @@ export default class Ink {
 	calculateLayout = () => {
 		// The 'columns' property can be undefined or 0 when not using a TTY.
 		// In that case we fall back to 80.
-		const terminalWidth = this.options.stdout.columns || 80;
+		const terminalWidth = this.options.stdout.columns ?? 80;
 
 		this.rootNode.yogaNode!.setWidth(terminalWidth);
 
@@ -333,12 +335,12 @@ export default class Ink {
 		}
 
 		const {output, outputHeight, staticOutput, styledOutput, cursorPosition} =
-			render(
-				this.rootNode,
-				this.isScreenReaderEnabled,
-				this.selection,
-				this.options.selectionStyle,
-			);
+			render(this.rootNode, {
+				isScreenReaderEnabled: this.isScreenReaderEnabled,
+				selection: this.selection,
+				selectionStyle: this.options.selectionStyle,
+				skipScrollbars: false,
+			});
 
 		// If <Static> output isn't empty, it means new children have been added to it
 		const hasStaticOutput = staticOutput && staticOutput !== '\n';
@@ -364,7 +366,7 @@ export default class Ink {
 			return;
 		}
 
-		if (this.options.alternateBuffer) {
+		if (this.optionsState.isAlternateBufferEnabled) {
 			if (hasStaticOutput) {
 				this.fullStaticOutput += staticOutput;
 			}
@@ -397,7 +399,7 @@ export default class Ink {
 				return;
 			}
 
-			const terminalWidth = this.options.stdout.columns || 80;
+			const terminalWidth = this.options.stdout.columns ?? 80;
 
 			const wrappedOutput = wrapAnsi(output, terminalWidth, {
 				trim: false,
@@ -494,6 +496,20 @@ export default class Ink {
 		this.onRender();
 	};
 
+	setOptions = (options: Partial<InkOptions>) => {
+		this.optionsState = {
+			...this.optionsState,
+			...options,
+		};
+
+		this.lastOutput = '';
+		if (this.node) {
+			this.render(this.node);
+		} else {
+			this.onRerender();
+		}
+	};
+
 	render(node: ReactNode): void {
 		this.node = node;
 		const tree = (
@@ -508,7 +524,7 @@ export default class Ink {
 					writeToStderr={this.writeToStderr}
 					exitOnCtrlC={this.options.exitOnCtrlC}
 					selection={this.selection}
-					options={this.optionsState as InkOptions}
+					options={this.optionsState}
 					setOptions={this.setOptions}
 					dumpCurrentFrame={this.dumpCurrentFrame}
 					startRecording={this.startRecording}
@@ -625,6 +641,12 @@ export default class Ink {
 
 		return this.exitPromise;
 	}
+
+	dumpCurrentFrame = (_filename: string) => {};
+
+	startRecording = (_filename: string) => {};
+
+	stopRecording = () => {};
 
 	clear(): void {
 		if (!isInCi && !this.options.debug) {

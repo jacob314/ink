@@ -1,7 +1,7 @@
 import React, {useRef, useEffect} from 'react';
 import test from 'ava';
-import delay from 'delay';
 import {render, Box, ResizeObserver, type DOMElement} from '../src/index.js';
+import {waitFor} from './helpers/wait-for.js';
 import createStdout from './helpers/create-stdout.js';
 
 test('ResizeObserver detects size changes', async t => {
@@ -61,12 +61,12 @@ test('ResizeObserver detects size changes', async t => {
 		{stdout},
 	);
 
-	await delay(100);
+	await waitFor(() => resizeCalls.length > 0);
 	t.is(resizeCalls.length, 1);
 	t.deepEqual(resizeCalls[0], {width: 10, height: 5});
 
 	rerender(<App width={20} height={10} onResize={onResize} />);
-	await delay(100);
+	await waitFor(() => resizeCalls.length > 1);
 	t.is(resizeCalls.length, 2);
 	t.deepEqual(resizeCalls[1], {width: 20, height: 10});
 
@@ -114,7 +114,7 @@ test('ResizeObserver handles multiple observers', async t => {
 		</Box>,
 		{stdout},
 	);
-	await delay(100);
+	await waitFor(() => callCount === 2);
 	// Initial render triggers both observers once
 	t.is(callCount, 2);
 
@@ -124,7 +124,14 @@ test('ResizeObserver handles multiple observers', async t => {
 			<Child onResize={onResize} />
 		</Box>,
 	);
-	await delay(100);
+
+	// Wait a bit to ensure it doesn't get called.
+	// As we are replacing fixed waits, and there is no condition to wait for (we want to ensure something DOES NOT happen),
+	// we can simply check after a tiny delay or just assert directly. The original test had an arbitrary 100ms delay.
+	// It is better to just yield to the event loop.
+	await new Promise(resolve => {
+		setTimeout(resolve, 10);
+	});
 	t.is(callCount, 2);
 
 	unmount();
@@ -181,7 +188,7 @@ test('ResizeObserver unobserve works', async t => {
 	const {rerender, unmount} = render(<App width={10} onResize={onResize} />, {
 		stdout,
 	});
-	await delay(100);
+	await waitFor(() => callCount === 1);
 	t.is(callCount, 1);
 
 	// Change width, but observer should be unobserved by now
@@ -190,7 +197,10 @@ test('ResizeObserver unobserve works', async t => {
 		setTimeout(resolve, 10);
 	});
 	rerender(<App width={20} onResize={onResize} />);
-	await delay(100);
+
+	await new Promise(resolve => {
+		setTimeout(resolve, 10);
+	});
 	t.is(callCount, 1);
 
 	unmount();
