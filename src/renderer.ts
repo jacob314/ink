@@ -311,6 +311,7 @@ const renderer = (
 				width: node.staticNode.yogaNode.getComputedWidth(),
 				height: node.staticNode.yogaNode.getComputedHeight(),
 				node: node.staticNode,
+				id: node.staticNode.internalId,
 			});
 
 			renderNodeToOutput(node.staticNode, staticOutput, {

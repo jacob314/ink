@@ -96,6 +96,7 @@ export const renderToStatic = (
 	const staticOutput = new Output({
 		width,
 		height,
+		id: node.internalId,
 	});
 
 	for (const childNode of node.childNodes) {

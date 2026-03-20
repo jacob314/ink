@@ -39,6 +39,7 @@ type Options = {
 	width: number;
 	height: number;
 	node?: DOMElement;
+	id?: string | number;
 };
 
 type Clip = {
@@ -180,6 +181,61 @@ export type RegionUpdate = {
 	};
 };
 
+export const regionLayoutProperties = [
+	'x',
+	'y',
+	'width',
+	'height',
+	'scrollTop',
+	'scrollLeft',
+	'scrollHeight',
+	'scrollWidth',
+	'isScrollable',
+	'isVerticallyScrollable',
+	'isHorizontallyScrollable',
+	'scrollbarVisible',
+	'overflowToBackbuffer',
+	'marginRight',
+	'marginBottom',
+	'scrollbarThumbColor',
+	'backgroundColor',
+	'opaque',
+	'borderTop',
+	'borderBottom',
+] as const;
+
+export type RegionLayoutProps = {
+	x?: number;
+	y?: number;
+	width?: number;
+	height?: number;
+	scrollTop?: number;
+	scrollLeft?: number;
+	scrollHeight?: number;
+	scrollWidth?: number;
+	isScrollable?: boolean;
+	isVerticallyScrollable?: boolean;
+	isHorizontallyScrollable?: boolean;
+	scrollbarVisible?: boolean;
+	overflowToBackbuffer?: boolean;
+	marginRight?: number;
+	marginBottom?: number;
+	scrollbarThumbColor?: string;
+	backgroundColor?: string;
+	opaque?: boolean;
+	borderTop?: number;
+	borderBottom?: number;
+};
+
+export function copyRegionProperty<
+	K extends (typeof regionLayoutProperties)[number],
+>(target: RegionLayoutProps, source: RegionLayoutProps, key: K) {
+	const value = source[key];
+	if (value !== undefined) {
+		target[key] = value;
+	}
+}
+
 export default class Output {
 	width: number;
 	height: number;
@@ -191,13 +247,13 @@ export default class Output {
 	private readonly clips: Clip[] = [];
 
 	constructor(options: Options) {
-		const {width, height, node} = options;
+		const {width, height, node, id = 'root'} = options;
 
 		this.width = width;
 		this.height = height;
 
 		this.root = {
-			id: 'root',
+			id,
 			x: 0,
 			y: 0,
 			width,
