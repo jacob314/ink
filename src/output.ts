@@ -126,11 +126,13 @@ export type Region = {
 	borderBottom?: number;
 
 	stickyHeaders: StickyHeader[];
+	cachedStickyHeaders?: StickyHeader[];
 	children: Region[];
 	cursorPosition?: CursorPosition;
 	stableScrollback?: boolean;
 	nodeId?: number;
 	node?: DOMElement;
+	selectableText?: string;
 	selectableSpans: Array<{
 		y: number;
 		startX: number;

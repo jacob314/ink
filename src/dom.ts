@@ -29,16 +29,6 @@ export type ElementNames =
 
 export type NodeNames = ElementNames | TextName;
 
-export type CachedRender = {
-	output: StyledChar[][];
-	width: number;
-	height: number;
-	key?: unknown;
-	stickyHeaders?: StickyHeader[];
-	root?: Region;
-	selectableText?: string;
-};
-
 export type StickyHeader = {
 	nodeId: number;
 	lines: StyledChar[][]; // Natural (scrolling) version
@@ -75,7 +65,7 @@ export type DOMElement = {
 	internal_terminalCursorFocus?: boolean;
 	internal_terminalCursorPosition?: number;
 	internalOnBeforeRender?: (node: DOMElement) => void;
-	cachedRender?: CachedRender;
+	cachedRender?: Region;
 
 	internal_accessibility?: {
 		role?:
@@ -331,10 +321,7 @@ const findClosestYogaNode = (node?: DOMNode): YogaNode | undefined => {
 	return node.yogaNode ?? findClosestYogaNode(node.parentNode);
 };
 
-export const setCachedRender = (
-	node: DOMElement,
-	cachedRender: CachedRender,
-) => {
+export const setCachedRender = (node: DOMElement, cachedRender: Region) => {
 	node.cachedRender = cachedRender;
 
 	if (node.yogaNode) {

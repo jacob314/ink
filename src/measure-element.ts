@@ -550,9 +550,9 @@ export const getText = (node: DOMNode): string => {
 
 	if (
 		node.nodeName === 'ink-static-render' &&
-		node.cachedRender?.root?.selectableSpans
+		node.cachedRender?.selectableSpans
 	) {
-		const spans = node.cachedRender.root.selectableSpans;
+		const spans = node.cachedRender.selectableSpans;
 		if (spans.length === 0) return '';
 
 		// Spans are already sorted during rendering, but let's be safe
@@ -886,9 +886,9 @@ export const getTextOffset = (
 
 	if (
 		node.nodeName === 'ink-static-render' &&
-		node.cachedRender?.root?.selectableSpans
+		node.cachedRender?.selectableSpans
 	) {
-		const spans = node.cachedRender.root.selectableSpans;
+		const spans = node.cachedRender.selectableSpans;
 		if (spans.length === 0) return 0;
 		const sortedSpans = [...spans].sort((a, b) =>
 			a.y === b.y ? a.startX - b.startX : a.y - b.y,

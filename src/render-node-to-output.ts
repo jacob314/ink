@@ -286,19 +286,10 @@ export const renderToStatic = (
 	}
 
 	const rootRegion = staticOutput.get();
-	const {lines: styledOutput} = rootRegion;
+	rootRegion.cachedStickyHeaders = cachedStickyHeaders;
+	rootRegion.selectableText = extractSelectableText(rootRegion.selectableSpans);
 
-	const spans = rootRegion.selectableSpans;
-	const selectableText = extractSelectableText(spans);
-
-	setCachedRender(node, {
-		output: styledOutput,
-		width,
-		height,
-		stickyHeaders: cachedStickyHeaders,
-		root: rootRegion,
-		selectableText,
-	});
+	setCachedRender(node, rootRegion);
 };
 
 function handleCachedRenderNode(
@@ -307,29 +298,29 @@ function handleCachedRenderNode(
 	options: {
 		x: number;
 		y: number;
-		clip: {x1?: number; y1?: number; x2?: number; y2?: number} | undefined;
-		newTransformers: OutputTransformer[];
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
 		selectionStyle?: (char: StyledChar) => StyledChar;
 	},
 ) {
-	const {x, y, clip, newTransformers, selectionMap, selectionStyle} = options;
+	const {x, y, selectionMap, selectionStyle} = options;
 	let handledSelection = false;
 
-	if (selectionMap && selectionMap.has(node) && node.cachedRender!.root) {
+	if (selectionMap && selectionMap.has(node) && node.cachedRender) {
 		const range = selectionMap.get(node)!;
 		const clonedRegionObj = {
-			...node.cachedRender!.root,
-			lines: node.cachedRender!.root.lines.map(line =>
+			...node.cachedRender,
+			lines: node.cachedRender.lines.map(line =>
 				line.map(char => ({...char, styles: [...char.styles]})),
 			),
-			selectableSpans: node.cachedRender!.root.selectableSpans.map(span => ({
+			selectableSpans: node.cachedRender.selectableSpans.map(span => ({
 				...span,
 			})),
-			stickyHeaders: node.cachedRender!.root.stickyHeaders.map(header => ({
-				...header,
-			})),
-			children: node.cachedRender!.root.children.map(child => ({...child})),
+			stickyHeaders: (node.cachedRender.cachedStickyHeaders ?? []).map(
+				header => ({
+					...header,
+				}),
+			),
+			children: node.cachedRender.children.map(child => ({...child})),
 		};
 
 		const spans = clonedRegionObj.selectableSpans;
@@ -378,32 +369,8 @@ function handleCachedRenderNode(
 		handledSelection = true;
 	}
 
-	if (!handledSelection) {
-		if (node.cachedRender!.root) {
-			output.addRegionTree(node.cachedRender!.root, x, y);
-		} else {
-			let index = 0;
-			let endIndex = node.cachedRender!.output.length;
-
-			if (clip) {
-				const clipY1 = clip.y1 ?? -Infinity;
-				const clipY2 = clip.y2 ?? Infinity;
-
-				index = Math.max(0, Math.ceil(clipY1 - y));
-				endIndex = Math.min(endIndex, Math.ceil(clipY2 - y));
-			}
-
-			for (; index < endIndex; index++) {
-				const line = node.cachedRender!.output[index];
-
-				if (line) {
-					output.write(x, y + index, line, {
-						transformers: newTransformers,
-						lineIndex: index,
-					});
-				}
-			}
-		}
+	if (!handledSelection && node.cachedRender) {
+		output.addRegionTree(node.cachedRender, x, y);
 	}
 }
 
@@ -1183,8 +1150,6 @@ function renderNodeToOutput(
 			handleCachedRenderNode(node, output, {
 				x,
 				y,
-				clip,
-				newTransformers,
 				selectionMap,
 				selectionStyle,
 			});
@@ -1317,9 +1282,9 @@ function getStickyDescendants(node: DOMElement): StickyNodeInfo[] {
 			});
 		} else if (
 			domChild.nodeName === 'ink-static-render' &&
-			domChild.cachedRender?.stickyHeaders
+			domChild.cachedRender?.cachedStickyHeaders
 		) {
-			for (const header of domChild.cachedRender.stickyHeaders) {
+			for (const header of domChild.cachedRender.cachedStickyHeaders) {
 				if (header.node) {
 					stickyDescendants.push({
 						node: header.node,
