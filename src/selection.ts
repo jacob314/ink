@@ -456,3 +456,53 @@ export class Selection {
 		}
 	}
 }
+
+export const applySelectionStyle = (
+	char: StyledChar,
+	selectionStyle?: (char: StyledChar) => StyledChar,
+): StyledChar => {
+	if (selectionStyle) {
+		return selectionStyle(char);
+	}
+
+	const newChar = {
+		...char,
+		styles: [...char.styles],
+	};
+
+	newChar.styles.push({
+		type: 'ansi',
+		code: '\u001B[7m',
+		endCode: '\u001B[27m',
+	});
+
+	return newChar;
+};
+
+export const applySelectionToStyledChars = (
+	styledChars: StyledChar[],
+	selectionState: {range: {start: number; end: number}; currentOffset: number},
+	selectionStyle?: (char: StyledChar) => StyledChar,
+): StyledChar[] => {
+	const {range, currentOffset} = selectionState;
+	const {start, end} = range;
+	let charCodeUnitOffset = 0;
+	const newStyledChars: StyledChar[] = [];
+
+	for (const char of styledChars) {
+		const charLength = char.value.length;
+		const globalOffset = currentOffset + charCodeUnitOffset;
+
+		if (globalOffset >= start && globalOffset < end) {
+			newStyledChars.push(applySelectionStyle(char, selectionStyle));
+		} else {
+			newStyledChars.push(char);
+		}
+
+		charCodeUnitOffset += charLength;
+	}
+
+	selectionState.currentOffset += charCodeUnitOffset;
+
+	return newStyledChars;
+};

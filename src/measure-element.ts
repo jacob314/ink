@@ -1227,3 +1227,44 @@ export const hitTest = (
 };
 
 export default measureElement;
+
+export function getRelativeTop(node: DOMElement, ancestor: DOMElement): number {
+	if (!node.yogaNode || node === ancestor) {
+		return 0;
+	}
+
+	let top = node.yogaNode.getComputedTop();
+	let parent = node.parentNode;
+
+	while (parent && parent !== ancestor) {
+		if (parent.yogaNode) {
+			top += parent.yogaNode.getComputedTop();
+		}
+
+		parent = parent.parentNode;
+	}
+
+	return top;
+}
+
+export function getRelativeLeft(
+	node: DOMElement,
+	ancestor: DOMElement,
+): number {
+	if (!node.yogaNode || node === ancestor) {
+		return 0;
+	}
+
+	let left = node.yogaNode.getComputedLeft();
+	let parent = node.parentNode;
+
+	while (parent && parent !== ancestor) {
+		if (parent.yogaNode) {
+			left += parent.yogaNode.getComputedLeft();
+		}
+
+		parent = parent.parentNode;
+	}
+
+	return left;
+}

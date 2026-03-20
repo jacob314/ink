@@ -1,7 +1,6 @@
 import {type StyledChar, styledCharsToString} from '@alcalzone/ansi-tokenize';
-import renderNodeToOutput, {
-	renderNodeToScreenReaderOutput,
-} from './render-node-to-output.js';
+import renderNodeToOutput from './render-node-to-output.js';
+import {renderNodeToScreenReaderOutput} from './render-screen-reader.js';
 import Output, {
 	type Region,
 	flattenRegion,
