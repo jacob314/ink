@@ -22,6 +22,12 @@ const {values} = parseArgs({
 		'scroll-down': {
 			type: 'string',
 		},
+		columns: {
+			type: 'string',
+		},
+		rows: {
+			type: 'string',
+		},
 	},
 });
 
@@ -29,12 +35,18 @@ const items = values.items ? Number.parseInt(values.items, 10) : undefined;
 const scrollDown = values['scroll-down']
 	? Number.parseInt(values['scroll-down'], 10)
 	: undefined;
+const columns = values.columns
+	? Number.parseInt(values.columns, 10)
+	: undefined;
+const rows = values.rows ? Number.parseInt(values.rows, 10) : undefined;
 
 const app = render(
 	React.createElement(ScrollableContent, {
 		itemCount: items,
 		initialScrollTop: scrollDown,
 		exportFilename: values.export,
+		columns,
+		rows,
 	}),
 	{
 		renderProcess: true,

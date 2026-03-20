@@ -1,0 +1,15 @@
+<backbuffer height: 0>
+
+<active-viewport 60x12>
+This is a demo showing a scrollable box.
+Press up/down arrow to scroll vertically.
+Press left/right arrow to scroll horizontally.
+Press 'b' to scroll to the bottom.
+Press 'm' to cycle through scroll modes (current: vertical)
+Press 's' to toggle scrollbars (current: on)
+Press 'a' or 'f' to toggle alternate buffer + sticky headers
+Press 'h' to toggle sticky headers in backbuffer (current: o
+Press 'r' to toggle recording (current: off)
+Press 'e' to dump current frame to scroll_snapshot.json
+ScrollTop: 10
+ScrollLeft: 0

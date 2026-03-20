@@ -91,12 +91,16 @@ function ScrollableContent({
 	initialScroll = 0,
 	exportFilename = '',
 	recordFilename = '',
+	columns: customColumns,
+	rows: customRows,
 }: {
 	readonly useStatic?: boolean;
 	readonly initialItems?: number;
 	readonly initialScroll?: number;
 	readonly exportFilename?: string;
 	readonly recordFilename?: string;
+	readonly columns?: number;
+	readonly rows?: number;
 } = {}) {
 	const [listItems, setListItems] = useState<Array<{id: number; text: string}>>(
 		() => {
@@ -128,9 +132,9 @@ function ScrollableContent({
 	const {columns: terminalColumns, rows: terminalRows} = useTerminalSize();
 	const {stdout} = useStdout();
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-	const columns = (stdout as any)?.columns ?? terminalColumns;
+	const columns = customColumns ?? (stdout as any)?.columns ?? terminalColumns;
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-	const rows = (stdout as any)?.rows ?? terminalRows;
+	const rows = customRows ?? (stdout as any)?.rows ?? terminalRows;
 	const reference = useRef<DOMElement>(null);
 	const {options, setOptions, dumpCurrentFrame, startRecording, stopRecording} =
 		useContext(AppContext);
