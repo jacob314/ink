@@ -52,7 +52,7 @@ test('overflowX - single text node in a box with border inside overflow containe
 		</Box>,
 	);
 
-	t.is(output, clipX(box('Hello'), 6));
+	t.is(output, '╭─────\n│Hello\n╰─────');
 });
 
 test('overflowX - multiple text nodes in a box inside overflow container', t => {
@@ -91,7 +91,7 @@ test('overflowX - multiple text nodes in a box with border inside overflow conta
 		</Box>,
 	);
 
-	t.is(output, clipX(box('HelloWo\n'), 8));
+	t.is(output, '╭───────\n│HelloWo\n│\n╰───────');
 });
 
 test('overflowX - multiple boxes inside overflow container', t => {

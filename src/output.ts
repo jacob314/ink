@@ -9,6 +9,7 @@ import {type CursorPosition} from './log-update.js';
 import {type StickyHeader, type DOMElement} from './dom.js';
 import {calculateScrollbarLayout} from './measure-element.js';
 import {renderScrollbar} from './render-scrollbar.js';
+import {drawRegionBorders} from './render-border.js';
 
 /**
 "Virtual" output class
@@ -125,6 +126,7 @@ export type Region = {
 	opaque?: boolean;
 	borderTop?: number;
 	borderBottom?: number;
+	borders?: any[];
 
 	stickyHeaders: StickyHeader[];
 	cachedStickyHeaders?: StickyHeader[];
@@ -169,6 +171,7 @@ export type RegionUpdate = {
 	opaque?: boolean;
 	borderTop?: number;
 	borderBottom?: number;
+	borders?: any[];
 	stickyHeaders?: StickyHeader[];
 	lines?: {
 		updates: Array<{
@@ -202,6 +205,7 @@ export const regionLayoutProperties = [
 	'opaque',
 	'borderTop',
 	'borderBottom',
+	'borders',
 ] as const;
 
 export type RegionLayoutProps = {
@@ -229,7 +233,7 @@ export type RegionLayoutProps = {
 
 export function copyRegionProperty<
 	K extends (typeof regionLayoutProperties)[number],
->(target: RegionLayoutProps, source: RegionLayoutProps, key: K) {
+>(target: any, source: any, key: K) {
 	const value = source[key];
 	if (value !== undefined) {
 		target[key] = value;
@@ -265,6 +269,7 @@ export default class Output {
 			children: [],
 			node,
 			selectableSpans: [],
+			borders: [],
 		};
 
 		this.initLines(this.root, width, height);
@@ -831,6 +836,7 @@ export function flattenRegion(
 		context?: {cursorPosition?: {row: number; col: number}};
 		skipScrollbars?: boolean;
 		skipStickyHeaders?: boolean;
+		skipBorders?: boolean;
 	},
 ): StyledChar[][] {
 	const {width, height} = root;
@@ -877,6 +883,7 @@ function composeRegion(
 		context?: {cursorPosition?: {row: number; col: number}};
 		skipScrollbars?: boolean;
 		skipStickyHeaders?: boolean;
+		skipBorders?: boolean;
 	},
 ) {
 	const {
@@ -953,10 +960,31 @@ function composeRegion(
 		);
 	}
 
+	if (!options?.skipBorders && region.borders) {
+		for (const border of region.borders) {
+			drawRegionBorders(border, absX, absY, myClip, (cx, cy, char) => {
+				if (cy >= 0 && cy < targetLines.length && cx >= 0 && cx < targetLines[cy]!.length) {
+					targetLines[cy]![cx] = char;
+				}
+			});
+		}
+	}
+
 	if (!options?.skipStickyHeaders) {
 		for (const header of stickyHeaders) {
 			const headerY = header.y + absY; // Absolute Y
 			const headerH = header.styledOutput.length;
+			
+			const bordersToRender = header.stuckLines ? header.stuckBorders : header.borders;
+			if (bordersToRender) {
+				for (const border of bordersToRender) {
+					drawRegionBorders(border, absX + header.x, Math.round(headerY), clip ?? {x: 0, y: 0, w: targetLines[0]?.length || 0, h: targetLines.length}, (cx, cy, char) => {
+						if (cy >= 0 && cy < targetLines.length && cx >= 0 && cx < targetLines[cy]!.length) {
+							targetLines[cy]![cx] = char;
+						}
+					});
+				}
+			}
 
 			for (let i = 0; i < headerH; i++) {
 				const sy = headerY + i;

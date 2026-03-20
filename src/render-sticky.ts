@@ -7,7 +7,7 @@
 import Yoga from 'yoga-layout';
 import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import {type DOMElement, type DOMNode, type StickyHeader} from './dom.js';
-import Output from './output.js';
+import Output, { flattenRegion, Region } from './output.js';
 import renderNodeToOutput, {
 	type OutputTransformer,
 } from './render-node-to-output.js';
@@ -82,6 +82,8 @@ export function renderStickyNode(
 	stuckLines: StyledChar[][] | undefined;
 	naturalHeight: number;
 	maxHeaderHeight: number;
+	borders?: any[];
+	stuckBorders?: any[];
 } {
 	const alternateStickyNode = stickyNode.childNodes.find(
 		childNode => (childNode as DOMElement).internalStickyAlternate,
@@ -91,7 +93,7 @@ export function renderStickyNode(
 	const stuckHeight = alternateStickyNode?.yogaNode?.getComputedHeight() ?? 0;
 	const maxHeaderHeight = Math.max(naturalHeight, stuckHeight);
 
-	const renderHeader = (isSticky: boolean) => {
+		const renderHeader = (isSticky: boolean) => {
 		const stickyOutput = new Output({
 			width: stickyNode.yogaNode!.getComputedWidth(),
 			height: maxHeaderHeight,
@@ -103,17 +105,46 @@ export function renderStickyNode(
 			transformers: options.transformers,
 			skipStaticElements: options.skipStaticElements,
 			isStickyRender: isSticky,
+			isStickyNodeRoot: isSticky,
 			selectionMap: options.selectionMap,
 			selectionStyle: options.selectionStyle,
 		});
 
-		return stickyOutput.get().lines;
+		const root = stickyOutput.get();
+		const lines = flattenRegion(root, { skipScrollbars: true, skipStickyHeaders: true, skipBorders: true });
+		
+		// Collect all borders from the region tree, accumulating offsets
+		const borders: any[] = [];
+		const collectBorders = (region: Region, offsetX: number, offsetY: number) => {
+			if (region.borders) {
+				for (const border of region.borders) {
+					borders.push({
+						...border,
+						x: border.x + offsetX,
+						y: border.y + offsetY
+					});
+				}
+			}
+			for (const child of region.children) {
+				collectBorders(child, offsetX + child.x - (child.scrollLeft ?? 0), offsetY + child.y - (child.scrollTop ?? 0));
+			}
+		};
+		collectBorders(root, 0, 0);
+
+		return {
+			lines,
+			borders
+		};
 	};
 
-	const naturalLines = renderHeader(false);
-	const stuckLines = alternateStickyNode ? renderHeader(true) : undefined;
+	const naturalResult = renderHeader(false);
+	const stuckResult = alternateStickyNode ? renderHeader(true) : undefined;
+	const naturalLines = naturalResult.lines;
+	const stuckLines = stuckResult?.lines;
+	const borders = naturalResult.borders;
+	const stuckBorders = stuckResult?.borders;
 
-	return {naturalLines, stuckLines, naturalHeight, maxHeaderHeight};
+	return {naturalLines, stuckLines, naturalHeight, maxHeaderHeight, borders, stuckBorders};
 }
 
 export function identifyActiveStickyNodes(
@@ -327,6 +358,7 @@ export function renderActiveStickyNodes(
 		let finalStickyY = 0;
 		let maxStuckY: number | undefined;
 		let minStuckY: number | undefined;
+		let isStuck = false;
 
 		if (type === 'top') {
 			let maxStickyTop = y - currentScrollTop + parentBottom - stickyNodeHeight;
@@ -361,6 +393,7 @@ export function renderActiveStickyNodes(
 			);
 
 			maxStuckY = maxStickyTop - (y + currentBorderTop);
+			isStuck = finalStickyY > naturalStickyY;
 		} else {
 			const parentBorderTop = cached
 				? (cached.parentBorderTop ?? 0)
@@ -402,13 +435,18 @@ export function renderActiveStickyNodes(
 			);
 
 			minStuckY = minStickyTop - (y + currentBorderTop);
+			isStuck = finalStickyY < naturalStickyY;
 		}
 
 		let naturalLines: StyledChar[][];
 		let stuckLines: StyledChar[][] | undefined;
 		let naturalHeight: number;
+		let borders: any[] | undefined;
+		let stuckBorders: any[] | undefined;
 
 		if (cached) {
+			borders = cached.borders;
+			stuckBorders = cached.stuckBorders;
 			naturalLines = cached.lines;
 			stuckLines = cached.stuckLines;
 			naturalHeight = cached.endRow - cached.startRow;
@@ -422,6 +460,8 @@ export function renderActiveStickyNodes(
 			naturalLines = rendered.naturalLines;
 			stuckLines = rendered.stuckLines;
 			naturalHeight = rendered.naturalHeight;
+			borders = rendered.borders;
+			stuckBorders = rendered.stuckBorders;
 		}
 
 		const naturalRow = stickyNodeTop - currentBorderTop;
@@ -441,6 +481,9 @@ export function renderActiveStickyNodes(
 			type,
 			maxStuckY,
 			minStuckY,
+			borders,
+			stuckBorders,
+			isStuck
 		};
 		output.addStickyHeader(headerObj);
 	}

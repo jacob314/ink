@@ -47,6 +47,9 @@ export type ReplayStickyHeader = Omit<
 	lines: string;
 	stuckLines?: string;
 	styledOutput: string;
+	borders?: any[];
+	stuckBorders?: any[];
+	isStuck?: boolean;
 };
 
 export function serializeReplayUpdate(
@@ -83,6 +86,9 @@ export function serializeReplayUpdate(
 			styledOutput: Buffer.from(
 				serializer.serialize(h.styledOutput ?? []),
 			).toString('base64'),
+			borders: h.borders,
+			stuckBorders: h.stuckBorders,
+			isStuck: h.isStuck,
 		}));
 	}
 
@@ -122,6 +128,9 @@ export function deserializeReplayUpdate(
 				styledOutput: new Deserializer(
 					Buffer.from(h.styledOutput, 'base64'),
 				).deserialize(),
+				borders: h.borders,
+				stuckBorders: h.stuckBorders,
+				isStuck: h.isStuck,
 			};
 			return header;
 		});

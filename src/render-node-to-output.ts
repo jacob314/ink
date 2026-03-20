@@ -24,6 +24,7 @@ export const renderToStatic = (
 		calculateLayout?: boolean;
 		skipStaticElements?: boolean;
 		isStickyRender?: boolean;
+		isStickyNodeRoot?: boolean;
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
 		selectionStyle?: (char: StyledChar) => StyledChar;
 	} = {},
@@ -130,6 +131,7 @@ function renderNodeToOutput(
 		transformers?: OutputTransformer[];
 		skipStaticElements: boolean;
 		isStickyRender?: boolean;
+		isStickyNodeRoot?: boolean;
 		skipStickyHeaders?: boolean;
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
 		selectionStyle?: (char: StyledChar) => StyledChar;
@@ -143,6 +145,7 @@ function renderNodeToOutput(
 		transformers = [],
 		skipStaticElements,
 		isStickyRender = false,
+		isStickyNodeRoot = false,
 		skipStickyHeaders = false,
 		selectionMap,
 		selectionStyle,
@@ -155,6 +158,7 @@ function renderNodeToOutput(
 	if (node.internalStickyAlternate && !isStickyRender) {
 		return;
 	}
+
 
 	const {yogaNode} = node;
 
@@ -218,6 +222,7 @@ function renderNodeToOutput(
 		}
 
 		if (node.nodeName === 'ink-text') {
+
 			handleTextNode(node, output, {
 				x,
 				y,
@@ -236,6 +241,7 @@ function renderNodeToOutput(
 			newTransformers,
 			skipStaticElements,
 			isStickyRender,
+			isStickyNodeRoot,
 			skipStickyHeaders,
 			selectionMap,
 			selectionStyle,

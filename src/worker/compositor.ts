@@ -12,6 +12,7 @@ import {renderScrollbar} from '../render-scrollbar.js';
 import {toStyledCharacters} from '../measure-text.js';
 import colorize from '../colorize.js';
 import {type Canvas, type Rect} from './canvas.js';
+import {drawRegionBorders} from '../render-border.js';
 
 export type CompositionOptions = {
 	skipStickyHeaders?: boolean;
@@ -91,6 +92,22 @@ export class Compositor {
 
 					canvas.setChar(sx, sy, char);
 				}
+			}
+		}
+	}
+
+	drawBorders(
+		canvas: Canvas,
+		region: Region,
+		absX: number,
+		absY: number,
+		clip: Rect,
+	) {
+		if (region.borders) {
+			for (const border of region.borders) {
+				drawRegionBorders(border, absX - (region.scrollLeft || 0), absY - (region.scrollTop || 0), clip, (cx, cy, char) => {
+					canvas.setChar(cx, cy, char, clip);
+				});
 			}
 		}
 	}
@@ -210,6 +227,15 @@ export class Compositor {
 					if (char) {
 						canvas.setChar(sx, sy, char);
 					}
+				}
+			}
+
+			const bordersToRender = useStuckPosition ? header.stuckBorders : header.borders;
+			if (bordersToRender) {
+				for (const border of bordersToRender) {
+					drawRegionBorders(border, absX + header.x, Math.round(headerY), clip, (cx, cy, char) => {
+						canvas.setChar(cx, cy, char, clip);
+					});
 				}
 			}
 		}

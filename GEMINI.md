@@ -143,3 +143,10 @@ This module managed the actual output to the terminal `stdout` in the legacy ren
 
 - **`<Static>`**: This component is considered a legacy feature. It is intended for permanently outputting text above the active Ink app (like a log). However, it is **not fully supported in alternate buffer mode** and will NEVER be supported by the new worker-based renderer. The architectural challenge is that `<Static>` relies on side-effects that can conflict with the strict timing requirements of `useLayoutEffect` used in the main rendering loop, potentially leading to out-of-order output or visual glitches in full-screen apps.
 - **`<StaticRender>`**: This is the more modern and efficient replacement for `<Static>`, designed to work better with the new rendering pipeline and avoid the pitfalls of the legacy implementation. This is the only static-style component supported by the new renderer. Use this instead of `<Static>` for new developments.
+
+### Running the Linter
+The `xo` linter occasionally struggles with memory limits in this repository due to its size and complexity. If you see `FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory` when running the linter, use the `NODE_OPTIONS` environment variable to increase the memory limit to 8GB:
+
+```bash
+NODE_OPTIONS="--max-old-space-size=8192" npx xo
+```

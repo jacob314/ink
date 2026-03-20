@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import {Buffer} from 'node:buffer';
 import fs from 'node:fs';
 import process from 'node:process';
 import ansiEscapes from 'ansi-escapes';
@@ -362,6 +363,33 @@ export class TerminalBufferWorker {
 				updates: updates.map(u => serializeReplayUpdate(u, serializer)),
 				cursorPosition,
 				timestamp: Date.now() - this.recordingStartTime,
+			});
+		}
+
+		if (process.env['INK_WEB_DEBUGGER']) {
+			const serializer = new Serializer();
+			const payload = JSON.stringify({
+				tree,
+				updates: updates.map(u => serializeReplayUpdate(u, serializer)),
+				cursorPosition,
+			});
+			
+			// Send HTTP POST asynchronously
+			const port = process.env['INK_WEB_DEBUGGER'];
+			import('node:http').then(http => {
+				const req = http.request({
+					hostname: 'localhost',
+					port: port,
+					path: '/update',
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'Content-Length': Buffer.byteLength(payload)
+					}
+				});
+				req.on('error', () => {}); // Ignore errors
+				req.write(payload);
+				req.end();
 			});
 		}
 
@@ -1005,6 +1033,7 @@ export class TerminalBufferWorker {
 				);
 			}
 
+			compositor.drawBorders(canvas, region, absX, absY, myClip);
 			compositor.drawStickyHeaders(canvas, region, absX, absY, myClip);
 			compositor.drawScrollbars(canvas, region, absX, absY, myClip);
 		} finally {

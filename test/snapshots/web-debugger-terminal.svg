@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="428" viewBox="0 0 920 428">
+  <style>
+    text { font-family: Consolas, "Courier New", monospace; font-size: 14px; dominant-baseline: text-before-edge; white-space: pre; }
+  </style>
+  <rect width="920" height="428" fill="#000000" />
+  <g transform="translate(10, 10)">
+    <text x="0" y="2" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">Line 1                                                                                              </text>
+    <text x="54" y="19" fill="#cdcd00" textLength="198" lengthAdjust="spacingAndGlyphs">This is the last line.</text>
+    <text x="0" y="155" fill="#00cdcd" textLength="900" lengthAdjust="spacingAndGlyphs">┌──────────────────────────────────────────────────────────────────────────────────────────────────┐</text>
+    <text x="0" y="172" fill="#00cdcd" textLength="333" lengthAdjust="spacingAndGlyphs">│┌──────────────────────────────────┐</text>
+    <text x="891" y="172" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="189" fill="#00cdcd" textLength="333" lengthAdjust="spacingAndGlyphs">││Sticky Inner Header 0 (sticky top)│</text>
+    <text x="891" y="189" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="206" fill="#00cdcd" textLength="333" lengthAdjust="spacingAndGlyphs">│└──────────────────────────────────┘</text>
+    <text x="891" y="206" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="223" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="9" y="223" fill="#7f7f7f" textLength="243" lengthAdjust="spacingAndGlyphs">[body line for header 0] 43</text>
+    <text x="252" y="223" fill="#ffffff" textLength="639" lengthAdjust="spacingAndGlyphs">                                                                      █</text>
+    <text x="891" y="223" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="240" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="9" y="240" fill="#7f7f7f" textLength="243" lengthAdjust="spacingAndGlyphs">[body line for header 0] 44</text>
+    <text x="891" y="240" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="257" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="9" y="257" fill="#7f7f7f" textLength="243" lengthAdjust="spacingAndGlyphs">[body line for header 0] 45</text>
+    <text x="891" y="257" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="274" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="9" y="274" fill="#7f7f7f" textLength="243" lengthAdjust="spacingAndGlyphs">[body line for header 0] 46</text>
+    <text x="891" y="274" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="291" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="9" y="291" fill="#7f7f7f" textLength="243" lengthAdjust="spacingAndGlyphs">[body line for header 0] 47</text>
+    <text x="891" y="291" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="308" fill="#00cdcd" textLength="900" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────────────────────────────────────────┘</text>
+    <text x="0" y="325" fill="#ffffff" textLength="81" lengthAdjust="spacingAndGlyphs">isStuck? </text>
+    <text x="81" y="325" fill="#cdcd00" textLength="36" lengthAdjust="spacingAndGlyphs">true</text>
+    <text x="117" y="325" fill="#ffffff" textLength="135" lengthAdjust="spacingAndGlyphs"> finalStickyY: </text>
+    <text x="252" y="325" fill="#cdcd00" textLength="9" lengthAdjust="spacingAndGlyphs">2</text>
+    <text x="261" y="325" fill="#ffffff" textLength="153" lengthAdjust="spacingAndGlyphs"> naturalStickyY: </text>
+    <text x="414" y="325" fill="#cdcd00" textLength="27" lengthAdjust="spacingAndGlyphs">-38</text>
+    <text x="441" y="325" fill="#ffffff" textLength="135" lengthAdjust="spacingAndGlyphs"> stuckStickyY: </text>
+    <text x="576" y="325" fill="#cdcd00" textLength="9" lengthAdjust="spacingAndGlyphs">2</text>
+    <text x="585" y="325" fill="#ffffff" textLength="135" lengthAdjust="spacingAndGlyphs"> maxStickyTop: </text>
+    <text x="720" y="325" fill="#cdcd00" textLength="18" lengthAdjust="spacingAndGlyphs">60</text>
+    <text x="0" y="359" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">                                                                          Press &apos;f&apos; to collapse foot</text>
+    <text x="0" y="376" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">er, &apos;a&apos; to toggle alternate buffer + sticky headers (current: off)                                  </text>
+    <text x="0" y="393" fill="#ffffff" textLength="900" lengthAdjust="spacingAndGlyphs">                                                                  Press &apos;h&apos; to toggle sticky headers</text>
+  </g>
+</svg>

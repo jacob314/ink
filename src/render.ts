@@ -1,5 +1,8 @@
 import {Stream} from 'node:stream';
 import process from 'node:process';
+import {fork} from 'node:child_process';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 import type {ReactNode} from 'react';
 import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import Ink, {type Options as InkOptions, type RenderMetrics} from './ink.js';
@@ -224,6 +227,27 @@ const render = (
 		inkOptions.stdout,
 		() => new Ink(inkOptions),
 	);
+
+	if (process.env['INK_WEB_DEBUGGER']) {
+		try {
+			const port = process.env['INK_WEB_DEBUGGER'];
+			const url = fileURLToPath(import.meta.url);
+			const dirname = path.dirname(url);
+			const ext = path.extname(url);
+			const serverPath = path.join(dirname, `web/server${ext}`);
+
+			const serverProcess = fork(serverPath, {
+				// eslint-disable-next-line @typescript-eslint/naming-convention
+				env: {...process.env, PORT: port},
+				detached: true,
+				stdio: 'ignore',
+			});
+
+			serverProcess.unref();
+		} catch (error) {
+			console.error('Failed to start Ink Web Debugger server:', error);
+		}
+	}
 
 	instance.render(node);
 

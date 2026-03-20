@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Ink Web Renderer Debugger</title>
+	<style>
+		:root {
+			--char-width: 8px;
+			--char-height: 16px;
+			--bg-color: #000;
+			--fg-color: #fff;
+		}
+
+		body {
+			margin: 0;
+			padding: 0;
+			background-color: var(--bg-color);
+			color: var(--fg-color);
+			/* Clean, standard monospace stack */
+			font-family: ui-monospace, Menlo, Monaco, 'Cascadia Code', 'Source Code Pro', Consolas, monospace;
+			font-size: 14px;
+			line-height: var(--char-height);
+			overflow: auto;
+		}
+
+		#root {
+			position: relative;
+			min-width: 100vw;
+			min-height: 100vh;
+		}
+
+		.region {
+			position: absolute;
+			box-sizing: border-box;
+			background-color: var(--bg-color);
+			overflow: hidden;
+		}
+
+		.region[data-scrollable-y="true"] {
+			overflow-y: overlay !important;
+		}
+
+		@supports not (overflow-y: overlay) {
+			.region[data-scrollable-y="true"] {
+				overflow-y: auto !important;
+			}
+		}
+
+		.region[data-scrollable-y="false"] {
+			overflow-y: hidden !important;
+		}
+
+		.region[data-scrollable-x="true"] {
+			overflow-x: overlay !important;
+		}
+
+		@supports not (overflow-x: overlay) {
+			.region[data-scrollable-x="true"] {
+				overflow-x: auto !important;
+			}
+		}
+
+		.region[data-scrollable-x="false"] {
+			overflow-x: hidden !important;
+		}
+
+		.region-content {
+			position: relative;
+			box-sizing: border-box;
+			display: flex;
+			flex-direction: column;
+			width: max-content;
+			min-width: 100%;
+		}
+
+		.line {
+			white-space: pre;
+			height: var(--char-height);
+			line-height: var(--char-height);
+			overflow: visible;
+			background-color: inherit;
+			flex-shrink: 0;
+			display: flex;
+			flex-direction: row;
+		}
+
+		.sticky-container {
+			position: sticky;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 0;
+			pointer-events: none;
+			z-index: 10;
+			overflow: visible;
+		}
+
+		.sticky-header {
+			position: absolute;
+			pointer-events: auto;
+			background-color: inherit;
+			width: 100%;
+			z-index: 10;
+		}
+
+		.sticky-header .line {
+			position: relative;
+		}
+
+		span {
+			display: block;
+			height: var(--char-height);
+			flex-shrink: 0;
+			margin: 0;
+			padding: 0;
+		}
+	</style>
+</head>
+<body>
+	<div id="root"></div>
+	<script type="module" src="/client.js"></script>
+</body>
+</html>

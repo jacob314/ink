@@ -191,6 +191,10 @@ export default createReconciler<
 
 			if (key === 'internalStickyAlternate') {
 				node.internalStickyAlternate = value as boolean;
+				if (value && node.yogaNode) {
+					node.yogaNode.setPosition(Yoga.EDGE_TOP, 0);
+					node.yogaNode.setPosition(Yoga.EDGE_LEFT, 0);
+				}
 				continue;
 			}
 
@@ -318,6 +322,10 @@ export default createReconciler<
 
 				if (key === 'internalStickyAlternate') {
 					node.internalStickyAlternate = Boolean(value);
+					if (value && node.yogaNode) {
+						node.yogaNode.setPosition(Yoga.EDGE_TOP, 0);
+						node.yogaNode.setPosition(Yoga.EDGE_LEFT, 0);
+					}
 					continue;
 				}
 

@@ -37,6 +37,7 @@ export function handleContainerNode(
 		newTransformers: OutputTransformer[];
 		skipStaticElements: boolean;
 		isStickyRender: boolean;
+		isStickyNodeRoot?: boolean;
 		skipStickyHeaders: boolean;
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
 		selectionStyle?: (char: StyledChar) => StyledChar;
@@ -235,6 +236,9 @@ export function handleContainerNode(
 	) {
 		if (!(verticallyScrollable || horizontallyScrollable)) {
 			for (const childNode of node.childNodes) {
+				if (options.isStickyRender && options.isStickyNodeRoot && !(childNode as DOMElement).internalStickyAlternate) {
+					continue;
+				}
 				renderNodeToOutput(childNode as DOMElement, output, {
 					offsetX: childrenOffsetX,
 					offsetY: childrenOffsetY,
@@ -243,6 +247,7 @@ export function handleContainerNode(
 					transformers: newTransformers,
 					skipStaticElements,
 					isStickyRender,
+					isStickyNodeRoot: false,
 					skipStickyHeaders,
 					selectionMap,
 					selectionStyle,

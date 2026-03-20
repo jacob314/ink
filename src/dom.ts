@@ -33,6 +33,8 @@ export type StickyHeader = {
 	nodeId: number;
 	lines: StyledChar[][]; // Natural (scrolling) version
 	stuckLines?: StyledChar[][]; // Alternate (sticky) version
+	borders?: any[];
+	stuckBorders?: any[];
 	styledOutput: StyledChar[][]; // Legacy property
 	x: number; // Stuck X position relative to region
 	y: number; // Stuck Y position relative to region
@@ -41,6 +43,7 @@ export type StickyHeader = {
 	endRow: number; // Content-relative end row
 	scrollContainerId: number | string;
 	isStuckOnly: boolean; // If true, natural 'lines' are already in background content
+	isStuck?: boolean;
 
 	// Metadata for cached headers
 	relativeX?: number; // Relative to StaticRender
