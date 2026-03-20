@@ -21,7 +21,6 @@ type Result = {
 	staticOutput: string;
 	styledOutput: StyledChar[][];
 	cursorPosition?: {row: number; col: number};
-	backbufferContent: StyledChar[][];
 	stickyHeaders: StickyHeader[];
 	root?: Region;
 };
@@ -286,7 +285,6 @@ const renderer = (
 				outputHeight,
 				staticOutput: staticOutput ? `${staticOutput}\n` : '',
 				styledOutput: [],
-				backbufferContent: [],
 				stickyHeaders: [],
 			};
 		}
@@ -340,20 +338,13 @@ const renderer = (
 			output: generatedOutput,
 			outputHeight,
 			// Newline at the end is needed, because static output doesn't have one, so
-			// interactive output will override last line of static output
-			// staticOutput has .lines now.
+			// interactive output will override last line of static output.
 			staticOutput: staticOutput
 				? `${regionToOutput(staticOutput.get()).output}\n`
 				: '',
 			styledOutput,
 			cursorPosition,
-			backbufferContent: [], // Backbuffer not supported in region tree yet? Or attached to root?
-			// rootRegion has 'lines'.
-			// styledOutput is rootRegion.lines? No, lines is StyledChar[][].
-			// We need to flatten if we want to support legacy return.
-			// For now, let's just use rootRegion.lines as styledOutput.
-			// scrollRegions: [], // Derived from tree
-			stickyHeaders: [], // Derived from tree
+			stickyHeaders: [],
 			root: rootRegion,
 		};
 	}
@@ -363,7 +354,6 @@ const renderer = (
 		outputHeight: 0,
 		staticOutput: '',
 		styledOutput: [],
-		backbufferContent: [],
 		stickyHeaders: [],
 		root: undefined,
 	};

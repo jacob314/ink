@@ -333,48 +333,16 @@ const findClosestYogaNode = (node?: DOMNode): YogaNode | undefined => {
 
 export const setCachedRender = (
 	node: DOMElement,
-	cachedRender: CachedRender | undefined,
+	cachedRender: CachedRender,
 ) => {
-	if (node.cachedRender === cachedRender) {
-		return;
-	}
-
 	node.cachedRender = cachedRender;
 
 	if (node.yogaNode) {
-		if (cachedRender) {
-			node.yogaNode.setWidth(cachedRender.width);
-			node.yogaNode.setHeight(cachedRender.height);
+		node.yogaNode.setWidth(cachedRender.width);
+		node.yogaNode.setHeight(cachedRender.height);
 
-			while (node.yogaNode.getChildCount() > 0) {
-				node.yogaNode.removeChild(node.yogaNode.getChild(0));
-			}
-		} else {
-			if (node.style.width === undefined) {
-				node.yogaNode.setWidthAuto();
-			} else if (typeof node.style.width === 'number') {
-				node.yogaNode.setWidth(node.style.width);
-			} else if (typeof node.style.width === 'string') {
-				node.yogaNode.setWidthPercent(Number.parseInt(node.style.width, 10));
-			} else {
-				node.yogaNode.setWidthAuto();
-			}
-
-			if (node.style.height === undefined) {
-				node.yogaNode.setHeightAuto();
-			} else if (typeof node.style.height === 'number') {
-				node.yogaNode.setHeight(node.style.height);
-			} else if (typeof node.style.height === 'string') {
-				node.yogaNode.setHeightPercent(Number.parseInt(node.style.height, 10));
-			} else {
-				node.yogaNode.setHeightAuto();
-			}
-
-			for (const [index, child] of node.childNodes.entries()) {
-				if (child.yogaNode) {
-					node.yogaNode.insertChild(child.yogaNode, index);
-				}
-			}
+		while (node.yogaNode.getChildCount() > 0) {
+			node.yogaNode.removeChild(node.yogaNode.getChild(0));
 		}
 	}
 };

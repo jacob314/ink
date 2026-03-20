@@ -1,6 +1,7 @@
 import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import colorize from './colorize.js';
 import {toStyledCharacters} from './measure-text.js';
+import {type ScrollbarBoundingBox} from './measure-element.js';
 
 export type ScrollbarThumb = {
 	startIndex: number;
@@ -10,9 +11,7 @@ export type ScrollbarThumb = {
 };
 
 export type DrawOptions = {
-	x: number;
-	y: number;
-	thumb: ScrollbarThumb;
+	layout: ScrollbarBoundingBox;
 	clip: {
 		x: number;
 		y: number;
@@ -26,16 +25,23 @@ export type DrawOptions = {
 };
 
 export const renderScrollbar = ({
-	x,
-	y,
-	thumb,
+	layout,
 	clip,
 	axis,
 	color,
 	setChar,
 	getExistingChar,
 }: DrawOptions) => {
-	const {startIndex, endIndex, thumbStartHalf, thumbEndHalf} = thumb;
+	const {
+		x,
+		y,
+		thumb: {
+			start: startIndex,
+			end: endIndex,
+			startHalf: thumbStartHalf,
+			endHalf: thumbEndHalf,
+		},
+	} = layout;
 
 	const applyBackground = (char: StyledChar, existingChar?: StyledChar) => {
 		if (!existingChar) return char;

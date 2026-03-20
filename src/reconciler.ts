@@ -15,12 +15,10 @@ import {
 	setTextNodeValue,
 	createNode,
 	setAttribute,
-	setCachedRender,
 	type DOMNodeAttribute,
 	type TextNode,
 	type ElementNames,
 	type DOMElement,
-	type CachedRender,
 } from './dom.js';
 import applyStyles, {type Styles} from './styles.js';
 import {type OutputTransformer} from './render-node-to-output.js';
@@ -232,11 +230,6 @@ export default createReconciler<
 				continue;
 			}
 
-			if (key === 'cachedRender') {
-				setCachedRender(node, value as CachedRender);
-				continue;
-			}
-
 			setAttribute(node, key, value as DOMNodeAttribute);
 		}
 
@@ -355,11 +348,6 @@ export default createReconciler<
 
 				if (key === 'scrollbar') {
 					node.internalScrollbar = value as boolean;
-					continue;
-				}
-
-				if (key === 'cachedRender') {
-					setCachedRender(node, value as CachedRender);
 					continue;
 				}
 

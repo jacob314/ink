@@ -7,6 +7,7 @@ import {
 	inkCharacterWidth,
 	styledCharsToString,
 } from './measure-text.js';
+import {extractSelectableText} from './output.js';
 import {wrapOrTruncateStyledChars} from './text-wrap.js';
 import getMaxWidth from './get-max-width.js';
 import {processLayout} from './layout.js';
@@ -169,6 +170,97 @@ export function calculateScrollbarThumb(options: {
 	return {startIndex, endIndex, thumbStartHalf, thumbEndHalf};
 }
 
+export function calculateScrollbarLayout(options: {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+	marginRight: number;
+	marginBottom: number;
+	clientDimension: number;
+	scrollDimension: number;
+	scrollPosition: number;
+	hasOppositeScrollbar: boolean;
+	axis: 'vertical' | 'horizontal';
+}): ScrollbarBoundingBox | undefined {
+	const {
+		x,
+		y,
+		width,
+		height,
+		marginRight,
+		marginBottom,
+		clientDimension,
+		scrollDimension,
+		scrollPosition,
+		hasOppositeScrollbar,
+		axis,
+	} = options;
+
+	if (scrollDimension <= clientDimension) {
+		return undefined;
+	}
+
+	if (axis === 'vertical') {
+		const {startIndex, endIndex, thumbStartHalf, thumbEndHalf} =
+			calculateScrollbarThumb({
+				scrollbarDimension: height,
+				clientDimension,
+				scrollDimension,
+				scrollPosition,
+				axis,
+			});
+
+		const scrollbarX = x + width - 1 - marginRight;
+
+		return {
+			x: scrollbarX,
+			y,
+			width: 1,
+			height,
+			thumb: {
+				x: scrollbarX,
+				y: y + startIndex,
+				width: 1,
+				height: endIndex - startIndex,
+				start: startIndex,
+				end: endIndex,
+				startHalf: thumbStartHalf,
+				endHalf: thumbEndHalf,
+			},
+		};
+	}
+
+	const scrollbarWidth = width - (hasOppositeScrollbar ? 1 : 0);
+	const {startIndex, endIndex, thumbStartHalf, thumbEndHalf} =
+		calculateScrollbarThumb({
+			scrollbarDimension: scrollbarWidth,
+			clientDimension,
+			scrollDimension,
+			scrollPosition,
+			axis,
+		});
+
+	const scrollbarY = y + height - 1 - marginBottom;
+
+	return {
+		x,
+		y: scrollbarY,
+		width: scrollbarWidth,
+		height: 1,
+		thumb: {
+			x: x + startIndex,
+			y: scrollbarY,
+			width: endIndex - startIndex,
+			height: 1,
+			start: startIndex,
+			end: endIndex,
+			startHalf: thumbStartHalf,
+			endHalf: thumbEndHalf,
+		},
+	};
+}
+
 /**
  * Get how much scroll height was added by stableScrollback.
  */
@@ -211,38 +303,20 @@ export const getVerticalScrollbarBoundingBox = (
 		yogaNode.getComputedBorder(Yoga.EDGE_TOP) -
 		yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM);
 
-	const {startIndex, endIndex, thumbStartHalf, thumbEndHalf} =
-		calculateScrollbarThumb({
-			scrollbarDimension: scrollbarHeight,
-			clientDimension: clientHeight,
-			scrollDimension: scrollHeight,
-			scrollPosition: node.internal_scrollState?.scrollTop ?? 0,
-			axis: 'vertical',
-		});
-
-	const scrollbarX =
-		x +
-		yogaNode.getComputedWidth() -
-		1 -
-		yogaNode.getComputedBorder(Yoga.EDGE_RIGHT);
-	const scrollbarY = y + yogaNode.getComputedBorder(Yoga.EDGE_TOP);
-
-	return {
-		x: scrollbarX,
-		y: scrollbarY,
-		width: 1,
+	return calculateScrollbarLayout({
+		x: x + yogaNode.getComputedBorder(Yoga.EDGE_LEFT),
+		y: y + yogaNode.getComputedBorder(Yoga.EDGE_TOP),
+		width:
+			yogaNode.getComputedWidth() - yogaNode.getComputedBorder(Yoga.EDGE_LEFT),
 		height: scrollbarHeight,
-		thumb: {
-			x: scrollbarX,
-			y: scrollbarY + startIndex,
-			width: 1,
-			height: endIndex - startIndex,
-			start: startIndex,
-			end: endIndex,
-			startHalf: thumbStartHalf,
-			endHalf: thumbEndHalf,
-		},
-	};
+		marginRight: yogaNode.getComputedBorder(Yoga.EDGE_RIGHT),
+		marginBottom: yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM),
+		clientDimension: clientHeight,
+		scrollDimension: scrollHeight,
+		scrollPosition: node.internal_scrollState?.scrollTop ?? 0,
+		hasOppositeScrollbar: false,
+		axis: 'vertical',
+	});
 };
 
 /**
@@ -279,44 +353,23 @@ export const getHorizontalScrollbarBoundingBox = (
 	const isVerticalScrollbarVisible =
 		overflowY === 'scroll' && scrollHeight > clientHeight;
 
-	const scrollbarWidth =
-		yogaNode.getComputedWidth() -
-		yogaNode.getComputedBorder(Yoga.EDGE_LEFT) -
-		yogaNode.getComputedBorder(Yoga.EDGE_RIGHT) -
-		(isVerticalScrollbarVisible ? 1 : 0);
-
-	const {startIndex, endIndex, thumbStartHalf, thumbEndHalf} =
-		calculateScrollbarThumb({
-			scrollbarDimension: scrollbarWidth,
-			clientDimension: clientWidth,
-			scrollDimension: scrollWidth,
-			scrollPosition: node.internal_scrollState?.scrollLeft ?? 0,
-			axis: 'horizontal',
-		});
-
-	const scrollbarX = x + yogaNode.getComputedBorder(Yoga.EDGE_LEFT);
-	const scrollbarY =
-		y +
-		yogaNode.getComputedHeight() -
-		1 -
-		yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM);
-
-	return {
-		x: scrollbarX,
-		y: scrollbarY,
-		width: scrollbarWidth,
-		height: 1,
-		thumb: {
-			x: scrollbarX + startIndex,
-			y: scrollbarY,
-			width: endIndex - startIndex,
-			height: 1,
-			start: startIndex,
-			end: endIndex,
-			startHalf: thumbStartHalf,
-			endHalf: thumbEndHalf,
-		},
-	};
+	return calculateScrollbarLayout({
+		x: x + yogaNode.getComputedBorder(Yoga.EDGE_LEFT),
+		y: y + yogaNode.getComputedBorder(Yoga.EDGE_TOP),
+		width:
+			yogaNode.getComputedWidth() -
+			yogaNode.getComputedBorder(Yoga.EDGE_LEFT) -
+			yogaNode.getComputedBorder(Yoga.EDGE_RIGHT),
+		height:
+			yogaNode.getComputedHeight() - yogaNode.getComputedBorder(Yoga.EDGE_TOP),
+		marginRight: yogaNode.getComputedBorder(Yoga.EDGE_RIGHT),
+		marginBottom: yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM),
+		clientDimension: clientWidth,
+		scrollDimension: scrollWidth,
+		scrollPosition: node.internal_scrollState?.scrollLeft ?? 0,
+		hasOppositeScrollbar: isVerticalScrollbarVisible,
+		axis: 'horizontal',
+	});
 };
 
 export type TextFragment = {
@@ -503,29 +556,7 @@ export const getText = (node: DOMNode): string => {
 		if (spans.length === 0) return '';
 
 		// Spans are already sorted during rendering, but let's be safe
-		const sortedSpans = [...spans].sort((a, b) =>
-			a.y === b.y ? a.startX - b.startX : a.y - b.y,
-		);
-		let text = '';
-		let currentY = sortedSpans[0]!.y;
-		let currentX = sortedSpans[0]!.startX;
-
-		for (const span of sortedSpans) {
-			if (span.y > currentY) {
-				text += '\n'.repeat(span.y - currentY);
-				currentX = 0;
-				currentY = span.y;
-			}
-
-			if (span.startX > currentX) {
-				text += ' '.repeat(span.startX - currentX);
-			}
-
-			text += span.text;
-			currentX = span.endX;
-		}
-
-		return text;
+		return extractSelectableText(spans);
 	}
 
 	if (node.nodeName === 'ink-text' || node.nodeName === 'ink-virtual-text') {

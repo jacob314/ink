@@ -7,7 +7,7 @@ import {
 } from './measure-text.js';
 import {type CursorPosition} from './log-update.js';
 import {type StickyHeader, type DOMElement} from './dom.js';
-import {calculateScrollbarThumb} from './measure-element.js';
+import {calculateScrollbarLayout} from './measure-element.js';
 import {renderScrollbar} from './render-scrollbar.js';
 
 /**
@@ -47,6 +47,43 @@ type Clip = {
 	y1: number | undefined;
 	y2: number | undefined;
 };
+
+export type Rect = {
+	x: number;
+	y: number;
+	w: number;
+	h: number;
+};
+
+export function intersectRect(a: Rect, b: Rect): Rect | undefined {
+	const x1 = Math.max(a.x, b.x);
+	const y1 = Math.max(a.y, b.y);
+	const x2 = Math.min(a.x + a.w, b.x + b.w);
+	const y2 = Math.min(a.y + a.h, b.y + b.h);
+
+	if (x2 <= x1 || y2 <= y1) {
+		return undefined;
+	}
+
+	return {x: x1, y: y1, w: x2 - x1, h: y2 - y1};
+}
+
+export function isRectIntersectingClip(
+	rect: {x1: number; y1: number; x2: number; y2: number},
+	clip: {x1?: number; y1?: number; x2?: number; y2?: number},
+): boolean {
+	const clipLeft = clip.x1 ?? -Infinity;
+	const clipRight = clip.x2 ?? Infinity;
+	const clipTop = clip.y1 ?? -Infinity;
+	const clipBottom = clip.y2 ?? Infinity;
+
+	return (
+		rect.x2 > clipLeft &&
+		rect.x1 < clipRight &&
+		rect.y2 > clipTop &&
+		rect.y1 < clipBottom
+	);
+}
 
 /**
  * Represents a rendered rectangular area in the terminal.
@@ -420,29 +457,8 @@ export default class Output {
 
 	addRegionTree(region: Region, x: number, y: number) {
 		const activeRegion = this.getActiveRegion();
-
-		// 1. Write the lines of the cached root region into the active region
-		for (let row = 0; row < region.lines.length; row++) {
-			const line = region.lines[row];
-			if (line) {
-				this.applyWrite(x, y + row, line, [], 0, false, false);
-			}
-		}
-
-		// 2. Add children regions
-		for (const child of region.children) {
-			const clonedChild = this.cloneRegion(child, x, y);
-			activeRegion.children.push(clonedChild);
-		}
-
-		// 3. Add sticky headers
-		for (const header of region.stickyHeaders) {
-			activeRegion.stickyHeaders.push({
-				...header,
-				x: header.x + x,
-				y: header.y + y,
-			});
-		}
+		const clonedRegion = this.cloneRegion(region, x, y);
+		activeRegion.children.push(clonedRegion);
 	}
 
 	private cloneRegion(region: Region, x: number, y: number): Region {
@@ -689,26 +705,21 @@ export default class Output {
 				toX: number | undefined;
 		  }
 		| undefined {
-		const {x1, x2, y1, y2} = clip;
+		const {x1, x2} = clip;
 		const clipHorizontally = typeof x1 === 'number' && typeof x2 === 'number';
-		const clipVertically = typeof y1 === 'number' && typeof y2 === 'number';
 
-		if (clipHorizontally) {
-			const width = styledCharsWidth(chars);
+		const width = styledCharsWidth(chars);
+		const effectiveY1 = this.getActiveRegion().overflowToBackbuffer
+			? -Infinity
+			: (clip.y1 ?? -Infinity);
 
-			if (x + width < clip.x1! || x > clip.x2!) {
-				return undefined;
-			}
-		}
-
-		if (clipVertically) {
-			const effectiveY1 = this.getActiveRegion().overflowToBackbuffer
-				? -Infinity
-				: clip.y1!;
-
-			if (y < effectiveY1 || y >= clip.y2!) {
-				return undefined;
-			}
+		if (
+			!isRectIntersectingClip(
+				{x1: x, y1: y, x2: x + width, y2: y + 1},
+				{...clip, y1: effectiveY1},
+			)
+		) {
+			return undefined;
 		}
 
 		let fromX: number | undefined;
@@ -803,18 +814,11 @@ function composeRegion(
 	const absX = x + offsetX;
 	const absY = y + offsetY;
 
-	const {x: clipX, y: clipY, w: clipW, h: clipH} = clip;
+	const myClip = intersectRect(clip, {x: absX, y: absY, w: width, h: height});
 
-	const x1 = Math.max(clipX, absX);
-	const y1 = Math.max(clipY, absY);
-	const x2 = Math.min(clipX + clipW, absX + width);
-	const y2 = Math.min(clipY + clipH, absY + height);
-
-	if (x2 <= x1 || y2 <= y1) {
+	if (!myClip) {
 		return;
 	}
-
-	const myClip = {x: x1, y: y1, w: x2 - x1, h: y2 - y1};
 
 	const scrollTop = regionScrollTop ?? 0;
 	const scrollLeft = regionScrollLeft ?? 0;
@@ -823,7 +827,12 @@ function composeRegion(
 		const cursorX = absX + regionCursorPosition.col - scrollLeft;
 		const cursorY = absY + regionCursorPosition.row - scrollTop;
 
-		if (cursorX >= x1 && cursorX <= x2 && cursorY >= y1 && cursorY <= y2) {
+		if (
+			cursorX >= myClip.x &&
+			cursorX <= myClip.x + myClip.w &&
+			cursorY >= myClip.y &&
+			cursorY <= myClip.y + myClip.h
+		) {
 			options.context.cursorPosition = {row: cursorY, col: cursorX};
 		}
 	}
@@ -915,70 +924,105 @@ function composeRegion(
 			(region.isHorizontallyScrollable ?? false) && scrollWidth > region.width;
 
 		if (isVerticalScrollbarVisible) {
-			const {startIndex, endIndex, thumbStartHalf, thumbEndHalf} =
-				calculateScrollbarThumb({
-					scrollbarDimension: region.height,
-					clientDimension: region.height,
-					scrollDimension: scrollHeight,
-					scrollPosition: scrollTop,
-					axis: 'vertical',
-				});
-
-			const barX = absX + region.width - 1 - (region.marginRight ?? 0);
-
-			renderScrollbar({
-				x: barX,
+			const verticalLayout = calculateScrollbarLayout({
+				x: absX,
 				y: absY,
-				thumb: {startIndex, endIndex, thumbStartHalf, thumbEndHalf},
-				clip: myClip,
+				width: region.width,
+				height: region.height,
+				marginRight: region.marginRight ?? 0,
+				marginBottom: region.marginBottom ?? 0,
+				clientDimension: region.height,
+				scrollDimension: scrollHeight,
+				scrollPosition: scrollTop,
+				hasOppositeScrollbar: false,
 				axis: 'vertical',
-				color: region.scrollbarThumbColor,
-				setChar(x, y, char) {
-					if (
-						y >= 0 &&
-						y < targetLines.length &&
-						x >= 0 &&
-						x < targetLines[0]!.length
-					) {
-						targetLines[y]![x] = char;
-					}
-				},
 			});
+
+			if (verticalLayout) {
+				renderScrollbar({
+					layout: verticalLayout,
+					clip: myClip,
+					axis: 'vertical',
+					color: region.scrollbarThumbColor,
+					setChar(x, y, char) {
+						if (
+							y >= 0 &&
+							y < targetLines.length &&
+							x >= 0 &&
+							x < targetLines[0]!.length
+						) {
+							targetLines[y]![x] = char;
+						}
+					},
+				});
+			}
 		}
 
 		if (isHorizontalScrollbarVisible) {
-			const scrollbarWidth =
-				region.width - (isVerticalScrollbarVisible ? 1 : 0);
-
-			const {startIndex, endIndex, thumbStartHalf, thumbEndHalf} =
-				calculateScrollbarThumb({
-					scrollbarDimension: scrollbarWidth,
-					clientDimension: region.width,
-					scrollDimension: scrollWidth,
-					scrollPosition: scrollLeft,
-					axis: 'horizontal',
-				});
-
-			const barY = absY + region.height - 1 - (region.marginBottom ?? 0);
-
-			renderScrollbar({
+			const horizontalLayout = calculateScrollbarLayout({
 				x: absX,
-				y: barY,
-				thumb: {startIndex, endIndex, thumbStartHalf, thumbEndHalf},
-				clip: myClip,
+				y: absY,
+				width: region.width,
+				height: region.height,
+				marginRight: region.marginRight ?? 0,
+				marginBottom: region.marginBottom ?? 0,
+				clientDimension: region.width,
+				scrollDimension: scrollWidth,
+				scrollPosition: scrollLeft,
+				hasOppositeScrollbar: isVerticalScrollbarVisible,
 				axis: 'horizontal',
-				color: region.scrollbarThumbColor,
-				setChar(x, y, char) {
-					if (
-						y >= 0 &&
-						y < targetLines.length &&
-						x >= 0 &&
-						x < targetLines[0]!.length
-					) {
-						targetLines[y]![x] = char;
-					}
-				},
 			});
+
+			if (horizontalLayout) {
+				renderScrollbar({
+					layout: horizontalLayout,
+					clip: myClip,
+					axis: 'horizontal',
+					color: region.scrollbarThumbColor,
+					setChar(x, y, char) {
+						if (
+							y >= 0 &&
+							y < targetLines.length &&
+							x >= 0 &&
+							x < targetLines[0]!.length
+						) {
+							targetLines[y]![x] = char;
+						}
+					},
+				});
+			}
 		}
 	}
 }
+
+export const extractSelectableText = (
+	spans: Array<{y: number; startX: number; endX: number; text: string}>,
+): string => {
+	if (spans.length === 0) {
+		return '';
+	}
+
+	const sortedSpans = [...spans].sort((a, b) =>
+		a.y === b.y ? a.startX - b.startX : a.y - b.y,
+	);
+	let selectableText = '';
+	let currentY = sortedSpans[0]?.y ?? 0;
+	let currentX = sortedSpans[0]?.startX ?? 0;
+
+	for (const span of sortedSpans) {
+		if (span.y > currentY) {
+			selectableText += '\n'.repeat(span.y - currentY);
+			currentX = 0;
+			currentY = span.y;
+		}
+
+		if (span.startX > currentX) {
+			selectableText += ' '.repeat(span.startX - currentX);
+		}
+
+		selectableText += span.text;
+		currentX = span.endX;
+	}
+
+	return selectableText;
+};
