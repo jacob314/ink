@@ -1,3 +1,9 @@
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import {type Region} from '../output.js';
 import {type RenderLine} from './terminal-writer.js';
 

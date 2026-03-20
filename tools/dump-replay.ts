@@ -1,6 +1,12 @@
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import fs from 'node:fs';
 import process from 'node:process';
-import {loadReplay, createHumanReadableDump} from './replay.js';
+import {loadReplay, createHumanReadableDump} from '../src/worker/replay.js';
 
 const filename = process.argv[2];
 if (!filename) {

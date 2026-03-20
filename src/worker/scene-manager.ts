@@ -1,3 +1,9 @@
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import {Buffer} from 'node:buffer';
 import {
 	type RegionNode,
@@ -39,16 +45,7 @@ export class SceneManager {
 			let region = this.regions.get(update.id);
 			const isNew = !region;
 
-			if (region) {
-				// We'll let the caller handle the animation logic, but we track if it was at the end.
-				// This is used for scrollbar thumb calculation during animations.
-				// Actually, the current logic in render-worker.ts does this:
-				// const currentEffectiveScrollTop = this.targetScrollTops.get(r.id) ?? r.scrollTop ?? 0;
-				// const wasAtEnd = currentEffectiveScrollTop >= (r.scrollHeight ?? 0) - (r.height ?? 0);
-				// this.regionWasAtEnd.set(r.id, wasAtEnd);
-				// I'll keep regionWasAtEnd in SceneManager but the 'currentEffectiveScrollTop'
-				// might need to be passed in or handled by the caller.
-			} else {
+			if (!region) {
 				// Initialize new region
 				region = {
 					id: update.id,

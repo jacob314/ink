@@ -86,6 +86,14 @@ npm run example examples/counter/counter.tsx
 
 - **Conceptual Consistency:** When adding new features, strive to keep them conceptually consistent with similar features in the browser (DOM/CSS). This ensures that the API remains intuitive for React developers who are accustomed to web development.
 - **Examples:** For any large new feature, **always create a new example** in the `examples/` directory to demonstrate its usage.
+- **Copyright Notices:** All new source files created in the project must include the following license header at the top of the file:
+  ```typescript
+  /**
+   * @license
+   * Copyright 2026 Google LLC
+   * SPDX-License-Identifier: Apache-2.0
+   */
+  ```
 
 ## Key Conventions
 

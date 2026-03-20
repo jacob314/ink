@@ -1,3 +1,9 @@
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import ansiEscapes from 'ansi-escapes';
 
 export const enterSynchronizedOutput = '\u001B[?2026h';

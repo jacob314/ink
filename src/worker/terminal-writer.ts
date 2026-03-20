@@ -1,3 +1,9 @@
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import process from 'node:process';
 import ansiEscapes from 'ansi-escapes';
 import {type StyledChar, styledCharsToString} from '@alcalzone/ansi-tokenize';
@@ -692,6 +698,19 @@ export class TerminalWriter {
 		}
 	}
 
+	private shiftScreenUp(start: number, bottom: number) {
+		for (let i = start; i < bottom - 1; i++) {
+			this.screen[i] = this.screen[i + 1]!;
+		}
+
+		this.screen[bottom - 1] = {
+			styledChars: [],
+			text: '',
+			length: 0,
+			tainted: false,
+		};
+	}
+
 	/**
 	 * Trigger a scroll up of content into the backbuffer.
 	 */
@@ -711,16 +730,7 @@ export class TerminalWriter {
 			}
 		}
 
-		for (let i = start; i < bottom - 1; i++) {
-			this.screen[i] = this.screen[i + 1]!;
-		}
-
-		this.screen[bottom - 1] = {
-			styledChars: [],
-			text: '',
-			length: 0,
-			tainted: false,
-		};
+		this.shiftScreenUp(start, bottom);
 	}
 
 	private applyScrollUp(start: number, bottom: number) {
@@ -740,16 +750,7 @@ export class TerminalWriter {
 			this.writeHelper(getDeleteLinesCode(1));
 
 			// Update screen state for lines 1 through bottom-1
-			for (let i = 1; i < bottom - 1; i++) {
-				this.screen[i] = this.screen[i + 1]!;
-			}
-
-			this.screen[bottom - 1] = {
-				styledChars: [],
-				text: '',
-				length: 0,
-				tainted: false,
-			};
+			this.shiftScreenUp(1, bottom);
 
 			// Mark line 0 as tainted so it gets redrawn with what was line 1
 			if (line0Content) {
@@ -769,16 +770,7 @@ export class TerminalWriter {
 		this.moveCursor(start, 0);
 		this.writeHelper(getDeleteLinesCode(1));
 		// Simulate the effect of the ansi escape for scroll up
-		for (let i = start; i < bottom - 1; i++) {
-			this.screen[i] = this.screen[i + 1]!;
-		}
-
-		this.screen[bottom - 1] = {
-			styledChars: [],
-			text: '',
-			length: 0,
-			tainted: false,
-		};
+		this.shiftScreenUp(start, bottom);
 	}
 
 	private applyScrollDown(start: number, bottom: number) {

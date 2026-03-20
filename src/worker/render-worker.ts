@@ -1,3 +1,9 @@
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import fs from 'node:fs';
 import process from 'node:process';
 import ansiEscapes from 'ansi-escapes';
@@ -114,38 +120,22 @@ export class TerminalBufferWorker {
 		this.primaryTerminalWriter.writeRaw(ansiEscapes.cursorHide);
 		this.alternateTerminalWriter.writeRaw(ansiEscapes.cursorHide);
 
-		if (options?.debugRainbowEnabled) {
-			this.debugRainbowEnabled = true;
-		}
-
-		if (options?.isAlternateBufferEnabled) {
-			this.isAlternateBufferEnabled = true;
-		}
-
-		if (options?.stickyHeadersInBackbuffer) {
-			this.stickyHeadersInBackbuffer = true;
-		}
-
-		if (options?.animatedScroll) {
-			this.animatedScroll = true;
-		}
-
-		if (options?.animationInterval !== undefined) {
-			this.animationInterval = options.animationInterval;
-		}
-
-		if (options?.backbufferUpdateDelay !== undefined) {
-			this.backbufferUpdateDelay = options.backbufferUpdateDelay;
-		}
-
-		if (options?.maxScrollbackLength !== undefined) {
-			this.maxScrollbackLength = options.maxScrollbackLength;
-		}
-
-		if (options?.forceScrollToBottomOnBackbufferRefresh !== undefined) {
-			this.forceScrollToBottomOnBackbufferRefresh =
-				options.forceScrollToBottomOnBackbufferRefresh;
-		}
+		this.debugRainbowEnabled =
+			options?.debugRainbowEnabled ?? this.debugRainbowEnabled;
+		this.isAlternateBufferEnabled =
+			options?.isAlternateBufferEnabled ?? this.isAlternateBufferEnabled;
+		this.stickyHeadersInBackbuffer =
+			options?.stickyHeadersInBackbuffer ?? this.stickyHeadersInBackbuffer;
+		this.animatedScroll = options?.animatedScroll ?? this.animatedScroll;
+		this.animationInterval =
+			options?.animationInterval ?? this.animationInterval;
+		this.backbufferUpdateDelay =
+			options?.backbufferUpdateDelay ?? this.backbufferUpdateDelay;
+		this.maxScrollbackLength =
+			options?.maxScrollbackLength ?? this.maxScrollbackLength;
+		this.forceScrollToBottomOnBackbufferRefresh =
+			options?.forceScrollToBottomOnBackbufferRefresh ??
+			this.forceScrollToBottomOnBackbufferRefresh;
 
 		this.primaryTerminalWriter.maxScrollbackLength = this.maxScrollbackLength;
 		this.alternateTerminalWriter.maxScrollbackLength = this.maxScrollbackLength;
@@ -196,34 +186,7 @@ export class TerminalBufferWorker {
 		const {root} = this.sceneManager;
 		if (root) {
 			const serializer = new Serializer();
-			const updates: RegionUpdate[] = [];
-			for (const region of this.sceneManager.regions.values()) {
-				const update: RegionUpdate = {
-					id: region.id,
-					stickyHeaders: region.stickyHeaders,
-				};
-
-				for (const key of regionLayoutProperties) {
-					copyRegionProperty(update, region, key);
-				}
-
-				if (region.lines.length > 0) {
-					update.lines = {
-						updates: [
-							{
-								start: 0,
-								end: region.lines.length,
-								data: serializer.serialize(
-									region.lines,
-								) as unknown as Uint8Array,
-							},
-						],
-						totalLength: region.lines.length,
-					};
-				}
-
-				updates.push(update);
-			}
+			const updates = this.serializeCurrentRegions(serializer);
 
 			this.recordedFrames.push({
 				tree: structuredClone(root),
@@ -255,29 +218,7 @@ export class TerminalBufferWorker {
 		if (!root) return;
 
 		const serializer = new Serializer();
-		const updates: RegionUpdate[] = [];
-		for (const region of this.sceneManager.regions.values()) {
-			const update: RegionUpdate = {
-				id: region.id,
-				stickyHeaders: region.stickyHeaders,
-				lines: {
-					updates: [
-						{
-							start: 0,
-							end: region.lines.length,
-							data: serializer.serialize(region.lines) as unknown as Uint8Array,
-						},
-					],
-					totalLength: region.lines.length,
-				},
-			};
-
-			for (const key of regionLayoutProperties) {
-				copyRegionProperty(update, region, key);
-			}
-
-			updates.push(update);
-		}
+		const updates = this.serializeCurrentRegions(serializer);
 
 		const data: ReplayData = {
 			type: 'single',
@@ -662,6 +603,37 @@ export class TerminalBufferWorker {
 		this.primaryTerminalWriter.clear();
 		this.alternateTerminalWriter.clear();
 		this.terminalWriter.flush();
+	}
+
+	private serializeCurrentRegions(serializer: Serializer): RegionUpdate[] {
+		const updates: RegionUpdate[] = [];
+		for (const region of this.sceneManager.regions.values()) {
+			const update: RegionUpdate = {
+				id: region.id,
+				stickyHeaders: region.stickyHeaders,
+			};
+
+			for (const key of regionLayoutProperties) {
+				copyRegionProperty(update, region, key);
+			}
+
+			if (region.lines.length > 0) {
+				update.lines = {
+					updates: [
+						{
+							start: 0,
+							end: region.lines.length,
+							data: serializer.serialize(region.lines) as unknown as Uint8Array,
+						},
+					],
+					totalLength: region.lines.length,
+				};
+			}
+
+			updates.push(update);
+		}
+
+		return updates;
 	}
 
 	private async _render() {

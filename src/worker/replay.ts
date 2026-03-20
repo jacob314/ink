@@ -1,3 +1,9 @@
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import fs from 'node:fs';
 import {Buffer} from 'node:buffer';
 import {type RegionNode, type RegionUpdate} from '../output.js';

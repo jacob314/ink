@@ -1,3 +1,9 @@
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import process from 'node:process';
 import {fork, type ChildProcess} from 'node:child_process';
 import {type StyledChar} from '@alcalzone/ansi-tokenize';
@@ -34,16 +40,6 @@ export default class TerminalBuffer {
 
 	private columns: number;
 	private rows: number;
-
-	private recording: 'none' | 'sequence' = 'none';
-	private recordedFrames: Array<{
-		tree: RegionNode;
-		updates: RegionUpdate[];
-		cursorPosition?: {row: number; col: number};
-		timestamp: number;
-	}> = [];
-
-	private recordingStartTime = 0;
 
 	constructor(
 		columns: number,
@@ -189,10 +185,6 @@ export default class TerminalBuffer {
 	}
 
 	startRecording(filename: string) {
-		this.recording = 'sequence';
-		this.recordedFrames = [];
-		this.recordingStartTime = Date.now();
-
 		if (this.workerInstance) {
 			this.workerInstance.startRecording(filename);
 		} else {
@@ -207,8 +199,6 @@ export default class TerminalBuffer {
 	}
 
 	stopRecording() {
-		if (this.recording === 'none') return;
-
 		if (this.workerInstance) {
 			this.workerInstance.stopRecording();
 		} else {
@@ -219,9 +209,6 @@ export default class TerminalBuffer {
 				'Failed to send stopRecording message to worker:',
 			);
 		}
-
-		this.recording = 'none';
-		this.recordedFrames = [];
 	}
 
 	dumpCurrentFrame(filename: string) {
@@ -278,29 +265,6 @@ export default class TerminalBuffer {
 
 		// Update local state to current frame
 		this.lastRegions = currentRegionsMap;
-
-		if (this.recording !== 'none' && this.workerInstance) {
-			if (this.recordedFrames.length === 0) {
-				const fullUpdates: RegionUpdate[] = [];
-				for (const r of currentRegionsMap.values()) {
-					fullUpdates.push(this.createFullRegionUpdate(r));
-				}
-
-				this.recordedFrames.push({
-					tree,
-					updates: fullUpdates,
-					cursorPosition,
-					timestamp: 0,
-				});
-			} else if (this.recording === 'sequence') {
-				this.recordedFrames.push({
-					tree,
-					updates,
-					cursorPosition,
-					timestamp: Date.now() - this.recordingStartTime,
-				});
-			}
-		}
 
 		const cursorChanged =
 			cursorPosition !== this.lastCursorPosition &&
@@ -428,29 +392,6 @@ export default class TerminalBuffer {
 				console.error(errorMessage, error);
 			}
 		}
-	}
-
-	private createFullRegionUpdate(current: Region): RegionUpdate {
-		const update: RegionUpdate = {id: current.id};
-		for (const key of regionLayoutProperties) {
-			copyRegionProperty(update, current, key);
-		}
-
-		update.stickyHeaders = current.stickyHeaders.map(({node, ...rest}) => rest);
-
-		const serialized = this.serializer.serialize(current.lines);
-		update.lines = {
-			updates: [
-				{
-					start: 0,
-					end: current.lines.length,
-					data: serialized as unknown as Uint8Array,
-				},
-			],
-			totalLength: current.lines.length,
-		};
-
-		return update;
 	}
 
 	private diffRegion(
