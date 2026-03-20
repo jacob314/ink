@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1073" height="581" viewBox="0 0 1073 581">
+  <style>
+    text { font-family: Consolas, "Courier New", monospace; font-size: 14px; dominant-baseline: text-before-edge; white-space: pre; }
+  </style>
+  <rect width="1073" height="581" fill="#000000" />
+  <g transform="translate(10, 10)">
+    <text x="18" y="19" fill="#4796e4" textLength="9" lengthAdjust="spacingAndGlyphs">▝</text>
+    <text x="27" y="19" fill="#6688d9" textLength="9" lengthAdjust="spacingAndGlyphs">▜</text>
+    <text x="36" y="19" fill="#847ace" textLength="9" lengthAdjust="spacingAndGlyphs">▄</text>
+    <text x="90" y="19" fill="#ffffff" textLength="90" lengthAdjust="spacingAndGlyphs" font-weight="bold">Gemini CLI</text>
+    <text x="180" y="19" fill="#afafaf" textLength="315" lengthAdjust="spacingAndGlyphs"> v0.36.0-nightly.20260317.2f90b4653</text>
+    <text x="36" y="36" fill="#847ace" textLength="9" lengthAdjust="spacingAndGlyphs">▝</text>
+    <text x="45" y="36" fill="#a471a7" textLength="9" lengthAdjust="spacingAndGlyphs">▜</text>
+    <text x="54" y="36" fill="#c3677f" textLength="9" lengthAdjust="spacingAndGlyphs">▄</text>
+    <text x="27" y="53" fill="#6688d9" textLength="9" lengthAdjust="spacingAndGlyphs">▗</text>
+    <text x="36" y="53" fill="#847ace" textLength="9" lengthAdjust="spacingAndGlyphs">▟</text>
+    <text x="45" y="53" fill="#a471a7" textLength="9" lengthAdjust="spacingAndGlyphs">▀</text>
+    <text x="90" y="53" fill="#ffffff" textLength="297" lengthAdjust="spacingAndGlyphs">Authenticated with gemini-api-key</text>
+    <text x="387" y="53" fill="#afafaf" textLength="54" lengthAdjust="spacingAndGlyphs"> /auth</text>
+    <text x="18" y="70" fill="#4796e4" textLength="9" lengthAdjust="spacingAndGlyphs">▝</text>
+    <text x="27" y="70" fill="#6688d9" textLength="9" lengthAdjust="spacingAndGlyphs">▀</text>
+    <text x="0" y="121" fill="#ffffaf" textLength="756" lengthAdjust="spacingAndGlyphs">ℹ You have 1 extension with an update available. Run &quot;/extensions update conductor&quot;.</text>
+    <rect x="0" y="136" width="1053" height="17" fill="#3e4148" />
+    <text x="0" y="138" fill="#282c34" textLength="1053" lengthAdjust="spacingAndGlyphs">▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀</text>
+    <rect x="0" y="153" width="9" height="17" fill="#3e4148" />
+    <rect x="9" y="153" width="18" height="17" fill="#3e4148" />
+    <text x="9" y="155" fill="#d7afff" textLength="18" lengthAdjust="spacingAndGlyphs">&gt; </text>
+    <rect x="27" y="153" width="432" height="17" fill="#3e4148" />
+    <text x="27" y="155" fill="#ffffff" textLength="432" lengthAdjust="spacingAndGlyphs">write a poem about cats to a file named cats.txt</text>
+    <rect x="459" y="153" width="594" height="17" fill="#3e4148" />
+    <rect x="0" y="170" width="1053" height="17" fill="#3e4148" />
+    <text x="0" y="172" fill="#282c34" textLength="1053" lengthAdjust="spacingAndGlyphs">▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄</text>
+    <text x="0" y="189" fill="#ffffff" textLength="117" lengthAdjust="spacingAndGlyphs" font-style="italic"> Thinking... </text>
+    <text x="9" y="206" fill="#afafaf" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="9" y="223" fill="#afafaf" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="27" y="223" fill="#ffffff" textLength="189" lengthAdjust="spacingAndGlyphs" font-weight="bold" font-style="italic">Defining the Approach</text>
+    <text x="9" y="240" fill="#afafaf" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="27" y="240" fill="#afafaf" textLength="1008" lengthAdjust="spacingAndGlyphs" font-style="italic">I&apos;m solidifying the framework. I recognize the user&apos;s desire for a poem about cats saved to `cats.txt`, and I&apos;ve</text>
+    <text x="9" y="257" fill="#afafaf" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="27" y="257" fill="#afafaf" textLength="963" lengthAdjust="spacingAndGlyphs" font-style="italic">locked in on `write_file` as the necessary tool to achieve this goal. Now, I&apos;m working through the specific</text>
+    <text x="9" y="274" fill="#afafaf" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="27" y="274" fill="#afafaf" textLength="486" lengthAdjust="spacingAndGlyphs" font-style="italic">parameters I&apos;ll need to define to make that tool sing.</text>
+    <text x="0" y="308" fill="#5e6065" textLength="1008" lengthAdjust="spacingAndGlyphs">╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────╮</text>
+    <text x="0" y="325" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="18" y="325" fill="#d7ffd7" textLength="9" lengthAdjust="spacingAndGlyphs">✓</text>
+    <text x="45" y="325" fill="#ffffff" textLength="81" lengthAdjust="spacingAndGlyphs" font-weight="bold">WriteFile</text>
+    <text x="135" y="325" fill="#afafaf" textLength="171" lengthAdjust="spacingAndGlyphs">Writing to cats.txt</text>
+    <text x="999" y="325" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="342" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="999" y="342" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="359" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="27" y="359" fill="#afafaf" textLength="9" lengthAdjust="spacingAndGlyphs">1</text>
+    <text x="45" y="359" fill="#ffffff" textLength="342" lengthAdjust="spacingAndGlyphs">In shadows they creep, on velvet paws,</text>
+    <text x="999" y="359" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="376" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="27" y="376" fill="#afafaf" textLength="9" lengthAdjust="spacingAndGlyphs">2</text>
+    <text x="45" y="376" fill="#ffffff" textLength="342" lengthAdjust="spacingAndGlyphs">With twitching tails and hidden claws.</text>
+    <text x="999" y="376" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="393" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="27" y="393" fill="#afafaf" textLength="9" lengthAdjust="spacingAndGlyphs">3</text>
+    <text x="45" y="393" fill="#ffffff" textLength="315" lengthAdjust="spacingAndGlyphs">A purr that rumbles, soft and deep,</text>
+    <text x="999" y="393" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="410" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="27" y="410" fill="#afafaf" textLength="9" lengthAdjust="spacingAndGlyphs">4</text>
+    <text x="45" y="410" fill="#ffffff" textLength="288" lengthAdjust="spacingAndGlyphs">Before they curl up fast asleep.</text>
+    <text x="999" y="410" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="427" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="27" y="427" fill="#afafaf" textLength="9" lengthAdjust="spacingAndGlyphs">5</text>
+    <text x="999" y="427" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="444" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="27" y="444" fill="#afafaf" textLength="9" lengthAdjust="spacingAndGlyphs">6</text>
+    <text x="45" y="444" fill="#ffffff" textLength="279" lengthAdjust="spacingAndGlyphs">Eyes of emerald, gold, or blue,</text>
+    <text x="999" y="444" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="461" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="27" y="461" fill="#afafaf" textLength="9" lengthAdjust="spacingAndGlyphs">7</text>
+    <text x="45" y="461" fill="#ffffff" textLength="261" lengthAdjust="spacingAndGlyphs">Always watching, judging you.</text>
+    <text x="999" y="461" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="478" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="27" y="478" fill="#afafaf" textLength="9" lengthAdjust="spacingAndGlyphs">8</text>
+    <text x="45" y="478" fill="#ffffff" textLength="261" lengthAdjust="spacingAndGlyphs">Masters of the sunlit square,</text>
+    <text x="999" y="478" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="495" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="27" y="495" fill="#afafaf" textLength="9" lengthAdjust="spacingAndGlyphs">9</text>
+    <text x="45" y="495" fill="#ffffff" textLength="261" lengthAdjust="spacingAndGlyphs">Sleeping softly on the chair.</text>
+    <text x="999" y="495" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="512" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="18" y="512" fill="#afafaf" textLength="18" lengthAdjust="spacingAndGlyphs">10</text>
+    <text x="999" y="512" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="529" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="18" y="529" fill="#afafaf" textLength="18" lengthAdjust="spacingAndGlyphs">11</text>
+    <text x="45" y="529" fill="#ffffff" textLength="315" lengthAdjust="spacingAndGlyphs">Fierce little hunters of the night,</text>
+    <text x="999" y="529" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="546" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="18" y="546" fill="#afafaf" textLength="18" lengthAdjust="spacingAndGlyphs">12</text>
+    <text x="45" y="546" fill="#ffffff" textLength="252" lengthAdjust="spacingAndGlyphs">Batting at a speck of light.</text>
+    <text x="999" y="546" fill="#5e6065" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+  </g>
+</svg>

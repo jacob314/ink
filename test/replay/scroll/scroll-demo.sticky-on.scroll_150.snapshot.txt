@@ -5,7 +5,7 @@
 ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 
 ╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│                                                                                                                                                                                 │
+│This is the first line of box 1                                                                                                                                                  │
 │1 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
 │2 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
 │3 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
@@ -183,8 +183,8 @@
 ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 
 ╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│This is the first line of box 20                                                                                                                                                 │
-│1 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ ▄
+│This is the first line of box 20                                                                                                                                                 │ ▄
+│1 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ █
 │2 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ █
 │3 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ █
 │4 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ █
@@ -197,8 +197,8 @@
 │1 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ █
 │2 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ █
 │3 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ █
-│4 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ █
-│5 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ █
+│4 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
+│5 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
 │6 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
 │7 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
 ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
@@ -212,8 +212,6 @@
 │5 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
 │6 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
 │7 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
-│8 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
-╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 This is a demo showing a scrollable box.
 Press up/down arrow to scroll vertically.
 Press left/right arrow to scroll horizontally.
@@ -222,8 +220,10 @@ Press 'm' to cycle through scroll modes (current: vertical)
 Press 's' to toggle scrollbars (current: on)
 Press 'a' or 'f' to toggle alternate buffer + sticky headers (current: off)
 Press 'h' to toggle sticky headers in backbuffer (current: off)
+Press 'r' to toggle recording (current: off)
+Press 'e' to dump current frame to scroll_snapshot.json
 ScrollTop: 10
 ScrollLeft: 0
-Size: 181x64
+Size: 181x62
 Inner scrollable size: 181x280
-VScroll: x=180, y=0, h=64, thumb=[2, 17]
+VScroll: x=180, y=0, h=62, thumb=[2, 16]

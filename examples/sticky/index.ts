@@ -56,6 +56,24 @@ if (scrollDownIndex !== -1 && arguments_.length > scrollDownIndex + 1) {
 	}
 }
 
+let columns: number | undefined;
+const columnsIndex = arguments_.indexOf('--columns');
+if (columnsIndex !== -1 && arguments_.length > columnsIndex + 1) {
+	columns = Number.parseInt(arguments_[columnsIndex + 1]!, 10);
+	if (Number.isNaN(columns)) {
+		columns = undefined;
+	}
+}
+
+let rows: number | undefined;
+const rowsIndex = arguments_.indexOf('--rows');
+if (rowsIndex !== -1 && arguments_.length > rowsIndex + 1) {
+	rows = Number.parseInt(arguments_[rowsIndex + 1]!, 10);
+	if (Number.isNaN(rows)) {
+		rows = undefined;
+	}
+}
+
 export const instance = render(
 	React.createElement(ScrollableContent, {
 		useStatic,
@@ -63,6 +81,8 @@ export const instance = render(
 		initialScroll,
 		exportFilename,
 		recordFilename,
+		columns,
+		rows,
 	}),
 	{
 		renderProcess: true,
@@ -73,6 +93,5 @@ export const instance = render(
 		animatedScroll: true,
 		backbufferUpdateDelay: 100,
 		maxFps: 10_000,
-		debugRainbow: true,
 	},
 );

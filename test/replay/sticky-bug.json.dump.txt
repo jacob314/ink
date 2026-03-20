@@ -11,19 +11,391 @@
             "id": 953,
             "children": [
               {
-                "id": 110,
+                "id": 111,
+                "children": [
+                  {
+                    "id": 110,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 145,
                 "children": []
               },
               {
-                "id": 347,
+                "id": 148,
                 "children": []
               },
               {
-                "id": 584,
+                "id": 151,
                 "children": []
               },
               {
-                "id": 821,
+                "id": 154,
+                "children": []
+              },
+              {
+                "id": 157,
+                "children": []
+              },
+              {
+                "id": 160,
+                "children": []
+              },
+              {
+                "id": 163,
+                "children": []
+              },
+              {
+                "id": 166,
+                "children": []
+              },
+              {
+                "id": 169,
+                "children": []
+              },
+              {
+                "id": 172,
+                "children": []
+              },
+              {
+                "id": 175,
+                "children": []
+              },
+              {
+                "id": 209,
+                "children": []
+              },
+              {
+                "id": 212,
+                "children": []
+              },
+              {
+                "id": 215,
+                "children": []
+              },
+              {
+                "id": 218,
+                "children": []
+              },
+              {
+                "id": 221,
+                "children": []
+              },
+              {
+                "id": 224,
+                "children": []
+              },
+              {
+                "id": 227,
+                "children": []
+              },
+              {
+                "id": 230,
+                "children": []
+              },
+              {
+                "id": 233,
+                "children": []
+              },
+              {
+                "id": 236,
+                "children": []
+              },
+              {
+                "id": 239,
+                "children": []
+              },
+              {
+                "id": 348,
+                "children": [
+                  {
+                    "id": 347,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 382,
+                "children": []
+              },
+              {
+                "id": 385,
+                "children": []
+              },
+              {
+                "id": 388,
+                "children": []
+              },
+              {
+                "id": 391,
+                "children": []
+              },
+              {
+                "id": 394,
+                "children": []
+              },
+              {
+                "id": 397,
+                "children": []
+              },
+              {
+                "id": 400,
+                "children": []
+              },
+              {
+                "id": 403,
+                "children": []
+              },
+              {
+                "id": 406,
+                "children": []
+              },
+              {
+                "id": 409,
+                "children": []
+              },
+              {
+                "id": 412,
+                "children": []
+              },
+              {
+                "id": 446,
+                "children": []
+              },
+              {
+                "id": 449,
+                "children": []
+              },
+              {
+                "id": 452,
+                "children": []
+              },
+              {
+                "id": 455,
+                "children": []
+              },
+              {
+                "id": 458,
+                "children": []
+              },
+              {
+                "id": 461,
+                "children": []
+              },
+              {
+                "id": 464,
+                "children": []
+              },
+              {
+                "id": 467,
+                "children": []
+              },
+              {
+                "id": 470,
+                "children": []
+              },
+              {
+                "id": 473,
+                "children": []
+              },
+              {
+                "id": 476,
+                "children": []
+              },
+              {
+                "id": 585,
+                "children": [
+                  {
+                    "id": 584,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 619,
+                "children": []
+              },
+              {
+                "id": 622,
+                "children": []
+              },
+              {
+                "id": 625,
+                "children": []
+              },
+              {
+                "id": 628,
+                "children": []
+              },
+              {
+                "id": 631,
+                "children": []
+              },
+              {
+                "id": 634,
+                "children": []
+              },
+              {
+                "id": 637,
+                "children": []
+              },
+              {
+                "id": 640,
+                "children": []
+              },
+              {
+                "id": 643,
+                "children": []
+              },
+              {
+                "id": 646,
+                "children": []
+              },
+              {
+                "id": 649,
+                "children": []
+              },
+              {
+                "id": 683,
+                "children": []
+              },
+              {
+                "id": 686,
+                "children": []
+              },
+              {
+                "id": 689,
+                "children": []
+              },
+              {
+                "id": 692,
+                "children": []
+              },
+              {
+                "id": 695,
+                "children": []
+              },
+              {
+                "id": 698,
+                "children": []
+              },
+              {
+                "id": 701,
+                "children": []
+              },
+              {
+                "id": 704,
+                "children": []
+              },
+              {
+                "id": 707,
+                "children": []
+              },
+              {
+                "id": 710,
+                "children": []
+              },
+              {
+                "id": 713,
+                "children": []
+              },
+              {
+                "id": 822,
+                "children": [
+                  {
+                    "id": 821,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 856,
+                "children": []
+              },
+              {
+                "id": 859,
+                "children": []
+              },
+              {
+                "id": 862,
+                "children": []
+              },
+              {
+                "id": 865,
+                "children": []
+              },
+              {
+                "id": 868,
+                "children": []
+              },
+              {
+                "id": 871,
+                "children": []
+              },
+              {
+                "id": 874,
+                "children": []
+              },
+              {
+                "id": 877,
+                "children": []
+              },
+              {
+                "id": 880,
+                "children": []
+              },
+              {
+                "id": 883,
+                "children": []
+              },
+              {
+                "id": 886,
+                "children": []
+              },
+              {
+                "id": 920,
+                "children": []
+              },
+              {
+                "id": 923,
+                "children": []
+              },
+              {
+                "id": 926,
+                "children": []
+              },
+              {
+                "id": 929,
+                "children": []
+              },
+              {
+                "id": 932,
+                "children": []
+              },
+              {
+                "id": 935,
+                "children": []
+              },
+              {
+                "id": 938,
+                "children": []
+              },
+              {
+                "id": 941,
+                "children": []
+              },
+              {
+                "id": 944,
+                "children": []
+              },
+              {
+                "id": 947,
+                "children": []
+              },
+              {
+                "id": 950,
                 "children": []
               }
             ]
@@ -113,7 +485,6 @@
                   "",
                   "",
                   "",
-                  "",
                   "This is a demo showing a scrollable box with sticky headers.",
                   "Press up/down arrow or w/s to scroll vertically (w/s for 30 lines, Shift for 10).",
                   "Press 'space' to add a block, 'c' to clear list.",
@@ -121,7 +492,8 @@
                   "Press 'f' to collapse footer, 'a' to toggle alternate buffer + sticky headers (current: off)",
                   "Press 'h' to toggle sticky headers in backbuffer (current: off)",
                   "Press 'v' to toggle stable scrollback (on)",
-                  "ScrollTop: 40, Size: 69, Content: 298, Added Scroll: 0"
+                  "Press 'e' to export current frame, 'r' to toggle recording (OFF)",
+                  "ScrollTop: 40, Size: 68, Content: 298, Added Scroll: 0"
                 ]
               }
             ]
@@ -133,7 +505,7 @@
           "x": 0,
           "y": 0,
           "width": 181,
-          "height": 69,
+          "height": 68,
           "scrollTop": 40,
           "scrollLeft": 0,
           "scrollHeight": 298,
@@ -145,6 +517,8 @@
           "overflowToBackbuffer": true,
           "marginRight": 0,
           "marginBottom": 0,
+          "borderTop": 0,
+          "borderBottom": 0,
           "lines": {
             "totalLength": 298,
             "updates": [
@@ -153,303 +527,333 @@
                 "end": 298,
                 "text": [
                   "Line 1",
-                  "┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘",
-                  " Sticky Header 1",
-                  " [body line for header 1] Line 20 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 1] Line 21 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " [body line for header 1] Line 22 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 1] Line 23 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 1] Line 24 -",
-                  " [body line for header 1] Line 25 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 1] Line 26 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 1] Line 27 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " [body line for header 1] Line 28 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 1] Line 29 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 1] last element matching header (sticky footer naturally here)",
-                  " [body line for header 1] Line 30 -",
-                  " [body line for header 1] Line 31 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 1] Line 32 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 1] Line 33 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " [body line for header 1] Line 34 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 1] Line 35 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 1] Line 36 -",
-                  " [body line for header 1] Line 37 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 1] Line 38 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 1] Line 39 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " Sticky Header 2",
-                  " [body line for header 2] Line 40 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 2] Line 41 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 2] Line 42 -",
-                  " [body line for header 2] Line 43 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 2] Line 44 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 2] Line 45 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " [body line for header 2] Line 46 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 2] Line 47 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 2] Line 48 -",
-                  " [body line for header 2] Line 49 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 2] last element matching header (sticky footer naturally here)",
-                  " [body line for header 2] Line 50 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 2] Line 51 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " [body line for header 2] Line 52 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 2] Line 53 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 2] Line 54 -",
-                  " [body line for header 2] Line 55 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 2] Line 56 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 2] Line 57 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " [body line for header 2] Line 58 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 2] Line 59 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  "┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘",
-                  " Sticky Header 4",
-                  " [body line for header 4] Line 80 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 4] Line 81 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " [body line for header 4] Line 82 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 4] Line 83 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 4] Line 84 -",
-                  " [body line for header 4] Line 85 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 4] Line 86 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 4] Line 87 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " [body line for header 4] Line 88 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 4] Line 89 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 4] last element matching header (sticky footer naturally here)",
-                  " [body line for header 4] Line 90 -",
-                  " [body line for header 4] Line 91 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 4] Line 92 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 4] Line 93 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " [body line for header 4] Line 94 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 4] Line 95 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 4] Line 96 -",
-                  " [body line for header 4] Line 97 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 4] Line 98 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 4] Line 99 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " Sticky Header 5",
-                  " [body line for header 5] Line 100 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 5] Line 101 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 5] Line 102 -",
-                  " [body line for header 5] Line 103 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 5] Line 104 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 5] Line 105 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " [body line for header 5] Line 106 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 5] Line 107 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 5] Line 108 -",
-                  " [body line for header 5] Line 109 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 5] last element matching header (sticky footer naturally here)",
-                  " [body line for header 5] Line 110 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 5] Line 111 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " [body line for header 5] Line 112 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 5] Line 113 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 5] Line 114 -",
-                  " [body line for header 5] Line 115 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 5] Line 116 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 5] Line 117 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " [body line for header 5] Line 118 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 5] Line 119 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  "┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘",
-                  " Sticky Header 7",
-                  " [body line for header 7] Line 140 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 7] Line 141 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " [body line for header 7] Line 142 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 7] Line 143 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 7] Line 144 -",
-                  " [body line for header 7] Line 145 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 7] Line 146 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 7] Line 147 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " [body line for header 7] Line 148 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 7] Line 149 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 7] last element matching header (sticky footer naturally here)",
-                  " [body line for header 7] Line 150 -",
-                  " [body line for header 7] Line 151 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 7] Line 152 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 7] Line 153 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " [body line for header 7] Line 154 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 7] Line 155 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 7] Line 156 -",
-                  " [body line for header 7] Line 157 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 7] Line 158 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 7] Line 159 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " Sticky Header 8",
-                  " [body line for header 8] Line 160 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 8] Line 161 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 8] Line 162 -",
-                  " [body line for header 8] Line 163 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 8] Line 164 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 8] Line 165 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " [body line for header 8] Line 166 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 8] Line 167 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 8] Line 168 -",
-                  " [body line for header 8] Line 169 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 8] last element matching header (sticky footer naturally here)",
-                  " [body line for header 8] Line 170 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 8] Line 171 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " [body line for header 8] Line 172 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 8] Line 173 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 8] Line 174 -",
-                  " [body line for header 8] Line 175 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 8] Line 176 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 8] Line 177 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " [body line for header 8] Line 178 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 8] Line 179 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  "┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "│                                                                                                                                                                                   │",
-                  "└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘",
-                  " Sticky Header 10",
-                  " [body line for header 10] Line 200 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 10] Line 201 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " [body line for header 10] Line 202 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 10] Line 203 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 10] Line 204 -",
-                  " [body line for header 10] Line 205 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 10] Line 206 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 10] Line 207 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " [body line for header 10] Line 208 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 10] Line 209 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 10] last element matching header (sticky footer naturally here)",
-                  " [body line for header 10] Line 210 -",
-                  " [body line for header 10] Line 211 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 10] Line 212 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 10] Line 213 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " [body line for header 10] Line 214 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 10] Line 215 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 10] Line 216 -",
-                  " [body line for header 10] Line 217 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 10] Line 218 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 10] Line 219 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " Sticky Header 11",
-                  " [body line for header 11] Line 220 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 11] Line 221 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 11] Line 222 -",
-                  " [body line for header 11] Line 223 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 11] Line 224 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 11] Line 225 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " [body line for header 11] Line 226 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 11] Line 227 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 11] Line 228 -",
-                  " [body line for header 11] Line 229 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 11] last element matching header (sticky footer naturally here)",
-                  " [body line for header 11] Line 230 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 11] Line 231 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " [body line for header 11] Line 232 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 11] Line 233 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 11] Line 234 -",
-                  " [body line for header 11] Line 235 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 11] Line 236 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 11] Line 237 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
-                  " consectetur adipiscing elit.",
-                  " [body line for header 11] Line 238 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                  " [body line for header 11] Line 239 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
                   "This is the last line."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 111,
+          "x": 0,
+          "y": 1,
+          "width": 181,
+          "height": 10,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 10,
+            "updates": [
+              {
+                "start": 0,
+                "end": 10,
+                "text": [
+                  "┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘"
                 ]
               }
             ]
@@ -459,7 +863,7 @@
         {
           "id": 110,
           "x": 1,
-          "y": 2,
+          "y": 1,
           "width": 180,
           "height": 8,
           "scrollTop": 40,
@@ -472,6 +876,8 @@
           "scrollbarVisible": true,
           "marginRight": 1,
           "marginBottom": 0,
+          "borderTop": 1,
+          "borderBottom": 1,
           "lines": {
             "totalLength": 101,
             "updates": [
@@ -479,7 +885,7 @@
                 "start": 0,
                 "end": 101,
                 "text": [
-                  "",
+                  "Sticky Inner Header 0",
                   "[body line for header 0] 1",
                   "[body line for header 0] 2",
                   "[body line for header 0] 3",
@@ -541,44 +947,44 @@
                   "[body line for header 0] 59",
                   "[body line for header 0] 60",
                   "[body line for header 0] 61",
-                  "[body line for header 0] 62",
-                  "[body line for header 0] 63",
-                  "[body line for header 0] 64",
-                  "[body line for header 0] 65",
-                  "[body line for header 0] 66",
-                  "[body line for header 0] 67",
-                  "[body line for header 0] 68",
-                  "[body line for header 0] 69",
-                  "[body line for header 0] 70",
-                  "[body line for header 0] 71",
-                  "[body line for header 0] 72",
-                  "[body line for header 0] 73",
-                  "[body line for header 0] 74",
-                  "[body line for header 0] 75",
-                  "[body line for header 0] 76",
-                  "[body line for header 0] 77",
-                  "[body line for header 0] 78",
-                  "[body line for header 0] 79",
-                  "[body line for header 0] 80",
-                  "[body line for header 0] 81",
-                  "[body line for header 0] 82",
-                  "[body line for header 0] 83",
-                  "[body line for header 0] 84",
-                  "[body line for header 0] 85",
-                  "[body line for header 0] 86",
-                  "[body line for header 0] 87",
-                  "[body line for header 0] 88",
-                  "[body line for header 0] 89",
-                  "[body line for header 0] 90",
-                  "[body line for header 0] 91",
-                  "[body line for header 0] 92",
-                  "[body line for header 0] 93",
-                  "[body line for header 0] 94",
-                  "[body line for header 0] 95",
-                  "[body line for header 0] 96",
-                  "[body line for header 0] 97",
-                  "[body line for header 0] 98",
-                  "[body line for header 0] 99",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
                   ""
                 ]
               }
@@ -602,21 +1008,556 @@
                 "│Sticky Inner Header 0 (sticky top)│",
                 "└──────────────────────────────────┘"
               ],
-              "x": 1,
+              "x": 0,
               "y": 0,
-              "naturalRow": 1,
-              "startRow": 1,
-              "endRow": 2,
+              "naturalRow": 0,
+              "startRow": 0,
+              "endRow": 1,
               "scrollContainerId": 110,
               "isStuckOnly": false,
-              "type": "top"
+              "type": "top",
+              "maxStuckY": 58
             }
           ]
         },
         {
+          "id": 145,
+          "x": 0,
+          "y": 11,
+          "width": 181,
+          "height": 17,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 17,
+            "updates": [
+              {
+                "start": 0,
+                "end": 17,
+                "text": [
+                  " Sticky Header 1",
+                  " [body line for header 1] Line 20 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 1] Line 21 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit.",
+                  " [body line for header 1] Line 22 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 1] Line 23 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 1] Line 24 -",
+                  " [body line for header 1] Line 25 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 1] Line 26 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 1] Line 27 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit.",
+                  " [body line for header 1] Line 28 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 1] Line 29 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 1] last element matching header (sticky footer naturally here)"
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 148,
+          "x": 0,
+          "y": 28,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 1] Line 30 -"
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 151,
+          "x": 0,
+          "y": 29,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 1] Line 31 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 154,
+          "x": 0,
+          "y": 31,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 1] Line 32 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 157,
+          "x": 0,
+          "y": 33,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 1] Line 33 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 160,
+          "x": 0,
+          "y": 35,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 1] Line 34 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 163,
+          "x": 0,
+          "y": 36,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 1] Line 35 - Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 166,
+          "x": 0,
+          "y": 37,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 1] Line 36 -"
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 169,
+          "x": 0,
+          "y": 38,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 1] Line 37 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 172,
+          "x": 0,
+          "y": 40,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 1] Line 38 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 175,
+          "x": 0,
+          "y": 42,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 1] Line 39 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 209,
+          "x": 0,
+          "y": 44,
+          "width": 181,
+          "height": 16,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 16,
+            "updates": [
+              {
+                "start": 0,
+                "end": 16,
+                "text": [
+                  " Sticky Header 2",
+                  " [body line for header 2] Line 40 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 2] Line 41 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 2] Line 42 -",
+                  " [body line for header 2] Line 43 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 2] Line 44 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 2] Line 45 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit.",
+                  " [body line for header 2] Line 46 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 2] Line 47 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 2] Line 48 -",
+                  " [body line for header 2] Line 49 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 2] last element matching header (sticky footer naturally here)"
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 212,
+          "x": 0,
+          "y": 60,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 2] Line 50 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 215,
+          "x": 0,
+          "y": 62,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 2] Line 51 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 218,
+          "x": 0,
+          "y": 64,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 2] Line 52 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 221,
+          "x": 0,
+          "y": 65,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 2] Line 53 - Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 224,
+          "x": 0,
+          "y": 66,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 2] Line 54 -"
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 227,
+          "x": 0,
+          "y": 67,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 2] Line 55 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 230,
+          "x": 0,
+          "y": 69,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 2] Line 56 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 233,
+          "x": 0,
+          "y": 71,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 2] Line 57 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 236,
+          "x": 0,
+          "y": 73,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 2] Line 58 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 239,
+          "x": 0,
+          "y": 74,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 2] Line 59 - Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 348,
+          "x": 0,
+          "y": 75,
+          "width": 181,
+          "height": 10,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 10,
+            "updates": [
+              {
+                "start": 0,
+                "end": 10,
+                "text": [
+                  "┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘"
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
           "id": 347,
           "x": 1,
-          "y": 76,
+          "y": 1,
           "width": 180,
           "height": 8,
           "scrollTop": 40,
@@ -629,6 +1570,8 @@
           "scrollbarVisible": true,
           "marginRight": 1,
           "marginBottom": 0,
+          "borderTop": 1,
+          "borderBottom": 1,
           "lines": {
             "totalLength": 101,
             "updates": [
@@ -636,7 +1579,7 @@
                 "start": 0,
                 "end": 101,
                 "text": [
-                  "",
+                  "Sticky Inner Header 3",
                   "[body line for header 3] 1",
                   "[body line for header 3] 2",
                   "[body line for header 3] 3",
@@ -698,44 +1641,44 @@
                   "[body line for header 3] 59",
                   "[body line for header 3] 60",
                   "[body line for header 3] 61",
-                  "[body line for header 3] 62",
-                  "[body line for header 3] 63",
-                  "[body line for header 3] 64",
-                  "[body line for header 3] 65",
-                  "[body line for header 3] 66",
-                  "[body line for header 3] 67",
-                  "[body line for header 3] 68",
-                  "[body line for header 3] 69",
-                  "[body line for header 3] 70",
-                  "[body line for header 3] 71",
-                  "[body line for header 3] 72",
-                  "[body line for header 3] 73",
-                  "[body line for header 3] 74",
-                  "[body line for header 3] 75",
-                  "[body line for header 3] 76",
-                  "[body line for header 3] 77",
-                  "[body line for header 3] 78",
-                  "[body line for header 3] 79",
-                  "[body line for header 3] 80",
-                  "[body line for header 3] 81",
-                  "[body line for header 3] 82",
-                  "[body line for header 3] 83",
-                  "[body line for header 3] 84",
-                  "[body line for header 3] 85",
-                  "[body line for header 3] 86",
-                  "[body line for header 3] 87",
-                  "[body line for header 3] 88",
-                  "[body line for header 3] 89",
-                  "[body line for header 3] 90",
-                  "[body line for header 3] 91",
-                  "[body line for header 3] 92",
-                  "[body line for header 3] 93",
-                  "[body line for header 3] 94",
-                  "[body line for header 3] 95",
-                  "[body line for header 3] 96",
-                  "[body line for header 3] 97",
-                  "[body line for header 3] 98",
-                  "[body line for header 3] 99",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
                   ""
                 ]
               }
@@ -759,21 +1702,556 @@
                 "│Sticky Inner Header 3 (sticky top)│",
                 "└──────────────────────────────────┘"
               ],
-              "x": 1,
+              "x": 0,
               "y": 0,
-              "naturalRow": 1,
-              "startRow": 1,
-              "endRow": 2,
+              "naturalRow": 0,
+              "startRow": 0,
+              "endRow": 1,
               "scrollContainerId": 347,
               "isStuckOnly": false,
-              "type": "top"
+              "type": "top",
+              "maxStuckY": 58
             }
           ]
         },
         {
+          "id": 382,
+          "x": 0,
+          "y": 85,
+          "width": 181,
+          "height": 17,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 17,
+            "updates": [
+              {
+                "start": 0,
+                "end": 17,
+                "text": [
+                  " Sticky Header 4",
+                  " [body line for header 4] Line 80 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 4] Line 81 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit.",
+                  " [body line for header 4] Line 82 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 4] Line 83 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 4] Line 84 -",
+                  " [body line for header 4] Line 85 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 4] Line 86 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 4] Line 87 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit.",
+                  " [body line for header 4] Line 88 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 4] Line 89 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 4] last element matching header (sticky footer naturally here)"
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 385,
+          "x": 0,
+          "y": 102,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 4] Line 90 -"
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 388,
+          "x": 0,
+          "y": 103,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 4] Line 91 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 391,
+          "x": 0,
+          "y": 105,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 4] Line 92 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 394,
+          "x": 0,
+          "y": 107,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 4] Line 93 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 397,
+          "x": 0,
+          "y": 109,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 4] Line 94 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 400,
+          "x": 0,
+          "y": 110,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 4] Line 95 - Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 403,
+          "x": 0,
+          "y": 111,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 4] Line 96 -"
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 406,
+          "x": 0,
+          "y": 112,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 4] Line 97 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 409,
+          "x": 0,
+          "y": 114,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 4] Line 98 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 412,
+          "x": 0,
+          "y": 116,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 4] Line 99 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 446,
+          "x": 0,
+          "y": 118,
+          "width": 181,
+          "height": 16,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 16,
+            "updates": [
+              {
+                "start": 0,
+                "end": 16,
+                "text": [
+                  " Sticky Header 5",
+                  " [body line for header 5] Line 100 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 5] Line 101 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 5] Line 102 -",
+                  " [body line for header 5] Line 103 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 5] Line 104 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 5] Line 105 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit.",
+                  " [body line for header 5] Line 106 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 5] Line 107 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 5] Line 108 -",
+                  " [body line for header 5] Line 109 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 5] last element matching header (sticky footer naturally here)"
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 449,
+          "x": 0,
+          "y": 134,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 5] Line 110 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 452,
+          "x": 0,
+          "y": 136,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 5] Line 111 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 455,
+          "x": 0,
+          "y": 138,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 5] Line 112 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 458,
+          "x": 0,
+          "y": 139,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 5] Line 113 - Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 461,
+          "x": 0,
+          "y": 140,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 5] Line 114 -"
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 464,
+          "x": 0,
+          "y": 141,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 5] Line 115 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 467,
+          "x": 0,
+          "y": 143,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 5] Line 116 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 470,
+          "x": 0,
+          "y": 145,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 5] Line 117 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 473,
+          "x": 0,
+          "y": 147,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 5] Line 118 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 476,
+          "x": 0,
+          "y": 148,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 5] Line 119 - Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 585,
+          "x": 0,
+          "y": 149,
+          "width": 181,
+          "height": 10,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 10,
+            "updates": [
+              {
+                "start": 0,
+                "end": 10,
+                "text": [
+                  "┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘"
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
           "id": 584,
           "x": 1,
-          "y": 150,
+          "y": 1,
           "width": 180,
           "height": 8,
           "scrollTop": 40,
@@ -786,6 +2264,8 @@
           "scrollbarVisible": true,
           "marginRight": 1,
           "marginBottom": 0,
+          "borderTop": 1,
+          "borderBottom": 1,
           "lines": {
             "totalLength": 101,
             "updates": [
@@ -793,7 +2273,7 @@
                 "start": 0,
                 "end": 101,
                 "text": [
-                  "",
+                  "Sticky Inner Header 6",
                   "[body line for header 6] 1",
                   "[body line for header 6] 2",
                   "[body line for header 6] 3",
@@ -855,44 +2335,44 @@
                   "[body line for header 6] 59",
                   "[body line for header 6] 60",
                   "[body line for header 6] 61",
-                  "[body line for header 6] 62",
-                  "[body line for header 6] 63",
-                  "[body line for header 6] 64",
-                  "[body line for header 6] 65",
-                  "[body line for header 6] 66",
-                  "[body line for header 6] 67",
-                  "[body line for header 6] 68",
-                  "[body line for header 6] 69",
-                  "[body line for header 6] 70",
-                  "[body line for header 6] 71",
-                  "[body line for header 6] 72",
-                  "[body line for header 6] 73",
-                  "[body line for header 6] 74",
-                  "[body line for header 6] 75",
-                  "[body line for header 6] 76",
-                  "[body line for header 6] 77",
-                  "[body line for header 6] 78",
-                  "[body line for header 6] 79",
-                  "[body line for header 6] 80",
-                  "[body line for header 6] 81",
-                  "[body line for header 6] 82",
-                  "[body line for header 6] 83",
-                  "[body line for header 6] 84",
-                  "[body line for header 6] 85",
-                  "[body line for header 6] 86",
-                  "[body line for header 6] 87",
-                  "[body line for header 6] 88",
-                  "[body line for header 6] 89",
-                  "[body line for header 6] 90",
-                  "[body line for header 6] 91",
-                  "[body line for header 6] 92",
-                  "[body line for header 6] 93",
-                  "[body line for header 6] 94",
-                  "[body line for header 6] 95",
-                  "[body line for header 6] 96",
-                  "[body line for header 6] 97",
-                  "[body line for header 6] 98",
-                  "[body line for header 6] 99",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
                   ""
                 ]
               }
@@ -916,21 +2396,556 @@
                 "│Sticky Inner Header 6 (sticky top)│",
                 "└──────────────────────────────────┘"
               ],
-              "x": 1,
+              "x": 0,
               "y": 0,
-              "naturalRow": 1,
-              "startRow": 1,
-              "endRow": 2,
+              "naturalRow": 0,
+              "startRow": 0,
+              "endRow": 1,
               "scrollContainerId": 584,
               "isStuckOnly": false,
-              "type": "top"
+              "type": "top",
+              "maxStuckY": 58
             }
           ]
         },
         {
+          "id": 619,
+          "x": 0,
+          "y": 159,
+          "width": 181,
+          "height": 17,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 17,
+            "updates": [
+              {
+                "start": 0,
+                "end": 17,
+                "text": [
+                  " Sticky Header 7",
+                  " [body line for header 7] Line 140 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 7] Line 141 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit.",
+                  " [body line for header 7] Line 142 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 7] Line 143 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 7] Line 144 -",
+                  " [body line for header 7] Line 145 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 7] Line 146 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 7] Line 147 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit.",
+                  " [body line for header 7] Line 148 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 7] Line 149 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 7] last element matching header (sticky footer naturally here)"
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 622,
+          "x": 0,
+          "y": 176,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 7] Line 150 -"
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 625,
+          "x": 0,
+          "y": 177,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 7] Line 151 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 628,
+          "x": 0,
+          "y": 179,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 7] Line 152 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 631,
+          "x": 0,
+          "y": 181,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 7] Line 153 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 634,
+          "x": 0,
+          "y": 183,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 7] Line 154 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 637,
+          "x": 0,
+          "y": 184,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 7] Line 155 - Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 640,
+          "x": 0,
+          "y": 185,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 7] Line 156 -"
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 643,
+          "x": 0,
+          "y": 186,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 7] Line 157 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 646,
+          "x": 0,
+          "y": 188,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 7] Line 158 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 649,
+          "x": 0,
+          "y": 190,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 7] Line 159 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 683,
+          "x": 0,
+          "y": 192,
+          "width": 181,
+          "height": 16,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 16,
+            "updates": [
+              {
+                "start": 0,
+                "end": 16,
+                "text": [
+                  " Sticky Header 8",
+                  " [body line for header 8] Line 160 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 8] Line 161 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 8] Line 162 -",
+                  " [body line for header 8] Line 163 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 8] Line 164 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 8] Line 165 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit.",
+                  " [body line for header 8] Line 166 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 8] Line 167 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 8] Line 168 -",
+                  " [body line for header 8] Line 169 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 8] last element matching header (sticky footer naturally here)"
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 686,
+          "x": 0,
+          "y": 208,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 8] Line 170 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 689,
+          "x": 0,
+          "y": 210,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 8] Line 171 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 692,
+          "x": 0,
+          "y": 212,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 8] Line 172 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 695,
+          "x": 0,
+          "y": 213,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 8] Line 173 - Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 698,
+          "x": 0,
+          "y": 214,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 8] Line 174 -"
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 701,
+          "x": 0,
+          "y": 215,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 8] Line 175 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 704,
+          "x": 0,
+          "y": 217,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 8] Line 176 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 707,
+          "x": 0,
+          "y": 219,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 8] Line 177 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 710,
+          "x": 0,
+          "y": 221,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 8] Line 178 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 713,
+          "x": 0,
+          "y": 222,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 8] Line 179 - Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 822,
+          "x": 0,
+          "y": 223,
+          "width": 181,
+          "height": 10,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 10,
+            "updates": [
+              {
+                "start": 0,
+                "end": 10,
+                "text": [
+                  "┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "│                                                                                                                                                                                   │",
+                  "└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘"
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
           "id": 821,
           "x": 1,
-          "y": 224,
+          "y": 1,
           "width": 180,
           "height": 8,
           "scrollTop": 40,
@@ -943,6 +2958,8 @@
           "scrollbarVisible": true,
           "marginRight": 1,
           "marginBottom": 0,
+          "borderTop": 1,
+          "borderBottom": 1,
           "lines": {
             "totalLength": 101,
             "updates": [
@@ -950,7 +2967,7 @@
                 "start": 0,
                 "end": 101,
                 "text": [
-                  "",
+                  "Sticky Inner Header 9",
                   "[body line for header 9] 1",
                   "[body line for header 9] 2",
                   "[body line for header 9] 3",
@@ -1012,44 +3029,44 @@
                   "[body line for header 9] 59",
                   "[body line for header 9] 60",
                   "[body line for header 9] 61",
-                  "[body line for header 9] 62",
-                  "[body line for header 9] 63",
-                  "[body line for header 9] 64",
-                  "[body line for header 9] 65",
-                  "[body line for header 9] 66",
-                  "[body line for header 9] 67",
-                  "[body line for header 9] 68",
-                  "[body line for header 9] 69",
-                  "[body line for header 9] 70",
-                  "[body line for header 9] 71",
-                  "[body line for header 9] 72",
-                  "[body line for header 9] 73",
-                  "[body line for header 9] 74",
-                  "[body line for header 9] 75",
-                  "[body line for header 9] 76",
-                  "[body line for header 9] 77",
-                  "[body line for header 9] 78",
-                  "[body line for header 9] 79",
-                  "[body line for header 9] 80",
-                  "[body line for header 9] 81",
-                  "[body line for header 9] 82",
-                  "[body line for header 9] 83",
-                  "[body line for header 9] 84",
-                  "[body line for header 9] 85",
-                  "[body line for header 9] 86",
-                  "[body line for header 9] 87",
-                  "[body line for header 9] 88",
-                  "[body line for header 9] 89",
-                  "[body line for header 9] 90",
-                  "[body line for header 9] 91",
-                  "[body line for header 9] 92",
-                  "[body line for header 9] 93",
-                  "[body line for header 9] 94",
-                  "[body line for header 9] 95",
-                  "[body line for header 9] 96",
-                  "[body line for header 9] 97",
-                  "[body line for header 9] 98",
-                  "[body line for header 9] 99",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
                   ""
                 ]
               }
@@ -1073,16 +3090,521 @@
                 "│Sticky Inner Header 9 (sticky top)│",
                 "└──────────────────────────────────┘"
               ],
-              "x": 1,
+              "x": 0,
               "y": 0,
-              "naturalRow": 1,
-              "startRow": 1,
-              "endRow": 2,
+              "naturalRow": 0,
+              "startRow": 0,
+              "endRow": 1,
               "scrollContainerId": 821,
               "isStuckOnly": false,
-              "type": "top"
+              "type": "top",
+              "maxStuckY": 58
             }
           ]
+        },
+        {
+          "id": 856,
+          "x": 0,
+          "y": 233,
+          "width": 181,
+          "height": 17,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 17,
+            "updates": [
+              {
+                "start": 0,
+                "end": 17,
+                "text": [
+                  " Sticky Header 10",
+                  " [body line for header 10] Line 200 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 10] Line 201 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit.",
+                  " [body line for header 10] Line 202 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 10] Line 203 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 10] Line 204 -",
+                  " [body line for header 10] Line 205 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 10] Line 206 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 10] Line 207 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit.",
+                  " [body line for header 10] Line 208 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 10] Line 209 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 10] last element matching header (sticky footer naturally here)"
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 859,
+          "x": 0,
+          "y": 250,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 10] Line 210 -"
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 862,
+          "x": 0,
+          "y": 251,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 10] Line 211 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 865,
+          "x": 0,
+          "y": 253,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 10] Line 212 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 868,
+          "x": 0,
+          "y": 255,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 10] Line 213 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 871,
+          "x": 0,
+          "y": 257,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 10] Line 214 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 874,
+          "x": 0,
+          "y": 258,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 10] Line 215 - Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 877,
+          "x": 0,
+          "y": 259,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 10] Line 216 -"
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 880,
+          "x": 0,
+          "y": 260,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 10] Line 217 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 883,
+          "x": 0,
+          "y": 262,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 10] Line 218 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 886,
+          "x": 0,
+          "y": 264,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 10] Line 219 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 920,
+          "x": 0,
+          "y": 266,
+          "width": 181,
+          "height": 16,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 16,
+            "updates": [
+              {
+                "start": 0,
+                "end": 16,
+                "text": [
+                  " Sticky Header 11",
+                  " [body line for header 11] Line 220 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 11] Line 221 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 11] Line 222 -",
+                  " [body line for header 11] Line 223 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 11] Line 224 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 11] Line 225 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit.",
+                  " [body line for header 11] Line 226 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 11] Line 227 - Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 11] Line 228 -",
+                  " [body line for header 11] Line 229 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                  " [body line for header 11] last element matching header (sticky footer naturally here)"
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 923,
+          "x": 0,
+          "y": 282,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 11] Line 230 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 926,
+          "x": 0,
+          "y": 284,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 11] Line 231 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 929,
+          "x": 0,
+          "y": 286,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 11] Line 232 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 932,
+          "x": 0,
+          "y": 287,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 11] Line 233 - Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 935,
+          "x": 0,
+          "y": 288,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 11] Line 234 -"
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 938,
+          "x": 0,
+          "y": 289,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 11] Line 235 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 941,
+          "x": 0,
+          "y": 291,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 11] Line 236 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 944,
+          "x": 0,
+          "y": 293,
+          "width": 181,
+          "height": 2,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  " [body line for header 11] Line 237 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,",
+                  " consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 947,
+          "x": 0,
+          "y": 295,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 11] Line 238 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
+        },
+        {
+          "id": 950,
+          "x": 0,
+          "y": 296,
+          "width": 181,
+          "height": 1,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  " [body line for header 11] Line 239 - Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                ]
+              }
+            ]
+          },
+          "stickyHeaders": []
         }
       ]
     }

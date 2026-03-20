@@ -21,7 +21,6 @@
           "width": 181,
           "height": 77,
           "isScrollable": false,
-          "stickyHeaders": [],
           "lines": {
             "totalLength": 77,
             "updates": [
@@ -29,8 +28,6 @@
                 "start": 0,
                 "end": 77,
                 "text": [
-                  "",
-                  "",
                   "",
                   "",
                   "",
@@ -101,22 +98,25 @@
                   "Press 's' to toggle scrollbars (current: on)",
                   "Press 'a' or 'f' to toggle alternate buffer + sticky headers (current: off)",
                   "Press 'h' to toggle sticky headers in backbuffer (current: off)",
+                  "Press 'r' to toggle recording (current: off)",
+                  "Press 'e' to dump current frame to scroll_snapshot.json",
                   "ScrollTop: 10",
                   "ScrollLeft: 0",
-                  "Size: 181x64",
+                  "Size: 181x62",
                   "Inner scrollable size: 181x280",
-                  "VScroll: x=180, y=0, h=64, thumb=[2, 17]"
+                  "VScroll: x=180, y=0, h=62, thumb=[2, 16]"
                 ]
               }
             ]
-          }
+          },
+          "stickyHeaders": []
         },
         {
           "id": 412,
           "x": 0,
           "y": 0,
           "width": 181,
-          "height": 64,
+          "height": 62,
           "scrollTop": 10,
           "scrollLeft": 0,
           "scrollHeight": 280,
@@ -128,25 +128,8 @@
           "overflowToBackbuffer": true,
           "marginRight": 0,
           "marginBottom": 0,
-          "stickyHeaders": [
-            {
-              "nodeId": 9,
-              "lines": [
-                "This is the first line of box 1"
-              ],
-              "styledOutput": [
-                "This is the first line of box 1"
-              ],
-              "x": 1,
-              "y": 0,
-              "naturalRow": 7,
-              "startRow": 7,
-              "endRow": 8,
-              "scrollContainerId": 412,
-              "isStuckOnly": false,
-              "type": "top"
-            }
-          ],
+          "borderTop": 0,
+          "borderBottom": 0,
           "lines": {
             "totalLength": 280,
             "updates": [
@@ -161,7 +144,7 @@
                   "╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯",
                   "",
                   "╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮",
-                  "│                                                                                                                                                                                 │",
+                  "│This is the first line of box 1                                                                                                                                                  │",
                   "│1 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │",
                   "│2 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │",
                   "│3 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │",
@@ -437,7 +420,27 @@
                 ]
               }
             ]
-          }
+          },
+          "stickyHeaders": [
+            {
+              "nodeId": 9,
+              "lines": [
+                "This is the first line of box 1"
+              ],
+              "styledOutput": [
+                "This is the first line of box 1"
+              ],
+              "x": 1,
+              "y": 0,
+              "naturalRow": 7,
+              "startRow": 7,
+              "endRow": 8,
+              "scrollContainerId": 412,
+              "isStuckOnly": false,
+              "type": "top",
+              "maxStuckY": 0
+            }
+          ]
         }
       ]
     }
