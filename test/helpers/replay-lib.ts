@@ -231,3 +231,13 @@ export async function captureTerminalState(
 
 	return result;
 }
+
+export const createStyledChar = (char: string): StyledChar => ({
+	type: 'char',
+	value: char,
+	fullWidth: false,
+	styles: [],
+});
+
+export const createStyledLine = (text: string): StyledChar[] =>
+	[...text].map(char => createStyledChar(char));

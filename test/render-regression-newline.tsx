@@ -69,21 +69,12 @@ test('multiple renders do not add extra blank lines at the bottom', async t => {
 
 	// Perform 3 renders
 	await renderFrame('Frame 1');
-	console.log(
-		`BaseY after Frame 1: ${term.buffer.active.baseY}, total lines: ${term.buffer.active.length}`,
-	);
 	t.is(term.buffer.active.baseY, 0, 'BaseY should be 0 after Frame 1');
 
 	await renderFrame('Frame 2');
-	console.log(
-		`BaseY after Frame 2: ${term.buffer.active.baseY}, total lines: ${term.buffer.active.length}`,
-	);
 	t.is(term.buffer.active.baseY, 0, 'BaseY should be 0 after Frame 2');
 
 	await renderFrame('Frame 3');
-	console.log(
-		`BaseY after Frame 3: ${term.buffer.active.baseY}, total lines: ${term.buffer.active.length}`,
-	);
 	t.is(term.buffer.active.baseY, 0, 'BaseY should be 0 after Frame 3');
 
 	// If there are extra newlines, baseY would increase.

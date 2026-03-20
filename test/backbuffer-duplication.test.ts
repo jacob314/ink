@@ -79,9 +79,6 @@ test('scrolling down, up, and down again does not duplicate lines in backbuffer'
 		]);
 		output = '';
 		await worker.render();
-		console.log(
-			`DEBUG: updateScroll(${scrollTop}) output length=${output.length}`,
-		);
 		await writeToTerm(term, output);
 		// Console.log(`[DEBUG] updateScroll(${scrollTop}) -> baseY: ${term.buffer.active.baseY}`);
 	};
@@ -538,9 +535,6 @@ test('scrolling oscillation with fullRender does not duplicate lines', async t =
 	await updateScroll(1);
 
 	// If it pushed to history, baseY would increase.
-	console.log(
-		`DEBUG: baseY after updateScroll(1) is ${term.buffer.active.baseY}`,
-	);
 	t.is(
 		term.buffer.active.baseY,
 		6,

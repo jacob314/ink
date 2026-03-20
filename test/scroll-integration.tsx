@@ -153,12 +153,7 @@ test('scroll integration - verify repaint efficiency', async t => {
 		}
 	}
 
-	console.log(
-		`Total repainted non-empty lines: ${repaintedIndices.length} / ${termRows}`,
-	);
-
 	const footerRepainted = repaintedIndices.filter(i => i >= footerStartY);
-	console.log(`Footer lines repainted: ${footerRepainted.length}`);
 
 	// Before the fix, this was 22. Now it should be very low (3 or less depending on whether ScrollTop status line and scrollbar line are in footer).
 	t.true(
@@ -178,10 +173,6 @@ test('scroll integration - verify repaint efficiency', async t => {
 	await writeToTerm(term, '');
 
 	const finalContent = getFullContent();
-	console.log(
-		'Final content after scroll up:',
-		finalContent.replaceAll(/\s+/g, ' '),
-	);
 	t.true(
 		finalContent.includes('ScrollTop: 0'),
 		'Should be back at ScrollTop 0',

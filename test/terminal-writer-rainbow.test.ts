@@ -31,14 +31,12 @@ function countLinesWithBackgroundColor(
 	colorIndex: number,
 ): number {
 	let count = 0;
-	console.log(`Searching for colorIndex: ${colorIndex}`);
 	for (let i = 0; i < term.rows; i++) {
 		const line = term.buffer.active.getLine(term.buffer.active.baseY + i);
 		if (!line) continue;
 
 		const cell = line.getCell(0);
 		const bg = cell?.getBgColor();
-		console.log(`  Line ${i}, bg: ${bg}`);
 		if (cell && bg === colorIndex) {
 			count++;
 		}
