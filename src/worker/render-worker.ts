@@ -398,6 +398,10 @@ export class TerminalBufferWorker {
 					}
 				}
 			},
+			onRegionDeleted: id => {
+				this.animationController.deleteTargetScrollTop(id);
+				this.scrollOptimizer.resetTracking(id);
+			},
 		});
 
 		// Track regionWasAtEnd for scrollbars

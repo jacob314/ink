@@ -608,6 +608,14 @@ export class TerminalWriter {
 		this.outputBuffer = [];
 	}
 
+	/**
+	 * Testing only method that flushes content slowly to simplify debugging
+	 * hard to diagnose issues.
+	 *
+	 * If there are bugs in terminal-writer a good way to debug is to call
+	 * slowFlush instead of flush() so you can see the incremental states the
+	 * terminal goes through applying the changes.
+	 */
 	async slowFlush() {
 		if (this.isDone) return;
 

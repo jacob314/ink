@@ -71,6 +71,13 @@ export class AnimationController {
 	}
 
 	/**
+	 * Removes the target scroll position for a region.
+	 */
+	deleteTargetScrollTop(regionId: string | number) {
+		this.targetScrollTops.delete(regionId);
+	}
+
+	/**
 	 * Starts the animation loop if not already running.
 	 */
 	start() {

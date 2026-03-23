@@ -37,9 +37,28 @@ export class SceneManager {
 				scrollTop: number,
 				isNew: boolean,
 			) => void;
+			onRegionDeleted?: (regionId: string | number) => void;
 		},
 	): boolean {
 		this.root = tree;
+
+		const activeIds = new Set<string | number>();
+		const traverse = (node: RegionNode) => {
+			activeIds.add(node.id);
+			for (const child of node.children) {
+				traverse(child);
+			}
+		};
+
+		traverse(tree);
+
+		for (const id of this.regions.keys()) {
+			if (!activeIds.has(id)) {
+				this.regions.delete(id);
+				this.regionWasAtEnd.delete(id);
+				options.onRegionDeleted?.(id);
+			}
+		}
 
 		for (const update of updates) {
 			let region = this.regions.get(update.id);
