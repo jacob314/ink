@@ -382,3 +382,17 @@ test.serial('no throttled renders after unmount', t => {
 		clock.uninstall();
 	}
 });
+
+test.serial('expose rootNode on instance', t => {
+	const {rootNode, unmount} = render(
+		<Box>
+			<Text>Hello</Text>
+		</Box>,
+	);
+
+	t.is(rootNode.nodeName, 'ink-root');
+	t.is(rootNode.childNodes.length, 1);
+	t.is(rootNode.childNodes[0]!.nodeName, 'ink-box');
+
+	unmount();
+});
