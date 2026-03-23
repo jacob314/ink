@@ -54,7 +54,6 @@ export class TerminalBufferWorker {
 	backbufferUpdateDelay = 1000;
 	maxScrollbackLength = defaultMaxScrollbackLength;
 	forceScrollToBottomOnBackbufferRefresh = false;
-	updatesReceived = 0;
 	resized = false;
 	cursorPosition?: {row: number; col: number};
 	forceNextRender = false;
@@ -356,8 +355,6 @@ export class TerminalBufferWorker {
 		const previousCursorPosition = this.cursorPosition;
 		this.cursorPosition = cursorPosition;
 
-		this.updatesReceived++;
-
 		if (this.isRecording) {
 			const serializer = new Serializer();
 			this.recordedFrames.push({
@@ -369,11 +366,9 @@ export class TerminalBufferWorker {
 		}
 
 		if (this.animatedScroll) {
-			if (this.updatesReceived > 2 && updates.length > 0) {
+			if (updates.length > 0) {
 				if (debugWorker) {
-					debugLog(
-						`[RENDER-WORKER] Interrupting animation for jump at update #${this.updatesReceived}\n`,
-					);
+					debugLog(`[RENDER-WORKER] Interrupting animation for jump\n`);
 				}
 
 				this.animationController.jumpToTargets(this.sceneManager.regions);
@@ -600,7 +595,6 @@ export class TerminalBufferWorker {
 
 		this.screen = [];
 		this.backbuffer = [];
-		this.updatesReceived = 0;
 		this.forceNextRender = false;
 		this.cursorPosition = undefined;
 
@@ -1115,9 +1109,7 @@ export class TerminalBufferWorker {
 		const cameraY = rootRegion ? this.getCameraY(rootRegion) : 0;
 
 		debugLog('='.repeat(80));
-		debugLog(
-			`FRAME START (Index: ${this.frameIndex}, Updates: ${this.updatesReceived})`,
-		);
+		debugLog(`FRAME START (Index: ${this.frameIndex})`);
 		debugLog('='.repeat(80));
 
 		const traverse = (
