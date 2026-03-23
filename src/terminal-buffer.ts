@@ -97,8 +97,8 @@ export default class TerminalBuffer {
 				},
 			});
 
-			this.worker.on('error', () => {
-				// Silently ignore worker errors (e.g. EPIPE on exit)
+			this.worker.on('error', error => {
+				console.error('Render worker error:', error);
 			});
 
 			this.sendToWorker(
