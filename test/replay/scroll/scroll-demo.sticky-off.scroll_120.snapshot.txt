@@ -120,7 +120,7 @@
 │1 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
 │2 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
 <active-viewport 181x77>
-│This is the first line of box 1                                                                                                                                                  │
+│3 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
 │4 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
 │5 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
 │6 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │

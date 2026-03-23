@@ -898,6 +898,21 @@ export class TerminalBufferWorker {
 		this.resized = false;
 	}
 
+	/**
+	 * Recursively composites a region and its children onto the provided canvas.
+	 *
+	 * @param node The hierarchical node to compose.
+	 * @param canvas The target canvas to draw upon.
+	 * @param layout Layout and clipping options for the current composition pass.
+	 * @param layout.clip Optional bounding box to clip rendering.
+	 * @param layout.offsetY The cumulative Y offset (used for scrolling/camera adjustments).
+	 * @param layout.offsetX The cumulative X offset (used for scrolling/camera adjustments).
+	 * @param layout.overrideHeight Optional height to force for the current region, typically used when composing to the backbuffer to capture content that has scrolled out of view.
+	 * @param layout.isExpanded If true, forces the region to render at its full scroll height rather than its constrained layout height. When composing the backbuffer, this flag is passed down to the specific scrollable descendant that has `overflowToBackbuffer` enabled (typically only one such region should exist), allowing its complete content to be captured instead of just the visible viewport.
+	 * @param options Additional composition flags.
+	 * @param options.skipStickyHeaders If true, sticky headers will not be drawn.
+	 * @param options.skipScrollbars If true, scrollbars will not be drawn.
+	 */
 	private composeNode(
 		node: RegionNode,
 		canvas: Canvas,
@@ -961,6 +976,21 @@ export class TerminalBufferWorker {
 			compositor.drawContent(canvas, region, absX, absY, myClip);
 
 			for (const child of node.children) {
+				const childRegion = this.sceneManager.getRegion(child.id);
+
+				let childOptions = options;
+				if (
+					options &&
+					childRegion &&
+					childRegion.isScrollable &&
+					!childRegion.overflowToBackbuffer
+				) {
+					childOptions = {
+						...options,
+						skipStickyHeaders: false,
+					};
+				}
+
 				this.composeNode(
 					child,
 					canvas,
@@ -968,9 +998,10 @@ export class TerminalBufferWorker {
 						clip: myClip,
 						offsetY: absY - (region.scrollTop ?? 0),
 						offsetX: absX - (region.scrollLeft ?? 0),
-						isExpanded: inExpandedContext,
+						isExpanded:
+							inExpandedContext && Boolean(childRegion?.overflowToBackbuffer),
 					},
-					options,
+					childOptions,
 				);
 			}
 

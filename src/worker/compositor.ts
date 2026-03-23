@@ -126,7 +126,10 @@ export class Compositor {
 			let headerY = absY + header.y;
 			const headerH = linesToRender.length;
 
-			if (this.options.stickyHeadersInBackbuffer) {
+			if (
+				this.options.stickyHeadersInBackbuffer &&
+				region.overflowToBackbuffer
+			) {
 				if (header.type === 'top') {
 					if (headerY < 0 && absY + region.height > 0) {
 						headerY = 0;
@@ -165,6 +168,7 @@ export class Compositor {
 					header.type === 'top' &&
 					absY < 0 &&
 					this.options.stickyHeadersInBackbuffer &&
+					region.overflowToBackbuffer &&
 					sy >= 0 &&
 					sy < Math.min(canvas.height, absY + region.height);
 
@@ -172,6 +176,7 @@ export class Compositor {
 					header.type === 'bottom' &&
 					absY + region.height > this.options.canvasHeight &&
 					this.options.stickyHeadersInBackbuffer &&
+					region.overflowToBackbuffer &&
 					sy >= Math.max(0, absY) &&
 					sy < this.options.canvasHeight;
 
@@ -218,7 +223,7 @@ export class Compositor {
 		clip: Rect,
 	) {
 		if (
-			Boolean(this.options.skipScrollbars && region.overflowToBackbuffer) ||
+			Boolean(this.options.skipScrollbars) ||
 			!region.isScrollable ||
 			region.scrollbarVisible === false
 		) {
@@ -352,11 +357,15 @@ export class Compositor {
 		}
 
 		if (header.type === 'top') {
-			return (
-				(this.options.stickyHeadersInBackbuffer ?? false) ||
-				absY >= 0 ||
-				!region.overflowToBackbuffer
-			);
+			if (
+				region.overflowToBackbuffer &&
+				absY + header.y <= 0 &&
+				!(this.options.stickyHeadersInBackbuffer ?? false)
+			) {
+				return false;
+			}
+
+			return true;
 		}
 
 		return true;
