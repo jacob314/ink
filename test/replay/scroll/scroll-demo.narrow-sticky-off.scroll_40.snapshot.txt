@@ -40,7 +40,7 @@
 ╰───────────────────────────────────────────────────────────
 
 <active-viewport 60x77>
-╭This is the first line of box 1
+╭───────────────────────────────────────────────────────────
 │This is the first line of box 5
 │1 This is line in a line in a box. This is some text that i
 │2 This is line in a line in a box. This is some text that i

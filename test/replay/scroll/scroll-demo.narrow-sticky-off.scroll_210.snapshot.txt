@@ -210,7 +210,7 @@
 │4 This is line in a line in a box. This is some text that i
 │5 This is line in a line in a box. This is some text that i
 <active-viewport 60x77>
-│This is the first line of box 1
+│6 This is line in a line in a box. This is some text that i
 │7 This is line in a line in a box. This is some text that i
 │8 This is line in a line in a box. This is some text that i
 ╰───────────────────────────────────────────────────────────

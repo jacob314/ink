@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1370" height="1040" viewBox="0 0 1370 1040">
+  <style>
+    text { font-family: Consolas, "Courier New", monospace; font-size: 14px; dominant-baseline: text-before-edge; white-space: pre; }
+  </style>
+  <rect width="1370" height="1040" fill="#000000" />
+  <g transform="translate(10, 10)">
+    <text x="0" y="2" fill="#ffffff" textLength="1350" lengthAdjust="spacingAndGlyphs">Line 1                                                                                                                                                </text>
+    <text x="0" y="19" fill="#00cdcd" textLength="1350" lengthAdjust="spacingAndGlyphs">┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐</text>
+    <text x="0" y="36" fill="#00cdcd" textLength="333" lengthAdjust="spacingAndGlyphs">│┌──────────────────────────────────┐</text>
+    <text x="1341" y="36" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="53" fill="#00cdcd" textLength="333" lengthAdjust="spacingAndGlyphs">││Sticky Inner Header 0 (sticky top)│</text>
+    <text x="1341" y="53" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="70" fill="#00cdcd" textLength="333" lengthAdjust="spacingAndGlyphs">│└──────────────────────────────────┘</text>
+    <text x="1341" y="70" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="87" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="9" y="87" fill="#7f7f7f" textLength="243" lengthAdjust="spacingAndGlyphs">[body line for header 0] 43</text>
+    <text x="252" y="87" fill="#ffffff" textLength="1089" lengthAdjust="spacingAndGlyphs">                                                                                                                        █</text>
+    <text x="1341" y="87" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="104" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="9" y="104" fill="#7f7f7f" textLength="243" lengthAdjust="spacingAndGlyphs">[body line for header 0] 44</text>
+    <text x="1341" y="104" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="121" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="9" y="121" fill="#7f7f7f" textLength="243" lengthAdjust="spacingAndGlyphs">[body line for header 0] 45</text>
+    <text x="1341" y="121" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="138" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="9" y="138" fill="#7f7f7f" textLength="243" lengthAdjust="spacingAndGlyphs">[body line for header 0] 46</text>
+    <text x="1341" y="138" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="155" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="9" y="155" fill="#7f7f7f" textLength="243" lengthAdjust="spacingAndGlyphs">[body line for header 0] 47</text>
+    <text x="1341" y="155" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
+    <text x="0" y="172" fill="#00cdcd" textLength="1350" lengthAdjust="spacingAndGlyphs">└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘</text>
+    <text x="0" y="189" fill="#ffffff" textLength="1350" lengthAdjust="spacingAndGlyphs"> Sticky Header 1                                                                                                                                      </text>
+    <text x="9" y="206" fill="#999999" textLength="1332" lengthAdjust="spacingAndGlyphs">[body line for header 1] Line 20 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</text>
+    <text x="9" y="223" fill="#999999" textLength="1026" lengthAdjust="spacingAndGlyphs">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. </text>
+    <text x="9" y="240" fill="#999999" textLength="1332" lengthAdjust="spacingAndGlyphs">[body line for header 1] Line 21 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</text>
+    <text x="9" y="257" fill="#999999" textLength="513" lengthAdjust="spacingAndGlyphs">Lorem ipsum dolor sit amet, consectetur adipiscing elit. </text>
+    <text x="9" y="274" fill="#999999" textLength="1341" lengthAdjust="spacingAndGlyphs">[body line for header 1] Line 22 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. </text>
+    <text x="9" y="291" fill="#999999" textLength="828" lengthAdjust="spacingAndGlyphs">[body line for header 1] Line 23 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. </text>
+    <text x="9" y="308" fill="#999999" textLength="315" lengthAdjust="spacingAndGlyphs">[body line for header 1] Line 24 - </text>
+    <text x="9" y="325" fill="#999999" textLength="1332" lengthAdjust="spacingAndGlyphs">[body line for header 1] Line 25 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</text>
+    <text x="9" y="342" fill="#999999" textLength="1269" lengthAdjust="spacingAndGlyphs">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,</text>
+    <text x="9" y="359" fill="#999999" textLength="261" lengthAdjust="spacingAndGlyphs">consectetur adipiscing elit. </text>
+    <text x="9" y="376" fill="#999999" textLength="1332" lengthAdjust="spacingAndGlyphs">[body line for header 1] Line 26 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</text>
+    <text x="9" y="393" fill="#999999" textLength="1026" lengthAdjust="spacingAndGlyphs">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. </text>
+    <text x="9" y="410" fill="#999999" textLength="1332" lengthAdjust="spacingAndGlyphs">[body line for header 1] Line 27 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</text>
+    <text x="9" y="427" fill="#999999" textLength="513" lengthAdjust="spacingAndGlyphs">Lorem ipsum dolor sit amet, consectetur adipiscing elit. </text>
+    <text x="9" y="444" fill="#999999" textLength="1341" lengthAdjust="spacingAndGlyphs">[body line for header 1] Line 28 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. </text>
+    <text x="9" y="461" fill="#999999" textLength="828" lengthAdjust="spacingAndGlyphs">[body line for header 1] Line 29 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. </text>
+    <text x="0" y="478" fill="#ffffff" textLength="1350" lengthAdjust="spacingAndGlyphs"> [body line for header 1] last element matching header (sticky footer naturally here)                                                                 </text>
+    <text x="9" y="495" fill="#999999" textLength="315" lengthAdjust="spacingAndGlyphs">[body line for header 1] Line 30 - </text>
+    <text x="9" y="512" fill="#999999" textLength="1332" lengthAdjust="spacingAndGlyphs">[body line for header 1] Line 31 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</text>
+    <text x="9" y="529" fill="#999999" textLength="1269" lengthAdjust="spacingAndGlyphs">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,</text>
+    <text x="9" y="546" fill="#999999" textLength="261" lengthAdjust="spacingAndGlyphs">consectetur adipiscing elit. </text>
+    <text x="9" y="563" fill="#999999" textLength="1332" lengthAdjust="spacingAndGlyphs">[body line for header 1] Line 32 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</text>
+    <text x="9" y="580" fill="#999999" textLength="1026" lengthAdjust="spacingAndGlyphs">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. </text>
+    <text x="9" y="597" fill="#999999" textLength="1332" lengthAdjust="spacingAndGlyphs">[body line for header 1] Line 33 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</text>
+    <text x="9" y="614" fill="#999999" textLength="513" lengthAdjust="spacingAndGlyphs">Lorem ipsum dolor sit amet, consectetur adipiscing elit. </text>
+    <text x="9" y="631" fill="#999999" textLength="1341" lengthAdjust="spacingAndGlyphs">[body line for header 1] Line 34 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. </text>
+    <text x="9" y="648" fill="#999999" textLength="828" lengthAdjust="spacingAndGlyphs">[body line for header 1] Line 35 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. </text>
+    <text x="9" y="665" fill="#999999" textLength="315" lengthAdjust="spacingAndGlyphs">[body line for header 1] Line 36 - </text>
+    <text x="9" y="682" fill="#999999" textLength="1332" lengthAdjust="spacingAndGlyphs">[body line for header 1] Line 37 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</text>
+    <text x="9" y="699" fill="#999999" textLength="1269" lengthAdjust="spacingAndGlyphs">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,</text>
+    <text x="9" y="716" fill="#999999" textLength="261" lengthAdjust="spacingAndGlyphs">consectetur adipiscing elit. </text>
+    <text x="9" y="733" fill="#999999" textLength="1332" lengthAdjust="spacingAndGlyphs">[body line for header 1] Line 38 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</text>
+    <text x="9" y="750" fill="#999999" textLength="1026" lengthAdjust="spacingAndGlyphs">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. </text>
+    <text x="9" y="767" fill="#999999" textLength="1332" lengthAdjust="spacingAndGlyphs">[body line for header 1] Line 39 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</text>
+    <text x="9" y="784" fill="#999999" textLength="513" lengthAdjust="spacingAndGlyphs">Lorem ipsum dolor sit amet, consectetur adipiscing elit. </text>
+    <text x="522" y="784" fill="#ffffff" textLength="828" lengthAdjust="spacingAndGlyphs">                                                                                           █</text>
+    <text x="0" y="801" fill="#ffffff" textLength="1350" lengthAdjust="spacingAndGlyphs"> Sticky Header 2                                                                                                                                     █</text>
+    <text x="9" y="818" fill="#999999" textLength="1332" lengthAdjust="spacingAndGlyphs">[body line for header 2] Line 40 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</text>
+    <text x="1341" y="818" fill="#ffffff" textLength="9" lengthAdjust="spacingAndGlyphs">█</text>
+    <text x="9" y="835" fill="#999999" textLength="828" lengthAdjust="spacingAndGlyphs">[body line for header 2] Line 41 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. </text>
+    <text x="837" y="835" fill="#ffffff" textLength="513" lengthAdjust="spacingAndGlyphs">                                                        █</text>
+    <text x="9" y="852" fill="#999999" textLength="315" lengthAdjust="spacingAndGlyphs">[body line for header 2] Line 42 - </text>
+    <text x="324" y="852" fill="#ffffff" textLength="1026" lengthAdjust="spacingAndGlyphs">                                                                                                                 █</text>
+    <text x="9" y="869" fill="#999999" textLength="1332" lengthAdjust="spacingAndGlyphs">[body line for header 2] Line 43 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</text>
+    <text x="1341" y="869" fill="#ffffff" textLength="9" lengthAdjust="spacingAndGlyphs">█</text>
+    <text x="9" y="886" fill="#999999" textLength="1269" lengthAdjust="spacingAndGlyphs">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,</text>
+    <text x="1278" y="886" fill="#ffffff" textLength="72" lengthAdjust="spacingAndGlyphs">       █</text>
+    <text x="9" y="903" fill="#999999" textLength="261" lengthAdjust="spacingAndGlyphs">consectetur adipiscing elit. </text>
+    <text x="270" y="903" fill="#ffffff" textLength="1080" lengthAdjust="spacingAndGlyphs">                                                                                                                       █</text>
+    <text x="9" y="920" fill="#999999" textLength="1332" lengthAdjust="spacingAndGlyphs">[body line for header 2] Line 44 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</text>
+    <text x="9" y="937" fill="#999999" textLength="1026" lengthAdjust="spacingAndGlyphs">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. </text>
+    <text x="9" y="954" fill="#999999" textLength="1332" lengthAdjust="spacingAndGlyphs">[body line for header 2] Line 45 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</text>
+    <text x="9" y="971" fill="#999999" textLength="513" lengthAdjust="spacingAndGlyphs">Lorem ipsum dolor sit amet, consectetur adipiscing elit. </text>
+    <text x="9" y="988" fill="#999999" textLength="1341" lengthAdjust="spacingAndGlyphs">[body line for header 2] Line 46 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. </text>
+    <text x="9" y="1005" fill="#999999" textLength="828" lengthAdjust="spacingAndGlyphs">[body line for header 2] Line 47 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. </text>
+  </g>
+</svg>

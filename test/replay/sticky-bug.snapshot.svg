@@ -6,33 +6,29 @@
   <g transform="translate(10, 10)">
     <text x="0" y="2" fill="#ffffff" textLength="1629" lengthAdjust="spacingAndGlyphs">Line 1                                                                                                                                                                               </text>
     <text x="0" y="19" fill="#00cdcd" textLength="1629" lengthAdjust="spacingAndGlyphs">┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐</text>
-    <text x="0" y="36" fill="#00cdcd" textLength="198" lengthAdjust="spacingAndGlyphs">│Sticky Inner Header 0</text>
-    <text x="198" y="36" fill="#ffffff" textLength="1422" lengthAdjust="spacingAndGlyphs">                                                                                                                                                             █</text>
+    <text x="0" y="36" fill="#00cdcd" textLength="333" lengthAdjust="spacingAndGlyphs">│┌──────────────────────────────────┐</text>
     <text x="1620" y="36" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
-    <text x="0" y="53" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
-    <text x="9" y="53" fill="#7f7f7f" textLength="234" lengthAdjust="spacingAndGlyphs">[body line for header 0] 1</text>
+    <text x="0" y="53" fill="#00cdcd" textLength="333" lengthAdjust="spacingAndGlyphs">││Sticky Inner Header 0 (sticky top)│</text>
     <text x="1620" y="53" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
-    <text x="0" y="70" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
-    <text x="9" y="70" fill="#7f7f7f" textLength="234" lengthAdjust="spacingAndGlyphs">[body line for header 0] 2</text>
+    <text x="0" y="70" fill="#00cdcd" textLength="333" lengthAdjust="spacingAndGlyphs">│└──────────────────────────────────┘</text>
     <text x="1620" y="70" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
     <text x="0" y="87" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
-    <text x="9" y="87" fill="#7f7f7f" textLength="234" lengthAdjust="spacingAndGlyphs">[body line for header 0] 3</text>
+    <text x="9" y="87" fill="#7f7f7f" textLength="243" lengthAdjust="spacingAndGlyphs">[body line for header 0] 43</text>
+    <text x="252" y="87" fill="#ffffff" textLength="1368" lengthAdjust="spacingAndGlyphs">                                                                                                                                                       █</text>
     <text x="1620" y="87" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
     <text x="0" y="104" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
-    <text x="9" y="104" fill="#7f7f7f" textLength="234" lengthAdjust="spacingAndGlyphs">[body line for header 0] 4</text>
+    <text x="9" y="104" fill="#7f7f7f" textLength="243" lengthAdjust="spacingAndGlyphs">[body line for header 0] 44</text>
     <text x="1620" y="104" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
     <text x="0" y="121" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
-    <text x="9" y="121" fill="#7f7f7f" textLength="234" lengthAdjust="spacingAndGlyphs">[body line for header 0] 5</text>
+    <text x="9" y="121" fill="#7f7f7f" textLength="243" lengthAdjust="spacingAndGlyphs">[body line for header 0] 45</text>
     <text x="1620" y="121" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
     <text x="0" y="138" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
-    <text x="9" y="138" fill="#7f7f7f" textLength="234" lengthAdjust="spacingAndGlyphs">[body line for header 0] 6</text>
+    <text x="9" y="138" fill="#7f7f7f" textLength="243" lengthAdjust="spacingAndGlyphs">[body line for header 0] 46</text>
     <text x="1620" y="138" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
     <text x="0" y="155" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
-    <text x="9" y="155" fill="#7f7f7f" textLength="234" lengthAdjust="spacingAndGlyphs">[body line for header 0] 7</text>
+    <text x="9" y="155" fill="#7f7f7f" textLength="243" lengthAdjust="spacingAndGlyphs">[body line for header 0] 47</text>
     <text x="1620" y="155" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">│</text>
-    <text x="0" y="172" fill="#00cdcd" textLength="9" lengthAdjust="spacingAndGlyphs">└</text>
-    <text x="9" y="172" fill="#7f7f7f" textLength="234" lengthAdjust="spacingAndGlyphs">[body line for header 0] 8</text>
-    <text x="243" y="172" fill="#00cdcd" textLength="1386" lengthAdjust="spacingAndGlyphs">─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘</text>
+    <text x="0" y="172" fill="#00cdcd" textLength="1629" lengthAdjust="spacingAndGlyphs">└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘</text>
     <text x="0" y="189" fill="#ffffff" textLength="1629" lengthAdjust="spacingAndGlyphs"> Sticky Header 1                                                                                                                                                                     </text>
     <text x="9" y="206" fill="#999999" textLength="1584" lengthAdjust="spacingAndGlyphs">[body line for header 1] Line 20 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,</text>
     <text x="9" y="223" fill="#999999" textLength="774" lengthAdjust="spacingAndGlyphs">consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. </text>
