@@ -347,6 +347,11 @@ export default class Output {
 		const bufferWidth = scrollState?.scrollWidth ?? width;
 		const bufferHeight = scrollState?.scrollHeight ?? height;
 
+		const activeRegion = this.getActiveRegion();
+		const inheritedOverflowToBackbuffer = isScrollable
+			? overflowToBackbuffer
+			: (overflowToBackbuffer ?? activeRegion.overflowToBackbuffer);
+
 		const region: Region = {
 			id,
 			x,
@@ -363,7 +368,7 @@ export default class Output {
 			scrollHeight: scrollState?.scrollHeight,
 			scrollWidth: scrollState?.scrollWidth,
 			scrollbarVisible,
-			overflowToBackbuffer,
+			overflowToBackbuffer: inheritedOverflowToBackbuffer,
 			marginRight,
 			marginBottom,
 			scrollbarThumbColor,
@@ -515,13 +520,28 @@ export default class Output {
 
 	addRegionTree(region: Region, x: number, y: number) {
 		const activeRegion = this.getActiveRegion();
-		const clonedRegion = this.cloneRegion(region, x, y);
+		const clonedRegion = this.cloneRegion(
+			region,
+			x,
+			y,
+			activeRegion.overflowToBackbuffer,
+		);
 		activeRegion.children.push(clonedRegion);
 	}
 
-	private cloneRegion(region: Region, x: number, y: number): Region {
+	private cloneRegion(
+		region: Region,
+		x: number,
+		y: number,
+		inheritedOverflowToBackbuffer?: boolean,
+	): Region {
+		const overflowToBackbuffer = region.isScrollable
+			? region.overflowToBackbuffer
+			: (region.overflowToBackbuffer ?? inheritedOverflowToBackbuffer);
+
 		const cloned: Region = {
 			...region,
+			overflowToBackbuffer,
 			x: region.x + x,
 			y: region.y + y,
 			lines: region.lines.map(line =>
@@ -533,7 +553,9 @@ export default class Output {
 				x: header.x,
 				y: header.y,
 			})),
-			children: region.children.map(child => this.cloneRegion(child, 0, 0)),
+			children: region.children.map(child =>
+				this.cloneRegion(child, 0, 0, overflowToBackbuffer),
+			),
 		};
 
 		return cloned;

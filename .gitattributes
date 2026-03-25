@@ -1,1 +1,9 @@
 * text=auto eol=lf
+
+*.json linguist-generated=true
+package.json linguist-generated=false
+*.svg linguist-generated=true
+*.txt linguist-generated=true
+
+test/replay/**/*.svg binary linguist-generated=true
+test/replay/**/*.json binary linguist-generated=true
