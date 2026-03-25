@@ -453,31 +453,51 @@ function ScrollableContent({
 
 	return (
 		<Box flexDirection="column" height={termRows} width={columns}>
+			<Box flexDirection="column" flexShrink={0}>
+				<Text>Header Line 1</Text>
+				<Text>Header Line 2</Text>
+				<Text>Header Line 3</Text>
+				<Text>Header Line 4</Text>
+				<Text>Header Line 5</Text>
+				<Text>Header Line 6</Text>
+				<Text>Header Line 7</Text>
+				<Text>Header Line 8</Text>
+				<Text>Header Line 9</Text>
+				<Text>Header Line 10</Text>
+			</Box>
 			<Box
-				ref={reference}
-				overflowToBackbuffer
 				flexShrink={1}
-				width={columns}
 				flexDirection="column"
-				overflowX={overflowX}
-				overflowY={overflowY}
-				paddingRight={1}
-				scrollTop={scrollTop}
-				scrollLeft={scrollLeft}
-				scrollbar={showScrollbars}
-				stableScrollback={!options?.isAlternateBufferEnabled}
+				overflow="hidden"
+				borderStyle="single"
 			>
 				<Box
+					ref={reference}
+					flexShrink={1}
+					width="100%"
 					flexDirection="column"
-					flexShrink={0}
-					width={
-						scrollMode === 'horizontal' || scrollMode === 'both' ? 120 : 'auto'
-					}
+					overflowX={overflowX}
+					overflowY={overflowY}
+					paddingRight={1}
+					scrollTop={scrollTop}
+					scrollLeft={scrollLeft}
+					scrollbar={showScrollbars}
+					stableScrollback={!options?.isAlternateBufferEnabled}
 				>
-					{staticContent}
-					<Text key="last-line" color="yellow">
-						This is the last line.
-					</Text>
+					<Box
+						flexDirection="column"
+						flexShrink={0}
+						width={
+							scrollMode === 'horizontal' || scrollMode === 'both'
+								? 120
+								: 'auto'
+						}
+					>
+						{staticContent}
+						<Text key="last-line" color="yellow">
+							This is the last line.
+						</Text>
+					</Box>
 				</Box>
 			</Box>
 			<Box flexDirection="column" flexShrink={0} overflow="hidden">

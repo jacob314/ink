@@ -186,7 +186,7 @@ test('scroll integration - verify repaint efficiency', async t => {
 
 	const bottomContent = getFullContent();
 	t.true(
-		bottomContent.includes('ScrollTop: 714'),
+		bottomContent.includes('ScrollTop: 726'),
 		'Should have scrolled to the bottom area',
 	);
 
