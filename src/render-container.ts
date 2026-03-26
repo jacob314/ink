@@ -40,6 +40,8 @@ export function handleContainerNode(
 		skipStickyHeaders: boolean;
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
 		selectionStyle?: (char: StyledChar) => StyledChar;
+		absoluteOffsetX: number;
+		absoluteOffsetY: number;
 	},
 ) {
 	const {
@@ -53,6 +55,8 @@ export function handleContainerNode(
 		skipStickyHeaders,
 		selectionMap,
 		selectionStyle,
+		absoluteOffsetX,
+		absoluteOffsetY,
 	} = options;
 	const {yogaNode} = node;
 	if (!yogaNode) return;
@@ -113,25 +117,22 @@ export function handleContainerNode(
 		const clipVertically = overflowY === 'hidden' || overflowY === 'scroll';
 
 		if (clipHorizontally || clipVertically) {
-			const regionOffset = output.getRegionAbsoluteOffset();
 			const x1 = clipHorizontally
-				? regionOffset.x + x + yogaNode.getComputedBorder(Yoga.EDGE_LEFT)
+				? absoluteOffsetX + yogaNode.getComputedBorder(Yoga.EDGE_LEFT)
 				: undefined;
 
 			const x2 = clipHorizontally
-				? regionOffset.x +
-					x +
+				? absoluteOffsetX +
 					yogaNode.getComputedWidth() -
 					yogaNode.getComputedBorder(Yoga.EDGE_RIGHT)
 				: undefined;
 
 			const y1 = clipVertically
-				? regionOffset.y + y + yogaNode.getComputedBorder(Yoga.EDGE_TOP)
+				? absoluteOffsetY + yogaNode.getComputedBorder(Yoga.EDGE_TOP)
 				: undefined;
 
 			const y2 = clipVertically
-				? regionOffset.y +
-					y +
+				? absoluteOffsetY +
 					yogaNode.getComputedHeight() -
 					yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM)
 				: undefined;
@@ -162,11 +163,11 @@ export function handleContainerNode(
 					x: x + borderLeft,
 					y: y + borderTop,
 					width:
-						(x2 ?? regionOffset.x + x + width) -
-						(x1 ?? regionOffset.x + x + borderLeft),
+						(x2 ?? absoluteOffsetX + width) -
+						(x1 ?? absoluteOffsetX + borderLeft),
 					height:
-						(y2 ?? regionOffset.y + y + height) -
-						(y1 ?? regionOffset.y + y + borderTop),
+						(y2 ?? absoluteOffsetY + height) -
+						(y1 ?? absoluteOffsetY + borderTop),
 					isScrollable: true,
 					isVerticallyScrollable: verticallyScrollable,
 					isHorizontallyScrollable: horizontallyScrollable,
@@ -196,8 +197,8 @@ export function handleContainerNode(
 					renderNodeToOutput(childNode as DOMElement, output, {
 						offsetX: childOffsetX,
 						offsetY: childOffsetY,
-						absoluteOffsetX: x + borderLeft - scrollLeft,
-						absoluteOffsetY: y + borderTop - scrollTop,
+						absoluteOffsetX: absoluteOffsetX - scrollLeft,
+						absoluteOffsetY: absoluteOffsetY - scrollTop,
 						transformers: newTransformers,
 						skipStaticElements,
 						isStickyRender,
@@ -238,8 +239,8 @@ export function handleContainerNode(
 				renderNodeToOutput(childNode as DOMElement, output, {
 					offsetX: childrenOffsetX,
 					offsetY: childrenOffsetY,
-					absoluteOffsetX: x,
-					absoluteOffsetY: y,
+					absoluteOffsetX,
+					absoluteOffsetY,
 					transformers: newTransformers,
 					skipStaticElements,
 					isStickyRender,

@@ -239,6 +239,8 @@ function renderNodeToOutput(
 			skipStickyHeaders,
 			selectionMap,
 			selectionStyle,
+			absoluteOffsetX: absX,
+			absoluteOffsetY: absY,
 		});
 	}
 }

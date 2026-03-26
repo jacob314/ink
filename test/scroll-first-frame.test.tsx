@@ -18,7 +18,7 @@ test('scrollbar is shown on the VERY first frame in ScrollableContent', async t 
 		return originalWrite(chunk);
 	};
 
-	render(<ScrollableContent columns={80} rows={20} itemCount={100} />, {
+	render(<ScrollableContent columns={80} rows={40} itemCount={100} />, {
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		stdout: stdout as any,
 		debugRainbow: false,
