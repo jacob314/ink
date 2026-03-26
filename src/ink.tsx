@@ -184,7 +184,6 @@ export default class Ink {
 		this.rootNode.onImmediateRender = options.standardReactLayoutTiming
 			? renderMethod
 			: this.onRender; // Original unthrottled method
-		this.rootNode.onImmediateRender = renderMethod;
 
 		if (options.renderProcess === true || options.terminalBuffer === true) {
 			this.terminalBuffer = new TerminalBuffer(
