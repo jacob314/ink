@@ -28,6 +28,7 @@ export default class TerminalBuffer {
 		if (this._cachedLines) {
 			return this._cachedLines;
 		}
+
 		if (this.lastRootRegion) {
 			this._cachedLines = flattenRegion(this.lastRootRegion, {
 				skipScrollbars: true,
@@ -35,6 +36,7 @@ export default class TerminalBuffer {
 			});
 			return this._cachedLines;
 		}
+
 		return [];
 	}
 
