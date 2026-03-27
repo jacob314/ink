@@ -7,6 +7,8 @@ const fullWidthMask = 0b0000_0001;
 const isRepeatedCharMask = 0b0000_0100;
 const isAsciiMixedMask = 0b0000_1000;
 
+export type StyledLine = StyledChar[];
+
 export class Serializer {
 	// eslint-disable-next-line @typescript-eslint/ban-types
 	private buffer: Buffer;
@@ -16,7 +18,7 @@ export class Serializer {
 		this.buffer = Buffer.allocUnsafe(initialSize);
 	}
 
-	serialize(lines: StyledChar[][]): Uint8Array {
+	serialize(lines: ReadonlyArray<readonly StyledChar[]>): Uint8Array {
 		this.currentSize = 0;
 		this.writeUint32(lines.length);
 		for (const line of lines) {
@@ -40,7 +42,7 @@ export class Serializer {
 		}
 	}
 
-	private writeLine(line: StyledChar[]) {
+	private writeLine(line: readonly StyledChar[]) {
 		if (line.length === 0) {
 			this.writeUint32(0);
 			return;
@@ -72,7 +74,12 @@ export class Serializer {
 			return false;
 		}
 
-		for (const [i, styleA] of stylesA.entries()) {
+		if (stylesA.length === 0) {
+			return true;
+		}
+
+		for (let i = 0; i < stylesA.length; i++) {
+			const styleA = stylesA[i]!;
 			const styleB = stylesB[i]!;
 
 			if (styleA.code !== styleB.code || styleA.endCode !== styleB.endCode) {
@@ -83,7 +90,7 @@ export class Serializer {
 		return true;
 	}
 
-	private writeSpan(line: StyledChar[], start: number, end: number) {
+	private writeSpan(line: readonly StyledChar[], start: number, end: number) {
 		const spanLength = end - start;
 		this.writeUint32(spanLength);
 
@@ -187,6 +194,29 @@ export class Serializer {
 	}
 }
 
+// Global interning cache for common characters
+const emptyStyleCache: AnsiCode[] = [];
+const commonCharCache = new Map<string, StyledChar>();
+
+export function getInternedChar(
+	value: string,
+	fullWidth: boolean,
+	styles: AnsiCode[],
+): StyledChar {
+	if (styles.length === 0) {
+		const key = fullWidth ? value + '|fw' : value;
+		let cached = commonCharCache.get(key);
+		if (!cached) {
+			cached = {type: 'char', value, fullWidth, styles: emptyStyleCache};
+			commonCharCache.set(key, cached);
+		}
+
+		return cached;
+	}
+
+	return {type: 'char', value, fullWidth, styles};
+}
+
 export class Deserializer {
 	private offset = 0;
 	// eslint-disable-next-line @typescript-eslint/ban-types
@@ -198,9 +228,9 @@ export class Deserializer {
 			: Buffer.from(buffer.buffer, buffer.byteOffset, buffer.byteLength);
 	}
 
-	deserialize(): StyledChar[][] {
+	deserialize(): StyledLine[] {
 		const lineCount = this.readUint32();
-		const lines: StyledChar[][] = [];
+		const lines: StyledLine[] = [];
 
 		for (let i = 0; i < lineCount; i++) {
 			lines.push(this.readLine());
@@ -209,15 +239,15 @@ export class Deserializer {
 		return lines;
 	}
 
-	private readLine(): StyledChar[] {
+	private readLine(): StyledLine {
 		const spanCount = this.readUint32();
-		const line: StyledChar[] = [];
+		const chars: StyledChar[] = [];
 
 		for (let i = 0; i < spanCount; i++) {
-			this.readSpan(line);
+			this.readSpan(chars);
 		}
 
-		return line;
+		return chars;
 	}
 
 	private readSpan(line: StyledChar[]) {
@@ -244,25 +274,16 @@ export class Deserializer {
 			// eslint-disable-next-line no-bitwise
 			const fullWidth = (charFlags & fullWidthMask) !== 0;
 			const value = this.readString();
+			const char = getInternedChar(value, fullWidth, styles);
 
 			for (let i = 0; i < spanLength; i++) {
-				line.push({
-					type: 'char',
-					value,
-					fullWidth,
-					styles,
-				});
+				line.push(char);
 			}
 		} else if (isAsciiMixed) {
 			const value = this.readString();
 
 			for (let i = 0; i < spanLength; i++) {
-				line.push({
-					type: 'char',
-					value: value[i]!,
-					fullWidth: false,
-					styles,
-				});
+				line.push(getInternedChar(value[i]!, false, styles));
 			}
 		} else {
 			for (let i = 0; i < spanLength; i++) {
@@ -271,12 +292,7 @@ export class Deserializer {
 				const fullWidth = (charFlags & fullWidthMask) !== 0;
 				const value = this.readString();
 
-				line.push({
-					type: 'char',
-					value,
-					fullWidth,
-					styles,
-				});
+				line.push(getInternedChar(value, fullWidth, styles));
 			}
 		}
 	}

@@ -147,6 +147,8 @@ export type RenderOptions = {
 	 * @default false
 	 */
 	stickyHeadersInBackbuffer?: boolean;
+	cacheToStyledCharacters?: boolean;
+	trackSelection?: boolean;
 };
 
 export type Instance = {

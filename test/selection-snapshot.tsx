@@ -30,6 +30,7 @@ test.serial('selection example renders correctly', async t => {
 		40,
 		{
 			terminalHeight: 60,
+			trackSelection: true,
 		},
 	);
 
@@ -68,6 +69,7 @@ test.serial(
 			40,
 			{
 				terminalHeight: 60,
+				trackSelection: true,
 			},
 		);
 

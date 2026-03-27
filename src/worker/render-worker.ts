@@ -14,6 +14,7 @@ import {
 	type Region,
 	regionLayoutProperties,
 	copyRegionProperty,
+	treesEqual,
 } from '../output.js';
 import {type InkOptions} from '../components/AppContext.js';
 import {Serializer} from '../serialization.js';
@@ -355,6 +356,9 @@ export class TerminalBufferWorker {
 		const previousCursorPosition = this.cursorPosition;
 		this.cursorPosition = cursorPosition;
 
+		const treeChanged =
+			!this.sceneManager.root || !treesEqual(this.sceneManager.root, tree);
+
 		if (this.isRecording) {
 			const serializer = new Serializer();
 			this.recordedFrames.push({
@@ -473,6 +477,7 @@ export class TerminalBufferWorker {
 		const shouldRender =
 			updates.length > 0 ||
 			cursorChanged ||
+			treeChanged ||
 			this.terminalWriter.backbufferDirty ||
 			this.forceNextRender;
 
@@ -521,7 +526,7 @@ export class TerminalBufferWorker {
 		this.terminalWriter.backbufferScrolledIncorrectly = false;
 		this.terminalWriter.backbufferDirtyCurrentFrame = false;
 
-		this.composeScene();
+		this.composeScene(true);
 
 		const rootRegion = this.sceneManager.getRootRegion();
 		const cameraY = rootRegion ? this.getCameraY(rootRegion) : 0;
@@ -711,7 +716,10 @@ export class TerminalBufferWorker {
 									{skipStickyHeaders: true, skipScrollbars},
 								);
 
-								return canvas.getLines().slice(start, end + count);
+								const lines = canvas.getLines();
+								return start === 0 && end + count === lines.length
+									? lines
+									: lines.slice(start, end + count);
 							};
 
 							const cleanLines = getLines(true);
@@ -772,7 +780,7 @@ export class TerminalBufferWorker {
 			}
 		}
 
-		this.composeScene();
+		this.composeScene(this.terminalWriter.isFirstRender);
 
 		if (this.terminalWriter.isFirstRender) {
 			this.terminalWriter.writeLines([...this.backbuffer, ...this.screen]);
@@ -823,7 +831,7 @@ export class TerminalBufferWorker {
 		}
 	}
 
-	private composeScene() {
+	private composeScene(computeBackbuffer: boolean) {
 		const rootRegion = this.sceneManager.getRootRegion();
 		if (!rootRegion) {
 			return;
@@ -832,7 +840,7 @@ export class TerminalBufferWorker {
 		const cameraY = this.getCameraY(rootRegion);
 		this.backbuffer = [];
 
-		if (!this.isAlternateBufferEnabled) {
+		if (!this.isAlternateBufferEnabled && computeBackbuffer) {
 			const composeToBackbuffer = (
 				node: RegionNode,
 				region: Region,

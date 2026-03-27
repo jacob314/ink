@@ -76,10 +76,11 @@ export function renderStickyNode(
 		skipStaticElements: boolean;
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
 		selectionStyle?: (char: StyledChar) => StyledChar;
+		trackSelection?: boolean;
 	},
 ): {
-	naturalLines: StyledChar[][];
-	stuckLines: StyledChar[][] | undefined;
+	naturalLines: ReadonlyArray<readonly StyledChar[]>;
+	stuckLines: ReadonlyArray<readonly StyledChar[]> | undefined;
 	naturalHeight: number;
 	maxHeaderHeight: number;
 } {
@@ -95,6 +96,7 @@ export function renderStickyNode(
 		const stickyOutput = new Output({
 			width: stickyNode.yogaNode!.getComputedWidth(),
 			height: maxHeaderHeight,
+			trackSelection: options.trackSelection,
 		});
 
 		renderNodeToOutput(stickyNode, stickyOutput, {
@@ -105,6 +107,7 @@ export function renderStickyNode(
 			isStickyRender: isSticky,
 			selectionMap: options.selectionMap,
 			selectionStyle: options.selectionStyle,
+			trackSelection: options.trackSelection,
 		});
 
 		return stickyOutput.get().lines;
@@ -251,6 +254,7 @@ export function renderActiveStickyNodes(
 		skipStaticElements: boolean;
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
 		selectionStyle?: (char: StyledChar) => StyledChar;
+		trackSelection?: boolean;
 	},
 ) {
 	const {
@@ -260,6 +264,7 @@ export function renderActiveStickyNodes(
 		skipStaticElements,
 		selectionMap,
 		selectionStyle,
+		trackSelection,
 	} = options;
 	const {yogaNode} = node;
 	if (!yogaNode) return;
@@ -404,8 +409,8 @@ export function renderActiveStickyNodes(
 			minStuckY = minStickyTop - (y + currentBorderTop);
 		}
 
-		let naturalLines: StyledChar[][];
-		let stuckLines: StyledChar[][] | undefined;
+		let naturalLines: ReadonlyArray<readonly StyledChar[]>;
+		let stuckLines: ReadonlyArray<readonly StyledChar[]> | undefined;
 		let naturalHeight: number;
 
 		if (cached) {
@@ -418,6 +423,7 @@ export function renderActiveStickyNodes(
 				skipStaticElements,
 				selectionMap,
 				selectionStyle,
+				trackSelection,
 			});
 			naturalLines = rendered.naturalLines;
 			stuckLines = rendered.stuckLines;

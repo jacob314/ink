@@ -18,4 +18,5 @@ render(React.createElement(Selection, {useStaticRender}), {
 	alternateBuffer: false,
 	standardReactLayoutTiming: true,
 	selectionStyle,
+	trackSelection: true,
 });
