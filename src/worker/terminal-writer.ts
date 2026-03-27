@@ -67,21 +67,23 @@ export function linesEqual(
 		return false;
 	}
 
-	for (const [i, charA] of lineA.entries()) {
-		const charB = lineB[i];
+	for (let i = 0; i < lineA.length; i++) {
+		const charA = lineA[i]!;
+		const charB = lineB[i]!;
 
-		if (charA.value !== charB!.value || charA.fullWidth !== charB!.fullWidth) {
+		if (charA.value !== charB.value || charA.fullWidth !== charB.fullWidth) {
 			return false;
 		}
 
-		if (charA.styles.length !== charB!.styles.length) {
+		if (charA.styles.length !== charB.styles.length) {
 			return false;
 		}
 
-		for (const [j, styleA] of charA.styles.entries()) {
-			const styleB = charB!.styles[j];
+		for (let j = 0; j < charA.styles.length; j++) {
+			const styleA = charA.styles[j]!;
+			const styleB = charB.styles[j]!;
 
-			if (styleA.code !== styleB!.code || styleA.endCode !== styleB!.endCode) {
+			if (styleA.code !== styleB.code || styleA.endCode !== styleB.endCode) {
 				return false;
 			}
 		}

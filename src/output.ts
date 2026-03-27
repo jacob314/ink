@@ -544,9 +544,7 @@ export default class Output {
 			overflowToBackbuffer,
 			x: region.x + x,
 			y: region.y + y,
-			lines: region.lines.map(line =>
-				line.map(char => ({...char, styles: [...char.styles]})),
-			),
+			lines: region.lines.map(line => [...line]),
 			selectableSpans: region.selectableSpans.map(span => ({...span})),
 			stickyHeaders: region.stickyHeaders.map(header => ({
 				...header,

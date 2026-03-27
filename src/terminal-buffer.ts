@@ -24,7 +24,22 @@ import {type InkOptions} from './components/AppContext.js';
 const debugEdits = false;
 
 export default class TerminalBuffer {
-	public lines: StyledChar[][] = [];
+	public get lines(): StyledChar[][] {
+		if (this._cachedLines) {
+			return this._cachedLines;
+		}
+		if (this.lastRootRegion) {
+			this._cachedLines = flattenRegion(this.lastRootRegion, {
+				skipScrollbars: true,
+				skipStickyHeaders: true,
+			});
+			return this._cachedLines;
+		}
+		return [];
+	}
+
+	private _cachedLines?: StyledChar[][];
+	private lastRootRegion?: Region;
 	private readonly serializer = new Serializer();
 	private readonly worker?: ChildProcess;
 	private readonly workerInstance?: TerminalBufferWorker;
@@ -231,10 +246,8 @@ export default class TerminalBuffer {
 		root: Region,
 		cursorPosition?: {row: number; col: number},
 	): boolean {
-		this.lines = flattenRegion(root, {
-			skipScrollbars: true,
-			skipStickyHeaders: true,
-		});
+		this.lastRootRegion = root;
+		this._cachedLines = undefined;
 		const currentRegionsMap = new Map<string | number, Region>();
 		const nodeIdToElement = new Map<number, DOMElement>();
 		const updates: RegionUpdate[] = [];
