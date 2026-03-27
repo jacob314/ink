@@ -500,8 +500,8 @@ export default class TerminalBuffer {
 	}
 
 	private diffLines(
-		oldLines: StyledChar[][],
-		newLines: StyledChar[][],
+		oldLines: ReadonlyArray<readonly StyledChar[]>,
+		newLines: ReadonlyArray<readonly StyledChar[]>,
 	): Array<{
 		start: number;
 		end: number;
@@ -517,9 +517,8 @@ export default class TerminalBuffer {
 
 		const limit = Math.max(oldLines.length, newLines.length);
 		let chunkStart = -1;
-		let chunkLines: StyledChar[][] = [];
-		let chunkSource: StyledChar[][] = [];
-
+		let chunkLines: Array<readonly StyledChar[]> = [];
+		let chunkSource: Array<readonly StyledChar[]> = [];
 		for (let i = 0; i < limit; i++) {
 			const newLine = newLines[i];
 			const oldLine = oldLines[i];

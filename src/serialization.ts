@@ -16,7 +16,7 @@ export class Serializer {
 		this.buffer = Buffer.allocUnsafe(initialSize);
 	}
 
-	serialize(lines: StyledChar[][]): Uint8Array {
+	serialize(lines: ReadonlyArray<readonly StyledChar[]>): Uint8Array {
 		this.currentSize = 0;
 		this.writeUint32(lines.length);
 		for (const line of lines) {
@@ -40,7 +40,7 @@ export class Serializer {
 		}
 	}
 
-	private writeLine(line: StyledChar[]) {
+	private writeLine(line: readonly StyledChar[]) {
 		if (line.length === 0) {
 			this.writeUint32(0);
 			return;
@@ -83,7 +83,7 @@ export class Serializer {
 		return true;
 	}
 
-	private writeSpan(line: StyledChar[], start: number, end: number) {
+	private writeSpan(line: readonly StyledChar[], start: number, end: number) {
 		const spanLength = end - start;
 		this.writeUint32(spanLength);
 

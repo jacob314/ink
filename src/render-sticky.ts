@@ -78,8 +78,8 @@ export function renderStickyNode(
 		selectionStyle?: (char: StyledChar) => StyledChar;
 	},
 ): {
-	naturalLines: StyledChar[][];
-	stuckLines: StyledChar[][] | undefined;
+	naturalLines: ReadonlyArray<readonly StyledChar[]>;
+	stuckLines: ReadonlyArray<readonly StyledChar[]> | undefined;
 	naturalHeight: number;
 	maxHeaderHeight: number;
 } {
@@ -404,8 +404,8 @@ export function renderActiveStickyNodes(
 			minStuckY = minStickyTop - (y + currentBorderTop);
 		}
 
-		let naturalLines: StyledChar[][];
-		let stuckLines: StyledChar[][] | undefined;
+		let naturalLines: ReadonlyArray<readonly StyledChar[]>;
+		let stuckLines: ReadonlyArray<readonly StyledChar[]> | undefined;
 		let naturalHeight: number;
 
 		if (cached) {

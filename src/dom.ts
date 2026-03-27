@@ -31,9 +31,9 @@ export type NodeNames = ElementNames | TextName;
 
 export type StickyHeader = {
 	nodeId: number;
-	lines: StyledChar[][]; // Natural (scrolling) version
-	stuckLines?: StyledChar[][]; // Alternate (sticky) version
-	styledOutput: StyledChar[][]; // Legacy property
+	lines: ReadonlyArray<readonly StyledChar[]>; // Natural (scrolling) version
+	stuckLines?: ReadonlyArray<readonly StyledChar[]>; // Alternate (sticky) version
+	styledOutput: ReadonlyArray<readonly StyledChar[]>; // Legacy property
 	x: number; // Stuck X position relative to region
 	y: number; // Stuck Y position relative to region
 	naturalRow: number; // Natural row offset relative to content start

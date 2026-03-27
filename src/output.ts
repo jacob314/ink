@@ -18,7 +18,10 @@ Handles the positioning and saving of the output of each node in the tree. Also 
 Used to generate the final output of all nodes before writing it to actual output stream (e.g. stdout)
 */
 
-export function clampCursorColumn(line: StyledChar[], col: number): number {
+export function clampCursorColumn(
+	line: readonly StyledChar[],
+	col: number,
+): number {
 	let currentLineCol = 0;
 	let lastContentCol = 0;
 
@@ -103,8 +106,8 @@ export type Region = {
 
 	// Content buffer for this region.
 	// Coordinates in `lines` are relative to (0,0) of this region.
-	lines: StyledChar[][];
-	styledOutput: StyledChar[][];
+	readonly lines: ReadonlyArray<readonly StyledChar[]>;
+	readonly styledOutput: ReadonlyArray<readonly StyledChar[]>;
 
 	isScrollable: boolean;
 	isVerticallyScrollable?: boolean;
@@ -544,7 +547,7 @@ export default class Output {
 			overflowToBackbuffer,
 			x: region.x + x,
 			y: region.y + y,
-			lines: region.lines.map(line => [...line]),
+			lines: region.lines,
 			selectableSpans: region.selectableSpans.map(span => ({...span})),
 			stickyHeaders: region.stickyHeaders.map(header => ({
 				...header,
@@ -573,7 +576,14 @@ export default class Output {
 				}
 			}
 
-			region.styledOutput[y] = line.slice(0, lastNonSpace + 1);
+			const trimmedLength = lastNonSpace + 1;
+
+			if (region.styledOutput[y]?.length !== trimmedLength) {
+				(region.styledOutput as StyledChar[][])[y] = line.slice(
+					0,
+					trimmedLength,
+				);
+			}
 		}
 
 		for (const child of region.children) {
@@ -608,8 +618,8 @@ export default class Output {
 				});
 			}
 
-			region.lines.push(row);
-			region.styledOutput.push(row);
+			(region.lines as StyledChar[][]).push(row);
+			(region.styledOutput as StyledChar[][]).push(row);
 		}
 	}
 
@@ -656,8 +666,7 @@ export default class Output {
 			y = absoluteY - regionOffset.y;
 		}
 
-		const currentLine = lines[y];
-
+		const currentLine = lines[y] as StyledChar[];
 		if (!currentLine) {
 			return;
 		}

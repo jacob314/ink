@@ -52,8 +52,8 @@ export type RenderLine = {
 };
 
 export function linesEqual(
-	lineA: StyledChar[] | undefined,
-	lineB: StyledChar[] | undefined,
+	lineA: readonly StyledChar[] | undefined,
+	lineB: readonly StyledChar[] | undefined,
 ): boolean {
 	if (lineA === lineB) {
 		return true;
