@@ -45,6 +45,9 @@ let toStyledCharactersCacheEnabled = true;
 
 export function setEnableToStyledCharactersCache(enabled: boolean) {
 	toStyledCharactersCacheEnabled = enabled;
+	if (!enabled) {
+		toStyledCharactersCache.clear();
+	}
 }
 
 export function setStringWidthFunction(fn: StringWidth) {

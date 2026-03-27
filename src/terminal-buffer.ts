@@ -74,6 +74,7 @@ export default class TerminalBuffer {
 			backbufferUpdateDelay?: number;
 			maxScrollbackLength?: number;
 			forceScrollToBottomOnBackbufferRefresh?: boolean;
+			cacheToStyledCharacters?: boolean;
 		},
 	) {
 		this.lastOptions = {
@@ -134,6 +135,7 @@ export default class TerminalBuffer {
 					maxScrollbackLength: options?.maxScrollbackLength,
 					forceScrollToBottomOnBackbufferRefresh:
 						options?.forceScrollToBottomOnBackbufferRefresh,
+					cacheToStyledCharacters: options?.cacheToStyledCharacters,
 				},
 				'Failed to send init message to worker:',
 			);

@@ -13,9 +13,10 @@ export default function StaticRender({children, width, style}: Props) {
 	const ref = useRef<DOMElement>(null);
 
 	useEffect(() => {
+		const node = ref.current;
 		return () => {
-			if (ref.current) {
-				ref.current.cachedRender = undefined;
+			if (node) {
+				node.cachedRender = undefined;
 			}
 		};
 	}, []);

@@ -18,6 +18,7 @@ export function handleCachedRenderNode(
 		y: number;
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
 		selectionStyle?: (char: StyledChar) => StyledChar;
+		trackSelection?: boolean;
 	},
 ) {
 	const {x, y, selectionMap, selectionStyle} = options;

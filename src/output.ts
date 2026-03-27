@@ -43,6 +43,7 @@ type Options = {
 	height: number;
 	node?: DOMElement;
 	id?: string | number;
+	trackSelection?: boolean;
 };
 
 type Clip = {
@@ -254,6 +255,7 @@ export function copyRegionProperty<
 export default class Output {
 	width: number;
 	height: number;
+	trackSelection: boolean;
 
 	// The root region represents the main screen area (non-scrollable background)
 	root: Region;
@@ -262,10 +264,11 @@ export default class Output {
 	private readonly clips: Clip[] = [];
 
 	constructor(options: Options) {
-		const {width, height, node, id = 'root'} = options;
+		const {width, height, node, id = 'root', trackSelection = false} = options;
 
 		this.width = width;
 		this.height = height;
+		this.trackSelection = trackSelection;
 
 		this.root = {
 			id,
@@ -748,7 +751,7 @@ export default class Output {
 			relativeX += characterWidth;
 		}
 
-		if (isSelectable && spanStartX !== -1) {
+		if (this.trackSelection && isSelectable && spanStartX !== -1) {
 			region.selectableSpans.push({
 				y,
 				startX: spanStartX,

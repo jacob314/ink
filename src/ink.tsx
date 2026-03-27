@@ -76,6 +76,7 @@ export type Options = {
 	renderProcess?: boolean;
 	terminalBuffer?: boolean;
 	cacheToStyledCharacters?: boolean;
+	trackSelection?: boolean;
 };
 
 const rainbowColors = [
@@ -209,6 +210,7 @@ export default class Ink {
 					maxScrollbackLength: options.maxScrollbackLength,
 					forceScrollToBottomOnBackbufferRefresh:
 						options.forceScrollToBottomOnBackbufferRefresh,
+					cacheToStyledCharacters: options.cacheToStyledCharacters,
 				},
 			);
 		}

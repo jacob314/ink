@@ -76,6 +76,7 @@ export function renderStickyNode(
 		skipStaticElements: boolean;
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
 		selectionStyle?: (char: StyledChar) => StyledChar;
+		trackSelection?: boolean;
 	},
 ): {
 	naturalLines: ReadonlyArray<readonly StyledChar[]>;
@@ -95,6 +96,7 @@ export function renderStickyNode(
 		const stickyOutput = new Output({
 			width: stickyNode.yogaNode!.getComputedWidth(),
 			height: maxHeaderHeight,
+			trackSelection: options.trackSelection,
 		});
 
 		renderNodeToOutput(stickyNode, stickyOutput, {
@@ -105,6 +107,7 @@ export function renderStickyNode(
 			isStickyRender: isSticky,
 			selectionMap: options.selectionMap,
 			selectionStyle: options.selectionStyle,
+			trackSelection: options.trackSelection,
 		});
 
 		return stickyOutput.get().lines;
@@ -251,6 +254,7 @@ export function renderActiveStickyNodes(
 		skipStaticElements: boolean;
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
 		selectionStyle?: (char: StyledChar) => StyledChar;
+		trackSelection?: boolean;
 	},
 ) {
 	const {
@@ -260,6 +264,7 @@ export function renderActiveStickyNodes(
 		skipStaticElements,
 		selectionMap,
 		selectionStyle,
+		trackSelection,
 	} = options;
 	const {yogaNode} = node;
 	if (!yogaNode) return;
@@ -418,6 +423,7 @@ export function renderActiveStickyNodes(
 				skipStaticElements,
 				selectionMap,
 				selectionStyle,
+				trackSelection,
 			});
 			naturalLines = rendered.naturalLines;
 			stuckLines = rendered.stuckLines;

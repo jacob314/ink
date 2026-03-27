@@ -126,6 +126,7 @@ export function handleTextNode(
 		newTransformers: OutputTransformer[];
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
 		selectionStyle?: (char: StyledChar) => StyledChar;
+		trackSelection?: boolean;
 	},
 ) {
 	const {x, y, newTransformers, selectionMap, selectionStyle} = options;

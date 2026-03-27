@@ -244,14 +244,20 @@ const renderer = (
 		selection?: Selection;
 		selectionStyle?: (char: StyledChar) => StyledChar;
 		skipScrollbars?: boolean;
+		trackSelection?: boolean;
 	},
 ): Result => {
-	const {isScreenReaderEnabled, selection, selectionStyle, skipScrollbars} =
-		options;
+	const {
+		isScreenReaderEnabled,
+		selection,
+		selectionStyle,
+		skipScrollbars,
+		trackSelection,
+	} = options;
 
 	const callBeforeRender = (n: DOMElement) => {
 		if (typeof n.internalOnBeforeRender === 'function') {
-			n.internalOnBeforeRender(n);
+			n.internalOnBeforeRender(n, {trackSelection});
 		}
 
 		for (const child of n.childNodes) {
@@ -292,6 +298,7 @@ const renderer = (
 			width: node.yogaNode.getComputedWidth(),
 			height: node.yogaNode.getComputedHeight(),
 			node,
+			trackSelection,
 		});
 
 		const selectionMap = selection
@@ -302,6 +309,7 @@ const renderer = (
 			skipStaticElements: true,
 			selectionStyle,
 			selectionMap,
+			trackSelection,
 		});
 
 		let staticOutput;
@@ -312,6 +320,7 @@ const renderer = (
 				height: node.staticNode.yogaNode.getComputedHeight(),
 				node: node.staticNode,
 				id: node.staticNode.internalId,
+				trackSelection,
 			});
 
 			renderNodeToOutput(node.staticNode, staticOutput, {
@@ -320,6 +329,7 @@ const renderer = (
 				selectionMap: selection
 					? calculateSelectionMap(node.staticNode, selection)
 					: undefined,
+				trackSelection,
 			});
 		}
 

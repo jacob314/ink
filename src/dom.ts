@@ -64,7 +64,10 @@ export type DOMElement = {
 	internal_transform?: OutputTransformer;
 	internal_terminalCursorFocus?: boolean;
 	internal_terminalCursorPosition?: number;
-	internalOnBeforeRender?: (node: DOMElement) => void;
+	internalOnBeforeRender?: (
+		node: DOMElement,
+		options?: {trackSelection?: boolean},
+	) => void;
 	cachedRender?: Region;
 
 	internal_accessibility?: {
