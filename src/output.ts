@@ -150,6 +150,18 @@ export type RegionNode = {
 	children: RegionNode[];
 };
 
+export function treesEqual(a: RegionNode, b: RegionNode): boolean {
+	if (a === b) return true;
+	if (a.id !== b.id) return false;
+	if (a.children.length !== b.children.length) return false;
+
+	for (let i = 0; i < a.children.length; i++) {
+		if (!treesEqual(a.children[i]!, b.children[i]!)) return false;
+	}
+
+	return true;
+}
+
 export type RegionUpdate = {
 	id: string | number;
 	x?: number;

@@ -25,6 +25,7 @@ import ResizeObserver, {ResizeObserverEntry} from './resize-observer.js';
 import {Selection} from './selection.js';
 import TerminalBuffer from './terminal-buffer.js';
 import {type Region} from './output.js';
+import {setEnableToStyledCharactersCache} from './measure-text.js';
 
 const noop = () => {};
 
@@ -74,6 +75,7 @@ export type Options = {
 	standardReactLayoutTiming?: boolean;
 	renderProcess?: boolean;
 	terminalBuffer?: boolean;
+	cacheToStyledCharacters?: boolean;
 };
 
 const rainbowColors = [
@@ -134,6 +136,12 @@ export default class Ink {
 		autoBind(this);
 
 		this.options = options;
+
+		if (options.cacheToStyledCharacters === false) {
+			setEnableToStyledCharactersCache(false);
+		} else if (options.cacheToStyledCharacters === true) {
+			setEnableToStyledCharactersCache(true);
+		}
 
 		this.optionsState = {
 			isAlternateBufferEnabled:

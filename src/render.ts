@@ -147,6 +147,7 @@ export type RenderOptions = {
 	 * @default false
 	 */
 	stickyHeadersInBackbuffer?: boolean;
+        cacheToStyledCharacters?: boolean;
 };
 
 export type Instance = {

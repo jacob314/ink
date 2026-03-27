@@ -14,6 +14,7 @@ import {
 	type Region,
 	regionLayoutProperties,
 	copyRegionProperty,
+	treesEqual,
 } from '../output.js';
 import {type InkOptions} from '../components/AppContext.js';
 import {Serializer} from '../serialization.js';
@@ -355,6 +356,9 @@ export class TerminalBufferWorker {
 		const previousCursorPosition = this.cursorPosition;
 		this.cursorPosition = cursorPosition;
 
+		const treeChanged =
+			!this.sceneManager.root || !treesEqual(this.sceneManager.root, tree);
+
 		if (this.isRecording) {
 			const serializer = new Serializer();
 			this.recordedFrames.push({
@@ -473,6 +477,7 @@ export class TerminalBufferWorker {
 		const shouldRender =
 			updates.length > 0 ||
 			cursorChanged ||
+			treeChanged ||
 			this.terminalWriter.backbufferDirty ||
 			this.forceNextRender;
 

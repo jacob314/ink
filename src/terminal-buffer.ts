@@ -18,6 +18,7 @@ import {
 	flattenRegion,
 	regionLayoutProperties,
 	copyRegionProperty,
+	treesEqual,
 } from './output.js';
 import {type InkOptions} from './components/AppContext.js';
 
@@ -51,6 +52,7 @@ export default class TerminalBuffer {
 	// Track previous state of all regions by ID
 	private lastRegions = new Map<string | number, Region>();
 	private lastCursorPosition?: {row: number; col: number};
+	private lastTree?: RegionNode;
 
 	private lastOptions?: InkOptions;
 	private optionsChanged = false;
@@ -278,6 +280,9 @@ export default class TerminalBuffer {
 
 		const tree = buildTree(root);
 
+		const treeChanged = !this.lastTree || !treesEqual(this.lastTree, tree);
+		this.lastTree = tree;
+
 		// Update local state to current frame
 		this.lastRegions = currentRegionsMap;
 
@@ -290,7 +295,12 @@ export default class TerminalBuffer {
 
 		this.lastCursorPosition = cursorPosition;
 
-		if (updates.length > 0 || cursorChanged || this.optionsChanged) {
+		if (
+			updates.length > 0 ||
+			cursorChanged ||
+			this.optionsChanged ||
+			treeChanged
+		) {
 			this.optionsChanged = false;
 			this.sendEdits(tree, updates, cursorPosition);
 			return true;

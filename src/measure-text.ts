@@ -41,6 +41,12 @@ const toStyledCharactersCache = new DataLimitedLruMap<StyledChar[]>(
 	1_000_000,
 );
 
+let toStyledCharactersCacheEnabled = true;
+
+export function setEnableToStyledCharactersCache(enabled: boolean) {
+	toStyledCharactersCacheEnabled = enabled;
+}
+
 export function setStringWidthFunction(fn: StringWidth) {
 	currentStringWidth = fn;
 	// Clear the width cache to avoid stale values.
@@ -52,9 +58,11 @@ export function clearStringWidthCache() {
 }
 
 export function toStyledCharacters(text: string): StyledChar[] {
-	const cached = toStyledCharactersCache.get(text);
-	if (cached !== undefined) {
-		return cached;
+	if (toStyledCharactersCacheEnabled) {
+		const cached = toStyledCharactersCache.get(text);
+		if (cached !== undefined) {
+			return cached;
+		}
 	}
 
 	const tokens = tokenize(text);
@@ -183,7 +191,9 @@ export function toStyledCharacters(text: string): StyledChar[] {
 		}
 	}
 
-	toStyledCharactersCache.set(text, combinedCharacters);
+	if (toStyledCharactersCacheEnabled) {
+		toStyledCharactersCache.set(text, combinedCharacters);
+	}
 
 	return combinedCharacters;
 }
