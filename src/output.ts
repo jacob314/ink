@@ -538,43 +538,16 @@ export default class Output {
 
 	addRegionTree(region: Region, x: number, y: number) {
 		const activeRegion = this.getActiveRegion();
-		const clonedRegion = this.cloneRegion(
-			region,
-			x,
-			y,
-			activeRegion.overflowToBackbuffer,
-		);
-		activeRegion.children.push(clonedRegion);
-	}
-
-	private cloneRegion(
-		region: Region,
-		x: number,
-		y: number,
-		inheritedOverflowToBackbuffer?: boolean,
-	): Region {
 		const overflowToBackbuffer = region.isScrollable
 			? region.overflowToBackbuffer
-			: (region.overflowToBackbuffer ?? inheritedOverflowToBackbuffer);
+			: (region.overflowToBackbuffer ?? activeRegion.overflowToBackbuffer);
 
-		const cloned: Region = {
+		activeRegion.children.push({
 			...region,
-			overflowToBackbuffer,
 			x: region.x + x,
 			y: region.y + y,
-			lines: region.lines,
-			selectableSpans: region.selectableSpans.map(span => ({...span})),
-			stickyHeaders: region.stickyHeaders.map(header => ({
-				...header,
-				x: header.x,
-				y: header.y,
-			})),
-			children: region.children.map(child =>
-				this.cloneRegion(child, 0, 0, overflowToBackbuffer),
-			),
-		};
-
-		return cloned;
+			overflowToBackbuffer,
+		});
 	}
 
 	private trimRegionLines(region: Region) {
