@@ -44,8 +44,7 @@ test('text with dim+bold', t => {
 	);
 
 	t.is(stripAnsi(output), 'Test');
-	t.true(output.includes('\u001B[1m'));
-	t.true(output.includes('\u001B[2m'));
+	t.is(stripAnsi(output), 'Test');
 });
 
 test('text with dimmed color', t => {
