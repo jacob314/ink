@@ -543,12 +543,12 @@ export default class Output {
 			? region.overflowToBackbuffer
 			: (region.overflowToBackbuffer ?? activeRegion.overflowToBackbuffer);
 
-		activeRegion.children.push({
-			...region,
-			x: region.x + x,
-			y: region.y + y,
-			overflowToBackbuffer,
-		});
+		const regionRef = Object.create(region) as Region;
+		regionRef.x = region.x + x;
+		regionRef.y = region.y + y;
+		regionRef.overflowToBackbuffer = overflowToBackbuffer;
+
+		activeRegion.children.push(regionRef);
 	}
 
 	private trimRegionLines(region: Region) {

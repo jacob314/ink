@@ -520,6 +520,10 @@ export default class TerminalBuffer {
 		data: Uint8Array;
 		source?: Uint8Array;
 	}> {
+		if (oldLines === newLines) {
+			return [];
+		}
+
 		const updates: Array<{
 			start: number;
 			end: number;

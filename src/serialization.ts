@@ -74,7 +74,12 @@ export class Serializer {
 			return false;
 		}
 
-		for (const [i, styleA] of stylesA.entries()) {
+		if (stylesA.length === 0) {
+			return true;
+		}
+
+		for (let i = 0; i < stylesA.length; i++) {
+			const styleA = stylesA[i]!;
 			const styleB = stylesB[i]!;
 
 			if (styleA.code !== styleB.code || styleA.endCode !== styleB.endCode) {
@@ -212,11 +217,7 @@ export function getInternedChar(
 	return {type: 'char', value, fullWidth, styles};
 }
 
-export class BinaryLine extends Array<StyledChar> {
-	constructor(chars: StyledChar[]) {
-		super(...chars);
-	}
-}
+
 
 export class Deserializer {
 	private offset = 0;
@@ -248,7 +249,7 @@ export class Deserializer {
 			this.readSpan(chars);
 		}
 
-		return new BinaryLine(chars);
+		return chars;
 	}
 
 	private readSpan(line: StyledChar[]) {

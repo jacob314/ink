@@ -526,7 +526,7 @@ export class TerminalBufferWorker {
 		this.terminalWriter.backbufferScrolledIncorrectly = false;
 		this.terminalWriter.backbufferDirtyCurrentFrame = false;
 
-		this.composeScene();
+		this.composeScene(true);
 
 		const rootRegion = this.sceneManager.getRootRegion();
 		const cameraY = rootRegion ? this.getCameraY(rootRegion) : 0;
@@ -777,7 +777,7 @@ export class TerminalBufferWorker {
 			}
 		}
 
-		this.composeScene();
+		this.composeScene(this.terminalWriter.isFirstRender);
 
 		if (this.terminalWriter.isFirstRender) {
 			this.terminalWriter.writeLines([...this.backbuffer, ...this.screen]);
@@ -828,7 +828,7 @@ export class TerminalBufferWorker {
 		}
 	}
 
-	private composeScene() {
+	private composeScene(computeBackbuffer: boolean) {
 		const rootRegion = this.sceneManager.getRootRegion();
 		if (!rootRegion) {
 			return;
@@ -837,7 +837,7 @@ export class TerminalBufferWorker {
 		const cameraY = this.getCameraY(rootRegion);
 		this.backbuffer = [];
 
-		if (!this.isAlternateBufferEnabled) {
+		if (!this.isAlternateBufferEnabled && computeBackbuffer) {
 			const composeToBackbuffer = (
 				node: RegionNode,
 				region: Region,
