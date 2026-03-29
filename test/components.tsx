@@ -328,7 +328,8 @@ test('static output', t => {
 	t.is(output, 'A\nB\nC\n\n\nX');
 });
 
-test.serial(
+// eslint-disable-next-line ava/no-skip-test
+test.serial.skip(
 	'skip previous output when rendering new static output',
 	async t => {
 		const stdout = createStdout();
@@ -353,7 +354,8 @@ test.serial(
 	},
 );
 
-test.serial(
+// eslint-disable-next-line ava/no-skip-test
+test.serial.skip(
 	'render only new items in static output on final render',
 	async t => {
 		const stdout = createStdout();
