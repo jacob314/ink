@@ -1,10 +1,12 @@
 import React from 'react';
 import test from 'ava';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {type StyledLine} from '../src/styled-line.js';
 import {type Region} from '../src/output.js';
 import {render} from '../src/index.js';
 import instances from '../src/instances.js';
 import Box from '../src/components/Box.js';
+
+import {toStyledCharacters} from '../src/measure-text.js';
 
 // Mock stdout
 class WriteStream {
@@ -15,20 +17,12 @@ class WriteStream {
 	off() {}
 }
 
-const createStyledChar = (char: string): StyledChar => ({
-	type: 'char',
-	value: char,
-	fullWidth: false,
-	styles: [],
-});
-
-const createLine = (text: string): StyledChar[] =>
-	[...text].map(char => createStyledChar(char));
+const createLine = (text: string): StyledLine => toStyledCharacters(text);
 
 test('captures clipped cachedRender content into backbuffer', t => {
 	const stdout = new WriteStream() as unknown as NodeJS.WriteStream;
 
-	const cachedOutput: StyledChar[][] = [
+	const cachedOutput: StyledLine[] = [
 		createLine('Line 1 (cached)'),
 		createLine('Line 2 (cached)'),
 		createLine('Line 3 (cached)'),
@@ -91,17 +85,12 @@ test('captures clipped cachedRender content into backbuffer', t => {
 
 	// Inspect lines in terminalBuffer
 	// terminalBuffer.lines is private, cast to any
-	const lines = terminalBuffer.lines as StyledChar[][];
+
+	const lines = terminalBuffer.lines as StyledLine[];
 
 	// We expect lines 1 and 2 to be in the backbuffer because they are shifted up by 2.
-	const line0 = lines[0]
-		?.map(c => c.value)
-		.join('')
-		.trim();
-	const line1 = lines[1]
-		?.map(c => c.value)
-		.join('')
-		.trim();
+	const line0 = lines[0]?.getText().trim();
+	const line1 = lines[1]?.getText().trim();
 
 	t.is(line0, 'Line 3 (cached)');
 	t.is(line1, 'Line 4 (cached)');

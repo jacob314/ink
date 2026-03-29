@@ -12,7 +12,7 @@ test('removes trailing unstyled spaces from styledOutput', t => {
 	// Row 0 should be trimmed to "Hello" (length 5)
 	// Currently it would be 10
 	t.is(result.styledOutput[0].length, 5, 'Row 0 should have length 5');
-	t.is(result.styledOutput[0][4].value, 'o');
+	t.is(result.styledOutput[0]!.getValue(4), 'o');
 
 	// Row 1 should be empty (length 0)
 	t.is(result.styledOutput[1].length, 0, 'Row 1 should have length 0');

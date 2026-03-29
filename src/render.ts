@@ -1,7 +1,7 @@
 import {Stream} from 'node:stream';
 import process from 'node:process';
 import type {ReactNode} from 'react';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {type StyledLine} from './styled-line.js';
 import Ink, {type Options as InkOptions, type RenderMetrics} from './ink.js';
 import instances from './instances.js';
 import {type Selection} from './selection.js';
@@ -104,7 +104,7 @@ export type RenderOptions = {
 	/**
 	 * Function to transform selected text characters.
 	 */
-	selectionStyle?: (char: StyledChar) => StyledChar;
+	selectionStyle?: (line: StyledLine, index: number) => void;
 
 	/*
 	 * If true, Ink will wait for `useLayoutEffect` hooks to run before rendering a frame.

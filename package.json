@@ -1,6 +1,6 @@
 {
 	"name": "@jrichman/ink",
-	"version": "6.5.0",
+	"version": "6.5.1-beta.3",
 	"description": "React for CLI",
 	"license": "MIT",
 	"repository": "jacob314/ink",
@@ -43,9 +43,8 @@
 		"text"
 	],
 	"dependencies": {
-		"@alcalzone/ansi-tokenize": "^0.2.1",
 		"ansi-escapes": "^7.0.0",
-		"ansi-styles": "^6.2.1",
+		"ansi-styles": "^6.2.3",
 		"auto-bind": "^5.0.1",
 		"chalk": "^5.6.0",
 		"cli-boxes": "^3.0.0",
@@ -54,6 +53,7 @@
 		"code-excerpt": "^4.0.0",
 		"es-toolkit": "^1.39.10",
 		"indent-string": "^5.0.0",
+		"is-fullwidth-code-point": "^5.0.0",
 		"is-in-ci": "^2.0.0",
 		"mnemonist": "^0.40.3",
 		"patch-console": "^2.0.0",
@@ -146,7 +146,17 @@
 			"import/no-useless-path-segments": "off",
 			"react-hooks/exhaustive-deps": "off",
 			"complexity": "off",
-			"unicorn/no-for-loop": "off"
+			"unicorn/no-for-loop": "off",
+			"no-bitwise": "off",
+			"@typescript-eslint/naming-convention": "off",
+			"eslint-comments/no-unused-disable": "off",
+			"import/order": "off",
+			"@typescript-eslint/no-unsafe-call": "off",
+			"unicorn/prefer-code-point": "off",
+			"@typescript-eslint/prefer-for-of": "off",
+			"@typescript-eslint/prefer-nullish-coalescing": "off",
+			"ava/no-import-test-files": "off",
+			"@typescript-eslint/no-unsafe-return": "off"
 		},
 		"ignores": [
 			"src/parse-keypress.ts"

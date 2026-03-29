@@ -4,17 +4,11 @@ import React, {useState, useEffect} from 'react';
 import xtermHeadless from '@xterm/headless';
 import {render, Box, Text} from '../src/index.js';
 import ScrollableContent from '../examples/scroll/scroll.js';
+import {waitFor} from './helpers/wait-for.js';
 
 const {Terminal} = xtermHeadless;
-
-const wait = async (ms: number) =>
-	new Promise(resolve => {
-		setTimeout(resolve, ms);
-	});
-
 const writeToTerm = async (term: any, data: string): Promise<void> =>
 	new Promise(resolve => {
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 		term.write(data, () => {
 			resolve();
 		});
@@ -46,7 +40,7 @@ test('scroll integration - verify repaint efficiency', async t => {
 		off() {},
 		removeListener() {},
 		end() {},
-		// eslint-disable-next-line @typescript-eslint/naming-convention
+
 		isTTY: true,
 	} as any;
 
@@ -109,18 +103,14 @@ test('scroll integration - verify repaint efficiency', async t => {
 		return 0;
 	};
 
-	let scrollHeight = 0;
-	for (let i = 0; i < 20; i++) {
-		// eslint-disable-next-line no-await-in-loop
-		await wait(500);
-		// eslint-disable-next-line no-await-in-loop
+	await waitFor(async () => {
 		await writeToTerm(term, '');
-		scrollHeight = getScrollHeightFromTerm();
-		if (scrollHeight > 0) break;
-	}
+		return getScrollHeightFromTerm() > 0;
+	}, 10_000);
+
+	const scrollHeight = getScrollHeightFromTerm();
 
 	t.true(scrollHeight > 0, 'Should have non-zero scrollHeight');
-
 	let footerStartY = -1;
 	for (let i = 0; i < termRows; i++) {
 		const line = term.buffer.active.getLine(i)?.translateToString(true);
@@ -135,11 +125,12 @@ test('scroll integration - verify repaint efficiency', async t => {
 	const initialBgs = Array.from({length: termRows}, (_, i) => getLineBg(i));
 
 	// Scroll down 1 line
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-	stdin.write('\u001B[B');
-	await wait(1000);
-	await writeToTerm(term, '');
 
+	stdin.write('\u001B[B');
+	await waitFor(async () => {
+		await writeToTerm(term, '');
+		return getFullContent().includes('ScrollTop: 1');
+	}, 5000);
 	const scrolledBgs = Array.from({length: termRows}, (_, i) => getLineBg(i));
 
 	const repaintedIndices = [];
@@ -166,11 +157,13 @@ test('scroll integration - verify repaint efficiency', async t => {
 	);
 
 	// Scroll back up
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
 	stdin.write('\u001B[A');
 	// Wait longer for scroll up to process and render
-	await wait(2000);
-	await writeToTerm(term, '');
+	await waitFor(async () => {
+		await writeToTerm(term, '');
+		return getFullContent().includes('ScrollTop: 0');
+	}, 5000);
 
 	const finalContent = getFullContent();
 	t.true(
@@ -179,14 +172,16 @@ test('scroll integration - verify repaint efficiency', async t => {
 	);
 
 	// Scroll to bottom
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
 	stdin.write('b');
-	await wait(5000);
-	await writeToTerm(term, '');
+	await waitFor(async () => {
+		await writeToTerm(term, '');
+		return getFullContent().includes('ScrollTop: 716');
+	}, 10_000);
 
 	const bottomContent = getFullContent();
 	t.true(
-		bottomContent.includes('ScrollTop: 726'),
+		bottomContent.includes('ScrollTop: 716'),
 		'Should have scrolled to the bottom area',
 	);
 

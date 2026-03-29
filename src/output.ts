@@ -1,4 +1,4 @@
-import {type StyledChar, styledCharsToString} from '@alcalzone/ansi-tokenize';
+import {styledLineToString} from './tokenize.js';
 import {type OutputTransformer} from './render-node-to-output.js';
 import {
 	toStyledCharacters,
@@ -6,7 +6,6 @@ import {
 	styledCharsWidth,
 } from './measure-text.js';
 import {type CursorPosition} from './log-update.js';
-import {getInternedChar} from './serialization.js';
 import {type StickyHeader, type DOMElement} from './dom.js';
 import {calculateScrollbarLayout} from './measure-element.js';
 import {renderScrollbar} from './render-scrollbar.js';
@@ -18,18 +17,17 @@ Handles the positioning and saving of the output of each node in the tree. Also 
 
 Used to generate the final output of all nodes before writing it to actual output stream (e.g. stdout)
 */
+import {StyledLine} from './styled-line.js';
 
-export function clampCursorColumn(
-	line: readonly StyledChar[],
-	col: number,
-): number {
+export function clampCursorColumn(line: StyledLine, col: number): number {
 	let currentLineCol = 0;
 	let lastContentCol = 0;
 
-	for (const char of line) {
-		const charWidth = char.fullWidth ? 2 : 1;
+	for (let i = 0; i < line.length; i++) {
+		const val = line.getValue(i);
+		const charWidth = inkCharacterWidth(val);
 
-		if (char.value !== ' ' || char.styles.length > 0) {
+		if (val !== ' ' || line.hasStyles(i)) {
 			lastContentCol = currentLineCol + charWidth;
 		}
 
@@ -108,8 +106,8 @@ export type Region = {
 
 	// Content buffer for this region.
 	// Coordinates in `lines` are relative to (0,0) of this region.
-	readonly lines: ReadonlyArray<readonly StyledChar[]>;
-	readonly styledOutput: ReadonlyArray<readonly StyledChar[]>;
+	readonly lines: readonly StyledLine[];
+	readonly styledOutput: readonly StyledLine[];
 
 	isScrollable: boolean;
 	isVerticallyScrollable?: boolean;
@@ -164,6 +162,15 @@ export function treesEqual(a: RegionNode, b: RegionNode): boolean {
 	return true;
 }
 
+export type SerializedStickyHeader = Omit<
+	StickyHeader,
+	'lines' | 'stuckLines' | 'styledOutput' | 'node'
+> & {
+	lines: Uint8Array;
+	stuckLines?: Uint8Array;
+	styledOutput: Uint8Array;
+};
+
 export type RegionUpdate = {
 	id: string | number;
 	x?: number;
@@ -186,7 +193,7 @@ export type RegionUpdate = {
 	opaque?: boolean;
 	borderTop?: number;
 	borderBottom?: number;
-	stickyHeaders?: StickyHeader[];
+	stickyHeaders?: SerializedStickyHeader[];
 	lines?: {
 		updates: Array<{
 			start: number;
@@ -424,7 +431,7 @@ export default class Output {
 	write(
 		x: number,
 		y: number,
-		items: string | StyledChar[],
+		items: string | StyledLine,
 		options: {
 			transformers: OutputTransformer[];
 			lineIndex?: number;
@@ -456,19 +463,20 @@ export default class Output {
 			let charOffset = 0;
 			const targetOffset = terminalCursorPosition ?? Number.POSITIVE_INFINITY;
 
-			for (const char of chars) {
+			for (let i = 0; i < chars.length; i++) {
 				if (charOffset >= targetOffset) {
 					break;
 				}
 
-				if (char.value === '\n') {
+				const val = chars.getValue(i);
+				if (val === '\n') {
 					row++;
 					col = 0;
 				} else {
-					col += inkCharacterWidth(char.value);
+					col += inkCharacterWidth(val);
 				}
 
-				charOffset += char.value.length;
+				charOffset += val.length;
 			}
 
 			region.cursorPosition = {
@@ -557,9 +565,7 @@ export default class Output {
 			let lastNonSpace = -1;
 
 			for (let i = line.length - 1; i >= 0; i--) {
-				const char = line[i]!;
-
-				if (char.value !== ' ' || char.styles.length > 0) {
+				if (line.getValue(i) !== ' ' || line.hasStyles(i)) {
 					lastNonSpace = i;
 					break;
 				}
@@ -568,7 +574,7 @@ export default class Output {
 			const trimmedLength = lastNonSpace + 1;
 
 			if (region.styledOutput[y]?.length !== trimmedLength) {
-				(region.styledOutput as Array<readonly StyledChar[]>)[y] =
+				(region.styledOutput as StyledLine[])[y] =
 					trimmedLength === line.length ? line : line.slice(0, trimmedLength);
 			}
 		}
@@ -594,24 +600,17 @@ export default class Output {
 	}
 
 	private initLines(region: Region, width: number, height: number) {
-		const emptyChar = getInternedChar(' ', false, []);
 		for (let y = 0; y < height; y++) {
-			const row: StyledChar[] = [];
-			for (let x = 0; x < width; x++) {
-				row.push(emptyChar);
-			}
-
-			(region.lines as StyledChar[][]).push(row);
-			(region.styledOutput as StyledChar[][]).push(row);
+			const row = StyledLine.empty(width);
+			(region.lines as StyledLine[]).push(row);
+			(region.styledOutput as StyledLine[]).push(row);
 		}
 	}
 
-	// Helper to apply write immediately
-	// eslint-disable-next-line max-params
 	private applyWrite(
 		x: number,
 		y: number,
-		items: string | StyledChar[],
+		items: string | StyledLine,
 		transformers: OutputTransformer[],
 		lineIndex: number,
 		_preserveBackgroundColor: boolean,
@@ -621,7 +620,7 @@ export default class Output {
 		const {lines} = region;
 		const bufferWidth = lines[0]?.length ?? 0;
 
-		let chars: StyledChar[] =
+		let chars: StyledLine =
 			typeof items === 'string' ? toStyledCharacters(items) : items;
 
 		const clip = this.getCurrentClip();
@@ -649,13 +648,13 @@ export default class Output {
 			y = absoluteY - regionOffset.y;
 		}
 
-		const currentLine = lines[y] as StyledChar[];
+		const currentLine = lines[y]!;
 		if (!currentLine) {
 			return;
 		}
 
 		if (transformers.length > 0) {
-			let line = styledCharsToString(chars);
+			let line = styledLineToString(chars);
 			for (const transformer of transformers) {
 				line = transformer(line, lineIndex);
 			}
@@ -668,8 +667,9 @@ export default class Output {
 		let spanStartX = -1;
 		let spanText = '';
 
-		for (const character of chars) {
-			const characterWidth = inkCharacterWidth(character.value);
+		for (let i = 0; i < chars.length; i++) {
+			const val = chars.getValue(i);
+			const characterWidth = inkCharacterWidth(val);
 
 			if (toX !== undefined && relativeX >= toX) {
 				break;
@@ -680,20 +680,27 @@ export default class Output {
 					break;
 				}
 
-				currentLine[offsetX] = character;
+				currentLine.setChar(
+					offsetX,
+					val,
+					chars.getFormatFlags(i),
+					chars.getFgColor(i),
+					chars.getBgColor(i),
+					chars.getLink(i),
+				);
 
 				if (isSelectable) {
 					if (spanStartX === -1) spanStartX = offsetX;
-					spanText += character.value;
+					spanText += val;
 				}
 
 				if (characterWidth > 1) {
 					this.clearRange(
 						currentLine,
 						{start: offsetX + 1, end: offsetX + characterWidth},
-						character.styles,
 						'',
 						bufferWidth,
+						chars.getBgColor(i),
 					);
 				}
 
@@ -708,7 +715,6 @@ export default class Output {
 				this.clearRange(
 					currentLine,
 					{start: offsetX, end: offsetX + clearLength},
-					character.styles,
 					' ',
 					bufferWidth,
 				);
@@ -734,36 +740,34 @@ export default class Output {
 			this.clearRange(
 				currentLine,
 				{start: offsetX, end: absoluteToX},
-				[],
 				' ',
 				bufferWidth,
 			);
 		}
 	}
 
-	// eslint-disable-next-line max-params
 	private clearRange(
-		currentLine: StyledChar[],
+		currentLine: StyledLine,
 		range: {start: number; end: number},
-		styles: StyledChar['styles'],
 		value: string,
 		maxWidth: number,
+		bgColor?: string,
 	) {
 		for (let offset = range.start; offset < range.end; offset++) {
 			if (offset >= 0 && offset < maxWidth) {
-				currentLine[offset] = getInternedChar(value, false, styles);
+				currentLine.setChar(offset, value, 0, undefined, bgColor);
 			}
 		}
 	}
 
 	private clipChars(
-		chars: StyledChar[],
+		chars: StyledLine,
 		x: number,
 		y: number,
 		clip: Clip,
 	):
 		| {
-				chars: StyledChar[];
+				chars: StyledLine;
 				x: number;
 				y: number;
 				fromX: number | undefined;
@@ -817,12 +821,13 @@ export function flattenRegion(
 		skipScrollbars?: boolean;
 		skipStickyHeaders?: boolean;
 	},
-): StyledChar[][] {
+): StyledLine[] {
 	const {width, height} = root;
 
-	const lines: StyledChar[][] = Array.from({length: height}, () =>
-		Array.from({length: width}, () => getInternedChar(' ', false, [])),
-	);
+	const lines: StyledLine[] = [];
+	for (let i = 0; i < height; i++) {
+		lines.push(StyledLine.empty(width));
+	}
 
 	composeRegion(
 		root,
@@ -843,7 +848,7 @@ export function flattenRegion(
  */
 function composeRegion(
 	region: Region,
-	targetLines: StyledChar[][],
+	targetLines: StyledLine[],
 	{
 		clip,
 		offsetX = 0,
@@ -913,9 +918,15 @@ function composeRegion(
 
 		for (let sx = myClipX; sx < myClipX + myClipW; sx++) {
 			const localX = sx - absX + scrollLeft;
-			const char = sourceLine[localX];
-			if (char) {
-				row[sx] = char;
+			if (localX < sourceLine.length) {
+				row.setChar(
+					sx,
+					sourceLine.getValue(localX),
+					sourceLine.getFormatFlags(localX),
+					sourceLine.getFgColor(localX),
+					sourceLine.getBgColor(localX),
+					sourceLine.getLink(localX),
+				);
 			}
 		}
 	}
@@ -935,7 +946,7 @@ function composeRegion(
 
 	if (!options?.skipStickyHeaders) {
 		for (const header of stickyHeaders) {
-			const headerY = header.y + absY; // Absolute Y
+			const headerY = header.y + absY;
 			const headerH = header.styledOutput.length;
 
 			for (let i = 0; i < headerH; i++) {
@@ -962,9 +973,15 @@ function composeRegion(
 
 				for (let sx = hx1; sx < hx2; sx++) {
 					const cx = sx - headerX;
-					const char = line[cx];
-					if (char) {
-						row[sx] = char;
+					if (cx < line.length) {
+						row.setChar(
+							sx,
+							line.getValue(cx),
+							line.getFormatFlags(cx),
+							line.getFgColor(cx),
+							line.getBgColor(cx),
+							line.getLink(cx),
+						);
 					}
 				}
 			}
@@ -1011,7 +1028,14 @@ function composeRegion(
 							x >= 0 &&
 							x < targetLines[0]!.length
 						) {
-							targetLines[y]![x] = char;
+							targetLines[y]!.setChar(
+								x,
+								char.getValue(0),
+								char.getFormatFlags(0),
+								char.getFgColor(0),
+								char.getBgColor(0),
+								char.getLink(0),
+							);
 						}
 					},
 				});
@@ -1046,7 +1070,14 @@ function composeRegion(
 							x >= 0 &&
 							x < targetLines[0]!.length
 						) {
-							targetLines[y]![x] = char;
+							targetLines[y]!.setChar(
+								x,
+								char.getValue(0),
+								char.getFormatFlags(0),
+								char.getFgColor(0),
+								char.getBgColor(0),
+								char.getLink(0),
+							);
 						}
 					},
 				});

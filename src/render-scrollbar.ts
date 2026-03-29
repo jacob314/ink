@@ -1,7 +1,7 @@
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import colorize from './colorize.js';
 import {toStyledCharacters} from './measure-text.js';
 import {type ScrollbarBoundingBox} from './measure-element.js';
+import {StyledLine} from './styled-line.js';
 
 export type ScrollbarThumb = {
 	startIndex: number;
@@ -20,8 +20,8 @@ export type DrawOptions = {
 	};
 	axis: 'vertical' | 'horizontal';
 	color?: string;
-	setChar: (x: number, y: number, char: StyledChar) => void;
-	getExistingChar?: (x: number, y: number) => StyledChar | undefined;
+	setChar: (x: number, y: number, char: StyledLine) => void;
+	getExistingChar?: (x: number, y: number) => {bgColor?: string} | undefined;
 };
 
 export const renderScrollbar = ({
@@ -43,20 +43,24 @@ export const renderScrollbar = ({
 		},
 	} = layout;
 
-	const applyBackground = (char: StyledChar, existingChar?: StyledChar) => {
+	const applyBackground = (
+		char: StyledLine,
+		existingChar?: {bgColor?: string},
+	) => {
 		if (!existingChar) return char;
 
-		const backgroundStyle = existingChar.styles.find(
-			s =>
-				s.code.includes(';4') ||
-				(s.code.startsWith('\u001B[4') && !s.code.startsWith('\u001B[49')),
-		);
+		const backgroundStyle = existingChar.bgColor;
 
 		if (backgroundStyle) {
-			return {
-				...char,
-				styles: [...(backgroundStyle ? [backgroundStyle] : []), ...char.styles],
-			};
+			const newChar = new StyledLine();
+			newChar.pushChar(
+				char.getValue(0),
+				char.getFormatFlags(0),
+				char.getFgColor(0),
+				backgroundStyle,
+				char.getLink(0),
+			);
+			return newChar;
 		}
 
 		return char;
@@ -85,9 +89,9 @@ export const renderScrollbar = ({
 				}
 
 				const charString = color ? colorize(char, color, 'foreground') : char;
-				let styled = toStyledCharacters(charString)[0];
+				let styled = toStyledCharacters(charString);
 
-				if (styled) {
+				if (styled.length > 0) {
 					if (getExistingChar && (char === '▀' || char === '▄')) {
 						const existing = getExistingChar(drawX, drawY);
 						styled = applyBackground(styled, existing);
@@ -120,9 +124,9 @@ export const renderScrollbar = ({
 				}
 
 				const charString = color ? colorize(char, color, 'foreground') : char;
-				let styled = toStyledCharacters(charString)[0];
+				let styled = toStyledCharacters(charString);
 
-				if (styled) {
+				if (styled.length > 0) {
 					if (getExistingChar && (char === '▌' || char === '▐')) {
 						const existing = getExistingChar(drawX, drawY);
 						styled = applyBackground(styled, existing);

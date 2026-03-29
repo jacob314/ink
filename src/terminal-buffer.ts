@@ -6,7 +6,7 @@
 
 import process from 'node:process';
 import {fork, type ChildProcess} from 'node:child_process';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {StyledLine} from './styled-line.js';
 import {Serializer} from './serialization.js';
 import {TerminalBufferWorker} from './worker/render-worker.js';
 import {linesEqual} from './worker/terminal-writer.js';
@@ -25,7 +25,7 @@ import {type InkOptions} from './components/AppContext.js';
 const debugEdits = false;
 
 export default class TerminalBuffer {
-	public get lines(): StyledChar[][] {
+	public get lines(): StyledLine[] {
 		if (this._cachedLines) {
 			return this._cachedLines;
 		}
@@ -41,7 +41,7 @@ export default class TerminalBuffer {
 		return [];
 	}
 
-	private _cachedLines?: StyledChar[][];
+	private _cachedLines?: StyledLine[];
 	private lastRootRegion?: Region;
 	private readonly serializer = new Serializer();
 	private readonly worker?: ChildProcess;
@@ -112,7 +112,7 @@ export default class TerminalBuffer {
 			this.worker = fork(workerUrl, {
 				env: {
 					...process.env,
-					// eslint-disable-next-line @typescript-eslint/naming-convention
+
 					INK_WORKER: 'true',
 				},
 			});
@@ -436,7 +436,15 @@ export default class TerminalBuffer {
 				copyRegionProperty(update, current, key);
 			}
 
-			update.stickyHeaders = current.stickyHeaders;
+			update.stickyHeaders = current.stickyHeaders.map(h => ({
+				...h,
+				node: undefined,
+				lines: this.serializer.serialize(h.lines),
+				stuckLines: h.stuckLines
+					? this.serializer.serialize(h.stuckLines)
+					: undefined,
+				styledOutput: this.serializer.serialize(h.styledOutput),
+			}));
 
 			// Send all lines
 			const serialized = this.serializer.serialize(current.lines);
@@ -471,7 +479,15 @@ export default class TerminalBuffer {
 			current.stickyHeaders.length > 0 ||
 			last.stickyHeaders.length > 0
 		) {
-			update.stickyHeaders = current.stickyHeaders;
+			update.stickyHeaders = current.stickyHeaders.map(h => ({
+				...h,
+				node: undefined,
+				lines: this.serializer.serialize(h.lines),
+				stuckLines: h.stuckLines
+					? this.serializer.serialize(h.stuckLines)
+					: undefined,
+				styledOutput: this.serializer.serialize(h.styledOutput),
+			}));
 			hasChanges = true;
 		}
 
@@ -512,8 +528,8 @@ export default class TerminalBuffer {
 	}
 
 	private diffLines(
-		oldLines: ReadonlyArray<readonly StyledChar[]>,
-		newLines: ReadonlyArray<readonly StyledChar[]>,
+		oldLines: readonly StyledLine[],
+		newLines: readonly StyledLine[],
 	): Array<{
 		start: number;
 		end: number;
@@ -533,8 +549,8 @@ export default class TerminalBuffer {
 
 		const limit = Math.max(oldLines.length, newLines.length);
 		let chunkStart = -1;
-		let chunkLines: Array<readonly StyledChar[]> = [];
-		let chunkSource: Array<readonly StyledChar[]> = [];
+		let chunkLines: StyledLine[] = [];
+		let chunkSource: StyledLine[] = [];
 		for (let i = 0; i < limit; i++) {
 			const newLine = newLines[i];
 			const oldLine = oldLines[i];
@@ -559,10 +575,10 @@ export default class TerminalBuffer {
 					chunkStart = i;
 				}
 
-				chunkLines.push(newLine ?? []);
+				chunkLines.push(newLine ?? new StyledLine());
 
 				if (debugEdits) {
-					chunkSource.push(oldLine ?? []);
+					chunkSource.push(oldLine ?? new StyledLine());
 				}
 			}
 		}

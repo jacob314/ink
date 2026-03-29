@@ -1,16 +1,11 @@
 import test from 'ava';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {StyledLine} from '../src/styled-line.js';
 import ansiEscapes from 'ansi-escapes';
 import xtermHeadless, {type Terminal} from '@xterm/headless';
 import {TerminalBufferWorker} from '../src/worker/render-worker.js';
 import {Serializer} from '../src/serialization.js';
-import {
-	writeToTerm,
-	createStyledChar,
-	createStyledLine,
-} from './helpers/replay-lib.js';
+import {writeToTerm, createStyledLine} from './helpers/replay-lib.js';
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 const {Terminal: XtermTerminal} = xtermHeadless;
 const serializer = new Serializer();
 

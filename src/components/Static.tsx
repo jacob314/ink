@@ -37,6 +37,7 @@ export default function Static<T>(props: Props<T>) {
 		setIndex(items.length);
 	}, [items.length]);
 
+	// eslint-disable-next-line @typescript-eslint/promise-function-async
 	const children = itemsToRender.map((item, itemIndex) => {
 		return render(item, index + itemIndex);
 	});

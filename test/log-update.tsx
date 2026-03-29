@@ -2,7 +2,8 @@ import test, {type ExecutionContext} from 'ava';
 import {type SinonSpy} from 'sinon';
 import ansiEscapes from 'ansi-escapes';
 import xtermHeadless from '@xterm/headless';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {type} from '../src/tokenize.js';
+import {type StyledLine} from '../src/styled-line.js';
 import logUpdate from '../src/log-update.js';
 import createStdout from './helpers/create-stdout.js';
 
@@ -171,9 +172,9 @@ for (const mode of bufferModes) {
 		const stdout = createStdout();
 		const render = logUpdate.create(stdout, mode.options);
 
-		render('Line 1\nLine 2\nLine 3', [] as StyledChar[][]);
+		render('Line 1\nLine 2\nLine 3', [] as StyledLine[]);
 		render.clear();
-		render('Line 1', [] as StyledChar[][]);
+		render('Line 1', [] as StyledLine[]);
 
 		mode.check(t, stdout);
 	});
@@ -251,12 +252,12 @@ test('incremental rendering - alternate buffer', t => {
 		getRows: () => rows,
 	});
 
-	render('Line 1\nLine 2', [] as StyledChar[][]);
+	render('Line 1\nLine 2', [] as StyledLine[]);
 	t.is((stdout.write as any).callCount, 3);
 	const firstRender = (stdout.write as any).thirdCall.args[0] as string;
 	t.true(firstRender.includes('Line 1\nLine 2'));
 
-	render('Line 1\nUpdated', [] as StyledChar[][]);
+	render('Line 1\nUpdated', [] as StyledLine[]);
 	t.is((stdout.write as any).callCount, 4);
 	const secondRender = (stdout.write as any).lastCall.args[0] as string;
 	t.true(secondRender.includes(ansiEscapes.cursorNextLine)); // Skips Line 1
@@ -265,7 +266,7 @@ test('incremental rendering - alternate buffer', t => {
 
 	// Change rows to trigger full redraw
 	rows = 5;
-	render('Line 1\nUpdated Again', [] as StyledChar[][]);
+	render('Line 1\nUpdated Again', [] as StyledLine[]);
 	t.is((stdout.write as any).callCount, 5);
 	const thirdRender = (stdout.write as any).lastCall.args[0] as string;
 	// Should be a full redraw, so it should contain Line 1
@@ -558,14 +559,14 @@ test('incremental rendering - alternate buffer - atomic IME cursor positioning',
 	});
 
 	// First render
-	render('Line 1\nLine 2', [] as StyledChar[][], undefined, {row: 1, col: 2});
+	render('Line 1\nLine 2', [] as StyledLine[], undefined, {row: 1, col: 2});
 	t.is((stdout.write as any).callCount, 3);
 	const firstRender = (stdout.write as any).lastCall.args[0] as string;
 	t.true(firstRender.includes('Line 1\nLine 2'));
 	t.true(firstRender.includes(ansiEscapes.cursorTo(2, 1)));
 
 	// Same output, different cursor - should trigger re-render in alternate buffer
-	render('Line 1\nLine 2', [] as StyledChar[][], undefined, {row: 0, col: 5});
+	render('Line 1\nLine 2', [] as StyledLine[], undefined, {row: 0, col: 5});
 	t.is((stdout.write as any).callCount, 4);
 	const secondRender = (stdout.write as any).lastCall.args[0] as string;
 	// In alternate buffer incremental mode, it diffs.
@@ -575,7 +576,7 @@ test('incremental rendering - alternate buffer - atomic IME cursor positioning',
 
 	// Resize (change rows)
 	rows = 5;
-	render('Line 1\nLine 2', [] as StyledChar[][], undefined, {row: 1, col: 3});
+	render('Line 1\nLine 2', [] as StyledLine[], undefined, {row: 1, col: 3});
 	t.is((stdout.write as any).callCount, 5);
 	const thirdRender = (stdout.write as any).lastCall.args[0] as string;
 	t.true(thirdRender.includes('Line 1\nLine 2')); // Full redraw includes content
@@ -597,7 +598,7 @@ test('incremental rendering - alternate buffer - defaults to no cursor positioni
 	});
 
 	// Render without cursor
-	render('Line 1', [] as StyledChar[][]);
+	render('Line 1', [] as StyledLine[]);
 	const output = stdout.get();
 	// It should NOT contain cursorTo(0, 0) for cursor positioning if not provided.
 	// Note: cursorTo(0, 0) IS used for clearing/home, so we check if there's ONLY ONE (or none for the positioning part).
@@ -628,12 +629,12 @@ test('incremental rendering - alternate buffer - forces cursor repositioning whe
 	});
 
 	// Initial render
-	render('Line 1', [] as StyledChar[][], undefined, {row: 0, col: 2});
+	render('Line 1', [] as StyledLine[], undefined, {row: 0, col: 2});
 	t.true(stdout.get().includes(ansiEscapes.cursorTo(2, 0)));
 
 	// Output changes, but cursor position remains same.
 	// We MUST still output the cursor position because the incremental update moved the cursor.
-	render('Line 1 updated', [] as StyledChar[][], undefined, {row: 0, col: 2});
+	render('Line 1 updated', [] as StyledLine[], undefined, {row: 0, col: 2});
 	const secondRender = stdout.get();
 	t.true(secondRender.includes('Line 1 updated'));
 	t.true(secondRender.includes(ansiEscapes.cursorTo(2, 0)));

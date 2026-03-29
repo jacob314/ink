@@ -4,11 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import {type DOMElement, type DOMNode} from './dom.js';
 import type Output from './output.js';
 import {toStyledCharacters} from './measure-text.js';
-import {applySelectionStyle} from './selection.js';
+import {type StyledLine} from './styled-line.js';
 
 export function handleCachedRenderNode(
 	node: DOMElement,
@@ -17,7 +16,7 @@ export function handleCachedRenderNode(
 		x: number;
 		y: number;
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
-		selectionStyle?: (char: StyledChar) => StyledChar;
+		selectionStyle?: (line: StyledLine, index: number) => void;
 		trackSelection?: boolean;
 	},
 ) {
@@ -28,7 +27,7 @@ export function handleCachedRenderNode(
 		const range = selectionMap.get(node)!;
 		const clonedRegionObj = {
 			...node.cachedRender,
-			lines: node.cachedRender.lines.map(line => [...line]),
+			lines: node.cachedRender.lines.map(line => line.clone()),
 			selectableSpans: node.cachedRender.selectableSpans.map(span => ({
 				...span,
 			})),
@@ -67,11 +66,12 @@ export function handleCachedRenderNode(
 
 				if (currentOffset >= range.start && currentOffset < range.end) {
 					const line = clonedRegionObj.lines[span.y];
-					if (line?.[spanCharX]) {
-						line[spanCharX] = applySelectionStyle(
-							line[spanCharX]!,
-							selectionStyle,
-						);
+					if (line && spanCharX < line.length) {
+						if (selectionStyle) {
+							selectionStyle(line, spanCharX);
+						} else {
+							line.setInverted(spanCharX, true);
+						}
 					}
 				}
 

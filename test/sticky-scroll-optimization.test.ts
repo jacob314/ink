@@ -1,11 +1,11 @@
 import test from 'ava';
 import xtermHeadless, {type Terminal} from '@xterm/headless';
 import chalk from 'chalk';
+import {StyledLine} from '../src/styled-line.js';
 import {TerminalBufferWorker} from '../src/worker/render-worker.js';
 import {Serializer} from '../src/serialization.js';
 import {rainbowColors} from '../src/worker/terminal-writer.js';
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 const {Terminal: XtermTerminal} = xtermHeadless;
 
 // Force color support for testing rainbow colors
@@ -13,20 +13,14 @@ chalk.level = 3;
 
 const serializer = new Serializer();
 
-const createStyledChar = (char: string) => ({
-	type: 'char' as const,
-	value: char,
-	fullWidth: false,
-	styles: [],
-});
-
-const createStyledLine = (text: string, width = 80) => {
-	const chars = [...text].map(char => createStyledChar(char));
-	while (chars.length < width) {
-		chars.push(createStyledChar(' '));
+const createPaddedStyledLine = (text: string): StyledLine => {
+	const line = new StyledLine();
+	const paddedText = text.padEnd(80, ' ');
+	for (const char of paddedText) {
+		line.pushChar(char, 0);
 	}
 
-	return chars;
+	return line;
 };
 
 const writeToTerm = async (term: Terminal, data: string): Promise<void> =>
@@ -64,13 +58,13 @@ test('TerminalBufferWorker avoids rerendering stuck headers during scroll', asyn
 	});
 
 	// 1. Initial State: Scrollable region with a sticky header
-	const headerLines = [createStyledLine('HEADER')];
+	const headerLines = [createPaddedStyledLine('HEADER')];
 	const contentLines = [
-		createStyledLine('Content 1'),
-		createStyledLine('Content 2'),
-		createStyledLine('Content 3'),
-		createStyledLine('Content 4'),
-		createStyledLine('Content 5'),
+		createPaddedStyledLine('Content 1'),
+		createPaddedStyledLine('Content 2'),
+		createPaddedStyledLine('Content 3'),
+		createPaddedStyledLine('Content 4'),
+		createPaddedStyledLine('Content 5'),
 	];
 
 	const allLines = [...headerLines, ...contentLines];
@@ -88,8 +82,8 @@ test('TerminalBufferWorker avoids rerendering stuck headers during scroll', asyn
 				{
 					nodeId: 1,
 					type: 'top',
-					lines: headerLines,
-					styledOutput: headerLines,
+					lines: serializer.serialize(headerLines),
+					styledOutput: serializer.serialize(headerLines),
 					x: 0,
 					y: 0,
 					naturalRow: 0,
@@ -181,13 +175,13 @@ test('TerminalBufferWorker handles sticky footers during scroll', async t => {
 	});
 
 	const contentLines = [
-		createStyledLine('Content 1'),
-		createStyledLine('Content 2'),
-		createStyledLine('Content 3'),
-		createStyledLine('Content 4'),
-		createStyledLine('Content 5'),
+		createPaddedStyledLine('Content 1'),
+		createPaddedStyledLine('Content 2'),
+		createPaddedStyledLine('Content 3'),
+		createPaddedStyledLine('Content 4'),
+		createPaddedStyledLine('Content 5'),
 	];
-	const footerLines = [createStyledLine('FOOTER')];
+	const footerLines = [createPaddedStyledLine('FOOTER')];
 
 	const allLines = [...contentLines, ...footerLines];
 	const data = serializer.serialize(allLines);
@@ -204,8 +198,8 @@ test('TerminalBufferWorker handles sticky footers during scroll', async t => {
 				{
 					nodeId: 2,
 					type: 'bottom',
-					lines: footerLines,
-					styledOutput: footerLines,
+					lines: serializer.serialize(footerLines),
+					styledOutput: serializer.serialize(footerLines),
 					x: 0,
 					y: 4,
 					naturalRow: 10,
@@ -287,12 +281,12 @@ test('TerminalBufferWorker handles headers scrolling off when stickyHeadersInBac
 		convertEol: true,
 	});
 
-	const headerLines = [createStyledLine('HEADER')];
+	const headerLines = [createPaddedStyledLine('HEADER')];
 	const contentLines = [
-		createStyledLine('Content 1'),
-		createStyledLine('Content 2'),
-		createStyledLine('Content 3'),
-		createStyledLine('Content 4'),
+		createPaddedStyledLine('Content 1'),
+		createPaddedStyledLine('Content 2'),
+		createPaddedStyledLine('Content 3'),
+		createPaddedStyledLine('Content 4'),
 	];
 
 	const allLines = [...headerLines, ...contentLines];
@@ -310,8 +304,8 @@ test('TerminalBufferWorker handles headers scrolling off when stickyHeadersInBac
 				{
 					nodeId: 1,
 					type: 'top',
-					lines: headerLines,
-					styledOutput: headerLines,
+					lines: serializer.serialize(headerLines),
+					styledOutput: serializer.serialize(headerLines),
 					x: 0,
 					y: 0,
 					naturalRow: 0,
@@ -377,8 +371,8 @@ test('TerminalBufferWorker switches to stuckLines when stuck', async t => {
 		convertEol: true,
 	});
 
-	const naturalLines = [createStyledLine('NATURAL')];
-	const stuckLines = [createStyledLine('STUCK')];
+	const naturalLines = [createPaddedStyledLine('NATURAL')];
+	const stuckLines = [createPaddedStyledLine('STUCK')];
 
 	worker.update({id: 'root', children: []}, [
 		{
@@ -392,9 +386,9 @@ test('TerminalBufferWorker switches to stuckLines when stuck', async t => {
 				{
 					nodeId: 1,
 					type: 'top',
-					lines: naturalLines,
-					stuckLines,
-					styledOutput: naturalLines,
+					lines: serializer.serialize(naturalLines),
+					stuckLines: serializer.serialize(stuckLines),
+					styledOutput: serializer.serialize(naturalLines),
 					x: 0,
 					y: 0,
 					naturalRow: 1, // Will stick when scrollTop >= 1
@@ -467,10 +461,10 @@ test('TerminalBufferWorker handles stuck headers with more lines than natural', 
 		convertEol: true,
 	});
 
-	const naturalLines = [createStyledLine('NATURAL')]; // 1 line
+	const naturalLines = [createPaddedStyledLine('NATURAL')]; // 1 line
 	const stuckLines = [
-		createStyledLine('STUCK L1'),
-		createStyledLine('STUCK L2'),
+		createPaddedStyledLine('STUCK L1'),
+		createPaddedStyledLine('STUCK L2'),
 	]; // 2 lines
 
 	worker.update({id: 'root', children: []}, [
@@ -485,9 +479,9 @@ test('TerminalBufferWorker handles stuck headers with more lines than natural', 
 				{
 					nodeId: 1,
 					type: 'top',
-					lines: naturalLines,
-					stuckLines,
-					styledOutput: stuckLines,
+					lines: serializer.serialize(naturalLines),
+					stuckLines: serializer.serialize(stuckLines),
+					styledOutput: serializer.serialize(stuckLines),
 					x: 0,
 					y: 0,
 					naturalRow: 1,
@@ -503,11 +497,11 @@ test('TerminalBufferWorker handles stuck headers with more lines than natural', 
 						start: 0,
 						end: 5,
 						data: serializer.serialize([
-							createStyledLine('Row 0'),
-							createStyledLine('Row 1'),
-							createStyledLine('Row 2'),
-							createStyledLine('Row 3'),
-							createStyledLine('Row 4'),
+							createPaddedStyledLine('Row 0'),
+							createPaddedStyledLine('Row 1'),
+							createPaddedStyledLine('Row 2'),
+							createPaddedStyledLine('Row 3'),
+							createPaddedStyledLine('Row 4'),
 						]),
 					},
 				],

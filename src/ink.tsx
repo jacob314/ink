@@ -1,7 +1,7 @@
+import {type StyledLine} from './styled-line.js';
 import process from 'node:process';
 import React, {type ReactNode} from 'react';
 import {throttle} from 'es-toolkit/compat';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import ansiEscapes from 'ansi-escapes';
 import isInCi from 'is-in-ci';
 import autoBind from 'auto-bind';
@@ -74,7 +74,7 @@ export type Options = {
 	backbufferUpdateDelay?: number;
 	maxScrollbackLength?: number;
 	forceScrollToBottomOnBackbufferRefresh?: boolean;
-	selectionStyle?: (char: StyledChar) => StyledChar;
+	selectionStyle?: (line: StyledLine, index: number) => void;
 	standardReactLayoutTiming?: boolean;
 	renderProcess?: boolean;
 	terminalBuffer?: boolean;
@@ -104,7 +104,7 @@ type RenderModeOptions = {
 	output: string;
 	outputHeight: number;
 	staticOutput: string;
-	styledOutput: StyledChar[][];
+	styledOutput: StyledLine[];
 	cursorPosition: {row: number; col: number} | undefined;
 	debugRainbowColor: string | undefined;
 	hasStaticOutput: boolean;
@@ -492,10 +492,10 @@ export default class Ink {
 		);
 
 		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
 		reconciler.updateContainerSync(tree, this.container, null, noop);
 		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
 		reconciler.flushSyncWork();
 	}
 
@@ -581,10 +581,10 @@ export default class Ink {
 		this.isUnmounted = true;
 
 		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
 		reconciler.updateContainerSync(null, this.container, null, noop);
 		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
 		reconciler.flushSyncWork();
 		instances.delete(this.options.stdout);
 

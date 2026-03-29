@@ -43,9 +43,7 @@ test('text with dim+bold', t => {
 		</Text>,
 	);
 
-	t.is(stripAnsi(output), 'Test');
-	t.true(output.includes('\u001B[1m'));
-	t.true(output.includes('\u001B[2m'));
+	t.is(output, '\u001B[1m\u001B[2mTest\u001B[22m');
 });
 
 test('text with dimmed color', t => {
@@ -55,7 +53,7 @@ test('text with dimmed color', t => {
 		</Text>,
 	);
 
-	t.is(output, chalk.green.dim('Test'));
+	t.is(output, chalk.dim.green('Test'));
 });
 
 test('text with hex color', t => {

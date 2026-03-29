@@ -1,16 +1,11 @@
 import test from 'ava';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {StyledLine} from '../src/styled-line.js';
 import {TerminalWriter} from '../src/worker/terminal-writer.js';
 
-const createStyledChar = (char: string): StyledChar => ({
-	type: 'char',
-	value: char,
-	fullWidth: false,
-	styles: [],
-});
+import {toStyledCharacters} from '../src/measure-text.js';
 
 const createLine = (text: string) => ({
-	styledChars: [...text].map(char => createStyledChar(char)),
+	styledChars: toStyledCharacters(text),
 	text,
 	length: text.length,
 	tainted: true,

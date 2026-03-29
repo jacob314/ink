@@ -7,7 +7,7 @@
 import fs from 'node:fs';
 import {Buffer} from 'node:buffer';
 import {type RegionNode, type RegionUpdate} from './output.js';
-import {type Serializer, Deserializer} from './serialization.js';
+import {Deserializer} from './serialization.js';
 import {type StickyHeader} from './dom.js';
 
 export type ReplayData = {
@@ -51,7 +51,6 @@ export type ReplayStickyHeader = Omit<
 
 export function serializeReplayUpdate(
 	update: RegionUpdate,
-	serializer: Serializer,
 ): ReplayRegionUpdate {
 	const {lines, stickyHeaders, ...rest} = update;
 	const result: ReplayRegionUpdate = {
@@ -73,16 +72,11 @@ export function serializeReplayUpdate(
 	if (stickyHeaders) {
 		result.stickyHeaders = stickyHeaders.map(h => ({
 			...h,
-			node: undefined,
-			lines: Buffer.from(serializer.serialize(h.lines ?? [])).toString(
-				'base64',
-			),
+			lines: Buffer.from(h.lines).toString('base64'),
 			stuckLines: h.stuckLines
-				? Buffer.from(serializer.serialize(h.stuckLines)).toString('base64')
+				? Buffer.from(h.stuckLines).toString('base64')
 				: undefined,
-			styledOutput: Buffer.from(
-				serializer.serialize(h.styledOutput ?? []),
-			).toString('base64'),
+			styledOutput: Buffer.from(h.styledOutput).toString('base64'),
 		}));
 	}
 
@@ -110,21 +104,14 @@ export function deserializeReplayUpdate(
 	}
 
 	if (stickyHeaders) {
-		result.stickyHeaders = stickyHeaders.map(h => {
-			const header: StickyHeader = {
-				...h,
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-				node: undefined as any,
-				lines: new Deserializer(Buffer.from(h.lines, 'base64')).deserialize(),
-				stuckLines: h.stuckLines
-					? new Deserializer(Buffer.from(h.stuckLines, 'base64')).deserialize()
-					: undefined,
-				styledOutput: new Deserializer(
-					Buffer.from(h.styledOutput, 'base64'),
-				).deserialize(),
-			};
-			return header;
-		});
+		result.stickyHeaders = stickyHeaders.map(h => ({
+			...h,
+			lines: Buffer.from(h.lines, 'base64'),
+			stuckLines: h.stuckLines
+				? Buffer.from(h.stuckLines, 'base64')
+				: undefined,
+			styledOutput: Buffer.from(h.styledOutput, 'base64'),
+		}));
 	}
 
 	return result;
@@ -195,12 +182,7 @@ export function createHumanReadableDump(data: LoadedReplayData): string {
 							return {
 								start: u.start,
 								end: u.end,
-								text: lines.map(line =>
-									line
-										.map(c => c.value)
-										.join('')
-										.trimEnd(),
-								),
+								text: lines.map(line => line.getText().trimEnd()),
 							};
 						}),
 					};
@@ -209,24 +191,17 @@ export function createHumanReadableDump(data: LoadedReplayData): string {
 				if (update.stickyHeaders) {
 					dumpUpdate['stickyHeaders'] = update.stickyHeaders.map(h => ({
 						...h,
-						lines: (h.lines ?? []).map(line =>
-							line
-								.map(c => c.value)
-								.join('')
-								.trimEnd(),
-						),
-						stuckLines: h.stuckLines?.map(line =>
-							line
-								.map(c => c.value)
-								.join('')
-								.trimEnd(),
-						),
-						styledOutput: (h.styledOutput ?? []).map(line =>
-							line
-								.map(c => c.value)
-								.join('')
-								.trimEnd(),
-						),
+						lines: new Deserializer(Buffer.from(h.lines))
+							.deserialize()
+							.map(line => line.getText().trimEnd()),
+						stuckLines: h.stuckLines
+							? new Deserializer(Buffer.from(h.stuckLines))
+									.deserialize()
+									.map(line => line.getText().trimEnd())
+							: undefined,
+						styledOutput: new Deserializer(Buffer.from(h.styledOutput))
+							.deserialize()
+							.map(line => line.getText().trimEnd()),
 						node: undefined,
 					}));
 				}

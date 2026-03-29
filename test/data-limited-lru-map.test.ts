@@ -98,11 +98,11 @@ test('DataLimitedLruMap prevents infinite loop if internal state is inconsistent
 	map.set('b', 2);
 
 	// Mock delete to return false for 'a', simulating a "ghost" key that is in the tail but not deletable
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 	const originalDelete = internalMap.delete.bind(internalMap);
 	internalMap.delete = (key: string) => {
 		if (key === 'a') return false;
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
+
 		return originalDelete(key);
 	};
 

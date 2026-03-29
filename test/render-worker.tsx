@@ -1,30 +1,24 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
 import test from 'ava';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {type StyledLine} from '../src/styled-line.js';
 import {TerminalBufferWorker} from '../src/worker/render-worker.js';
 import {Serializer} from '../src/serialization.js';
 
+import {toStyledCharacters} from '../src/measure-text.js';
+
 const serializer = new Serializer();
 
-const createStyledChar = (char: string): StyledChar => ({
-	type: 'char',
-	value: char,
-	fullWidth: false,
-	styles: [],
-});
-
-const createLine = (text: string): StyledChar[] =>
-	[...text].map(char => createStyledChar(char));
+const createLine = (text: string): StyledLine => toStyledCharacters(text);
 
 class TestWorkerWrapper {
-	lines: StyledChar[][] = [];
+	lines: StyledLine[] = [];
 
 	constructor(public worker: TerminalBufferWorker) {}
 
 	// Simulate an update (overwrite)
 	update(
 		start: number,
-		newLines: StyledChar[][],
+		newLines: StyledLine[],
 		cursorPosition?: {row: number; col: number},
 	) {
 		// Update local model
@@ -57,10 +51,7 @@ class TestWorkerWrapper {
 		);
 	}
 
-	append(
-		newLines: StyledChar[][],
-		cursorPosition?: {row: number; col: number},
-	) {
+	append(newLines: StyledLine[], cursorPosition?: {row: number; col: number}) {
 		const start = this.lines.length;
 		this.lines.push(...newLines);
 		const data = serializer.serialize(newLines);

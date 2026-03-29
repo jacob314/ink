@@ -1,12 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import xtermHeadless, {type Terminal} from '@xterm/headless';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {StyledLine} from '../../src/styled-line.js';
 import {TerminalBufferWorker} from '../../src/worker/render-worker.js';
 import {loadReplay} from '../../src/replay.js';
 import {type RenderLine} from '../../src/worker/terminal-writer.js';
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 const {Terminal: XtermTerminal} = xtermHeadless;
 
 function getPlainText(line: RenderLine | undefined): string {
@@ -15,10 +14,7 @@ function getPlainText(line: RenderLine | undefined): string {
 	}
 
 	// RenderLine.text contains ANSI codes. We want plain text for comparison with xterm buffer.
-	return line.styledChars
-		.map((c: StyledChar) => c.value)
-		.join('')
-		.trimEnd();
+	return line.styledChars.getText().trimEnd();
 }
 
 export const writeToTerm = async (
@@ -232,12 +228,11 @@ export async function captureTerminalState(
 	return result;
 }
 
-export const createStyledChar = (char: string): StyledChar => ({
-	type: 'char',
-	value: char,
-	fullWidth: false,
-	styles: [],
-});
+export const createStyledLine = (text: string): StyledLine => {
+	const line = new StyledLine();
+	for (const char of text) {
+		line.pushChar(char, 0);
+	}
 
-export const createStyledLine = (text: string): StyledChar[] =>
-	[...text].map(char => createStyledChar(char));
+	return line;
+};

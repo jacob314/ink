@@ -1,3 +1,4 @@
+import {type StyledLine} from './styled-line.js';
 /**
  * @license
  * Copyright 2026 Google LLC
@@ -5,7 +6,6 @@
  */
 
 import Yoga from 'yoga-layout';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import {type DOMElement, type DOMNode, type StickyHeader} from './dom.js';
 import Output from './output.js';
 import renderNodeToOutput, {
@@ -75,12 +75,12 @@ export function renderStickyNode(
 		transformers?: OutputTransformer[];
 		skipStaticElements: boolean;
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
-		selectionStyle?: (char: StyledChar) => StyledChar;
+		selectionStyle?: (line: StyledLine, index: number) => void;
 		trackSelection?: boolean;
 	},
 ): {
-	naturalLines: ReadonlyArray<readonly StyledChar[]>;
-	stuckLines: ReadonlyArray<readonly StyledChar[]> | undefined;
+	naturalLines: readonly StyledLine[];
+	stuckLines: readonly StyledLine[] | undefined;
 	naturalHeight: number;
 	maxHeaderHeight: number;
 } {
@@ -253,7 +253,7 @@ export function renderActiveStickyNodes(
 		newTransformers: OutputTransformer[];
 		skipStaticElements: boolean;
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
-		selectionStyle?: (char: StyledChar) => StyledChar;
+		selectionStyle?: (line: StyledLine, index: number) => void;
 		trackSelection?: boolean;
 	},
 ) {
@@ -409,8 +409,8 @@ export function renderActiveStickyNodes(
 			minStuckY = minStickyTop - (y + currentBorderTop);
 		}
 
-		let naturalLines: ReadonlyArray<readonly StyledChar[]>;
-		let stuckLines: ReadonlyArray<readonly StyledChar[]> | undefined;
+		let naturalLines: readonly StyledLine[];
+		let stuckLines: readonly StyledLine[] | undefined;
 		let naturalHeight: number;
 
 		if (cached) {

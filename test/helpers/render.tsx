@@ -20,7 +20,6 @@ type TerminalState = {
 };
 
 export class XtermStdout extends EventEmitter {
-	// eslint-disable-next-line @typescript-eslint/naming-convention
 	isTTY = true;
 	private readonly state: TerminalState;
 	private pendingWrites = 0;
@@ -155,7 +154,6 @@ export class XtermStdout extends EventEmitter {
 }
 
 export class XtermStderr extends EventEmitter {
-	// eslint-disable-next-line @typescript-eslint/naming-convention
 	isTTY = true;
 	private readonly state: TerminalState;
 	private pendingWrites = 0;
@@ -192,7 +190,6 @@ export class XtermStderr extends EventEmitter {
 }
 
 export class XtermStdin extends EventEmitter {
-	// eslint-disable-next-line @typescript-eslint/naming-convention
 	isTTY = true;
 	private readonly dataBuffer: string[] = [];
 

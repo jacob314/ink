@@ -6,7 +6,8 @@
 
 import process from 'node:process';
 import ansiEscapes from 'ansi-escapes';
-import {type StyledChar, styledCharsToString} from '@alcalzone/ansi-tokenize';
+import {styledLineToString} from '../tokenize.js';
+import {StyledLine} from '../styled-line.js';
 import {debugLog} from '../debug-log.js';
 import colorize from '../colorize.js';
 import {debugWorker} from './render-worker.js';
@@ -45,51 +46,19 @@ export const rainbowColors = [
 ];
 
 export type RenderLine = {
-	styledChars: StyledChar[];
+	styledChars: StyledLine;
 	text: string;
 	length: number;
 	tainted: boolean;
 };
 
 export function linesEqual(
-	lineA: readonly StyledChar[] | undefined,
-	lineB: readonly StyledChar[] | undefined,
+	lineA: StyledLine | undefined,
+	lineB: StyledLine | undefined,
 ): boolean {
-	if (lineA === lineB) {
-		return true;
-	}
-
-	if (!lineA || !lineB) {
-		return false;
-	}
-
-	if (lineA.length !== lineB.length) {
-		return false;
-	}
-
-	for (const [i, element] of lineA.entries()) {
-		const charA = element;
-		const charB = lineB[i]!;
-
-		if (charA.value !== charB.value || charA.fullWidth !== charB.fullWidth) {
-			return false;
-		}
-
-		if (charA.styles.length !== charB.styles.length) {
-			return false;
-		}
-
-		for (let j = 0; j < charA.styles.length; j++) {
-			const styleA = charA.styles[j]!;
-			const styleB = charB.styles[j]!;
-
-			if (styleA.code !== styleB.code || styleA.endCode !== styleB.endCode) {
-				return false;
-			}
-		}
-	}
-
-	return true;
+	if (lineA === lineB) return true;
+	if (!lineA || !lineB) return false;
+	return lineA.equals(lineB);
 }
 
 /**
@@ -377,10 +346,10 @@ export class TerminalWriter {
 		}
 	}
 
-	clampLine(line: StyledChar[], width: number): RenderLine {
-		if (width <= 0) {
+	clampLine(line: StyledLine | undefined, width: number): RenderLine {
+		if (width <= 0 || !line) {
 			return {
-				styledChars: [],
+				styledChars: new StyledLine(),
 				text: '',
 				length: 0,
 				tainted: false,
@@ -388,8 +357,7 @@ export class TerminalWriter {
 		}
 
 		let i = line.length - 1;
-
-		while (i >= 0 && line[i]?.value === ' ' && line[i]!.styles.length === 0) {
+		while (i >= 0 && line.getValue(i) === ' ' && !line.hasStyles(i)) {
 			i--;
 		}
 
@@ -398,11 +366,9 @@ export class TerminalWriter {
 		let visualWidth = 0;
 
 		for (let k = 0; k < trimmedLength; k++) {
-			if (line[k]?.value === '') {
-				continue;
-			}
-
-			visualWidth += line[k]!.fullWidth ? 2 : 1;
+			const val = line.getValue(k);
+			if (val === '') continue;
+			visualWidth += line.getFullWidth(k) ? 2 : 1;
 		}
 
 		if (visualWidth <= width) {
@@ -410,31 +376,28 @@ export class TerminalWriter {
 				trimmedLength === line.length ? line : line.slice(0, trimmedLength);
 			return {
 				styledChars,
-				text: styledCharsToString(styledChars),
+				text: styledLineToString(styledChars),
 				length: visualWidth,
 				tainted: false,
 			};
 		}
 
 		// Truncate logic
-		const lastNonSpaceChar = line[i];
-		const hasBoxChar =
-			lastNonSpaceChar &&
-			(lastNonSpaceChar.value === '╮' ||
-				lastNonSpaceChar.value === '│' ||
-				lastNonSpaceChar.value === '╯');
+		const lastVal = line.getValue(i);
+		const lastFullWidth = line.getFullWidth(i);
+		const hasBoxChar = lastVal === '╮' || lastVal === '│' || lastVal === '╯';
 
 		let targetVisualWidth = width;
 
-		if (hasBoxChar && lastNonSpaceChar) {
-			targetVisualWidth -= lastNonSpaceChar.fullWidth ? 2 : 1;
+		if (hasBoxChar) {
+			targetVisualWidth -= lastFullWidth ? 2 : 1;
 		}
 
 		let currentWidth = 0;
 		let sliceIndex = 0;
 
 		for (let k = 0; k < trimmedLength; k++) {
-			const charWidth = line[k]!.fullWidth ? 2 : 1;
+			const charWidth = line.getFullWidth(k) ? 2 : 1;
 
 			if (currentWidth + charWidth > targetVisualWidth) {
 				break;
@@ -444,13 +407,22 @@ export class TerminalWriter {
 			sliceIndex++;
 		}
 
-		if (hasBoxChar && lastNonSpaceChar) {
-			const boxWidth = lastNonSpaceChar.fullWidth ? 2 : 1;
-			const styledChars = [...line.slice(0, sliceIndex), lastNonSpaceChar];
+		if (hasBoxChar) {
+			const boxWidth = lastFullWidth ? 2 : 1;
+			const lastCharLine = new StyledLine();
+			lastCharLine.pushChar(
+				lastVal,
+				line.getFormatFlags(i),
+				line.getFgColor(i),
+				line.getBgColor(i),
+				line.getLink(i),
+			);
+			// eslint-disable-next-line unicorn/prefer-spread
+			const styledChars = line.slice(0, sliceIndex).concat(lastCharLine);
 
 			return {
 				styledChars,
-				text: styledCharsToString(styledChars),
+				text: styledLineToString(styledChars),
 				length: currentWidth + boxWidth,
 				tainted: false,
 			};
@@ -459,7 +431,7 @@ export class TerminalWriter {
 		const styledChars = line.slice(0, sliceIndex);
 		return {
 			styledChars,
-			text: styledCharsToString(styledChars),
+			text: styledLineToString(styledChars),
 			length: currentWidth,
 			tainted: false,
 		};
@@ -685,9 +657,9 @@ export class TerminalWriter {
 				debugWorker
 			) {
 				debugLog(
-					`Line ${r} on screen inconsistent between terminalWriter and ground truth. Expected "${styledCharsToString(
-						lines[index]?.styledChars ?? [],
-					)}", got "${styledCharsToString(this.screen[r]?.styledChars ?? [])}"`,
+					`Line ${r} on screen inconsistent between terminalWriter and ground truth. Expected "${styledLineToString(
+						lines[index]?.styledChars ?? new StyledLine(),
+					)}", got "${styledLineToString(this.screen[r]?.styledChars ?? new StyledLine())}"`,
 				);
 			}
 		}
@@ -701,9 +673,9 @@ export class TerminalWriter {
 				debugWorker
 			) {
 				debugLog(
-					`Line ${i} in backbuffer inconsistent. Expected "${styledCharsToString(
-						lines[i]?.styledChars ?? [],
-					)}", got "${styledCharsToString(this.backbuffer[i]?.styledChars ?? [])}"`,
+					`Line ${i} in backbuffer inconsistent. Expected "${styledLineToString(
+						lines[i]?.styledChars ?? new StyledLine(),
+					)}", got "${styledLineToString(this.backbuffer[i]?.styledChars ?? new StyledLine())}"`,
 				);
 			}
 		}
@@ -715,7 +687,7 @@ export class TerminalWriter {
 		}
 
 		this.screen[bottom - 1] = {
-			styledChars: [],
+			styledChars: new StyledLine(),
 			text: '',
 			length: 0,
 			tainted: false,
@@ -768,7 +740,7 @@ export class TerminalWriter {
 				this.screen[0] = {...line0Content, tainted: true};
 			} else {
 				this.screen[0] = {
-					styledChars: [],
+					styledChars: new StyledLine(),
 					text: '',
 					length: 0,
 					tainted: true,
@@ -792,7 +764,12 @@ export class TerminalWriter {
 			this.screen[i] = this.screen[i - 1]!;
 		}
 
-		this.screen[start] = {styledChars: [], text: '', length: 0, tainted: false};
+		this.screen[start] = {
+			styledChars: new StyledLine(),
+			text: '',
+			length: 0,
+			tainted: false,
+		};
 	}
 
 	private performScroll(options: {

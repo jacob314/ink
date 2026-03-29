@@ -599,7 +599,6 @@ test('render different component based on whether stdin is a TTY or not', t => {
 
 test('render only last frame when run in CI', async t => {
 	const output = await run('ci', {
-		// eslint-disable-next-line @typescript-eslint/naming-convention
 		env: {CI: 'true'},
 		columns: 0,
 	});
@@ -613,7 +612,6 @@ test('render only last frame when run in CI', async t => {
 
 test('render all frames if CI environment variable equals false', async t => {
 	const output = await run('ci', {
-		// eslint-disable-next-line @typescript-eslint/naming-convention
 		env: {CI: 'false'},
 		columns: 0,
 	});

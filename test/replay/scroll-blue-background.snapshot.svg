@@ -1,22 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1622" height="581" viewBox="0 0 1622 581">
+<svg xmlns="http://www.w3.org/2000/svg" width="1649" height="581" viewBox="0 0 1649 581">
   <style>
     text { font-family: Consolas, "Courier New", monospace; font-size: 14px; dominant-baseline: text-before-edge; white-space: pre; }
   </style>
-  <rect width="1622" height="581" fill="#000000" />
+  <rect width="1649" height="581" fill="#000000" />
   <g transform="translate(10, 10)">
-    <text x="0" y="19" fill="#ffffff" textLength="1602" lengthAdjust="spacingAndGlyphs"> Use Up/Down arrows to scroll. Press &apos;s&apos; to export snapshot. Press &apos;Ctrl+C&apos; to exit.                                                                                              </text>
+    <text x="0" y="19" fill="#ffffff" textLength="1629" lengthAdjust="spacingAndGlyphs"> Use Up/Down arrows to scroll. Press &apos;s&apos; to export snapshot. Press &apos;Ctrl+C&apos; to exit.                                                                                                 </text>
     <rect x="9" y="51" width="261" height="17" fill="#0000ee" />
     <text x="9" y="53" fill="#ffffff" textLength="261" lengthAdjust="spacingAndGlyphs">This is line 1 of arbitrary t</text>
-    <text x="270" y="53" fill="#ffffff" textLength="1332" lengthAdjust="spacingAndGlyphs">█                                                                                                                                                   </text>
+    <text x="270" y="53" fill="#ffffff" textLength="1359" lengthAdjust="spacingAndGlyphs">█                                                                                                                                                      </text>
     <rect x="9" y="68" width="261" height="17" fill="#0000ee" />
     <text x="9" y="70" fill="#ffffff" textLength="261" lengthAdjust="spacingAndGlyphs">region.                      </text>
-    <text x="270" y="70" fill="#ffffff" textLength="1332" lengthAdjust="spacingAndGlyphs">█                                                                                                                                                   </text>
+    <text x="270" y="70" fill="#ffffff" textLength="1359" lengthAdjust="spacingAndGlyphs">█                                                                                                                                                      </text>
     <rect x="9" y="85" width="261" height="17" fill="#0000ee" />
     <text x="9" y="87" fill="#ffffff" textLength="261" lengthAdjust="spacingAndGlyphs">This is line 2 of arbitrary t</text>
-    <text x="270" y="87" fill="#ffffff" textLength="1332" lengthAdjust="spacingAndGlyphs">█                                                                                                                                                   </text>
+    <text x="270" y="87" fill="#ffffff" textLength="1359" lengthAdjust="spacingAndGlyphs">█                                                                                                                                                      </text>
     <rect x="9" y="102" width="261" height="17" fill="#0000ee" />
     <text x="9" y="104" fill="#ffffff" textLength="261" lengthAdjust="spacingAndGlyphs">region.                      </text>
-    <text x="270" y="104" fill="#ffffff" textLength="1332" lengthAdjust="spacingAndGlyphs">█                                                                                                                                                   </text>
+    <text x="270" y="104" fill="#ffffff" textLength="1359" lengthAdjust="spacingAndGlyphs">█                                                                                                                                                      </text>
     <rect x="9" y="119" width="270" height="17" fill="#0000ee" />
     <text x="9" y="121" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">This is line 3 of arbitrary t▀</text>
     <rect x="9" y="136" width="270" height="17" fill="#0000ee" />
