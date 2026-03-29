@@ -78,8 +78,8 @@ export class Serializer {
 			return true;
 		}
 
-		for (let i = 0; i < stylesA.length; i++) {
-			const styleA = stylesA[i]!;
+		for (const [i, element] of stylesA.entries()) {
+			const styleA = element;
 			const styleB = stylesB[i]!;
 
 			if (styleA.code !== styleB.code || styleA.endCode !== styleB.endCode) {
@@ -216,8 +216,6 @@ export function getInternedChar(
 
 	return {type: 'char', value, fullWidth, styles};
 }
-
-
 
 export class Deserializer {
 	private offset = 0;

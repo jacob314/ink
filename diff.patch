@@ -1,0 +1,28 @@
+diff --git a/src/components/Static.tsx b/src/components/Static.tsx
+index 6480e00..d0628e2 100644
+--- a/src/components/Static.tsx
++++ b/src/components/Static.tsx
+@@ -37,7 +37,7 @@ export default function Static<T>(props: Props<T>) {
+ 		setIndex(items.length);
+ 	}, [items.length]);
+ 
+-	const children = itemsToRender.map((item, itemIndex) => {
++	const children = itemsToRender.map(async (item, itemIndex) => {
+ 		return render(item, index + itemIndex);
+ 	});
+ 
+diff --git a/src/worker/terminal-writer.ts b/src/worker/terminal-writer.ts
+index a9e2cc4..fb6ce81 100644
+--- a/src/worker/terminal-writer.ts
++++ b/src/worker/terminal-writer.ts
+@@ -67,8 +67,8 @@ export function linesEqual(
+ 		return false;
+ 	}
+ 
+-	for (let i = 0; i < lineA.length; i++) {
+-		const charA = lineA[i]!;
++	for (const [i, element] of lineA.entries()) {
++		const charA = element;
+ 		const charB = lineB[i]!;
+ 
+ 		if (charA.value !== charB.value || charA.fullWidth !== charB.fullWidth) {

@@ -1,0 +1,67 @@
+
+  src/measure-element.ts:669:23
+  ⚠   669:23  Arrow function has too many parameters (5). Maximum allowed is 4.                                                                                                                                                           max-params
+  ⚠   711:23  Arrow function has too many parameters (5). Maximum allowed is 4.                                                                                                                                                           max-params
+  ⚠   755:23  Arrow function has too many parameters (5). Maximum allowed is 4.                                                                                                                                                           max-params
+  ⚠   811:6   Blocks are nested too deeply (5). Maximum allowed is 4.                                                                                                                                                                     max-depth
+  ⚠   813:7   Blocks are nested too deeply (6). Maximum allowed is 4.                                                                                                                                                                     max-depth
+  ⚠   817:7   Blocks are nested too deeply (6). Maximum allowed is 4.                                                                                                                                                                     max-depth
+  ⚠   835:6   Blocks are nested too deeply (5). Maximum allowed is 4.                                                                                                                                                                     max-depth
+  ⚠   923:6   Blocks are nested too deeply (5). Maximum allowed is 4.                                                                                                                                                                     max-depth
+  ⚠   924:7   Blocks are nested too deeply (6). Maximum allowed is 4.                                                                                                                                                                     max-depth
+  ⚠  1076:6   Blocks are nested too deeply (5). Maximum allowed is 4.                                                                                                                                                                     max-depth
+
+  src/worker/compositor.ts:34:2
+  ⚠    34:2   Method drawContent has too many parameters (5). Maximum allowed is 4.                                                                                                                                                       max-params
+  ⚠    75:7   Blocks are nested too deeply (5). Maximum allowed is 4.                                                                                                                                                                     max-depth
+  ⚠    79:7   Blocks are nested too deeply (5). Maximum allowed is 4.                                                                                                                                                                     max-depth
+  ⚠    97:2   Method drawStickyHeaders has too many parameters (5). Maximum allowed is 4.                                                                                                                                                 max-params
+  ⚠   217:2   Method drawScrollbars has too many parameters (5). Maximum allowed is 4.                                                                                                                                                    max-params
+
+  src/log-update.ts:470:7
+  ⚠   470:7   Blocks are nested too deeply (5). Maximum allowed is 4.                                                                                                                                                                     max-depth
+  ⚠   486:7   Blocks are nested too deeply (5). Maximum allowed is 4.                                                                                                                                                                     max-depth
+  ⚠   495:7   Blocks are nested too deeply (5). Maximum allowed is 4.                                                                                                                                                                     max-depth
+  ⚠   504:7   Blocks are nested too deeply (5). Maximum allowed is 4.                                                                                                                                                                     max-depth
+
+  src/replay.ts:200:16
+  ⚠   200:16  Too many nested callbacks (5). Maximum allowed is 4.                                                                                                                                                                        max-nested-callbacks
+  ⚠   214:14  Too many nested callbacks (5). Maximum allowed is 4.                                                                                                                                                                        max-nested-callbacks
+  ⚠   220:14  Too many nested callbacks (5). Maximum allowed is 4.                                                                                                                                                                        max-nested-callbacks
+  ⚠   226:14  Too many nested callbacks (5). Maximum allowed is 4.                                                                                                                                                                        max-nested-callbacks
+
+  src/worker/render-worker.ts:441:7
+  ⚠   441:7   Blocks are nested too deeply (5). Maximum allowed is 4.                                                                                                                                                                     max-depth
+  ⚠   447:7   Blocks are nested too deeply (5). Maximum allowed is 4.                                                                                                                                                                     max-depth
+  ⚠   744:7   Blocks are nested too deeply (5). Maximum allowed is 4.                                                                                                                                                                     max-depth
+  ⚠  1157:5   Arrow function has too many parameters (5). Maximum allowed is 4.                                                                                                                                                           max-params
+
+  src/hooks/use-input.ts:155:5
+  ⚠   155:5   Unexpected todo comment: TODO(vadimdemedes): consider removing....                                                                                                                                                          no-warning-comments
+  ⚠   166:4   Unexpected todo comment: TODO(vadimdemedes): remove this in the....                                                                                                                                                         no-warning-comments
+
+  src/worker/terminal-writer.ts:851:7
+  ⚠   851:7   Blocks are nested too deeply (5). Maximum allowed is 4.                                                                                                                                                                     max-depth
+  ⚠   855:7   Blocks are nested too deeply (5). Maximum allowed is 4.                                                                                                                                                                     max-depth
+
+  test/hooks.tsx:46:4
+  ⚠    46:4   Unexpected todo comment: TODO: Send a signal from the Ink process....                                                                                                                                                       no-warning-comments
+
+  src/output.ts:968:6
+  ⚠   968:6   Blocks are nested too deeply (5). Maximum allowed is 4.                                                                                                                                                                     max-depth
+
+  src/render-cached.ts:70:6
+  ⚠    70:6   Blocks are nested too deeply (5). Maximum allowed is 4.                                                                                                                                                                     max-depth
+
+  src/terminal-buffer.ts:493:7
+  ⚠   493:7   Blocks are nested too deeply (5). Maximum allowed is 4.                                                                                                                                                                     max-depth
+
+  src/worker/scroll-optimizer.ts:32:2
+  ⚠    32:2   Method calculateScrollOperations has too many parameters (8). Maximum allowed is 4.                                                                                                                                         max-params
+
+  test/text.tsx:47:9
+  ✖    47:9   Replace output.includes('\u001B[1m')·||·output.includes('\u001B[1;2m')·||·output.includes('\u001B[2;1m') with ⏎↹↹output.includes('\u001B[1m')·||⏎↹↹↹output.includes('\u001B[1;2m')·||⏎↹↹↹output.includes('\u001B[2;1m'),⏎↹  prettier/prettier
+  ✖    48:9   Replace output.includes('\u001B[2m')·||·output.includes('\u001B[1;2m')·||·output.includes('\u001B[2;1m') with ⏎↹↹output.includes('\u001B[2m')·||⏎↹↹↹output.includes('\u001B[1;2m')·||⏎↹↹↹output.includes('\u001B[2;1m'),⏎↹  prettier/prettier
+
+  36 warnings
+  2 errors
