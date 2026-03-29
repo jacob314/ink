@@ -67,6 +67,7 @@ export function linesEqual(
 		return false;
 	}
 
+	// eslint-disable-next-line unicorn/no-for-loop
 	for (let i = 0; i < lineA.length; i++) {
 		const charA = lineA[i]!;
 		const charB = lineB[i]!;
