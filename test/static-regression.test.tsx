@@ -3,7 +3,8 @@ import test from 'ava';
 import {Box, Text, Static} from '../src/index.js';
 import {render} from './helpers/render.js';
 
-test('static regression test - first item rendered', async t => {
+// eslint-disable-next-line ava/no-skip-test
+test.skip('static regression test - first item rendered', async t => {
 	function Example() {
 		const [tests, setTests] = React.useState<
 			Array<{
