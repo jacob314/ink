@@ -37,8 +37,8 @@ const widthCache = new Map<string, number>();
 // of the data cached as well as the number of keys cached to prevent
 // memory issues.
 const toStyledCharactersCache = new DataLimitedLruMap<StyledChar[]>(
-	10_000,
-	1_000_000,
+	2000,
+	100_000,
 );
 
 let toStyledCharactersCacheEnabled = true;
@@ -58,6 +58,10 @@ export function setStringWidthFunction(fn: StringWidth) {
 
 export function clearStringWidthCache() {
 	widthCache.clear();
+}
+
+export function clearToStyledCharactersCache() {
+	toStyledCharactersCache.clear();
 }
 
 export function toStyledCharacters(text: string): StyledChar[] {

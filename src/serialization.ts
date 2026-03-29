@@ -217,8 +217,6 @@ export function getInternedChar(
 	return {type: 'char', value, fullWidth, styles};
 }
 
-
-
 export class Deserializer {
 	private offset = 0;
 	// eslint-disable-next-line @typescript-eslint/ban-types

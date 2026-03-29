@@ -100,6 +100,18 @@ const cleanupNodeTree = (node?: DOMNode): void => {
 			cleanupNodeTree(child);
 		}
 	}
+
+	node.yogaNode?.free();
+
+	if ('cachedRender' in node) {
+		node.cachedRender = undefined;
+	}
+
+	if ('childNodes' in node) {
+		node.childNodes = [];
+	}
+
+	node.parentNode = undefined;
 };
 
 type Props = Record<string, unknown>;
@@ -296,7 +308,6 @@ export default createReconciler<
 	removeChildFromContainer(node, removeNode) {
 		removeChildNode(node, removeNode);
 		cleanupNodeTree(removeNode);
-		removeNode.yogaNode?.freeRecursive();
 	},
 	commitUpdate(node, _type, oldProps, newProps) {
 		if (currentRootNode && node.internal_static) {
@@ -380,7 +391,6 @@ export default createReconciler<
 	removeChild(node, removeNode) {
 		removeChildNode(node, removeNode);
 		cleanupNodeTree(removeNode);
-		removeNode.yogaNode?.freeRecursive();
 	},
 	setCurrentUpdatePriority(newPriority: number) {
 		currentUpdatePriority = newPriority;

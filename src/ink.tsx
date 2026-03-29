@@ -25,7 +25,10 @@ import ResizeObserver, {ResizeObserverEntry} from './resize-observer.js';
 import {Selection} from './selection.js';
 import TerminalBuffer from './terminal-buffer.js';
 import {type Region} from './output.js';
-import {setEnableToStyledCharactersCache} from './measure-text.js';
+import {
+	setEnableToStyledCharactersCache,
+	clearToStyledCharactersCache,
+} from './measure-text.js';
 
 const noop = () => {};
 
@@ -285,6 +288,7 @@ export default class Ink {
 		const terminalWidth = this.options.stdout.columns ?? 80;
 		const terminalHeight = this.options.stdout.rows ?? 24;
 
+		clearToStyledCharactersCache();
 		this.terminalBuffer?.resize(terminalWidth, terminalHeight);
 		this.calculateLayout();
 		void this.onRender();
@@ -568,6 +572,10 @@ export default class Ink {
 			if (this.terminalBuffer) {
 				this.terminalBuffer.done();
 			}
+		}
+
+		if (this.terminalBuffer) {
+			this.terminalBuffer.destroy();
 		}
 
 		this.isUnmounted = true;
