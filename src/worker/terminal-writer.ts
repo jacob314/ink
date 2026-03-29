@@ -406,7 +406,8 @@ export class TerminalWriter {
 		}
 
 		if (visualWidth <= width) {
-			const styledChars = line.slice(0, trimmedLength);
+			const styledChars =
+				trimmedLength === line.length ? line : line.slice(0, trimmedLength);
 			return {
 				styledChars,
 				text: styledCharsToString(styledChars),

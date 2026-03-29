@@ -716,7 +716,10 @@ export class TerminalBufferWorker {
 									{skipStickyHeaders: true, skipScrollbars},
 								);
 
-								return canvas.getLines().slice(start, end + count);
+								const lines = canvas.getLines();
+								return start === 0 && end + count === lines.length
+									? lines
+									: lines.slice(start, end + count);
 							};
 
 							const cleanLines = getLines(true);

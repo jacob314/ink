@@ -568,10 +568,8 @@ export default class Output {
 			const trimmedLength = lastNonSpace + 1;
 
 			if (region.styledOutput[y]?.length !== trimmedLength) {
-				(region.styledOutput as StyledChar[][])[y] = line.slice(
-					0,
-					trimmedLength,
-				);
+				(region.styledOutput as Array<readonly StyledChar[]>)[y] =
+					trimmedLength === line.length ? line : line.slice(0, trimmedLength);
 			}
 		}
 

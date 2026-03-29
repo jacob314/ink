@@ -30,7 +30,7 @@ export default function Static<T>(props: Props<T>) {
 	const [index, setIndex] = useState(0);
 
 	const itemsToRender: T[] = useMemo(() => {
-		return items.slice(index);
+		return index === 0 ? items : items.slice(index);
 	}, [items, index]);
 
 	useLayoutEffect(() => {
