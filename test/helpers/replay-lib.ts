@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import xtermHeadless, {type Terminal} from '@xterm/headless';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {StyledChar} from '../src/tokenize.js';
 import {TerminalBufferWorker} from '../../src/worker/render-worker.js';
 import {loadReplay} from '../../src/replay.js';
 import {type RenderLine} from '../../src/worker/terminal-writer.js';
@@ -16,7 +16,7 @@ function getPlainText(line: RenderLine | undefined): string {
 
 	// RenderLine.text contains ANSI codes. We want plain text for comparison with xterm buffer.
 	return line.styledChars
-		.map((c: StyledChar) => c.value)
+		.map((c: StyledChar) => c.getValue())
 		.join('')
 		.trimEnd();
 }
@@ -232,12 +232,8 @@ export async function captureTerminalState(
 	return result;
 }
 
-export const createStyledChar = (char: string): StyledChar => ({
-	type: 'char',
-	value: char,
-	fullWidth: false,
-	styles: [],
-});
+export const createStyledChar = (char: string): StyledChar =>
+	new StyledChar(char, 0);
 
 export const createStyledLine = (text: string): StyledChar[] =>
 	[...text].map(char => createStyledChar(char));

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {StyledChar} from '../tokenize.js';
 import {type RenderLine} from './terminal-writer.js';
 
 export type Rect = {
@@ -87,12 +87,7 @@ export class Canvas {
 
 		// Ensure the line is long enough
 		while (line.styledChars.length <= x) {
-			line.styledChars.push({
-				type: 'char',
-				value: ' ',
-				fullWidth: false,
-				styles: [],
-			});
+			line.styledChars.push(new StyledChar(' ', 0));
 		}
 
 		line.styledChars[x] = char;

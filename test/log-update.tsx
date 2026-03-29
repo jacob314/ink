@@ -2,7 +2,7 @@ import test, {type ExecutionContext} from 'ava';
 import {type SinonSpy} from 'sinon';
 import ansiEscapes from 'ansi-escapes';
 import xtermHeadless from '@xterm/headless';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {type StyledChar} from '../src/tokenize.js';
 import logUpdate from '../src/log-update.js';
 import createStdout from './helpers/create-stdout.js';
 

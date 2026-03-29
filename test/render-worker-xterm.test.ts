@@ -1,5 +1,5 @@
 import test from 'ava';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {StyledChar} from '../src/tokenize.js';
 import xtermHeadless, {type Terminal} from '@xterm/headless';
 import {TerminalBufferWorker} from '../src/worker/render-worker.js';
 import {Serializer} from '../src/serialization.js';
@@ -9,12 +9,7 @@ const {Terminal: XtermTerminal} = xtermHeadless;
 
 const serializer = new Serializer();
 
-const createStyledChar = (char: string): StyledChar => ({
-	type: 'char',
-	value: char,
-	fullWidth: false,
-	styles: [],
-});
+const createStyledChar = (char: string): StyledChar => new StyledChar(char, 0);
 
 const createStyledLine = (text: string): StyledChar[] =>
 	[...text].map(char => createStyledChar(char));

@@ -1,9 +1,5 @@
 import stringWidth from 'string-width';
-import {
-	tokenize,
-	styledCharsFromTokens,
-	type StyledChar,
-} from '@alcalzone/ansi-tokenize';
+import {tokenize, styledCharsFromTokens, type StyledChar} from './tokenize.js';
 import {DataLimitedLruMap} from './data-limited-lru-map.js';
 import {type DOMNode} from './dom.js';
 
@@ -82,8 +78,8 @@ export function toStyledCharacters(text: string): StyledChar[] {
 			continue;
 		}
 
-		if (character.value === '\t') {
-			const spaceCharacter: StyledChar = {...character, value: ' '};
+		if (character.getValue() === '\t') {
+			const spaceCharacter = character.copyWith({value: ' '});
 
 			combinedCharacters.push(
 				spaceCharacter,
@@ -94,14 +90,13 @@ export function toStyledCharacters(text: string): StyledChar[] {
 			continue;
 		}
 
-		if (character.value === '\b') {
+		if (character.getValue() === '\b') {
 			continue;
 		}
 
-		let {value} = character;
+		let value = character.getValue();
 		let isCombined = false;
 		const firstCodePoint = value.codePointAt(0);
-
 		// 1. Regional Indicators (Flags)
 		// These combine in pairs.
 		// See: https://en.wikipedia.org/wiki/Regional_indicator_symbol
@@ -114,17 +109,17 @@ export function toStyledCharacters(text: string): StyledChar[] {
 			const nextCharacter = characters[i + 1];
 
 			if (nextCharacter) {
-				const nextFirstCodePoint = nextCharacter.value.codePointAt(0);
+				const nextFirstCodePoint = nextCharacter.getValue().codePointAt(0);
 
 				if (
 					nextFirstCodePoint &&
 					nextFirstCodePoint >= 0x1_f1_e6 &&
 					nextFirstCodePoint <= 0x1_f1_ff
 				) {
-					value += nextCharacter.value;
+					value += nextCharacter.getValue();
 					i++;
 
-					combinedCharacters.push({...character, value});
+					combinedCharacters.push(character.copyWith({value}));
 					continue;
 				}
 			}
@@ -139,7 +134,7 @@ export function toStyledCharacters(text: string): StyledChar[] {
 				break;
 			}
 
-			const codePoints = [...nextCharacter.value].map(char =>
+			const codePoints = [...nextCharacter.getValue()].map(char =>
 				char.codePointAt(0),
 			);
 
@@ -155,7 +150,7 @@ export function toStyledCharacters(text: string): StyledChar[] {
 			// - Variation selectors (U+FE00-FE0F)
 			// - Combining enclosing keycap (U+20E3)
 			// - And many other combining marks across Unicode
-			const isUnicodeMark = /\p{Mark}/u.test(nextCharacter.value);
+			const isUnicodeMark = /\p{Mark}/u.test(nextCharacter.getValue());
 
 			// Skin tone modifiers (emoji modifiers, not in Mark category)
 			const isSkinToneModifier =
@@ -176,7 +171,7 @@ export function toStyledCharacters(text: string): StyledChar[] {
 			}
 
 			// Merge with previous character
-			value += nextCharacter.value;
+			value += nextCharacter.getValue();
 			i++; // Consume next character.
 			isCombined = true;
 
@@ -185,14 +180,14 @@ export function toStyledCharacters(text: string): StyledChar[] {
 				const characterAfterZwj = characters[i + 1];
 
 				if (characterAfterZwj) {
-					value += characterAfterZwj.value;
+					value += characterAfterZwj.getValue();
 					i++; // Consume character after ZWJ.
 				}
 			}
 		}
 
 		if (isCombined) {
-			combinedCharacters.push({...character, value});
+			combinedCharacters.push(character.copyWith({value}));
 		} else {
 			combinedCharacters.push(character);
 		}
@@ -208,7 +203,7 @@ export function toStyledCharacters(text: string): StyledChar[] {
 export function styledCharsWidth(styledChars: StyledChar[]): number {
 	let length = 0;
 	for (const char of styledChars) {
-		length += inkCharacterWidth(char.value);
+		length += inkCharacterWidth(char.getValue());
 	}
 
 	return length;
@@ -243,7 +238,7 @@ export function wordBreakStyledChars(
 	let currentWord: StyledChar[] = [];
 
 	for (const char of styledChars) {
-		if (char.value === '\n' || char.value === ' ') {
+		if (char.getValue() === '\n' || char.getValue() === ' ') {
 			if (currentWord.length > 0) {
 				words.push(currentWord);
 			}
@@ -268,7 +263,7 @@ export function splitStyledCharsByNewline(
 	const lines: StyledChar[][] = [[]];
 
 	for (const char of styledChars) {
-		if (char.value === '\n') {
+		if (char.getValue() === '\n') {
 			lines.push([]);
 		} else {
 			lines.at(-1)!.push(char);
@@ -290,7 +285,7 @@ export function widestLineFromStyledChars(lines: StyledChar[][]): number {
 export function styledCharsToString(styledChars: StyledChar[]): string {
 	let result = '';
 	for (const char of styledChars) {
-		result += char.value;
+		result += char.getValue();
 	}
 
 	return result;
@@ -341,14 +336,14 @@ export function getPositionAtOffset(
 			break;
 		}
 
-		if (char.value === '\n') {
+		if (char.getValue() === '\n') {
 			row++;
 			col = 0;
 		} else {
-			col += inkCharacterWidth(char.value);
+			col += inkCharacterWidth(char.getValue());
 		}
 
-		charCount += char.value.length;
+		charCount += char.getValue().length;
 	}
 
 	return {row, col};

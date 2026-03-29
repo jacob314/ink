@@ -1,4 +1,4 @@
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {type StyledChar} from './tokenize.js';
 import colorize from './colorize.js';
 import {toStyledCharacters} from './measure-text.js';
 import {type ScrollbarBoundingBox} from './measure-element.js';
@@ -46,17 +46,12 @@ export const renderScrollbar = ({
 	const applyBackground = (char: StyledChar, existingChar?: StyledChar) => {
 		if (!existingChar) return char;
 
-		const backgroundStyle = existingChar.styles.find(
-			s =>
-				s.code.includes(';4') ||
-				(s.code.startsWith('\u001B[4') && !s.code.startsWith('\u001B[49')),
-		);
+		const backgroundStyle = existingChar.getBackgroundColor();
 
 		if (backgroundStyle) {
-			return {
-				...char,
-				styles: [...(backgroundStyle ? [backgroundStyle] : []), ...char.styles],
-			};
+			const newChar = char.copyWith({});
+			newChar.setBackgroundColor(backgroundStyle);
+			return newChar;
 		}
 
 		return char;

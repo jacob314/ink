@@ -6,7 +6,7 @@
 
 import process from 'node:process';
 import ansiEscapes from 'ansi-escapes';
-import {type StyledChar, styledCharsToString} from '@alcalzone/ansi-tokenize';
+import {type StyledChar, styledCharsToString} from '../tokenize.js';
 import {debugLog} from '../debug-log.js';
 import colorize from '../colorize.js';
 import {debugWorker} from './render-worker.js';
@@ -71,21 +71,27 @@ export function linesEqual(
 		const charA = element;
 		const charB = lineB[i]!;
 
-		if (charA.value !== charB.value || charA.fullWidth !== charB.fullWidth) {
+		if (
+			charA.getValue() !== charB.getValue() ||
+			charA.getFullWidth() !== charB.getFullWidth()
+		) {
 			return false;
 		}
 
-		if (charA.styles.length !== charB.styles.length) {
+		if (charA.hasStyles() !== charB.hasStyles()) {
 			return false;
 		}
 
-		for (let j = 0; j < charA.styles.length; j++) {
-			const styleA = charA.styles[j]!;
-			const styleB = charB.styles[j]!;
+		const a = charA;
+		const b = charB;
 
-			if (styleA.code !== styleB.code || styleA.endCode !== styleB.endCode) {
-				return false;
-			}
+		if (
+			a.formatFlags !== b.formatFlags ||
+			a.fgColor !== b.fgColor ||
+			a.bgColor !== b.bgColor ||
+			a.link !== b.link
+		) {
+			return false;
 		}
 	}
 
@@ -377,8 +383,8 @@ export class TerminalWriter {
 		}
 	}
 
-	clampLine(line: StyledChar[], width: number): RenderLine {
-		if (width <= 0) {
+	clampLine(line: StyledChar[] | undefined, width: number): RenderLine {
+		if (width <= 0 || !line) {
 			return {
 				styledChars: [],
 				text: '',
@@ -388,8 +394,13 @@ export class TerminalWriter {
 		}
 
 		let i = line.length - 1;
-
-		while (i >= 0 && line[i]?.value === ' ' && line[i]!.styles.length === 0) {
+		while (
+			i >= 0 &&
+			line[i] &&
+			((line[i] as any).getValue
+				? line[i]!.getValue() === ' ' && !line[i]!.hasStyles()
+				: (line[i] as any).value === ' ' && !(line[i] as any).styles?.length)
+		) {
 			i--;
 		}
 
@@ -398,11 +409,19 @@ export class TerminalWriter {
 		let visualWidth = 0;
 
 		for (let k = 0; k < trimmedLength; k++) {
-			if (line[k]?.value === '') {
+			const char = line[k];
+			if (!char || typeof (char as any).getValue !== 'function') {
+				// Fallback for plain objects if they somehow leak in
+				if ((char as any)?.value === '') continue;
+				visualWidth += (char as any)?.fullWidth ? 2 : 1;
 				continue;
 			}
 
-			visualWidth += line[k]!.fullWidth ? 2 : 1;
+			if (char.getValue() === '') {
+				continue;
+			}
+
+			visualWidth += char.getFullWidth() ? 2 : 1;
 		}
 
 		if (visualWidth <= width) {
@@ -420,21 +439,21 @@ export class TerminalWriter {
 		const lastNonSpaceChar = line[i];
 		const hasBoxChar =
 			lastNonSpaceChar &&
-			(lastNonSpaceChar.value === '╮' ||
-				lastNonSpaceChar.value === '│' ||
-				lastNonSpaceChar.value === '╯');
+			(lastNonSpaceChar.getValue() === '╮' ||
+				lastNonSpaceChar.getValue() === '│' ||
+				lastNonSpaceChar.getValue() === '╯');
 
 		let targetVisualWidth = width;
 
 		if (hasBoxChar && lastNonSpaceChar) {
-			targetVisualWidth -= lastNonSpaceChar.fullWidth ? 2 : 1;
+			targetVisualWidth -= lastNonSpaceChar.getFullWidth() ? 2 : 1;
 		}
 
 		let currentWidth = 0;
 		let sliceIndex = 0;
 
 		for (let k = 0; k < trimmedLength; k++) {
-			const charWidth = line[k]!.fullWidth ? 2 : 1;
+			const charWidth = line[k]!.getFullWidth() ? 2 : 1;
 
 			if (currentWidth + charWidth > targetVisualWidth) {
 				break;
@@ -445,7 +464,7 @@ export class TerminalWriter {
 		}
 
 		if (hasBoxChar && lastNonSpaceChar) {
-			const boxWidth = lastNonSpaceChar.fullWidth ? 2 : 1;
+			const boxWidth = lastNonSpaceChar.getFullWidth() ? 2 : 1;
 			const styledChars = [...line.slice(0, sliceIndex), lastNonSpaceChar];
 
 			return {

@@ -1,4 +1,4 @@
-import {type StyledChar, styledCharsToString} from '@alcalzone/ansi-tokenize';
+import {type StyledChar, styledCharsToString} from './tokenize.js';
 import renderNodeToOutput from './render-node-to-output.js';
 import {renderNodeToScreenReaderOutput} from './render-screen-reader.js';
 import Output, {

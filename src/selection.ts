@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {StyledChar} from './tokenize.js';
 import {type DOMNode, type DOMElement, getPathToRoot} from './dom.js';
 import {toStyledCharacters, type CharOffsetMap} from './measure-text.js';
 import {processLayout} from './layout.js';
@@ -49,22 +49,12 @@ const getPlainTextFromDomNode = (node: DOMNode): PlainTextResultWithMap => {
 		}),
 		onNewline(count, state) {
 			for (let i = 0; i < count; i++) {
-				state.styledChars.push({
-					type: 'char',
-					value: '\n',
-					fullWidth: false,
-					styles: [],
-				});
+				state.styledChars.push(new StyledChar('\n', 0));
 			}
 		},
 		onSpace(count, state) {
 			for (let i = 0; i < count; i++) {
-				state.styledChars.push({
-					type: 'char',
-					value: ' ',
-					fullWidth: false,
-					styles: [],
-				});
+				state.styledChars.push(new StyledChar(' ', 0));
 			}
 		},
 		onText(fragment, state) {
@@ -279,7 +269,7 @@ export class Range {
 
 		return fullStyledChars
 			.slice(offsets.start, offsets.end)
-			.map(char => char.value)
+			.map(char => char.getValue())
 			.join('');
 	}
 
@@ -465,17 +455,8 @@ export const applySelectionStyle = (
 		return selectionStyle(char);
 	}
 
-	const newChar = {
-		...char,
-		styles: [...char.styles],
-	};
-
-	newChar.styles.push({
-		type: 'ansi',
-		code: '\u001B[7m',
-		endCode: '\u001B[27m',
-	});
-
+	const newChar = char.copyWith({});
+	newChar.setFormatFlag(1 << 5); // INVERSE_MASK
 	return newChar;
 };
 
@@ -490,7 +471,7 @@ export const applySelectionToStyledChars = (
 	const newStyledChars: StyledChar[] = [];
 
 	for (const char of styledChars) {
-		const charLength = char.value.length;
+		const charLength = char.getValue().length;
 		const globalOffset = currentOffset + charCodeUnitOffset;
 
 		if (globalOffset >= start && globalOffset < end) {

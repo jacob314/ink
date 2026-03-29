@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {type StyledChar} from './tokenize.js';
 import {type DOMElement, type DOMNode} from './dom.js';
 import type Output from './output.js';
 import {toStyledCharacters} from './measure-text.js';
@@ -62,8 +62,8 @@ export function handleCachedRenderNode(
 			let spanCharX = span.startX;
 			const styledChars = toStyledCharacters(span.text);
 			for (const char of styledChars) {
-				const charLen = char.value.length;
-				const charWidth = char.fullWidth ? 2 : 1;
+				const charLen = char.getValue().length;
+				const charWidth = char.getFullWidth() ? 2 : 1;
 
 				if (currentOffset >= range.start && currentOffset < range.end) {
 					const line = clonedRegionObj.lines[span.y];

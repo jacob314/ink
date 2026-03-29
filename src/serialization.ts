@@ -1,7 +1,6 @@
 import {Buffer} from 'node:buffer';
-import type {StyledChar, AnsiCode} from '@alcalzone/ansi-tokenize';
+import {StyledChar, FULL_WIDTH_MASK} from './tokenize.js';
 
-// Constants for binary format
 const hasStylesMask = 0b0000_0010;
 const fullWidthMask = 0b0000_0001;
 const isRepeatedCharMask = 0b0000_0100;
@@ -67,27 +66,24 @@ export class Serializer {
 	}
 
 	private isSameStyle(charA: StyledChar, charB: StyledChar): boolean {
-		const stylesA = charA.styles;
-		const stylesB = charB.styles;
-
-		if (stylesA.length !== stylesB.length) {
+		if (charA.hasStyles() !== charB.hasStyles()) {
 			return false;
 		}
 
-		if (stylesA.length === 0) {
+		if (!charA.hasStyles()) {
 			return true;
 		}
 
-		for (let i = 0; i < stylesA.length; i++) {
-			const styleA = stylesA[i]!;
-			const styleB = stylesB[i]!;
+		// Internal access for performance during serialization
+		const a = charA;
+		const b = charB;
 
-			if (styleA.code !== styleB.code || styleA.endCode !== styleB.endCode) {
-				return false;
-			}
-		}
-
-		return true;
+		return (
+			a.formatFlags === b.formatFlags &&
+			a.fgColor === b.fgColor &&
+			a.bgColor === b.bgColor &&
+			a.link === b.link
+		);
 	}
 
 	private writeSpan(line: readonly StyledChar[], start: number, end: number) {
@@ -101,54 +97,50 @@ export class Serializer {
 		for (let i = start; i < end; i++) {
 			const char = line[i]!;
 			if (
-				char.value !== firstChar.value ||
-				char.fullWidth !== firstChar.fullWidth
+				char.getValue() !== firstChar.getValue() ||
+				char.getFullWidth() !== firstChar.getFullWidth()
 			) {
 				isRepeatedChar = false;
 			}
 
-			if (char.fullWidth || char.value.length !== 1) {
+			if (char.getFullWidth() || char.getValue().length !== 1) {
 				isAsciiMixed = false;
 			}
 		}
 
 		let flags = 0;
-		if (firstChar.styles.length > 0) {
-			// eslint-disable-next-line no-bitwise
+		if (firstChar.hasStyles()) {
 			flags |= hasStylesMask;
 		}
 
 		if (isRepeatedChar) {
-			// eslint-disable-next-line no-bitwise
 			flags |= isRepeatedCharMask;
 		} else if (isAsciiMixed) {
-			// eslint-disable-next-line no-bitwise
 			flags |= isAsciiMixedMask;
 		}
 
 		this.writeUint8(flags);
 
-		// eslint-disable-next-line no-bitwise
 		if (flags & hasStylesMask) {
-			this.writeUint8(firstChar.styles.length);
-			for (const style of firstChar.styles) {
-				this.writeAnsiCode(style);
-			}
+			const fc = firstChar;
+			this.writeUint8(fc.formatFlags);
+			this.writeString(fc.fgColor || '');
+			this.writeString(fc.bgColor || '');
+			this.writeString(fc.link || '');
 		}
 
 		if (isRepeatedChar) {
 			let charFlags = 0;
-			if (firstChar.fullWidth) {
-				// eslint-disable-next-line no-bitwise
+			if (firstChar.getFullWidth()) {
 				charFlags |= fullWidthMask;
 			}
 
 			this.writeUint8(charFlags);
-			this.writeString(firstChar.value || '');
+			this.writeString(firstChar.getValue() || '');
 		} else if (isAsciiMixed) {
 			let concat = '';
 			for (let i = start; i < end; i++) {
-				concat += line[i]!.value;
+				concat += line[i]!.getValue();
 			}
 
 			this.writeString(concat);
@@ -156,20 +148,14 @@ export class Serializer {
 			for (let i = start; i < end; i++) {
 				const char = line[i]!;
 				let charFlags = 0;
-				if (char.fullWidth) {
-					// eslint-disable-next-line no-bitwise
+				if (char.getFullWidth()) {
 					charFlags |= fullWidthMask;
 				}
 
 				this.writeUint8(charFlags);
-				this.writeString(char.value || '');
+				this.writeString(char.getValue() || '');
 			}
 		}
-	}
-
-	private writeAnsiCode(code: AnsiCode) {
-		this.writeString(code.code);
-		this.writeString(code.endCode);
 	}
 
 	private writeString(str: string) {
@@ -194,27 +180,39 @@ export class Serializer {
 	}
 }
 
-// Global interning cache for common characters
-const emptyStyleCache: AnsiCode[] = [];
 const commonCharCache = new Map<string, StyledChar>();
 
 export function getInternedChar(
 	value: string,
 	fullWidth: boolean,
-	styles: AnsiCode[],
+	charTemplate: StyledChar | undefined,
 ): StyledChar {
-	if (styles.length === 0) {
+	if (!charTemplate?.hasStyles()) {
 		const key = fullWidth ? value + '|fw' : value;
 		let cached = commonCharCache.get(key);
 		if (!cached) {
-			cached = {type: 'char', value, fullWidth, styles: emptyStyleCache};
+			cached = new StyledChar(value, fullWidth ? FULL_WIDTH_MASK : 0);
 			commonCharCache.set(key, cached);
 		}
 
 		return cached;
 	}
 
-	return {type: 'char', value, fullWidth, styles};
+	// Just copy over properties from template, plus fullwidth and value
+	let flags = charTemplate.formatFlags;
+	if (fullWidth) {
+		flags |= FULL_WIDTH_MASK;
+	} else {
+		flags &= ~FULL_WIDTH_MASK;
+	}
+
+	return new StyledChar(
+		value,
+		flags,
+		charTemplate.fgColor,
+		charTemplate.bgColor,
+		charTemplate.link,
+	);
 }
 
 export class Deserializer {
@@ -253,28 +251,36 @@ export class Deserializer {
 	private readSpan(line: StyledChar[]) {
 		const spanLength = this.readUint32();
 		const flags = this.readUint8();
-		// eslint-disable-next-line no-bitwise
+
 		const hasStyles = (flags & hasStylesMask) !== 0;
-		// eslint-disable-next-line no-bitwise
+
 		const isRepeatedChar = (flags & isRepeatedCharMask) !== 0;
-		// eslint-disable-next-line no-bitwise
+
 		const isAsciiMixed = (flags & isAsciiMixedMask) !== 0;
 
-		const styles: AnsiCode[] = [];
+		let charTemplate: StyledChar | undefined;
 
 		if (hasStyles) {
-			const styleCount = this.readUint8();
-			for (let i = 0; i < styleCount; i++) {
-				styles.push(this.readAnsiCode());
-			}
+			const formatFlags = this.readUint8();
+			const fgColor = this.readString();
+			const bgColor = this.readString();
+			const link = this.readString();
+
+			charTemplate = new StyledChar(
+				'',
+				formatFlags,
+				fgColor || undefined,
+				bgColor || undefined,
+				link || undefined,
+			);
 		}
 
 		if (isRepeatedChar) {
 			const charFlags = this.readUint8();
-			// eslint-disable-next-line no-bitwise
+
 			const fullWidth = (charFlags & fullWidthMask) !== 0;
 			const value = this.readString();
-			const char = getInternedChar(value, fullWidth, styles);
+			const char = getInternedChar(value, fullWidth, charTemplate);
 
 			for (let i = 0; i < spanLength; i++) {
 				line.push(char);
@@ -283,28 +289,18 @@ export class Deserializer {
 			const value = this.readString();
 
 			for (let i = 0; i < spanLength; i++) {
-				line.push(getInternedChar(value[i]!, false, styles));
+				line.push(getInternedChar(value[i]!, false, charTemplate));
 			}
 		} else {
 			for (let i = 0; i < spanLength; i++) {
 				const charFlags = this.readUint8();
-				// eslint-disable-next-line no-bitwise
+
 				const fullWidth = (charFlags & fullWidthMask) !== 0;
 				const value = this.readString();
 
-				line.push(getInternedChar(value, fullWidth, styles));
+				line.push(getInternedChar(value, fullWidth, charTemplate));
 			}
 		}
-	}
-
-	private readAnsiCode(): AnsiCode {
-		const code = this.readString();
-		const endCode = this.readString();
-		return {
-			type: 'ansi',
-			code,
-			endCode,
-		};
 	}
 
 	private readString(): string {

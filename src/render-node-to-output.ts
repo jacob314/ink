@@ -1,5 +1,5 @@
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import Yoga from 'yoga-layout';
+import {type StyledChar} from './tokenize.js';
 import {
 	type DOMElement,
 	type DOMNode,

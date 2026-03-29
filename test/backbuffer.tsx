@@ -1,6 +1,6 @@
 import React from 'react';
 import test from 'ava';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {StyledChar} from '../src/tokenize.js';
 import {type Region} from '../src/output.js';
 import {render} from '../src/index.js';
 import instances from '../src/instances.js';
@@ -15,12 +15,7 @@ class WriteStream {
 	off() {}
 }
 
-const createStyledChar = (char: string): StyledChar => ({
-	type: 'char',
-	value: char,
-	fullWidth: false,
-	styles: [],
-});
+const createStyledChar = (char: string): StyledChar => new StyledChar(char, 0);
 
 const createLine = (text: string): StyledChar[] =>
 	[...text].map(char => createStyledChar(char));
@@ -95,11 +90,11 @@ test('captures clipped cachedRender content into backbuffer', t => {
 
 	// We expect lines 1 and 2 to be in the backbuffer because they are shifted up by 2.
 	const line0 = lines[0]
-		?.map(c => c.value)
+		?.map(c => c.getValue())
 		.join('')
 		.trim();
 	const line1 = lines[1]
-		?.map(c => c.value)
+		?.map(c => c.getValue())
 		.join('')
 		.trim();
 

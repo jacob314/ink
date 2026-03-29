@@ -1,5 +1,5 @@
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import Yoga, {type Node as YogaNode} from 'yoga-layout';
+import {type StyledChar} from './tokenize.js';
 import {
 	measureStyledChars,
 	toStyledCharacters,
@@ -56,7 +56,6 @@ export type StickyHeader = {
 	minStuckY?: number;
 };
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export type DOMElement = {
 	nodeName: ElementNames;
 	attributes: Record<string, DOMNodeAttribute>;
@@ -135,7 +134,6 @@ export type TextNode = {
 	nodeValue: string;
 } & InkNode;
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export type DOMNode<T = {nodeName: NodeNames}> = T extends {
 	nodeName: infer U;
 }
@@ -144,7 +142,6 @@ export type DOMNode<T = {nodeName: NodeNames}> = T extends {
 		: DOMElement
 	: never;
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export type DOMNodeAttribute = boolean | string | number;
 
 let idCounter = 0;
@@ -157,7 +154,7 @@ export const createNode = (nodeName: ElementNames): DOMElement => {
 		childNodes: [],
 		parentNode: undefined,
 		yogaNode: nodeName === 'ink-virtual-text' ? undefined : Yoga.Node.create(),
-		// eslint-disable-next-line @typescript-eslint/naming-convention
+
 		internal_accessibility: {},
 		internalSticky: false,
 		internalStickyAlternate: false,
@@ -240,7 +237,7 @@ export const removeChildNode = (
 	if (removeNode.yogaNode) {
 		try {
 			removeNode.parentNode?.yogaNode?.removeChild(removeNode.yogaNode);
-		} catch (error) {
+		} catch {
 			// Ignore error if node was already detached (e.g. by StaticRender optimization)
 		}
 	}

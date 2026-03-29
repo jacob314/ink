@@ -5,7 +5,7 @@
  */
 
 import {Buffer} from 'node:buffer';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {type StyledChar} from '../tokenize.js';
 import {
 	type RegionNode,
 	type RegionUpdate,
@@ -96,8 +96,18 @@ export class SceneManager {
 				}
 			}
 
-			if (update.stickyHeaders !== undefined)
-				r.stickyHeaders = update.stickyHeaders;
+			if (update.stickyHeaders !== undefined) {
+				r.stickyHeaders = update.stickyHeaders.map(header => ({
+					...header,
+					lines: new Deserializer(Buffer.from(header.lines)).deserialize(),
+					stuckLines: header.stuckLines
+						? new Deserializer(Buffer.from(header.stuckLines)).deserialize()
+						: undefined,
+					styledOutput: new Deserializer(
+						Buffer.from(header.styledOutput),
+					).deserialize(),
+				}));
+			}
 
 			// Apply line updates
 			if (update.lines) {

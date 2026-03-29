@@ -1,13 +1,8 @@
 import test from 'ava';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {StyledChar} from '../src/tokenize.js';
 import {TerminalWriter} from '../src/worker/terminal-writer.js';
 
-const createStyledChar = (char: string): StyledChar => ({
-	type: 'char',
-	value: char,
-	fullWidth: false,
-	styles: [],
-});
+const createStyledChar = (char: string): StyledChar => new StyledChar(char, 0);
 
 const createLine = (text: string) => ({
 	styledChars: [...text].map(char => createStyledChar(char)),

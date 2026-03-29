@@ -1,6 +1,7 @@
 import test from 'ava';
 import xtermHeadless, {type Terminal} from '@xterm/headless';
 import chalk from 'chalk';
+import {StyledChar} from '../src/tokenize.js';
 import {TerminalBufferWorker} from '../src/worker/render-worker.js';
 import {Serializer} from '../src/serialization.js';
 import {rainbowColors} from '../src/worker/terminal-writer.js';
@@ -13,12 +14,7 @@ chalk.level = 3;
 
 const serializer = new Serializer();
 
-const createStyledChar = (char: string) => ({
-	type: 'char' as const,
-	value: char,
-	fullWidth: false,
-	styles: [],
-});
+const createStyledChar = (char: string) => new StyledChar(char, 0);
 
 const createStyledLine = (text: string, width = 80) => {
 	const chars = [...text].map(char => createStyledChar(char));

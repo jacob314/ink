@@ -2,7 +2,7 @@ import {type Writable} from 'node:stream';
 import process from 'node:process';
 import ansiEscapes from 'ansi-escapes';
 import cliCursor from 'cli-cursor';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {type StyledChar} from './tokenize.js';
 import colorize from './colorize.js';
 
 // Debugging option to simulate flicker if for terminals that do not support enableSynchronizedOutput.
@@ -164,8 +164,11 @@ const getLineLength = (styledChars: StyledChar[] | undefined): number => {
 			continue;
 		}
 
-		if ((char.value !== ' ' && char.value !== '') || char.styles.length > 0) {
-			return j + (char.fullWidth ? 2 : 1);
+		if (
+			(char.getValue() !== ' ' && char.getValue() !== '') ||
+			char.hasStyles()
+		) {
+			return j + (char.getFullWidth() ? 2 : 1);
 		}
 	}
 

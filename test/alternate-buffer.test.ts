@@ -1,5 +1,5 @@
 import test from 'ava';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {StyledChar} from '../src/tokenize.js';
 import ansiEscapes from 'ansi-escapes';
 import xtermHeadless, {type Terminal} from '@xterm/headless';
 import {TerminalBufferWorker} from '../src/worker/render-worker.js';

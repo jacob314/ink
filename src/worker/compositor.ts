@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import {type Region} from '../output.js';
 import {type StickyHeader} from '../dom.js';
 import {calculateScrollbarThumb} from '../measure-element.js';
@@ -27,7 +26,7 @@ export type CompositionOptions = {
  */
 export class Compositor {
 	private static lastBackgroundColor?: string;
-	private static lastBackgroundStyles: StyledChar['styles'] = [];
+	private static lastBackgroundStyles: string | undefined;
 
 	constructor(private readonly options: CompositionOptions) {}
 
@@ -69,7 +68,7 @@ export class Compositor {
 
 				let char = line[contentX];
 				if (char) {
-					const isEmpty = char.value === ' ' && char.styles.length === 0;
+					const isEmpty = char.getValue() === ' ' && !char.hasStyles();
 
 					if (isEmpty) {
 						if (!isOpaque) {
@@ -77,14 +76,11 @@ export class Compositor {
 						}
 
 						if (region.backgroundColor) {
-							// Apply background to empty char
-							char = {
-								...char,
-								styles: [
-									...char.styles,
-									...this.getBackgroundStyles(region.backgroundColor),
-								],
-							};
+							const bgColor = this.getBackgroundStyles(region.backgroundColor);
+							if (bgColor) {
+								char = char.copyWith({});
+								char.setBackgroundColor(bgColor);
+							}
 						}
 					}
 
@@ -421,24 +417,18 @@ export class Compositor {
 		return stuckHeight;
 	}
 
-	private getBackgroundStyles(color: string) {
+	private getBackgroundStyles(color: string): string | undefined {
 		if (color === Compositor.lastBackgroundColor) {
 			return Compositor.lastBackgroundStyles;
 		}
 
-		let styles: StyledChar['styles'] = [];
+		let styles: string | undefined;
 		const colorized = colorize('x', color, 'background');
 
 		if (colorized !== 'x') {
 			const parts = colorized.split('x');
 			if (parts.length === 2 && parts[0] && parts[1]) {
-				styles = [
-					{
-						type: 'ansi',
-						code: parts[0],
-						endCode: parts[1],
-					},
-				];
+				styles = parts[0];
 			}
 		}
 

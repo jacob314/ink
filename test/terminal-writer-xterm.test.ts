@@ -1,17 +1,12 @@
 import test from 'ava';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {StyledChar} from '../src/tokenize.js';
 import xtermHeadless, {type Terminal} from '@xterm/headless';
 import {TerminalWriter} from '../src/worker/terminal-writer.js';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const {Terminal: XtermTerminal} = xtermHeadless;
 
-const createStyledChar = (char: string): StyledChar => ({
-	type: 'char',
-	value: char,
-	fullWidth: false,
-	styles: [],
-});
+const createStyledChar = (char: string): StyledChar => new StyledChar(char, 0);
 
 const createLine = (text: string) => ({
 	styledChars: [...text].map(char => createStyledChar(char)),

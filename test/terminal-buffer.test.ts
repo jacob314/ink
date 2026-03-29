@@ -1,16 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import test from 'ava';
 import {stub} from 'sinon';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {StyledChar} from '../src/tokenize.js';
 import TerminalBuffer from '../src/terminal-buffer.js';
 import {type Region} from '../src/output.js';
 
-const createStyledChar = (char: string): StyledChar => ({
-	type: 'char',
-	value: char,
-	fullWidth: false,
-	styles: [],
-});
+const createStyledChar = (char: string): StyledChar => new StyledChar(char, 0);
 
 const createLine = (text: string): StyledChar[] =>
 	[...text].map(char => createStyledChar(char));

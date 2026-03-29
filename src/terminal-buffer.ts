@@ -6,7 +6,7 @@
 
 import process from 'node:process';
 import {fork, type ChildProcess} from 'node:child_process';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {type StyledChar} from './tokenize.js';
 import {Serializer} from './serialization.js';
 import {TerminalBufferWorker} from './worker/render-worker.js';
 import {linesEqual} from './worker/terminal-writer.js';
@@ -112,7 +112,7 @@ export default class TerminalBuffer {
 			this.worker = fork(workerUrl, {
 				env: {
 					...process.env,
-					// eslint-disable-next-line @typescript-eslint/naming-convention
+
 					INK_WORKER: 'true',
 				},
 			});
@@ -436,7 +436,15 @@ export default class TerminalBuffer {
 				copyRegionProperty(update, current, key);
 			}
 
-			update.stickyHeaders = current.stickyHeaders;
+			update.stickyHeaders = current.stickyHeaders.map(h => ({
+				...h,
+				node: undefined,
+				lines: this.serializer.serialize(h.lines),
+				stuckLines: h.stuckLines
+					? this.serializer.serialize(h.stuckLines)
+					: undefined,
+				styledOutput: this.serializer.serialize(h.styledOutput),
+			}));
 
 			// Send all lines
 			const serialized = this.serializer.serialize(current.lines);
@@ -471,7 +479,15 @@ export default class TerminalBuffer {
 			current.stickyHeaders.length > 0 ||
 			last.stickyHeaders.length > 0
 		) {
-			update.stickyHeaders = current.stickyHeaders;
+			update.stickyHeaders = current.stickyHeaders.map(h => ({
+				...h,
+				node: undefined,
+				lines: this.serializer.serialize(h.lines),
+				stuckLines: h.stuckLines
+					? this.serializer.serialize(h.stuckLines)
+					: undefined,
+				styledOutput: this.serializer.serialize(h.styledOutput),
+			}));
 			hasChanges = true;
 		}
 

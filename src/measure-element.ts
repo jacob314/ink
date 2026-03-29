@@ -562,7 +562,7 @@ export const getText = (node: DOMNode): string => {
 	if (node.nodeName === 'ink-text' || node.nodeName === 'ink-virtual-text') {
 		const text = squashTextNodes(node);
 		const styledChars = toStyledCharacters(text);
-		const plainText = styledChars.map(char => char.value).join('');
+		const plainText = styledChars.map(char => char.getValue()).join('');
 
 		const textWrap = node.style.textWrap ?? 'wrap';
 
@@ -805,17 +805,17 @@ const getTextOffsetForTextNode = (
 		if (y === currentY) {
 			let currentX = 0;
 			for (const char of line) {
-				const charWidth = inkCharacterWidth(char.value);
+				const charWidth = inkCharacterWidth(char.getValue());
 				if (x < currentX + charWidth) {
 					const index = styledChars.indexOf(char);
 					if (index !== -1) {
 						let currentOffset = 0;
 						for (let i = 0; i < index; i++) {
-							currentOffset += styledChars[i]!.value.length;
+							currentOffset += styledChars[i]!.getValue().length;
 						}
 
 						if (options?.snapToChar === 'end' && x >= currentX) {
-							currentOffset += char.value.length;
+							currentOffset += char.getValue().length;
 						}
 
 						return currentOffset;
@@ -833,7 +833,7 @@ const getTextOffsetForTextNode = (
 				if (index !== -1) {
 					let currentOffset = 0;
 					for (let i = 0; i <= index; i++) {
-						currentOffset += styledChars[i]!.value.length;
+						currentOffset += styledChars[i]!.getValue().length;
 					}
 
 					return currentOffset;

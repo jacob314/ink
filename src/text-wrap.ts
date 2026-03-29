@@ -1,4 +1,4 @@
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {StyledChar} from './tokenize.js';
 import {inkCharacterWidth, styledCharsWidth} from './measure-text.js';
 
 export const sliceStyledChars = (
@@ -10,7 +10,7 @@ export const sliceStyledChars = (
 	const result: StyledChar[] = [];
 
 	for (const char of styledChars) {
-		const charWidth = inkCharacterWidth(char.value);
+		const charWidth = inkCharacterWidth(char.getValue());
 		const charStart = width;
 		const charEnd = width + charWidth;
 
@@ -35,13 +35,10 @@ export const truncateStyledChars = (
 ): StyledChar[] => {
 	const {position = 'end'} = options;
 	const truncationCharacter = '…';
-	const truncationStyledChar: StyledChar = {
-		type: 'char',
-		value: truncationCharacter,
-		fullWidth: false,
-		styles: [],
-	};
-
+	const truncationStyledChar: StyledChar = new StyledChar(
+		truncationCharacter,
+		0, // 0 means no formatting flags (and therefore fullWidth = false)
+	);
 	if (columns < 1) {
 		return [];
 	}
@@ -92,7 +89,7 @@ const wrapWord = (
 	let visible = styledCharsWidth(currentLine);
 
 	for (const character of word) {
-		const characterLength = inkCharacterWidth(character.value);
+		const characterLength = inkCharacterWidth(character.getValue());
 
 		if (visible + characterLength > columns && visible > 0) {
 			rows.push([]);
@@ -115,7 +112,7 @@ export const wrapStyledChars = (
 	let currentWord: StyledChar[] = [];
 
 	for (const char of styledChars) {
-		if (char.value === '\n' || char.value === ' ') {
+		if (char.getValue() === '\n' || char.getValue() === ' ') {
 			if (currentWord.length > 0) {
 				words.push(currentWord);
 			}
@@ -138,7 +135,7 @@ export const wrapStyledChars = (
 			continue;
 		}
 
-		if (word[0]!.value === '\n') {
+		if (word[0]!.getValue() === '\n') {
 			rows.push([]);
 			isAtStartOfLogicalLine = true;
 			continue;
@@ -150,14 +147,17 @@ export const wrapStyledChars = (
 		if (rowWidth + wordWidth > columns) {
 			if (
 				!isAtStartOfLogicalLine &&
-				word[0]!.value === ' ' &&
+				word[0]!.getValue() === ' ' &&
 				word.length === 1
 			) {
 				continue;
 			}
 
 			if (!isAtStartOfLogicalLine) {
-				while (rows.at(-1)!.length > 0 && rows.at(-1)!.at(-1)!.value === ' ') {
+				while (
+					rows.at(-1)!.length > 0 &&
+					rows.at(-1)!.at(-1)!.getValue() === ' '
+				) {
 					rows.at(-1)!.pop();
 				}
 			}
@@ -178,7 +178,7 @@ export const wrapStyledChars = (
 
 		if (
 			isAtStartOfLogicalLine &&
-			!(word[0]!.value === ' ' && word.length === 1)
+			!(word[0]!.getValue() === ' ' && word.length === 1)
 		) {
 			isAtStartOfLogicalLine = false;
 		}

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {StyledChar} from './tokenize.js';
 import {type DOMElement, type DOMNode, isNodeSelectable} from './dom.js';
 import type Output from './output.js';
 import {
@@ -28,13 +28,7 @@ export const applyPaddingToStyledChars = (
 		const offsetX = yogaNode.getComputedLeft();
 		const offsetY = yogaNode.getComputedTop();
 
-		const space: StyledChar = {
-			type: 'char',
-			value: ' ',
-			fullWidth: false,
-			styles: [],
-		};
-
+		const space = new StyledChar(' ', 0);
 		const paddingLeft = Array.from({length: offsetX}).map(() => space);
 
 		lines = lines.map(line => [...paddingLeft, ...line]);
@@ -58,7 +52,7 @@ export const calculateWrappedCursorPosition = (
 
 	for (const char of styledChars) {
 		styledCharToOffset.set(char, offset);
-		offset += char.value.length;
+		offset += char.getValue().length;
 	}
 
 	let cursorLineIndex = lines.length - 1;
@@ -84,7 +78,7 @@ export const calculateWrappedCursorPosition = (
 
 			const lineStartOffset = styledCharToOffset.get(firstChar)!;
 			const lineEndOffset =
-				styledCharToOffset.get(lastChar)! + lastChar.value.length;
+				styledCharToOffset.get(lastChar)! + lastChar.getValue().length;
 
 			// Set as candidate if targetOffset is at or after line start
 			if (targetOffset >= lineStartOffset) {

@@ -5,7 +5,7 @@
  */
 
 import Yoga from 'yoga-layout';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {type StyledChar} from './tokenize.js';
 import {type DOMElement, type DOMNode, type StickyHeader} from './dom.js';
 import type Output from './output.js';
 import renderBackground from './render-background.js';

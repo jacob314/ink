@@ -1,7 +1,6 @@
 import process from 'node:process';
 import React, {type ReactNode} from 'react';
 import {throttle} from 'es-toolkit/compat';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import ansiEscapes from 'ansi-escapes';
 import isInCi from 'is-in-ci';
 import autoBind from 'auto-bind';
@@ -11,6 +10,7 @@ import {LegacyRoot} from 'react-reconciler/constants.js';
 import {type FiberRoot} from 'react-reconciler';
 import Yoga from 'yoga-layout';
 import wrapAnsi from 'wrap-ansi';
+import {type StyledChar} from './tokenize.js';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';

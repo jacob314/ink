@@ -1,4 +1,4 @@
-import {type StyledChar, styledCharsToString} from '@alcalzone/ansi-tokenize';
+import {type StyledChar, styledCharsToString} from './tokenize.js';
 import {type OutputTransformer} from './render-node-to-output.js';
 import {
 	toStyledCharacters,
@@ -27,9 +27,9 @@ export function clampCursorColumn(
 	let lastContentCol = 0;
 
 	for (const char of line) {
-		const charWidth = char.fullWidth ? 2 : 1;
+		const charWidth = char.getFullWidth() ? 2 : 1;
 
-		if (char.value !== ' ' || char.styles.length > 0) {
+		if (char.getValue() !== ' ' || char.hasStyles()) {
 			lastContentCol = currentLineCol + charWidth;
 		}
 
@@ -164,6 +164,15 @@ export function treesEqual(a: RegionNode, b: RegionNode): boolean {
 	return true;
 }
 
+export type SerializedStickyHeader = Omit<
+	StickyHeader,
+	'lines' | 'stuckLines' | 'styledOutput' | 'node'
+> & {
+	lines: Uint8Array;
+	stuckLines?: Uint8Array;
+	styledOutput: Uint8Array;
+};
+
 export type RegionUpdate = {
 	id: string | number;
 	x?: number;
@@ -186,7 +195,7 @@ export type RegionUpdate = {
 	opaque?: boolean;
 	borderTop?: number;
 	borderBottom?: number;
-	stickyHeaders?: StickyHeader[];
+	stickyHeaders?: SerializedStickyHeader[];
 	lines?: {
 		updates: Array<{
 			start: number;
@@ -461,14 +470,14 @@ export default class Output {
 					break;
 				}
 
-				if (char.value === '\n') {
+				if (char.getValue() === '\n') {
 					row++;
 					col = 0;
 				} else {
-					col += inkCharacterWidth(char.value);
+					col += inkCharacterWidth(char.getValue());
 				}
 
-				charOffset += char.value.length;
+				charOffset += char.getValue().length;
 			}
 
 			region.cursorPosition = {
@@ -559,7 +568,7 @@ export default class Output {
 			for (let i = line.length - 1; i >= 0; i--) {
 				const char = line[i]!;
 
-				if (char.value !== ' ' || char.styles.length > 0) {
+				if (char.getValue() !== ' ' || char.hasStyles()) {
 					lastNonSpace = i;
 					break;
 				}
@@ -594,7 +603,7 @@ export default class Output {
 	}
 
 	private initLines(region: Region, width: number, height: number) {
-		const emptyChar = getInternedChar(' ', false, []);
+		const emptyChar = getInternedChar(' ', false, undefined);
 		for (let y = 0; y < height; y++) {
 			const row: StyledChar[] = [];
 			for (let x = 0; x < width; x++) {
@@ -669,7 +678,7 @@ export default class Output {
 		let spanText = '';
 
 		for (const character of chars) {
-			const characterWidth = inkCharacterWidth(character.value);
+			const characterWidth = inkCharacterWidth(character.getValue());
 
 			if (toX !== undefined && relativeX >= toX) {
 				break;
@@ -684,14 +693,14 @@ export default class Output {
 
 				if (isSelectable) {
 					if (spanStartX === -1) spanStartX = offsetX;
-					spanText += character.value;
+					spanText += character.getValue();
 				}
 
 				if (characterWidth > 1) {
 					this.clearRange(
 						currentLine,
 						{start: offsetX + 1, end: offsetX + characterWidth},
-						character.styles,
+						character,
 						'',
 						bufferWidth,
 					);
@@ -708,7 +717,7 @@ export default class Output {
 				this.clearRange(
 					currentLine,
 					{start: offsetX, end: offsetX + clearLength},
-					character.styles,
+					character,
 					' ',
 					bufferWidth,
 				);
@@ -734,7 +743,7 @@ export default class Output {
 			this.clearRange(
 				currentLine,
 				{start: offsetX, end: absoluteToX},
-				[],
+				undefined,
 				' ',
 				bufferWidth,
 			);
@@ -745,13 +754,13 @@ export default class Output {
 	private clearRange(
 		currentLine: StyledChar[],
 		range: {start: number; end: number},
-		styles: StyledChar['styles'],
+		charTemplate: StyledChar | undefined,
 		value: string,
 		maxWidth: number,
 	) {
 		for (let offset = range.start; offset < range.end; offset++) {
 			if (offset >= 0 && offset < maxWidth) {
-				currentLine[offset] = getInternedChar(value, false, styles);
+				currentLine[offset] = getInternedChar(value, false, charTemplate);
 			}
 		}
 	}
@@ -821,7 +830,7 @@ export function flattenRegion(
 	const {width, height} = root;
 
 	const lines: StyledChar[][] = Array.from({length: height}, () =>
-		Array.from({length: width}, () => getInternedChar(' ', false, [])),
+		Array.from({length: width}, () => getInternedChar(' ', false, undefined)),
 	);
 
 	composeRegion(
