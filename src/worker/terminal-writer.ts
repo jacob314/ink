@@ -67,8 +67,8 @@ export function linesEqual(
 		return false;
 	}
 
-	for (let i = 0; i < lineA.length; i++) {
-		const charA = lineA[i]!;
+	for (const [i, element] of lineA.entries()) {
+		const charA = element;
 		const charB = lineB[i]!;
 
 		if (charA.value !== charB.value || charA.fullWidth !== charB.fullWidth) {

@@ -428,7 +428,7 @@ export class Compositor {
 
 		let styles: StyledChar['styles'] = [];
 		const colorized = colorize('x', color, 'background');
-		
+
 		if (colorized !== 'x') {
 			const parts = colorized.split('x');
 			if (parts.length === 2 && parts[0] && parts[1]) {

@@ -6,6 +6,7 @@ import {
 	styledCharsWidth,
 } from './measure-text.js';
 import {type CursorPosition} from './log-update.js';
+import {getInternedChar} from './serialization.js';
 import {type StickyHeader, type DOMElement} from './dom.js';
 import {calculateScrollbarLayout} from './measure-element.js';
 import {renderScrollbar} from './render-scrollbar.js';
@@ -595,15 +596,11 @@ export default class Output {
 	}
 
 	private initLines(region: Region, width: number, height: number) {
+		const emptyChar = getInternedChar(' ', false, []);
 		for (let y = 0; y < height; y++) {
 			const row: StyledChar[] = [];
 			for (let x = 0; x < width; x++) {
-				row.push({
-					type: 'char',
-					value: ' ',
-					fullWidth: false,
-					styles: [],
-				});
+				row.push(emptyChar);
 			}
 
 			(region.lines as StyledChar[][]).push(row);
@@ -756,12 +753,7 @@ export default class Output {
 	) {
 		for (let offset = range.start; offset < range.end; offset++) {
 			if (offset >= 0 && offset < maxWidth) {
-				currentLine[offset] = {
-					type: 'char',
-					value,
-					fullWidth: false,
-					styles,
-				};
+				currentLine[offset] = getInternedChar(value, false, styles);
 			}
 		}
 	}
@@ -831,12 +823,7 @@ export function flattenRegion(
 	const {width, height} = root;
 
 	const lines: StyledChar[][] = Array.from({length: height}, () =>
-		Array.from({length: width}, () => ({
-			type: 'char',
-			value: ' ',
-			fullWidth: false,
-			styles: [],
-		})),
+		Array.from({length: width}, () => getInternedChar(' ', false, [])),
 	);
 
 	composeRegion(
