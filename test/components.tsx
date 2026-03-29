@@ -312,8 +312,7 @@ test('hooks', t => {
 	t.is(output, 'Hello');
 });
 
-// eslint-disable-next-line ava/no-skip-test
-test.skip('static output', t => {
+test('static output', t => {
 	const output = renderToString(
 		<Box>
 			<Static items={['A', 'B', 'C']} style={{paddingBottom: 1}}>
@@ -329,8 +328,7 @@ test.skip('static output', t => {
 	t.is(output, 'A\nB\nC\n\n\nX');
 });
 
-// eslint-disable-next-line ava/no-skip-test
-test.serial.skip(
+test.serial(
 	'skip previous output when rendering new static output',
 	async t => {
 		const stdout = createStdout();
@@ -355,8 +353,7 @@ test.serial.skip(
 	},
 );
 
-// eslint-disable-next-line ava/no-skip-test
-test.serial.skip(
+test.serial(
 	'render only new items in static output on final render',
 	async t => {
 		const stdout = createStdout();
@@ -600,8 +597,7 @@ test('render different component based on whether stdin is a TTY or not', t => {
 	t.false(stdin.setRawMode.called);
 });
 
-// eslint-disable-next-line ava/no-skip-test
-test.skip('render only last frame when run in CI', async t => {
+test('render only last frame when run in CI', async t => {
 	const output = await run('ci', {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		env: {CI: 'true'},
@@ -615,8 +611,7 @@ test.skip('render only last frame when run in CI', async t => {
 	t.true(output.includes('Counter: 5'));
 });
 
-// eslint-disable-next-line ava/no-skip-test
-test.skip('render all frames if CI environment variable equals false', async t => {
+test('render all frames if CI environment variable equals false', async t => {
 	const output = await run('ci', {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		env: {CI: 'false'},

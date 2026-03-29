@@ -34,13 +34,17 @@ export const run: Run = async (fixture, props) => {
 	};
 
 	return new Promise<string>((resolve, reject) => {
-		const term = spawn('node', ['--loader=ts-node/esm', fixturePath], {
-			name: 'xterm-color',
-			cols: typeof props?.columns === 'number' ? props.columns : 100,
-			rows: typeof props?.rows === 'number' ? props.rows : 30,
-			cwd: projectRoot,
-			env,
-		});
+		const term = spawn(
+			process.execPath,
+			['--loader=ts-node/esm', fixturePath],
+			{
+				name: 'xterm-color',
+				cols: typeof props?.columns === 'number' ? props.columns : 100,
+				rows: typeof props?.rows === 'number' ? props.rows : 30,
+				cwd: projectRoot,
+				env,
+			},
+		);
 
 		let output = '';
 

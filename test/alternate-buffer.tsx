@@ -31,8 +31,7 @@ const scenarios: Array<{
 ];
 
 for (const {name, env, eraseOperation} of scenarios) {
-	// eslint-disable-next-line ava/no-skip-test
-	test.skip(`(${name}) renders in alternate buffer and leaves it on exit`, async t => {
+	test(`(${name}) renders in alternate buffer and leaves it on exit`, async t => {
 		const output = await run('alternate-buffer', {
 			env,
 		});
@@ -54,8 +53,7 @@ for (const {name, env, eraseOperation} of scenarios) {
 	});
 }
 
-// eslint-disable-next-line ava/no-skip-test
-test.skip('does not use alternate buffer when disabled', async t => {
+test('does not use alternate buffer when disabled', async t => {
 	const output = await run('alternate-buffer-off');
 
 	t.false(output.includes(ansiEscapes.enterAlternativeScreen));
@@ -66,8 +64,7 @@ test.skip('does not use alternate buffer when disabled', async t => {
 });
 
 for (const {name, env} of scenarios) {
-	// eslint-disable-next-line ava/no-skip-test
-	test.skip(`(${name}) renders final frame on exit outside of alternate buffer`, async t => {
+	test(`(${name}) renders final frame on exit outside of alternate buffer`, async t => {
 		const output = await run('alternate-buffer', {env});
 
 		const finalOutput = output.slice(
@@ -78,8 +75,7 @@ for (const {name, env} of scenarios) {
 		t.true(finalOutput.includes('Hello World'));
 	});
 
-	// eslint-disable-next-line ava/no-skip-test
-	test.skip(`(${name}) does not render more lines than terminal height until exit`, async t => {
+	test(`(${name}) does not render more lines than terminal height until exit`, async t => {
 		const output = await run('alternate-buffer-long', {rows: 3, env});
 
 		const alternateBufferOutput: string = stripAnsi(

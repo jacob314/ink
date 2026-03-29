@@ -2,8 +2,7 @@ import test from 'ava';
 import stripAnsi from 'strip-ansi';
 import {run} from './helpers/run.js';
 
-// eslint-disable-next-line ava/no-skip-test
-test.skip('cursor is moved to the last line on exit', async t => {
+test('cursor is moved to the last line on exit', async t => {
 	const output = await run('exit-cursor-position');
 
 	// The output should contain 'exited'

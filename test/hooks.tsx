@@ -26,7 +26,7 @@ const term = (fixture: string, args: string[] = []) => {
 	};
 
 	const ps = spawn(
-		process.execPath,
+		'node',
 		[
 			'--loader=ts-node/esm',
 			path.join(__dirname, `./fixtures/${fixture}.tsx`),

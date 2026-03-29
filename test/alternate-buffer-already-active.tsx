@@ -2,8 +2,7 @@ import test from 'ava';
 import ansiEscapes from 'ansi-escapes';
 import {run} from './helpers/run.js';
 
-// eslint-disable-next-line ava/no-skip-test
-test.skip('does not enter alternate buffer when already active', async t => {
+test('does not enter alternate buffer when already active', async t => {
 	const output = await run('alternate-buffer-already-active');
 
 	t.false(

@@ -62,7 +62,7 @@ const term = (fixture: string, args: string[] = []) => {
 	};
 
 	const ps = spawn(
-		process.execPath,
+		'node',
 		[
 			'--loader=ts-node/esm',
 			path.join(__dirname, `./fixtures/${fixture}.tsx`),
@@ -318,8 +318,7 @@ test.serial('throttle renders to maxFps', t => {
 	}
 });
 
-// eslint-disable-next-line ava/no-skip-test
-test.serial.skip('outputs renderTime when onRender is passed', async t => {
+test.serial('outputs renderTime when onRender is passed', async t => {
 	const metrics: RenderMetrics[] = [];
 
 	const onRender = (m: RenderMetrics) => {
