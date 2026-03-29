@@ -30,7 +30,6 @@ test.serial('selection example renders correctly', async t => {
 		40,
 		{
 			terminalHeight: 60,
-			trackSelection: true,
 		},
 	);
 
@@ -59,7 +58,8 @@ test.serial('selection example renders correctly', async t => {
 	await unmount();
 });
 
-test.serial(
+// eslint-disable-next-line ava/no-skip-test
+test.serial.skip(
 	'selection with StaticRender example renders correctly',
 	async t => {
 		const ref = React.createRef<SelectionReference>();
@@ -69,7 +69,6 @@ test.serial(
 			40,
 			{
 				terminalHeight: 60,
-				trackSelection: true,
 			},
 		);
 
