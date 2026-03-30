@@ -69,18 +69,35 @@ const colorize = (
 	return str;
 };
 
+const backgroundColorCache = new Map<string, string | undefined>();
+const foregroundColorCache = new Map<string, string | undefined>();
+
 export const getBackgroundColorEscape = (color: string): string | undefined => {
+	if (backgroundColorCache.has(color)) {
+		return backgroundColorCache.get(color);
+	}
+
 	// Chalk automatically downgrades colors based on terminal support.
 	// Since Chalk doesn't expose the raw escape codes directly without
 	// applying them to a string, we colorize a dummy character and extract
 	// the generated ANSI escape prefix.
 	const colorized = colorize('x', color, 'background');
+	const escape = colorized === 'x' ? undefined : colorized.split('x')[0];
 
-	if (colorized !== 'x') {
-		return colorized.split('x')[0];
+	backgroundColorCache.set(color, escape);
+	return escape;
+};
+
+export const getForegroundColorEscape = (color: string): string | undefined => {
+	if (foregroundColorCache.has(color)) {
+		return foregroundColorCache.get(color);
 	}
 
-	return undefined;
+	const colorized = colorize('x', color, 'foreground');
+	const escape = colorized === 'x' ? undefined : colorized.split('x')[0];
+
+	foregroundColorCache.set(color, escape);
+	return escape;
 };
 
 export default colorize;

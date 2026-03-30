@@ -29,6 +29,7 @@ import {
 	setEnableToStyledCharactersCache,
 	clearToStyledCharactersCache,
 } from './measure-text.js';
+import {debugLog} from './debug-log.js';
 
 const noop = () => {};
 
@@ -377,6 +378,7 @@ export default class Ink {
 		}
 
 		const startTime = performance.now();
+		debugLog(`\n--- FRAME START ---`);
 
 		let debugRainbowColor: string | undefined;
 		if (this.options.debugRainbow) {
@@ -430,6 +432,7 @@ export default class Ink {
 		}
 
 		this.callOnRender(startTime, output, staticOutput);
+		debugLog(`--- FRAME END (${(performance.now() - startTime).toFixed(2)}ms) ---\n`);
 	};
 
 	recalculateLayout(): void {

@@ -6,6 +6,7 @@
 
 import {StyledLine} from './styled-line.js';
 import {inkCharacterWidth, styledCharsWidth} from './measure-text.js';
+import {debugLog} from './debug-log.js';
 
 export const sliceStyledChars = (
 	line: StyledLine,
@@ -191,6 +192,10 @@ export const wrapOrTruncateStyledChars = (
 	maxWidth: number,
 	textWrap = 'wrap',
 ): StyledLine[] => {
+	debugLog(
+		`wrapOrTruncateStyledChars called. dimensions: maxWidth ${maxWidth}, input: ${line.getText()}`,
+	);
+
 	if (textWrap.startsWith('truncate')) {
 		let position: 'start' | 'middle' | 'end' = 'end';
 		if (textWrap === 'truncate-middle') {

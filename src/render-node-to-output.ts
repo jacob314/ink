@@ -15,6 +15,7 @@ import {renderStickyNode, getStickyDescendants} from './render-sticky.js';
 import {handleContainerNode} from './render-container.js';
 import {handleCachedRenderNode} from './render-cached.js';
 import {getRelativeLeft, getRelativeTop} from './measure-element.js';
+import {debugLog} from './debug-log.js';
 
 export type OutputTransformer = (s: string, index: number) => string;
 
@@ -35,6 +36,10 @@ export const renderToStatic = (
 
 	const width = node.yogaNode?.getComputedWidth() ?? 0;
 	const height = node.yogaNode?.getComputedHeight() ?? 0;
+
+	debugLog(
+		`renderToStatic called. Content size: width ${width}, height ${height}`,
+	);
 
 	const stickyNodes = getStickyDescendants(node);
 	const cachedStickyHeaders: StickyHeader[] = [];

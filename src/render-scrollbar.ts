@@ -1,5 +1,4 @@
-import colorize from './colorize.js';
-import {toStyledCharacters} from './measure-text.js';
+import {getForegroundColorEscape} from './colorize.js';
 import {type ScrollbarBoundingBox} from './measure-element.js';
 
 export type ScrollbarThumb = {
@@ -50,6 +49,8 @@ export const renderScrollbar = ({
 		},
 	} = layout;
 
+	const fgColor = color ? getForegroundColorEscape(color) : undefined;
+
 	if (axis === 'vertical') {
 		for (let i = startIndex; i < endIndex; i++) {
 			const drawY = y + i;
@@ -72,28 +73,23 @@ export const renderScrollbar = ({
 					char = '▄';
 				}
 
-				const charString = color ? colorize(char, color, 'foreground') : char;
-				const styled = toStyledCharacters(charString);
-
-				if (styled.length > 0) {
-					let bgColor = styled.getBgColor(0);
-					if (getExistingChar && (char === '▀' || char === '▄')) {
-						const existing = getExistingChar(drawX, drawY);
-						if (existing?.bgColor) {
-							bgColor = existing.bgColor;
-						}
+				let bgColor: string | undefined;
+				if (getExistingChar && (char === '▀' || char === '▄')) {
+					const existing = getExistingChar(drawX, drawY);
+					if (existing?.bgColor) {
+						bgColor = existing.bgColor;
 					}
-
-					setChar(
-						drawX,
-						drawY,
-						styled.getValue(0),
-						styled.getFormatFlags(0),
-						styled.getFgColor(0),
-						bgColor,
-						styled.getLink(0),
-					);
 				}
+
+				setChar(
+					drawX,
+					drawY,
+					char,
+					0,
+					fgColor,
+					bgColor,
+					undefined,
+				);
 			}
 		}
 	} else {
@@ -118,28 +114,23 @@ export const renderScrollbar = ({
 					char = '▐';
 				}
 
-				const charString = color ? colorize(char, color, 'foreground') : char;
-				const styled = toStyledCharacters(charString);
-
-				if (styled.length > 0) {
-					let bgColor = styled.getBgColor(0);
-					if (getExistingChar && (char === '▌' || char === '▐')) {
-						const existing = getExistingChar(drawX, drawY);
-						if (existing?.bgColor) {
-							bgColor = existing.bgColor;
-						}
+				let bgColor: string | undefined;
+				if (getExistingChar && (char === '▌' || char === '▐')) {
+					const existing = getExistingChar(drawX, drawY);
+					if (existing?.bgColor) {
+						bgColor = existing.bgColor;
 					}
-
-					setChar(
-						drawX,
-						drawY,
-						styled.getValue(0),
-						styled.getFormatFlags(0),
-						styled.getFgColor(0),
-						bgColor,
-						styled.getLink(0),
-					);
 				}
+
+				setChar(
+					drawX,
+					drawY,
+					char,
+					0,
+					fgColor,
+					bgColor,
+					undefined,
+				);
 			}
 		}
 	}

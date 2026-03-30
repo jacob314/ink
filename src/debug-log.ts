@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
-const debugLogEnabled = false;
+const debugLogEnabled = true;
 let isFirstRun = true;
 const logFilePath = path.join(process.cwd(), 'debug.log');
 let logStream: fs.WriteStream | undefined;
@@ -14,7 +14,8 @@ export const debugLog = (message: string) => {
 
 	if (isFirstRun) {
 		try {
-			logStream = fs.createWriteStream(logFilePath, {flags: 'w'});
+			const flags = process.env['INK_WORKER'] === 'true' ? 'a' : 'w';
+			logStream = fs.createWriteStream(logFilePath, {flags});
 		} catch (error) {
 			process.stderr.write(
 				`[debug-log] Failed to start writing to debug file ${logFilePath} in debugLog: ${String(error)}\n`,
