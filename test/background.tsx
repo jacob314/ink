@@ -374,3 +374,19 @@ test('Box background updates on rerender', t => {
 	rerender(<Test />);
 	t.is((stdout.write as any).lastCall.args[0], 'Hello');
 });
+
+test('background does not mutate empty line cache', t => {
+	const output = renderToString(
+		<Box flexDirection="column">
+			<Box width={10} backgroundColor="red">
+				<Text>A</Text>
+			</Box>
+			<Box width={10}>
+				<Text>B</Text>
+			</Box>
+		</Box>,
+	);
+
+	t.true(output.includes(`${ansi.bgRed}A         ${ansi.bgReset}`));
+	t.is(output, `${ansi.bgRed}A         ${ansi.bgReset}\nB`);
+});

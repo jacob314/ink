@@ -1,6 +1,7 @@
-import colorize from './colorize.js';
+import {getBackgroundColorEscape} from './colorize.js';
 import {type DOMElement, type DOMNode} from './dom.js';
 import type Output from './output.js';
+import {StyledLine} from './styled-line.js';
 
 const renderBackground = (
 	x: number,
@@ -32,18 +33,24 @@ const renderBackground = (
 		return;
 	}
 
-	// Create background fill for each row
-	const backgroundLine = colorize(
-		' '.repeat(contentWidth),
-		node.style.backgroundColor,
-		'background',
-	);
+	const bgColorEsc = node.style.backgroundColor
+		? getBackgroundColorEscape(node.style.backgroundColor)
+		: undefined;
+	let backgroundChars: StyledLine;
+	if (bgColorEsc) {
+		backgroundChars = new StyledLine();
+		for (let i = 0; i < contentWidth; i++) {
+			backgroundChars.pushChar(' ', 0, undefined, bgColorEsc);
+		}
+	} else {
+		backgroundChars = StyledLine.empty(contentWidth);
+	}
 
 	for (let row = 0; row < contentHeight; row++) {
 		output.write(
 			x + leftBorderWidth,
 			y + topBorderHeight + row,
-			backgroundLine,
+			backgroundChars,
 			{transformers: []},
 		);
 	}

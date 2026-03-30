@@ -19,19 +19,36 @@ const MAX_SAFE_OFFSET = 0x7f_ff;
 export class StyledLine {
 	static empty(length: number): StyledLine {
 		const safeLength = Math.min(length, MAX_SAFE_OFFSET);
-		const line = new StyledLine();
-		if (safeLength > 0) {
-			line.length = safeLength;
-			line.text = ' '.repeat(safeLength);
-			line.charData = new Uint16Array(Math.max(safeLength, 16));
-			for (let i = 0; i < safeLength; i++) {
-				line.charData[i] = i;
-			}
-
-			line.spans = [{length: safeLength, formatFlags: 0}];
+		if (safeLength <= 0) {
+			return new StyledLine();
 		}
 
-		return line;
+		const cached = StyledLine.emptyCache.get(safeLength);
+		if (cached) {
+			return cached.clone();
+		}
+
+		const line = new StyledLine();
+		line.length = safeLength;
+		line.text = ' '.repeat(safeLength);
+		line.charData = new Uint16Array(Math.max(safeLength, 16));
+		for (let i = 0; i < safeLength; i++) {
+			line.charData[i] = i;
+		}
+
+		line.spans = [{length: safeLength, formatFlags: 0}];
+
+		if (StyledLine.emptyCache.size > 100) {
+			StyledLine.emptyCache.clear();
+		}
+
+		Object.freeze(line.spans[0]);
+		Object.freeze(line.spans);
+		Object.freeze(line);
+
+		StyledLine.emptyCache.set(safeLength, line);
+
+		return line.clone();
 	}
 
 	static legacyCreateStyledLine(
@@ -40,8 +57,11 @@ export class StyledLine {
 	): StyledLine {
 		const line = new StyledLine();
 		line.applyValuesAndSpans(values, spans);
+
 		return line;
 	}
+
+	private static readonly emptyCache = new Map<number, StyledLine>();
 
 	public length: number;
 	private text: string | undefined;
@@ -422,14 +442,49 @@ export class StyledLine {
 		return result;
 	}
 
-	trimEnd(): StyledLine {
-		if (this.length === 0) return this.clone();
-		let i = this.length - 1;
-		while (i >= 0 && this.getValue(i) === ' ' && !this.hasStyles(i)) {
-			i--;
+	getTrimmedLength(): number {
+		if (this.length === 0) return 0;
+		if (this.text === undefined || this.charData === undefined) return 0;
+
+		let currentIdx = this.length - 1;
+
+		if (this.spans) {
+			for (let s = this.spans.length - 1; s >= 0; s--) {
+				const span = this.spans[s]!;
+				const hasStyles =
+					(span.formatFlags & ~FULL_WIDTH_MASK) !== 0 ||
+					span.fgColor !== undefined ||
+					span.bgColor !== undefined ||
+					span.link !== undefined;
+
+				if (hasStyles) {
+					return currentIdx + 1;
+				}
+
+				for (let i = 0; i < span.length; i++) {
+					const start = this.charData[currentIdx]! & 0x7f_ff;
+					const end =
+						currentIdx + 1 < this.length
+							? this.charData[currentIdx + 1]! & 0x7f_ff
+							: this.text.length;
+
+					if (end - start !== 1 || this.text[start] !== ' ') {
+						return currentIdx + 1;
+					}
+
+					currentIdx--;
+				}
+			}
 		}
 
-		return this.slice(0, i + 1);
+		return 0;
+	}
+
+	trimEnd(): StyledLine {
+		const trimmedLength = this.getTrimmedLength();
+		if (trimmedLength === this.length) return this;
+		if (trimmedLength === 0) return new StyledLine();
+		return this.slice(0, trimmedLength);
 	}
 
 	equals(other: StyledLine): boolean {
