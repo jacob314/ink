@@ -53,7 +53,7 @@ export {
 	wordBreakStyledChars,
 } from './measure-text.js';
 export {type DOMElement, type DOMNode, getPathToRoot} from './dom.js';
-export type {StyledChar} from '@alcalzone/ansi-tokenize';
+export {StyledLine} from './styled-line.js';
 export {
 	default as ResizeObserver,
 	ResizeObserverEntry,

@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import {type Region} from '../output.js';
 import {type StickyHeader} from '../dom.js';
 import {calculateScrollbarThumb} from '../measure-element.js';
@@ -27,7 +26,7 @@ export type CompositionOptions = {
  */
 export class Compositor {
 	private static lastBackgroundColor?: string;
-	private static lastBackgroundStyles: StyledChar['styles'] = [];
+	private static lastBackgroundStyles: string | undefined;
 
 	constructor(private readonly options: CompositionOptions) {}
 
@@ -67,9 +66,9 @@ export class Compositor {
 				const dx = sx - absX;
 				const contentX = scrollLeft + dx;
 
-				let char = line[contentX];
-				if (char) {
-					const isEmpty = char.value === ' ' && char.styles.length === 0;
+				if (contentX < line.length) {
+					const val = line.getValue(contentX);
+					const isEmpty = val === ' ' && !line.hasStyles(contentX);
 
 					if (isEmpty) {
 						if (!isOpaque) {
@@ -77,18 +76,31 @@ export class Compositor {
 						}
 
 						if (region.backgroundColor) {
-							// Apply background to empty char
-							char = {
-								...char,
-								styles: [
-									...char.styles,
-									...this.getBackgroundStyles(region.backgroundColor),
-								],
-							};
+							const bgColor = this.getBackgroundStyles(region.backgroundColor);
+							if (bgColor) {
+								canvas.setChar(
+									sx,
+									sy,
+									val,
+									line.getFormatFlags(contentX),
+									line.getFgColor(contentX),
+									bgColor,
+									line.getLink(contentX),
+								);
+								continue;
+							}
 						}
 					}
 
-					canvas.setChar(sx, sy, char);
+					canvas.setChar(
+						sx,
+						sy,
+						val,
+						line.getFormatFlags(contentX),
+						line.getFgColor(contentX),
+						line.getBgColor(contentX),
+						line.getLink(contentX),
+					);
 				}
 			}
 		}
@@ -204,10 +216,16 @@ export class Compositor {
 
 				for (let sx = hx1; sx < hx2; sx++) {
 					const cx = sx - headerX;
-					const char = line[cx];
-
-					if (char) {
-						canvas.setChar(sx, sy, char);
+					if (cx < line.length) {
+						canvas.setChar(
+							sx,
+							sy,
+							line.getValue(cx),
+							line.getFormatFlags(cx),
+							line.getFgColor(cx),
+							line.getBgColor(cx),
+							line.getLink(cx),
+						);
 					}
 				}
 			}
@@ -285,8 +303,8 @@ export class Compositor {
 				clip,
 				axis: 'vertical',
 				color: region.scrollbarThumbColor,
-				setChar(x, y, char) {
-					canvas.setChar(x, y, char);
+				setChar(x, y, value, formatFlags, fgColor, bgColor, link) {
+					canvas.setChar(x, y, value, formatFlags, fgColor, bgColor, link);
 				},
 				getExistingChar(x, y) {
 					return canvas.getChar(x, y);
@@ -329,8 +347,8 @@ export class Compositor {
 				clip,
 				axis: 'horizontal',
 				color: region.scrollbarThumbColor,
-				setChar(x, y, char) {
-					canvas.setChar(x, y, char);
+				setChar(x, y, value, formatFlags, fgColor, bgColor, link) {
+					canvas.setChar(x, y, value, formatFlags, fgColor, bgColor, link);
 				},
 				getExistingChar(x, y) {
 					return canvas.getChar(x, y);
@@ -421,24 +439,18 @@ export class Compositor {
 		return stuckHeight;
 	}
 
-	private getBackgroundStyles(color: string) {
+	private getBackgroundStyles(color: string): string | undefined {
 		if (color === Compositor.lastBackgroundColor) {
 			return Compositor.lastBackgroundStyles;
 		}
 
-		let styles: StyledChar['styles'] = [];
+		let styles: string | undefined;
 		const colorized = colorize('x', color, 'background');
 
 		if (colorized !== 'x') {
 			const parts = colorized.split('x');
 			if (parts.length === 2 && parts[0] && parts[1]) {
-				styles = [
-					{
-						type: 'ansi',
-						code: parts[0],
-						endCode: parts[1],
-					},
-				];
+				styles = parts[0];
 			}
 		}
 

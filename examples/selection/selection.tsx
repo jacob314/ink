@@ -19,21 +19,12 @@ import {
 	getPathToRoot,
 	StaticRender,
 	type DOMElement,
-	type StyledChar,
+	type StyledLine,
 	type DOMNode,
 } from '../../src/index.js';
 
-export const selectionStyle = (char: StyledChar): StyledChar => {
-	return {
-		...char,
-		styles: [
-			{
-				type: 'ansi',
-				code: '\u001B[7m',
-				endCode: '\u001B[27m',
-			},
-		],
-	};
+export const selectionStyle = (line: StyledLine, index: number) => {
+	line.setInverted(index, true);
 };
 
 const longText =

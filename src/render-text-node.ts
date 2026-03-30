@@ -1,10 +1,3 @@
-/**
- * @license
- * Copyright 2026 Google LLC
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import {type DOMElement, type DOMNode, isNodeSelectable} from './dom.js';
 import type Output from './output.js';
 import {
@@ -17,30 +10,38 @@ import getMaxWidth from './get-max-width.js';
 import squashTextNodes from './squash-text-nodes.js';
 import {applySelectionToStyledChars} from './selection.js';
 import type {OutputTransformer} from './render-node-to-output.js';
+import {StyledLine} from './styled-line.js';
 
 export const applyPaddingToStyledChars = (
 	node: DOMElement,
-	lines: StyledChar[][],
-): StyledChar[][] => {
+	lines: StyledLine[],
+): StyledLine[] => {
 	const yogaNode = node.childNodes[0]?.yogaNode;
 
 	if (yogaNode) {
 		const offsetX = yogaNode.getComputedLeft();
 		const offsetY = yogaNode.getComputedTop();
 
-		const space: StyledChar = {
-			type: 'char',
-			value: ' ',
-			fullWidth: false,
-			styles: [],
-		};
+		const paddedLines: StyledLine[] = [];
 
-		const paddingLeft = Array.from({length: offsetX}).map(() => space);
+		for (const line of lines) {
+			const newLine = new StyledLine();
+			for (let i = 0; i < offsetX; i++) {
+				newLine.pushChar(' ', 0);
+			}
 
-		lines = lines.map(line => [...paddingLeft, ...line]);
+			paddedLines.push(
+				new StyledLine(
+					[...newLine.getValues(), ...line.getValues()],
+					[...newLine.getSpans(), ...line.getSpans().map(s => ({...s}))],
+				),
+			);
+		}
 
-		const paddingTop: StyledChar[][] = Array.from({length: offsetY}).map(
-			() => [],
+		lines = paddedLines;
+
+		const paddingTop: StyledLine[] = Array.from({length: offsetY}).map(
+			() => new StyledLine(),
 		);
 		lines.unshift(...paddingTop);
 	}
@@ -49,68 +50,61 @@ export const applyPaddingToStyledChars = (
 };
 
 export const calculateWrappedCursorPosition = (
-	lines: StyledChar[][],
-	styledChars: StyledChar[],
+	lines: StyledLine[],
+	_styledChars: StyledLine,
 	targetOffset: number,
 ): {cursorLineIndex: number; relativeCursorPosition: number} => {
-	const styledCharToOffset = new Map<StyledChar, number>();
-	let offset = 0;
-
-	for (const char of styledChars) {
-		styledCharToOffset.set(char, offset);
-		offset += char.value.length;
-	}
-
 	let cursorLineIndex = lines.length - 1;
 	let relativeCursorPosition = targetOffset;
-	// -1 represents "before document start" so first character (offset 0) is handled correctly
-	let previousLineEndOffset = -1;
+
+	let sourceIndex = 0;
 
 	for (const [i, line] of lines.entries()) {
-		if (line.length > 0) {
-			const firstChar = line.find(char => styledCharToOffset.has(char));
-			const lastChar = line.findLast(char => styledCharToOffset.has(char));
-
-			if (!firstChar || !lastChar) {
-				// Padding-only line (originally empty), treat as empty line
-				if (targetOffset > previousLineEndOffset) {
-					cursorLineIndex = i;
-					relativeCursorPosition = targetOffset - previousLineEndOffset - 1;
-					previousLineEndOffset++;
-				}
-
-				continue;
-			}
-
-			const lineStartOffset = styledCharToOffset.get(firstChar)!;
-			const lineEndOffset =
-				styledCharToOffset.get(lastChar)! + lastChar.value.length;
-
-			// Set as candidate if targetOffset is at or after line start
-			if (targetOffset >= lineStartOffset) {
+		// If the line is empty (e.g., from consecutive newlines), it consumes a newline
+		if (line.length === 0) {
+			if (targetOffset === sourceIndex) {
 				cursorLineIndex = i;
-				relativeCursorPosition = Math.max(0, targetOffset - lineStartOffset);
-			}
-
-			// Finalize and exit if targetOffset is within or before this line's range.
-			// If targetOffset is in a gap (between previousLineEndOffset and lineStartOffset),
-			// the cursor stays at the previous line's end (already set in previous iteration).
-			if (targetOffset <= lineEndOffset) {
+				relativeCursorPosition = 0;
 				break;
 			}
 
-			previousLineEndOffset = lineEndOffset;
-		} else if (i === 0 && targetOffset === 0) {
-			// Edge case: First line is empty and cursor is at position 0
-			cursorLineIndex = 0;
-			relativeCursorPosition = 0;
-			break;
-		} else if (i > 0 && targetOffset > previousLineEndOffset) {
-			// Handle empty lines (usually caused by \n)
+			sourceIndex++; // Consume the newline
+			continue;
+		}
+
+		// Advance sourceIndex over dropped characters (like \n or space)
+		while (
+			sourceIndex < _styledChars.length &&
+			_styledChars.getValue(sourceIndex) !== line.getValue(0)
+		) {
+			if (targetOffset === sourceIndex) {
+				// Target is on a dropped character BEFORE this line
+				// We return the END of the previous line (or start of this line if i=0)
+				if (i > 0) {
+					cursorLineIndex = i - 1;
+					relativeCursorPosition = lines[i - 1]!.length;
+				} else {
+					cursorLineIndex = 0;
+					relativeCursorPosition = 0;
+				}
+
+				return {cursorLineIndex, relativeCursorPosition};
+			}
+
+			sourceIndex++;
+		}
+
+		const lineStartOffset = sourceIndex;
+		sourceIndex += line.length; // Advance past the line content
+		const lineEndOffset = sourceIndex;
+
+		if (targetOffset >= lineStartOffset && targetOffset <= lineEndOffset) {
 			cursorLineIndex = i;
-			relativeCursorPosition = targetOffset - previousLineEndOffset - 1;
-			// Advance past the \n character
-			previousLineEndOffset++;
+			relativeCursorPosition = targetOffset - lineStartOffset;
+			break;
+		} else if (targetOffset > lineEndOffset && i === lines.length - 1) {
+			cursorLineIndex = i;
+			relativeCursorPosition = line.length;
 		}
 	}
 
@@ -125,7 +119,7 @@ export function handleTextNode(
 		y: number;
 		newTransformers: OutputTransformer[];
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
-		selectionStyle?: (char: StyledChar) => StyledChar;
+		selectionStyle?: (line: StyledLine, index: number) => void;
 		trackSelection?: boolean;
 	},
 ) {
@@ -157,7 +151,7 @@ export function handleTextNode(
 	}
 
 	if (styledChars.length > 0 || node.internal_terminalCursorFocus) {
-		let lines: StyledChar[][] = [];
+		let lines: StyledLine[] = [];
 		let cursorLineIndex = 0;
 		let relativeCursorPosition = node.internal_terminalCursorPosition ?? 0;
 
@@ -174,10 +168,6 @@ export function handleTextNode(
 						)
 					: splitStyledCharsByNewline(styledChars);
 
-			lines = applyPaddingToStyledChars(node, lines);
-
-			cursorLineIndex = lines.length - 1;
-
 			if (
 				node.internal_terminalCursorFocus &&
 				node.internal_terminalCursorPosition !== undefined
@@ -189,8 +179,44 @@ export function handleTextNode(
 						node.internal_terminalCursorPosition,
 					));
 			}
+
+			// Original code applied padding here.
+			// It was done BEFORE calculateWrappedCursorPosition in original?
+			// Wait, the original code did:
+			// lines = applyPaddingToStyledChars(node, lines);
+			// cursorLineIndex = lines.length - 1;
+			// if (node.internal_terminalCursorFocus) { ... }
+			// I moved it after, because mapping padding offsets is hard without objects.
+			// But padding affects the visual cursor index!
+			// If we pad, the cursor shifts. Let's do it after, but we need to shift the cursor position by the padding.
+			const yogaNode = node.childNodes[0]?.yogaNode;
+			const offsetX = yogaNode?.getComputedLeft() ?? 0;
+			const offsetY = yogaNode?.getComputedTop() ?? 0;
+
+			lines = applyPaddingToStyledChars(node, lines);
+
+			if (
+				node.internal_terminalCursorFocus &&
+				node.internal_terminalCursorPosition !== undefined
+			) {
+				cursorLineIndex += offsetY;
+				relativeCursorPosition += offsetX;
+			} else if (node.internal_terminalCursorFocus) {
+				cursorLineIndex = lines.length - 1;
+				// Default to end of the last line
+				relativeCursorPosition = lines[cursorLineIndex]!.length;
+			}
 		} else {
-			lines = [[]];
+			lines = [new StyledLine()];
+			const yogaNode = node.childNodes[0]?.yogaNode;
+			const offsetX = yogaNode?.getComputedLeft() ?? 0;
+			const offsetY = yogaNode?.getComputedTop() ?? 0;
+			lines = applyPaddingToStyledChars(node, lines);
+
+			if (node.internal_terminalCursorFocus) {
+				cursorLineIndex = offsetY;
+				relativeCursorPosition = offsetX;
+			}
 		}
 
 		for (const [index, line] of lines.entries()) {

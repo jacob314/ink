@@ -108,17 +108,6 @@ export default function Text({
 			children = chalk.dim(children);
 		}
 
-		if (color) {
-			children = colorize(children, color, 'foreground');
-		}
-
-		// Use explicit backgroundColor if provided, otherwise use inherited from parent Box
-		const effectiveBackgroundColor =
-			backgroundColor ?? inheritedBackgroundColor;
-		if (effectiveBackgroundColor) {
-			children = colorize(children, effectiveBackgroundColor, 'background');
-		}
-
 		if (bold) {
 			children = chalk.bold(children);
 		}
@@ -137,6 +126,17 @@ export default function Text({
 
 		if (inverse) {
 			children = chalk.inverse(children);
+		}
+
+		if (color) {
+			children = colorize(children, color, 'foreground');
+		}
+
+		// Use explicit backgroundColor if provided, otherwise use inherited from parent Box
+		const effectiveBackgroundColor =
+			backgroundColor ?? inheritedBackgroundColor;
+		if (effectiveBackgroundColor) {
+			children = colorize(children, effectiveBackgroundColor, 'background');
 		}
 
 		return children;

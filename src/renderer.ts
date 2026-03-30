@@ -1,4 +1,5 @@
-import {type StyledChar, styledCharsToString} from '@alcalzone/ansi-tokenize';
+import {type StyledLine} from './styled-line.js';
+import {styledLineToString} from './tokenize.js';
 import renderNodeToOutput from './render-node-to-output.js';
 import {renderNodeToScreenReaderOutput} from './render-screen-reader.js';
 import Output, {
@@ -18,7 +19,7 @@ type Result = {
 	output: string;
 	outputHeight: number;
 	staticOutput: string;
-	styledOutput: StyledChar[][];
+	styledOutput: StyledLine[];
 	cursorPosition?: {row: number; col: number};
 	stickyHeaders: StickyHeader[];
 	root?: Region;
@@ -242,7 +243,7 @@ const renderer = (
 	options: {
 		isScreenReaderEnabled: boolean;
 		selection?: Selection;
-		selectionStyle?: (char: StyledChar) => StyledChar;
+		selectionStyle?: (line: StyledLine, index: number) => void;
 		skipScrollbars?: boolean;
 		trackSelection?: boolean;
 	},
@@ -388,11 +389,9 @@ function regionToOutput(
 	// Flatten the root region for legacy string output
 	const generatedOutput = lines
 		.map(line => {
-			const lineWithoutEmptyItems = line.filter(item => item !== undefined);
-			return styledCharsToString(lineWithoutEmptyItems).trimEnd();
+			return styledLineToString(line.trimEnd());
 		})
 		.join('\n');
-
 	return {
 		output: generatedOutput,
 		height: lines.length,

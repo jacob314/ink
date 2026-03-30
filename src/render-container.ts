@@ -5,7 +5,7 @@
  */
 
 import Yoga from 'yoga-layout';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {type StyledLine} from './styled-line.js';
 import {type DOMElement, type DOMNode, type StickyHeader} from './dom.js';
 import type Output from './output.js';
 import renderBackground from './render-background.js';
@@ -39,7 +39,7 @@ export function handleContainerNode(
 		isStickyRender: boolean;
 		skipStickyHeaders: boolean;
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
-		selectionStyle?: (char: StyledChar) => StyledChar;
+		selectionStyle?: (line: StyledLine, index: number) => void;
 		absoluteOffsetX: number;
 		absoluteOffsetY: number;
 		trackSelection?: boolean;

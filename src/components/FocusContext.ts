@@ -13,7 +13,6 @@ export type Props = {
 	readonly focus: (id: string) => void;
 };
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 const FocusContext = createContext<Props>({
 	activeId: undefined,
 	add() {},

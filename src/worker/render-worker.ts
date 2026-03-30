@@ -190,7 +190,7 @@ export class TerminalBufferWorker {
 
 			this.recordedFrames.push({
 				tree: structuredClone(root),
-				updates: updates.map(u => serializeReplayUpdate(u, serializer)),
+				updates: updates.map(u => serializeReplayUpdate(u)),
 				cursorPosition: this.cursorPosition,
 				timestamp: 0,
 			});
@@ -227,7 +227,7 @@ export class TerminalBufferWorker {
 			frames: [
 				{
 					tree: root,
-					updates: updates.map(u => serializeReplayUpdate(u, serializer)),
+					updates: updates.map(u => serializeReplayUpdate(u)),
 					cursorPosition: this.cursorPosition,
 					timestamp: 0,
 				},
@@ -360,10 +360,9 @@ export class TerminalBufferWorker {
 			!this.sceneManager.root || !treesEqual(this.sceneManager.root, tree);
 
 		if (this.isRecording) {
-			const serializer = new Serializer();
 			this.recordedFrames.push({
 				tree,
-				updates: updates.map(u => serializeReplayUpdate(u, serializer)),
+				updates: updates.map(u => serializeReplayUpdate(u)),
 				cursorPosition,
 				timestamp: Date.now() - this.recordingStartTime,
 			});
@@ -613,7 +612,17 @@ export class TerminalBufferWorker {
 		for (const region of this.sceneManager.regions.values()) {
 			const update: RegionUpdate = {
 				id: region.id,
-				stickyHeaders: region.stickyHeaders,
+				stickyHeaders: region.stickyHeaders.map(h => {
+					const {node: _node, ...rest} = h;
+					return {
+						...rest,
+						lines: serializer.serialize(h.lines),
+						stuckLines: h.stuckLines
+							? serializer.serialize(h.stuckLines)
+							: undefined,
+						styledOutput: serializer.serialize(h.styledOutput),
+					};
+				}),
 			};
 
 			for (const key of regionLayoutProperties) {
@@ -1212,10 +1221,7 @@ export class TerminalBufferWorker {
 			if (region.lines.length > 0) {
 				debugLog(`${indent}  Content:`);
 				for (const line of region.lines) {
-					const plainText = line
-						.map(c => c.value)
-						.join('')
-						.trimEnd();
+					const plainText = line.getText().trimEnd();
 					if (plainText) {
 						debugLog(`${indent}    ${plainText}`);
 					}
@@ -1256,10 +1262,7 @@ export class TerminalBufferWorker {
 						`${indent}    Header Content (${isStuck ? 'STUCK' : 'NATURAL'}):`,
 					);
 					for (const line of linesToLog) {
-						const plainText = line
-							.map(c => c.value)
-							.join('')
-							.trimEnd();
+						const plainText = line.getText().trimEnd();
 						if (plainText) {
 							debugLog(`${indent}      ${plainText}`);
 						}

@@ -5,7 +5,7 @@
  */
 
 import {Buffer} from 'node:buffer';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {StyledLine} from '../styled-line.js';
 import {
 	type RegionNode,
 	type RegionUpdate,
@@ -96,14 +96,24 @@ export class SceneManager {
 				}
 			}
 
-			if (update.stickyHeaders !== undefined)
-				r.stickyHeaders = update.stickyHeaders;
+			if (update.stickyHeaders !== undefined) {
+				r.stickyHeaders = update.stickyHeaders.map(header => ({
+					...header,
+					lines: new Deserializer(Buffer.from(header.lines)).deserialize(),
+					stuckLines: header.stuckLines
+						? new Deserializer(Buffer.from(header.stuckLines)).deserialize()
+						: undefined,
+					styledOutput: new Deserializer(
+						Buffer.from(header.styledOutput),
+					).deserialize(),
+				}));
+			}
 
 			// Apply line updates
 			if (update.lines) {
-				const mutableLines = r.lines as StyledChar[][];
+				const mutableLines = r.lines as StyledLine[];
 				while (mutableLines.length < update.lines.totalLength) {
-					mutableLines.push([]);
+					mutableLines.push(new StyledLine());
 				}
 
 				if (mutableLines.length > update.lines.totalLength) {

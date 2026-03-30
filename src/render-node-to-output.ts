@@ -1,5 +1,5 @@
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import Yoga from 'yoga-layout';
+import {type StyledLine} from './styled-line.js';
 import {
 	type DOMElement,
 	type DOMNode,
@@ -25,7 +25,7 @@ export const renderToStatic = (
 		skipStaticElements?: boolean;
 		isStickyRender?: boolean;
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
-		selectionStyle?: (char: StyledChar) => StyledChar;
+		selectionStyle?: (line: StyledLine, index: number) => void;
 		trackSelection?: boolean;
 	} = {},
 ) => {
@@ -140,7 +140,7 @@ function renderNodeToOutput(
 		isStickyRender?: boolean;
 		skipStickyHeaders?: boolean;
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
-		selectionStyle?: (char: StyledChar) => StyledChar;
+		selectionStyle?: (line: StyledLine, index: number) => void;
 		trackSelection?: boolean;
 	},
 ) {

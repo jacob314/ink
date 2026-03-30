@@ -1,5 +1,5 @@
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import Yoga, {type Node as YogaNode} from 'yoga-layout';
+import {type StyledLine} from './styled-line.js';
 import {
 	measureStyledChars,
 	toStyledCharacters,
@@ -31,9 +31,9 @@ export type NodeNames = ElementNames | TextName;
 
 export type StickyHeader = {
 	nodeId: number;
-	lines: ReadonlyArray<readonly StyledChar[]>; // Natural (scrolling) version
-	stuckLines?: ReadonlyArray<readonly StyledChar[]>; // Alternate (sticky) version
-	styledOutput: ReadonlyArray<readonly StyledChar[]>; // Legacy property
+	lines: readonly StyledLine[]; // Natural (scrolling) version
+	stuckLines?: readonly StyledLine[]; // Alternate (sticky) version
+	styledOutput: readonly StyledLine[]; // Legacy property
 	x: number; // Stuck X position relative to region
 	y: number; // Stuck Y position relative to region
 	naturalRow: number; // Natural row offset relative to content start
@@ -56,7 +56,6 @@ export type StickyHeader = {
 	minStuckY?: number;
 };
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export type DOMElement = {
 	nodeName: ElementNames;
 	attributes: Record<string, DOMNodeAttribute>;
@@ -135,7 +134,6 @@ export type TextNode = {
 	nodeValue: string;
 } & InkNode;
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export type DOMNode<T = {nodeName: NodeNames}> = T extends {
 	nodeName: infer U;
 }
@@ -144,7 +142,6 @@ export type DOMNode<T = {nodeName: NodeNames}> = T extends {
 		: DOMElement
 	: never;
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export type DOMNodeAttribute = boolean | string | number;
 
 let idCounter = 0;
@@ -157,7 +154,7 @@ export const createNode = (nodeName: ElementNames): DOMElement => {
 		childNodes: [],
 		parentNode: undefined,
 		yogaNode: nodeName === 'ink-virtual-text' ? undefined : Yoga.Node.create(),
-		// eslint-disable-next-line @typescript-eslint/naming-convention
+
 		internal_accessibility: {},
 		internalSticky: false,
 		internalStickyAlternate: false,

@@ -90,7 +90,7 @@ const main = async () => {
 	const worker = fork(workerUrl, {
 		env: {
 			...process.env,
-			// eslint-disable-next-line @typescript-eslint/naming-convention
+
 			INK_WORKER: 'true',
 		},
 	});

@@ -24,7 +24,7 @@ const scenarios: Array<{
 	},
 	{
 		name: 'iTerm',
-		// eslint-disable-next-line @typescript-eslint/naming-convention
+
 		env: {TERM_PROGRAM: 'iTerm.app'},
 		eraseOperation: ansiEscapes.clearTerminal,
 	},

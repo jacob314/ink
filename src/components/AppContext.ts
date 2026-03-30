@@ -57,7 +57,7 @@ export type Props = {
 /**
 `AppContext` is a React context that exposes a method to manually exit the app (unmount).
 */
-// eslint-disable-next-line @typescript-eslint/naming-convention
+
 export const AppContext = createContext<Props>({
 	exit() {},
 	rerender() {},

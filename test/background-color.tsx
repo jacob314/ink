@@ -1,7 +1,8 @@
 import test from 'ava';
 import {type SinonSpy} from 'sinon';
 import xtermHeadless from '@xterm/headless';
-import {type StyledChar} from '@alcalzone/ansi-tokenize';
+
+import {tokenize, styledLineFromTokens} from '../src/tokenize.js';
 import logUpdate from '../src/log-update.js';
 import createStdout from './helpers/create-stdout.js';
 
@@ -30,35 +31,15 @@ test('incremental rendering in alternate buffer - correctly handles styled space
 
 	// A line with 5 chars of text and 5 spaces with background color.
 	const line = 'Hello' + redSpace.repeat(5);
-	const styledLine: StyledChar[] = [
-		...[...'Hello'].map(char => ({
-			type: 'char' as const,
-			value: char,
-			styles: [] as string[],
-		})),
-		...Array.from({length: 5}, () => ({
-			type: 'char' as const,
-			value: ' ',
-			styles: ['\u001B[48;2;255;0;0m'],
-		})),
-	];
+
+	const styledLine = styledLineFromTokens(tokenize(line));
 
 	render(line, [styledLine]);
 
 	// Update with a slightly different line to trigger incremental update.
 	const newLine = 'Hella' + redSpace.repeat(5);
-	const newStyledLine: StyledChar[] = [
-		...[...'Hella'].map(char => ({
-			type: 'char' as const,
-			value: char,
-			styles: [] as string[],
-		})),
-		...Array.from({length: 5}, () => ({
-			type: 'char' as const,
-			value: ' ',
-			styles: ['\u001B[48;2;255;0;0m'],
-		})),
-	];
+
+	const newStyledLine = styledLineFromTokens(tokenize(newLine));
 
 	render(newLine, [newStyledLine]);
 

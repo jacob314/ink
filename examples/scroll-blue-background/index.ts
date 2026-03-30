@@ -28,4 +28,7 @@ export const instance = render(
 	React.createElement(ScrollableContent, {
 		exportFilename,
 	}),
+	{
+		terminalBuffer: true,
+	},
 );
