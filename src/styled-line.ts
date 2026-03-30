@@ -18,24 +18,69 @@ export type StyleSpan = {
 };
 
 export class StyledLine {
+	static empty(length: number): StyledLine {
+		const line = new StyledLine();
+		line.length = length;
+		line.text = ' '.repeat(length);
+		line.charData = new Uint16Array(Math.max(length, 16));
+		for (let i = 0; i < length; i++) {
+			line.charData[i] = i;
+		}
+
+		line.spans = length > 0 ? [{length, formatFlags: 0}] : [];
+		return line;
+	}
+
 	public length: number;
-	private values: string[];
+	private text: string;
+	private charData: Uint16Array;
 	private spans: StyleSpan[];
 
 	constructor(values: string[] = [], spans: StyleSpan[] = []) {
-		this.values = values;
-		this.spans = spans;
 		this.length = values.length;
-	}
+		this.text = values.join('');
+		this.charData = new Uint16Array(Math.max(this.length, 16));
 
-	static empty(length: number): StyledLine {
-		const values = Array.from({length}).map(() => ' ');
-		const spans = length > 0 ? [{length, formatFlags: 0}] : [];
-		return new StyledLine(values, spans);
+		let currentOffset = 0;
+		let spanIdx = 0;
+		let spanPos = 0;
+
+		for (let i = 0; i < this.length; i++) {
+			const val = values[i]!;
+			let isFullWidth = false;
+
+			if (spans.length > 0 && spanIdx < spans.length) {
+				const span = spans[spanIdx]!;
+				if ((span.formatFlags & FULL_WIDTH_MASK) !== 0) {
+					isFullWidth = true;
+				}
+
+				spanPos++;
+				if (spanPos >= span.length) {
+					spanIdx++;
+					spanPos = 0;
+				}
+			}
+
+			this.charData[i] = currentOffset | (isFullWidth ? 0x80_00 : 0);
+			currentOffset += val.length;
+		}
+
+		this.spans = spans.map(s => ({
+			...s,
+			formatFlags: s.formatFlags & ~FULL_WIDTH_MASK,
+		}));
+		this.mergeSpans();
 	}
 
 	getValue(index: number): string {
-		return this.values[index] ?? '';
+		if (index < 0 || index >= this.length) return '';
+		const start = this.charData[index]! & 0x7f_ff;
+		const end =
+			index + 1 < this.length
+				? this.charData[index + 1]! & 0x7f_ff
+				: this.text.length;
+		return this.text.slice(start, end);
 	}
 
 	getSpan(index: number): StyleSpan | undefined {
@@ -50,7 +95,8 @@ export class StyledLine {
 	}
 
 	getFullWidth(index: number): boolean {
-		return ((this.getSpan(index)?.formatFlags ?? 0) & FULL_WIDTH_MASK) !== 0;
+		if (index < 0 || index >= this.length) return false;
+		return (this.charData[index]! & 0x80_00) !== 0;
 	}
 
 	hasStyles(index: number): boolean {
@@ -65,7 +111,12 @@ export class StyledLine {
 	}
 
 	getFormatFlags(index: number): number {
-		return this.getSpan(index)?.formatFlags ?? 0;
+		let flags = this.getSpan(index)?.formatFlags ?? 0;
+		if (this.getFullWidth(index)) {
+			flags |= FULL_WIDTH_MASK;
+		}
+
+		return flags;
 	}
 
 	getFgColor(index: number): string | undefined {
@@ -78,6 +129,257 @@ export class StyledLine {
 
 	getLink(index: number): string | undefined {
 		return this.getSpan(index)?.link;
+	}
+
+	// eslint-disable-next-line max-params
+	setChar(
+		index: number,
+		value: string,
+		formatFlags: number,
+		fgColor?: string,
+		bgColor?: string,
+		link?: string,
+	) {
+		if (index < 0 || index >= this.length) return;
+
+		const isFullWidth = (formatFlags & FULL_WIDTH_MASK) !== 0;
+		const cleanFormatFlags = formatFlags & ~FULL_WIDTH_MASK;
+
+		const start = this.charData[index]! & 0x7f_ff;
+		const end =
+			index + 1 < this.length
+				? this.charData[index + 1]! & 0x7f_ff
+				: this.text.length;
+		const oldLen = end - start;
+		const newLen = value.length;
+
+		if (oldLen === newLen) {
+			this.text = this.text.slice(0, start) + value + this.text.slice(end);
+		} else {
+			this.text = this.text.slice(0, start) + value + this.text.slice(end);
+			const diff = newLen - oldLen;
+			for (let i = index + 1; i < this.length; i++) {
+				const data = this.charData[i]!;
+				const oldOffset = data & 0x7f_ff;
+				const fw = data & 0x80_00;
+				this.charData[i] = (oldOffset + diff) | fw;
+			}
+		}
+
+		this.charData[index] = start | (isFullWidth ? 0x80_00 : 0);
+
+		this.splitSpansAt(index);
+		this.splitSpansAt(index + 1);
+
+		let current = 0;
+		for (let i = 0; i < this.spans.length; i++) {
+			const span = this.spans[i]!;
+			if (current === index && span.length === 1) {
+				this.spans[i] = {
+					length: 1,
+					formatFlags: cleanFormatFlags,
+					fgColor,
+					bgColor,
+					link,
+				};
+				break;
+			}
+
+			current += span.length;
+		}
+
+		this.mergeSpans();
+	}
+
+	// eslint-disable-next-line max-params
+	pushChar(
+		value: string,
+		formatFlags: number,
+		fgColor?: string,
+		bgColor?: string,
+		link?: string,
+	) {
+		const isFullWidth = (formatFlags & FULL_WIDTH_MASK) !== 0;
+		const cleanFormatFlags = formatFlags & ~FULL_WIDTH_MASK;
+
+		const offset = this.text.length;
+		this.text += value;
+
+		if (this.length >= this.charData.length) {
+			const newData = new Uint16Array(this.charData.length * 2 || 16);
+			newData.set(this.charData);
+			this.charData = newData;
+		}
+
+		this.charData[this.length] = offset | (isFullWidth ? 0x80_00 : 0);
+
+		const lastSpan = this.spans.at(-1);
+
+		if (
+			lastSpan &&
+			lastSpan.formatFlags === cleanFormatFlags &&
+			lastSpan.fgColor === fgColor &&
+			lastSpan.bgColor === bgColor &&
+			lastSpan.link === link
+		) {
+			lastSpan.length++;
+		} else {
+			this.spans.push({
+				length: 1,
+				formatFlags: cleanFormatFlags,
+				fgColor,
+				bgColor,
+				link,
+			});
+		}
+
+		this.length++;
+	}
+
+	slice(start: number, end?: number): StyledLine {
+		const actualStart = Math.max(0, start);
+		const actualEnd =
+			end === undefined ? this.length : Math.min(this.length, end);
+		if (actualStart >= actualEnd) return new StyledLine([], []);
+
+		const result = new StyledLine();
+		result.length = actualEnd - actualStart;
+		result.charData = new Uint16Array(Math.max(result.length, 16));
+
+		const textStart = this.charData[actualStart]! & 0x7f_ff;
+		const textEnd =
+			actualEnd < this.length
+				? this.charData[actualEnd]! & 0x7f_ff
+				: this.text.length;
+		result.text = this.text.slice(textStart, textEnd);
+
+		for (let i = 0; i < result.length; i++) {
+			const oldData = this.charData[actualStart + i]!;
+			const oldOffset = oldData & 0x7f_ff;
+			const fw = oldData & 0x80_00;
+			result.charData[i] = (oldOffset - textStart) | fw;
+		}
+
+		const newSpans: StyleSpan[] = [];
+		let current = 0;
+		for (const span of this.spans) {
+			const spanStart = current;
+			const spanEnd = current + span.length;
+
+			const intersectStart = Math.max(actualStart, spanStart);
+			const intersectEnd = Math.min(actualEnd, spanEnd);
+
+			if (intersectStart < intersectEnd) {
+				newSpans.push({
+					...span,
+					length: intersectEnd - intersectStart,
+				});
+			}
+
+			current += span.length;
+			if (current >= actualEnd) break;
+		}
+
+		result.spans = newSpans;
+		result.mergeSpans();
+		return result;
+	}
+
+	concat(other: StyledLine): StyledLine {
+		const result = new StyledLine();
+		result.length = this.length + other.length;
+		result.text = this.text + other.text;
+		result.charData = new Uint16Array(Math.max(result.length, 16));
+
+		result.charData.set(this.charData.subarray(0, this.length), 0);
+
+		const textOffset = this.text.length;
+		for (let i = 0; i < other.length; i++) {
+			const oldData = other.charData[i]!;
+			const oldOffset = oldData & 0x7f_ff;
+			const fw = oldData & 0x80_00;
+			result.charData[this.length + i] = (oldOffset + textOffset) | fw;
+		}
+
+		result.spans = [...this.spans, ...other.spans.map(s => ({...s}))];
+		result.mergeSpans();
+		return result;
+	}
+
+	trimEnd(): StyledLine {
+		let i = this.length - 1;
+		while (i >= 0 && this.getValue(i) === ' ' && !this.hasStyles(i)) {
+			i--;
+		}
+
+		return this.slice(0, i + 1);
+	}
+
+	equals(other: StyledLine): boolean {
+		if (this.length !== other.length) return false;
+		if (this.text !== other.text) return false;
+		if (this.spans.length !== other.spans.length) return false;
+
+		for (let i = 0; i < this.spans.length; i++) {
+			const s1 = this.spans[i]!;
+			const s2 = other.spans[i]!;
+			if (
+				s1.length !== s2.length ||
+				s1.formatFlags !== s2.formatFlags ||
+				s1.fgColor !== s2.fgColor ||
+				s1.bgColor !== s2.bgColor ||
+				s1.link !== s2.link
+			) {
+				return false;
+			}
+		}
+
+		for (let i = 0; i < this.length; i++) {
+			if (this.charData[i] !== other.charData[i]) return false;
+		}
+
+		return true;
+	}
+
+	getSpans(): StyleSpan[] {
+		return this.spans;
+	}
+
+	getValues(): string[] {
+		return Array.from({length: this.length}, (_, i) => this.getValue(i));
+	}
+
+	*[Symbol.iterator]() {
+		let currentSpanIdx = 0;
+		let currentSpanPos = 0;
+
+		for (let i = 0; i < this.length; i++) {
+			const span = this.spans[currentSpanIdx];
+			const formatFlags = span ? span.formatFlags : 0;
+			const isFullWidth = this.getFullWidth(i);
+
+			yield {
+				value: this.getValue(i),
+				formatFlags: formatFlags | (isFullWidth ? FULL_WIDTH_MASK : 0),
+				fgColor: span?.fgColor,
+				bgColor: span?.bgColor,
+				link: span?.link,
+				fullWidth: isFullWidth,
+				hasStyles:
+					(formatFlags & ~FULL_WIDTH_MASK) !== 0 ||
+					span?.fgColor !== undefined ||
+					span?.bgColor !== undefined ||
+					span?.link !== undefined,
+			};
+
+			if (span) {
+				currentSpanPos++;
+				if (currentSpanPos >= span.length) {
+					currentSpanIdx++;
+					currentSpanPos = 0;
+				}
+			}
+		}
 	}
 
 	private splitSpansAt(index: number) {
@@ -121,173 +423,10 @@ export class StyledLine {
 
 		this.spans = newSpans;
 	}
-
-	setChar(
-		index: number,
-		value: string,
-		formatFlags: number,
-		fgColor?: string,
-		bgColor?: string,
-		link?: string,
-	) {
-		if (index < 0 || index >= this.length) return;
-
-		this.values[index] = value;
-
-		this.splitSpansAt(index);
-		this.splitSpansAt(index + 1);
-
-		let current = 0;
-		for (let i = 0; i < this.spans.length; i++) {
-			const span = this.spans[i]!;
-			if (current === index && span.length === 1) {
-				this.spans[i] = {length: 1, formatFlags, fgColor, bgColor, link};
-				break;
-			}
-
-			current += span.length;
-		}
-
-		this.mergeSpans();
-	}
-
-	pushChar(
-		value: string,
-		formatFlags: number,
-		fgColor?: string,
-		bgColor?: string,
-		link?: string,
-	) {
-		this.values.push(value);
-		const lastSpan = this.spans.at(-1);
-
-		if (
-			lastSpan &&
-			lastSpan.formatFlags === formatFlags &&
-			lastSpan.fgColor === fgColor &&
-			lastSpan.bgColor === bgColor &&
-			lastSpan.link === link
-		) {
-			lastSpan.length++;
-		} else {
-			this.spans.push({length: 1, formatFlags, fgColor, bgColor, link});
-		}
-
-		this.length++;
-	}
-
-	slice(start: number, end?: number): StyledLine {
-		const actualStart = Math.max(0, start);
-		const actualEnd =
-			end === undefined ? this.length : Math.min(this.length, end);
-		if (actualStart >= actualEnd) return new StyledLine([], []);
-
-		const newValues = this.values.slice(actualStart, actualEnd);
-		const newSpans: StyleSpan[] = [];
-
-		let current = 0;
-		for (const span of this.spans) {
-			const spanStart = current;
-			const spanEnd = current + span.length;
-
-			const intersectStart = Math.max(actualStart, spanStart);
-			const intersectEnd = Math.min(actualEnd, spanEnd);
-
-			if (intersectStart < intersectEnd) {
-				newSpans.push({
-					...span,
-					length: intersectEnd - intersectStart,
-				});
-			}
-
-			current += span.length;
-			if (current >= actualEnd) break;
-		}
-
-		const result = new StyledLine(newValues, newSpans);
-		result.mergeSpans();
-		return result;
-	}
-
-	concat(other: StyledLine): StyledLine {
-		const newValues = [...this.values, ...other.values];
-		const newSpans = [...this.spans, ...other.spans.map(s => ({...s}))];
-		const result = new StyledLine(newValues, newSpans);
-		result.mergeSpans();
-		return result;
-	}
-
-	trimEnd(): StyledLine {
-		let i = this.length - 1;
-		while (i >= 0 && this.getValue(i) === ' ' && !this.hasStyles(i)) {
-			i--;
-		}
-
-		return this.slice(0, i + 1);
-	}
-
-	equals(other: StyledLine): boolean {
-		if (this.length !== other.length) return false;
-		if (this.spans.length !== other.spans.length) return false;
-
-		for (let i = 0; i < this.spans.length; i++) {
-			const s1 = this.spans[i]!;
-			const s2 = other.spans[i]!;
-			if (
-				s1.length !== s2.length ||
-				s1.formatFlags !== s2.formatFlags ||
-				s1.fgColor !== s2.fgColor ||
-				s1.bgColor !== s2.bgColor ||
-				s1.link !== s2.link
-			)
-				return false;
-		}
-
-		for (let i = 0; i < this.length; i++) {
-			if (this.values[i] !== other.values[i]) return false;
-		}
-
-		return true;
-	}
-
-	getSpans(): StyleSpan[] {
-		return this.spans;
-	}
-
-	getValues(): string[] {
-		return this.values;
-	}
-
-	*[Symbol.iterator]() {
-		let currentSpanIdx = 0;
-		let currentSpanPos = 0;
-
-		for (let i = 0; i < this.length; i++) {
-			const span = this.spans[currentSpanIdx]!;
-			yield {
-				value: this.values[i]!,
-				formatFlags: span.formatFlags,
-				fgColor: span.fgColor,
-				bgColor: span.bgColor,
-				link: span.link,
-				fullWidth: (span.formatFlags & FULL_WIDTH_MASK) !== 0,
-				hasStyles:
-					(span.formatFlags & ~FULL_WIDTH_MASK) !== 0 ||
-					span.fgColor !== undefined ||
-					span.bgColor !== undefined ||
-					span.link !== undefined,
-			};
-
-			currentSpanPos++;
-			if (currentSpanPos >= span.length) {
-				currentSpanIdx++;
-				currentSpanPos = 0;
-			}
-		}
-	}
 }
 
 export class StyledChar {
+	// eslint-disable-next-line max-params
 	constructor(
 		private readonly _value: string,
 		private _formatFlags: number,
