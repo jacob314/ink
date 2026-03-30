@@ -15,10 +15,9 @@ class WriteStream {
 	off() {}
 }
 
-const createStyledChar = (char: string): StyledChar => new StyledChar(char, 0);
+import {toStyledCharacters} from '../src/measure-text.js';
 
-const createLine = (text: string): StyledLine =>
-	[...text].map(char => createStyledChar(char));
+const createLine = (text: string): StyledLine => toStyledCharacters(text);
 
 test('captures clipped cachedRender content into backbuffer', t => {
 	const stdout = new WriteStream() as unknown as NodeJS.WriteStream;

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import xtermHeadless, {type Terminal} from '@xterm/headless';
-import {StyledChar, StyledLine} from '../../src/styled-line.js';
+import {StyledLine} from '../../src/styled-line.js';
 import {TerminalBufferWorker} from '../../src/worker/render-worker.js';
 import {loadReplay} from '../../src/replay.js';
 import {type RenderLine} from '../../src/worker/terminal-writer.js';
@@ -228,8 +228,7 @@ export async function captureTerminalState(
 	return result;
 }
 
-export const createStyledChar = (char: string): StyledChar =>
-	new StyledChar(char, 0);
+
 
 export const createStyledLine = (text: string): StyledLine => {
 	const line = new StyledLine();

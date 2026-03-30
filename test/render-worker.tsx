@@ -6,10 +6,9 @@ import {Serializer} from '../src/serialization.js';
 
 const serializer = new Serializer();
 
-const createStyledChar = (char: string): StyledChar => new StyledChar(char, 0);
+import {toStyledCharacters} from '../src/measure-text.js';
 
-const createLine = (text: string): StyledLine =>
-	[...text].map(char => createStyledChar(char));
+const createLine = (text: string): StyledLine => toStyledCharacters(text);
 
 class TestWorkerWrapper {
 	lines: StyledLine[] = [];

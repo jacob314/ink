@@ -2,10 +2,10 @@ import test from 'ava';
 import {StyledLine} from '../src/styled-line.js';
 import {TerminalWriter} from '../src/worker/terminal-writer.js';
 
-const createStyledChar = (char: string): StyledChar => new StyledChar(char, 0);
+import {toStyledCharacters} from '../src/measure-text.js';
 
 const createLine = (text: string) => ({
-	styledChars: [...text].map(char => createStyledChar(char)),
+	styledChars: toStyledCharacters(text),
 	text,
 	length: text.length,
 	tainted: true,

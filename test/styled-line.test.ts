@@ -1,5 +1,5 @@
 import test from 'ava';
-import {StyledLine, StyledChar} from '../src/styled-line.js';
+import {StyledLine} from '../src/styled-line.js';
 import {FULL_WIDTH_MASK, BOLD_MASK} from '../src/tokenize.js';
 
 test('StyledLine handles empty creation', t => {
@@ -88,15 +88,3 @@ test('StyledLine trimEnd', t => {
 	t.is(trimmed.getValue(0), 'a');
 });
 
-test('StyledChar class compat', t => {
-	const char = new StyledChar('x', BOLD_MASK, 'red', 'bg', 'link');
-	t.is(char.getValue(), 'x');
-	t.is(char.getForegroundColor(), 'red');
-	t.is(char.getBackgroundColor(), 'bg');
-	t.is(char.getLink(), 'link');
-	t.true(char.getBold());
-
-	const char2 = char.copyWith({value: 'y'});
-	t.is(char2.getValue(), 'y');
-	t.true(char2.getBold());
-});
