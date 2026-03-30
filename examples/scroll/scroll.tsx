@@ -453,18 +453,7 @@ function ScrollableContent({
 
 	return (
 		<Box flexDirection="column" height={termRows} width={columns}>
-			<Box flexDirection="column" flexShrink={0}>
-				<Text>Header Line 1</Text>
-				<Text>Header Line 2</Text>
-				<Text>Header Line 3</Text>
-				<Text>Header Line 4</Text>
-				<Text>Header Line 5</Text>
-				<Text>Header Line 6</Text>
-				<Text>Header Line 7</Text>
-				<Text>Header Line 8</Text>
-				<Text>Header Line 9</Text>
-				<Text>Header Line 10</Text>
-			</Box>
+			<Box flexDirection="column" flexShrink={0} />
 			<Box
 				flexShrink={1}
 				flexDirection="column"

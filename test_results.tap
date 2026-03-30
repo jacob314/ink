@@ -1,0 +1,2128 @@
+TAP version 13
+not ok 1 - alternate-buffer-already-active › does not enter alternate buffer when already active
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      <anonymous> (test/helpers/run.ts:37:16)
+      run (test/helpers/run.ts:36:9)
+      <anonymous> (test/alternate-buffer-already-active.tsx:6:23)
+  ...
+not ok 2 - alternate-buffer › (non-iTerm) renders in alternate buffer and leaves it on exit
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      <anonymous> (test/helpers/run.ts:37:16)
+      run (test/helpers/run.ts:36:9)
+      <anonymous> (test/alternate-buffer.tsx:35:24)
+  ...
+not ok 3 - alternate-buffer › (iTerm) renders in alternate buffer and leaves it on exit
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      <anonymous> (test/helpers/run.ts:37:16)
+      run (test/helpers/run.ts:36:9)
+      <anonymous> (test/alternate-buffer.tsx:35:24)
+  ...
+not ok 4 - alternate-buffer › does not use alternate buffer when disabled
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      <anonymous> (test/helpers/run.ts:37:16)
+      run (test/helpers/run.ts:36:9)
+      <anonymous> (test/alternate-buffer.tsx:57:23)
+  ...
+not ok 5 - alternate-buffer › (non-iTerm) renders final frame on exit outside of alternate buffer
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      <anonymous> (test/helpers/run.ts:37:16)
+      run (test/helpers/run.ts:36:9)
+      <anonymous> (test/alternate-buffer.tsx:68:24)
+  ...
+not ok 6 - alternate-buffer › (non-iTerm) does not render more lines than terminal height until exit
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      <anonymous> (test/helpers/run.ts:37:16)
+      run (test/helpers/run.ts:36:9)
+      <anonymous> (test/alternate-buffer.tsx:79:24)
+  ...
+not ok 7 - alternate-buffer › (iTerm) renders final frame on exit outside of alternate buffer
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      <anonymous> (test/helpers/run.ts:37:16)
+      run (test/helpers/run.ts:36:9)
+      <anonymous> (test/alternate-buffer.tsx:68:24)
+  ...
+not ok 8 - alternate-buffer › (iTerm) does not render more lines than terminal height until exit
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      <anonymous> (test/helpers/run.ts:37:16)
+      run (test/helpers/run.ts:36:9)
+      <anonymous> (test/alternate-buffer.tsx:79:24)
+  ...
+not ok 9 - background-color › incremental rendering in alternate buffer - correctly handles styled space at the end of a line
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        TypeError {
+          message: 'char.getValue is not a function',
+        }
+    at: |-
+      getLineLength (src/log-update.ts:168:10)
+      render (src/log-update.ts:482:26)
+      <anonymous> (test/background-color.tsx:63:2)
+  ...
+ok 10 - data-limited-lru-map › DataLimitedLruMap respects max keys limit
+ok 11 - data-limited-lru-map › DataLimitedLruMap respects max data size limit
+ok 12 - data-limited-lru-map › DataLimitedLruMap handles eviction by setpop correctly
+ok 13 - data-limited-lru-map › DataLimitedLruMap handles large item eviction
+ok 14 - data-limited-lru-map › DataLimitedLruMap handles item larger than max size
+ok 15 - data-limited-lru-map › DataLimitedLruMap correctly updates size when overwriting existing key
+ok 16 - data-limited-lru-map › DataLimitedLruMap prevents infinite loop if internal state is inconsistent
+ok 17 - alternate-buffer › TerminalBufferWorker reproduction: blank screen on toggle if content unchanged
+ok 18 - alternate-buffer › TerminalBufferWorker handles alternate buffer toggle correctly with new content
+ok 19 - animated-scroll-blank-lines › TerminalBufferWorker prevents blank lines during animated scroll
+ok 20 - backbuffer-duplication › fullRender does not duplicate lines in backbuffer
+ok 21 - backbuffer-duplication › fullRender does not duplicate sub-region backbuffer lines
+ok 22 - backbuffer-duplication › scrolling down, up, and down again does not duplicate lines in backbuffer
+not ok 23 - exit-cursor › cursor is moved to the last line on exit
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      <anonymous> (test/helpers/run.ts:37:16)
+      run (test/helpers/run.ts:36:9)
+      <anonymous> (test/exit-cursor.tsx:6:23)
+  ...
+ok 24 - backbuffer-duplication › scrolling oscillation with fullRender does not duplicate lines
+ok 25 - backbuffer › captures clipped cachedRender content into backbuffer
+ok 26 - backbuffer-duplication › scrolling down 4, up 2, down 1
+ok 27 - alternate-buffer › switching back from alternate buffer does NOT trigger a full render clear
+ok 28 - app-context-options › setOptions in AppContext triggers React rerender and updates options
+ok 29 - app-context-options › setOptions updates optionsState from legacy alternateBuffer option
+# background › before hook
+ok 30 - bottom-sticky › bottom sticky header states
+not ok 31 - background › Text inherits parent Box background color
+  ---
+    name: AssertionError
+    assertion: is
+    values:
+      'Difference (- actual, + expected):': |-
+        - 'Hello World'
+        + 'Hello World'
+    at: '<anonymous> (test/background.tsx:55:4)'
+  ...
+not ok 32 - background › Text explicit background color overrides inherited
+  ---
+    name: AssertionError
+    assertion: is
+    values:
+      'Difference (- actual, + expected):': |-
+        - 'Hello World'
+        + 'Hello World'
+    at: '<anonymous> (test/background.tsx:65:4)'
+  ...
+not ok 33 - background › Nested Box background inheritance
+  ---
+    name: AssertionError
+    assertion: is
+    values:
+      'Difference (- actual, + expected):': |-
+        - 'Hello World'
+        + 'Hello World'
+    at: '<anonymous> (test/background.tsx:77:4)'
+  ...
+ok 34 - background › Text without parent Box background has no inheritance
+not ok 35 - background › Multiple Text elements inherit same background
+  ---
+    name: AssertionError
+    assertion: is
+    values:
+      'Difference (- actual, + expected):': |-
+        - 'Hello World'
+        + 'Hello World'
+    at: '<anonymous> (test/background.tsx:99:4)'
+  ...
+not ok 36 - background › Mixed text with and without background inheritance
+  ---
+    name: AssertionError
+    assertion: is
+    values:
+      'Difference (- actual, + expected):': |-
+        - 'Inherited No BG Red BG'
+        + 'Inherited No BG Red BG'
+    at: '<anonymous> (test/background.tsx:111:4)'
+  ...
+not ok 37 - background › Complex nested structure with background inheritance
+  ---
+    name: AssertionError
+    assertion: is
+    values:
+      'Difference (- actual, + expected):': |-
+        - 'Outer: Inner: Explicit'
+        + 'Outer: Inner: Explicit'
+    at: '<anonymous> (test/background.tsx:128:4)'
+  ...
+not ok 38 - background › Box background with standard color
+  ---
+    name: AssertionError
+    assertion: is
+    values:
+      'Difference (- actual, + expected):': |-
+        - 'Hello'
+        + 'Hello'
+    at: '<anonymous> (test/background.tsx:142:4)'
+  ...
+not ok 39 - background › Box background with hex color
+  ---
+    name: AssertionError
+    assertion: is
+    values:
+      'Difference (- actual, + expected):': |-
+        - 'Hello'
+        + 'Hello'
+    at: '<anonymous> (test/background.tsx:152:4)'
+  ...
+not ok 40 - background › Box background with rgb color
+  ---
+    name: AssertionError
+    assertion: is
+    values:
+      'Difference (- actual, + expected):': |-
+        - 'Hello'
+        + 'Hello'
+    at: '<anonymous> (test/background.tsx:162:4)'
+  ...
+not ok 41 - background › Box background with ansi256 color
+  ---
+    name: AssertionError
+    assertion: is
+    values:
+      'Difference (- actual, + expected):': |-
+        - 'Hello'
+        + 'Hello'
+    at: '<anonymous> (test/background.tsx:172:4)'
+  ...
+not ok 42 - background › Box background with wide characters
+  ---
+    name: AssertionError
+    assertion: is
+    values:
+      'Difference (- actual, + expected):': |-
+        - 'こんにちは'
+        + 'こんにちは'
+    at: '<anonymous> (test/background.tsx:182:4)'
+  ...
+not ok 43 - background › Box background with emojis
+  ---
+    name: AssertionError
+    assertion: is
+    values:
+      'Difference (- actual, + expected):': "- '\U0001F389\U0001F38A'\n+ '\U0001F389\U0001F38A'"
+    at: '<anonymous> (test/background.tsx:192:4)'
+  ...
+ok 44 - background › Box background fills entire area with standard color
+ok 45 - background › Box background fills with hex color
+ok 46 - background › Box background fills with rgb color
+ok 47 - background › Box background fills with ansi256 color
+ok 48 - background › Box background with border fills content area
+ok 49 - background › Box background with padding fills entire padded area
+ok 50 - background › Box background with center alignment fills entire area
+ok 51 - background › Box background with column layout fills entire area
+not ok 52 - background › Box background updates on rerender
+  ---
+    name: AssertionError
+    assertion: is
+    values:
+      'Difference (- actual, + expected):': |-
+        - 'Hello'
+        + 'Hello'
+    at: '<anonymous> (test/background.tsx:372:4)'
+  ...
+ok 53 - app-context-rerender › rerender method in AppContext forces full rerender
+ok 54 - app-context-rerender › rerender method in AppContext forces full rerender in alternate buffer mode
+not ok 55 - exit › exit normally without unmount() or exit()
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      <anonymous> (test/helpers/run.ts:37:16)
+      run (test/helpers/run.ts:36:9)
+      <anonymous> (test/exit.tsx:16:23)
+  ...
+not ok 56 - exit › exit on unmount()
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      <anonymous> (test/helpers/run.ts:37:16)
+      run (test/helpers/run.ts:36:9)
+      <anonymous> (test/exit.tsx:21:23)
+  ...
+not ok 57 - exit › exit when app finishes execution
+  ---
+    name: AssertionError
+    assertion: notThrowsAsync
+    values:
+      'Promise rejected with:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: '<anonymous> (test/exit.tsx:27:10)'
+  ...
+not ok 58 - exit › exit on exit()
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      <anonymous> (test/helpers/run.ts:37:16)
+      run (test/helpers/run.ts:36:9)
+      <anonymous> (test/exit.tsx:31:23)
+  ...
+not ok 59 - exit › exit on exit() with error
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      <anonymous> (test/helpers/run.ts:37:16)
+      run (test/helpers/run.ts:36:9)
+      <anonymous> (test/exit.tsx:36:23)
+  ...
+not ok 60 - exit › exit on exit() with raw mode
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      <anonymous> (test/helpers/run.ts:37:16)
+      run (test/helpers/run.ts:36:9)
+      <anonymous> (test/exit.tsx:41:23)
+  ...
+not ok 61 - exit › exit on exit() with raw mode with error
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      <anonymous> (test/helpers/run.ts:37:16)
+      run (test/helpers/run.ts:36:9)
+      <anonymous> (test/exit.tsx:46:23)
+  ...
+not ok 62 - exit › exit on unmount() with raw mode
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      <anonymous> (test/helpers/run.ts:37:16)
+      run (test/helpers/run.ts:36:9)
+      <anonymous> (test/exit.tsx:51:23)
+  ...
+not ok 63 - exit › exit with thrown error
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      <anonymous> (test/helpers/run.ts:37:16)
+      run (test/helpers/run.ts:36:9)
+      <anonymous> (test/exit.tsx:56:23)
+  ...
+not ok 64 - exit › don’t exit while raw mode is active
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      <anonymous> (test/exit.tsx:68:16)
+      <anonymous> (test/exit.tsx:61:8)
+  ...
+ok 65 - borders › single node - full width box
+ok 66 - borders › single node - full width box with colorful border
+ok 67 - borders › single node - fit-content box
+ok 68 - borders › single node - fit-content box with wide characters
+ok 69 - borders › single node - fit-content box with emojis
+ok 70 - borders › single node - fixed width box
+ok 71 - borders › single node - fixed width and height box
+ok 72 - borders › single node - box with padding
+ok 73 - borders › single node - box with horizontal alignment
+ok 74 - borders › single node - box with vertical alignment
+ok 75 - borders › single node - box with wrapping
+ok 76 - borders › multiple nodes - full width box
+ok 77 - borders › multiple nodes - full width box with colorful border
+ok 78 - borders › multiple nodes - fit-content box
+ok 79 - borders › multiple nodes - fixed width box
+ok 80 - borders › multiple nodes - fixed width and height box
+ok 81 - borders › multiple nodes - box with padding
+ok 82 - borders › multiple nodes - box with horizontal alignment
+ok 83 - borders › multiple nodes - box with vertical alignment
+ok 84 - borders › multiple nodes - box with wrapping
+ok 85 - borders › multiple nodes - box with wrapping and long first node
+ok 86 - borders › multiple nodes - box with wrapping and very long first node
+ok 87 - borders › nested boxes
+ok 88 - borders › nested boxes - fit-content box with wide characters on flex-direction row
+ok 89 - borders › nested boxes - fit-content box with emojis on flex-direction row
+ok 90 - borders › nested boxes - fit-content box with wide characters on flex-direction column
+ok 91 - borders › nested boxes - fit-content box with emojis on flex-direction column
+ok 92 - borders › render border after update
+ok 93 - borders › hide top border
+ok 94 - borders › hide bottom border
+ok 95 - borders › hide top and bottom borders
+ok 96 - borders › hide left border
+ok 97 - borders › hide right border
+ok 98 - borders › hide left and right border
+ok 99 - borders › hide all borders
+ok 100 - borders › change color of top border
+ok 101 - borders › change color of bottom border
+ok 102 - borders › change color of left border
+ok 103 - borders › change color of right border
+ok 104 - borders › custom border style
+ok 105 - borders › dim border color
+ok 106 - borders › dim top border color
+ok 107 - borders › dim bottom border color
+ok 108 - borders › dim left border color
+ok 109 - borders › dim right border color
+ok 110 - display › display flex
+ok 111 - display › display none
+not ok 112 - hooks › useStderr - write to stderr # TODO
+not ok 113 - hooks › useInput - handle lowercase character
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:72:13)
+  ...
+not ok 114 - hooks › useInput - handle uppercase character
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:79:13)
+  ...
+not ok 115 - hooks › useInput - should not count as an uppercase character
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:88:14)
+  ...
+not ok 116 - hooks › useInput - pasted carriage return
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:96:13)
+  ...
+not ok 117 - hooks › useInput - pasted tab
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:103:13)
+  ...
+not ok 118 - hooks › useInput - handle escape
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:110:13)
+  ...
+not ok 119 - hooks › useInput - handle ctrl
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:117:13)
+  ...
+not ok 120 - hooks › useInput - handle meta
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:124:13)
+  ...
+not ok 121 - hooks › useInput - handle up arrow
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:131:13)
+  ...
+not ok 122 - hooks › useInput - handle down arrow
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:138:13)
+  ...
+not ok 123 - hooks › useInput - handle left arrow
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:145:13)
+  ...
+not ok 124 - hooks › useInput - handle right arrow
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:152:13)
+  ...
+not ok 125 - hooks › useInput - handle meta + up arrow
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:159:13)
+  ...
+not ok 126 - hooks › useInput - handle meta + down arrow
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:166:13)
+  ...
+not ok 127 - hooks › useInput - handle meta + left arrow
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:173:13)
+  ...
+not ok 128 - hooks › useInput - handle meta + right arrow
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:180:13)
+  ...
+not ok 129 - hooks › useInput - handle ctrl + up arrow
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:187:13)
+  ...
+not ok 130 - hooks › useInput - handle ctrl + down arrow
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:194:13)
+  ...
+not ok 131 - hooks › useInput - handle ctrl + left arrow
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:201:13)
+  ...
+not ok 132 - hooks › useInput - handle ctrl + right arrow
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:208:13)
+  ...
+not ok 133 - hooks › useInput - handle page down
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:215:13)
+  ...
+not ok 134 - hooks › useInput - handle page up
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:222:13)
+  ...
+not ok 135 - hooks › useInput - handle tab
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:229:13)
+  ...
+not ok 136 - hooks › useInput - handle shift + tab
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:236:13)
+  ...
+not ok 137 - hooks › useInput - handle backspace
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:243:13)
+  ...
+not ok 138 - hooks › useInput - handle delete
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:250:13)
+  ...
+not ok 139 - hooks › useInput - handle remove (delete)
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:257:13)
+  ...
+not ok 140 - hooks › useInput - ignore input if not active
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:264:13)
+  ...
+not ok 141 - hooks › useInput - handle Ctrl+C when `exitOnCtrlC` is `false`
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      run (test/hooks.tsx:277:15)
+      <anonymous> (test/hooks.tsx:301:31)
+  ...
+not ok 142 - hooks › useStdout - write to stdout
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/hooks.tsx:28:13)
+      <anonymous> (test/hooks.tsx:307:13)
+  ...
+not ok 143 - components › skip previous output when rendering new static output
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'Timed out waiting for condition',
+        }
+    at: |-
+      waitFor (test/helpers/wait-for.ts:17:8)
+      async <anonymous> (test/components.tsx:347:3)
+  ...
+# errors › before hook
+ok 144 - errors › catch and display error
+# errors › after hook
+ok 145 - flex-align-items › row - align text to center
+ok 146 - flex-align-items › row - align multiple text nodes to center
+ok 147 - flex-align-items › row - align text to bottom
+ok 148 - flex-align-items › row - align multiple text nodes to bottom
+ok 149 - flex-align-items › column - align text to center
+ok 150 - flex-align-items › column - align text to right
+ok 151 - flex-justify-content › row - align text to center
+ok 152 - flex-justify-content › row - align multiple text nodes to center
+ok 153 - flex-justify-content › row - align text to right
+ok 154 - flex-justify-content › row - align multiple text nodes to right
+ok 155 - flex-justify-content › row - align two text nodes on the edges
+ok 156 - flex-justify-content › row - space evenly two text nodes
+ok 157 - flex-justify-content › row - align two text nodes with equal space around them
+ok 158 - flex-justify-content › row - align colored text node when text is squashed
+ok 159 - flex-justify-content › column - align text to center
+ok 160 - flex-justify-content › column - align text to bottom
+ok 161 - flex-justify-content › column - align two text nodes on the edges
+ok 162 - flex-justify-content › column - align two text nodes with equal space around them
+ok 163 - flex-align-self › row - align text to center
+ok 164 - flex-align-self › row - align multiple text nodes to center
+ok 165 - flex-align-self › row - align text to bottom
+ok 166 - flex-align-self › row - align multiple text nodes to bottom
+ok 167 - flex-align-self › column - align text to center
+ok 168 - flex-align-self › column - align text to right
+not ok 169 - components › render only new items in static output on final render
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'Timed out waiting for condition',
+        }
+    at: |-
+      waitFor (test/helpers/wait-for.ts:17:8)
+      async <anonymous> (test/components.tsx:376:3)
+  ...
+ok 170 - components › text
+ok 171 - components › text with variable
+ok 172 - components › multiple text nodes
+ok 173 - components › text with component
+ok 174 - components › text with fragment
+ok 175 - components › wrap text
+ok 176 - components › don’t wrap text if there is enough space
+ok 177 - components › truncate text in the end
+ok 178 - components › truncate text in the middle
+ok 179 - components › truncate text in the beginning
+ok 180 - components › ignore empty text node
+ok 181 - components › render a single empty text node
+ok 182 - components › number
+ok 183 - components › fail when text nodes are not within <Text> component
+ok 184 - components › fail when text node is not within <Text> component
+ok 185 - components › fail when <Box> is inside <Text> component
+ok 186 - components › remesure text dimensions on text change
+ok 187 - components › fragment
+ok 188 - components › transform children
+ok 189 - components › squash multiple text nodes
+ok 190 - components › transform with multiple lines
+ok 191 - components › squash multiple nested text nodes
+ok 192 - components › squash empty `<Text>` nodes
+ok 193 - components › <Transform> with undefined children
+ok 194 - components › <Transform> with null children
+ok 195 - components › hooks
+not ok 196 - components › static output
+  ---
+    name: AssertionError
+    assertion: is
+    values:
+      'Difference (- actual, + expected):': |-
+        - `
+        + `A␊
+    at: '<anonymous> (test/components.tsx:328:4)'
+  ...
+ok 197 - components › ensure wrap-ansi doesn’t trim leading whitespace
+ok 198 - components › replace child node with text
+ok 199 - components › disable raw mode when all input components are unmounted
+ok 200 - components › setRawMode() should throw if raw mode is not supported
+ok 201 - components › render different component based on whether stdin is a TTY or not
+ok 202 - components › reset prop when it’s removed from the element
+ok 203 - components › newline
+ok 204 - components › multiple newlines
+ok 205 - components › horizontal spacer
+ok 206 - components › vertical spacer
+ok 207 - components › link ansi escapes are closed properly
+not ok 208 - components › render only last frame when run in CI
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      <anonymous> (test/helpers/run.ts:37:16)
+      run (test/helpers/run.ts:36:9)
+      <anonymous> (test/components.tsx:601:23)
+  ...
+not ok 209 - components › render all frames if CI environment variable equals false
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      <anonymous> (test/helpers/run.ts:37:16)
+      run (test/helpers/run.ts:36:9)
+      <anonymous> (test/components.tsx:615:23)
+  ...
+ok 210 - flex-direction › direction row
+ok 211 - flex-direction › direction row reverse
+ok 212 - flex-direction › direction column
+ok 213 - flex-direction › direction column reverse
+ok 214 - flex-direction › don’t squash text nodes when column direction is applied
+ok 215 - gap › gap
+ok 216 - gap › column gap
+ok 217 - gap › row gap
+ok 218 - flex › grow equally
+ok 219 - flex › grow one element
+ok 220 - flex › dont shrink
+ok 221 - flex › shrink equally
+ok 222 - flex › set flex basis with flexDirection="row" container
+ok 223 - flex › set flex basis in percent with flexDirection="row" container
+ok 224 - flex › set flex basis with flexDirection="column" container
+ok 225 - flex › set flex basis in percent with flexDirection="column" container
+ok 226 - log-update › standard rendering - renders and updates output
+ok 227 - log-update › standard rendering - skips identical output
+ok 228 - log-update › incremental rendering - renders and updates output
+ok 229 - log-update › incremental rendering - skips identical output
+ok 230 - log-update › incremental rendering - surgical updates
+ok 231 - log-update › incremental rendering - clears extra lines when output shrinks
+ok 232 - log-update › incremental rendering - when output grows
+ok 233 - log-update › incremental rendering - single write call with multiple surgical updates
+ok 234 - log-update › incremental rendering - skips multiple lines with cursorDown
+ok 235 - log-update › incremental rendering - shrinking output keeps screen tight
+ok 236 - log-update › incremental rendering - regular buffer - clear() fully resets incremental state
+ok 237 - log-update › incremental rendering - alternate buffer - clear() fully resets incremental state
+ok 238 - log-update › incremental rendering - done() resets before next render
+ok 239 - log-update › incremental rendering - multiple consecutive clear() calls (should be harmless no-ops)
+ok 240 - log-update › incremental rendering - sync() followed by update (assert incremental path is used)
+ok 241 - log-update › incremental rendering - render to empty string (full clear vs early exit)
+ok 242 - log-update › incremental rendering - alternate buffer
+ok 243 - log-update › standard IME cursor - moves cursor when output is same but cursor changed
+ok 244 - log-update › standard IME cursor - skips when both output and cursor are same
+ok 245 - log-update › standard IME cursor - cursor backward movement
+ok 246 - log-update › standard IME cursor - cursor up movement
+ok 247 - log-update › standard IME cursor - cursor down movement
+ok 248 - log-update › standard IME cursor - diagonal cursor movement
+ok 249 - log-update › standard IME cursor - no cursor provided (undefined)
+ok 250 - log-update › standard IME cursor - cursor at position 0,0
+ok 251 - log-update › standard IME cursor - re-render when output changes
+ok 252 - log-update › incremental IME cursor - basic cursor positioning
+ok 253 - log-update › incremental rendering - alternate buffer - atomic IME cursor positioning
+ok 254 - log-update › incremental rendering - alternate buffer - defaults to no cursor positioning if not specified
+ok 255 - log-update › standard rendering respects cursor position by default
+ok 256 - log-update › incremental rendering - alternate buffer - forces cursor repositioning when output changes
+ok 257 - log-update › standard rendering - clears content below cursor when cursor is set
+ok 258 - log-update › standard rendering - clear() clears content below cursor
+ok 259 - log-update › incremental rendering - clear() clears content below cursor
+ok 260 - large-scroll-oscillation › large root scroll oscillation does not duplicate lines
+#   After grow to 40: baseY=30
+#   After shrink to 10: baseY=30
+#   After regrow to 40: baseY=30
+ok 261 - measure-text › handle string width function that throws
+ok 262 - focus › dont focus on register when auto focus is off
+ok 263 - measure-text › measure "constructor"
+ok 264 - measure-text › measure simple emoji
+ok 265 - measure-text › measure emoji with skin tone modifier
+ok 266 - measure-text › measure emoji ZWJ sequence
+ok 267 - measure-text › measure flags
+ok 268 - measure-text › measure multiple flags
+ok 269 - measure-text › measure combining marks
+ok 270 - measure-text › measure mixed content
+ok 271 - measure-text › measure variation selectors
+ok 272 - measure-text › do not combine regular characters
+ok 273 - measure-text › combine emoji ZWJ sequence into single styled char
+ok 274 - measure-text › combine flag sequence into single styled char
+ok 275 - measure-text › handle tabs by expanding to 4 spaces
+ok 276 - measure-text › ignore backspaces
+ok 277 - measure-text › group styled chars into words
+ok 278 - measure-text › group styled chars with newlines
+ok 279 - measure-text › group styled chars with multiple spaces
+ok 280 - flex-wrap › row - no wrap
+ok 281 - flex-wrap › column - no wrap
+ok 282 - flex-wrap › row - wrap content
+ok 283 - flex-wrap › column - wrap content
+ok 284 - flex-wrap › column - wrap content reverse
+ok 285 - flex-wrap › row - wrap content reverse
+ok 286 - focus › focus the first component to register
+ok 287 - focus › unfocus active component on Esc
+ok 288 - focus › switch focus to first component on Tab
+ok 289 - position-ime-cursor › positionImeCursor - first line
+ok 290 - position-ime-cursor › positionImeCursor - middle line
+ok 291 - position-ime-cursor › positionImeCursor - last line
+ok 292 - focus › switch focus to the next component on Tab
+ok 293 - output-trim › removes trailing unstyled spaces from styledOutput
+ok 294 - focus › switch focus to the first component if currently focused component is the last one on Tab
+ok 295 - indent-wrapping › preserves indentation when wrapping if there is room
+ok 296 - indent-wrapping › drops indentation when it does not fit
+ok 297 - indent-wrapping › preserves just indentation
+ok 298 - indent-wrapping › preserves just indentation no box
+ok 299 - focus › skip disabled component on Tab
+ok 300 - focus › switch focus to the previous component on Shift+Tab
+ok 301 - render-regression-newline › multiple renders do not add extra blank lines at the bottom
+ok 302 - focus › switch focus to the last component if currently focused component is the first one on Shift+Tab
+ok 303 - focus › skip disabled component on Shift+Tab
+ok 304 - margin › margin
+ok 305 - margin › margin X
+ok 306 - margin › margin Y
+ok 307 - margin › margin top
+ok 308 - margin › margin bottom
+ok 309 - margin › margin left
+ok 310 - margin › margin right
+ok 311 - margin › nested margin
+ok 312 - margin › margin with multiline string
+ok 313 - margin › apply margin to text with newlines
+ok 314 - margin › apply margin to wrapped text
+ok 315 - measure-element › measure element
+ok 316 - measure-element › get bounding box
+ok 317 - measure-element › get inner width
+ok 318 - measure-element › get inner height
+ok 319 - measure-element › get bounding box of nested element
+ok 320 - measure-element › get scroll height and width
+ok 321 - measure-element › get bounding box with scroll position
+ok 322 - measure-element › get vertical scrollbar bounding box
+ok 323 - measure-element › get vertical scrollbar bounding box with border
+ok 324 - measure-element › get vertical scrollbar bounding box scrolled
+ok 325 - measure-element › get horizontal scrollbar bounding box
+ok 326 - measure-element › get horizontal scrollbar bounding box scrolled
+ok 327 - measure-element › get horizontal scrollbar bounding box with border
+ok 328 - measure-element › get both scrollbars bounding box
+ok 329 - measure-element › get scrollbar bounding box when not scrollable
+ok 330 - focus › reset focus when focused component unregisters
+# multi-char-text › before hook
+ok 331 - padding › padding
+ok 332 - padding › padding X
+ok 333 - padding › padding Y
+ok 334 - padding › padding top
+ok 335 - padding › padding bottom
+ok 336 - padding › padding left
+ok 337 - padding › padding right
+ok 338 - padding › nested padding
+ok 339 - padding › padding with multiline string
+ok 340 - padding › apply padding to text with newlines
+ok 341 - padding › apply padding to wrapped text
+ok 342 - nested-clipping › nested clipping - content inside deeply nested scrollable should be rendered with terminalBuffer
+ok 343 - render-worker-cursor-restore › TerminalBufferWorker restores cursor on done
+ok 344 - focus › focus first component after focused component unregisters
+ok 345 - overflow › overflowX - single text node in a box inside overflow container
+ok 346 - overflow › overflowX - single text node inside overflow container with border
+ok 347 - overflow › overflowX - single text node in a box with border inside overflow container
+ok 348 - overflow › overflowX - multiple text nodes in a box inside overflow container
+ok 349 - overflow › overflowX - multiple text nodes in a box inside overflow container with border
+ok 350 - overflow › overflowX - multiple text nodes in a box with border inside overflow container
+ok 351 - overflow › overflowX - multiple boxes inside overflow container
+ok 352 - overflow › overflowX - multiple boxes inside overflow container with border
+ok 353 - overflow › overflowX - box before left edge of overflow container
+ok 354 - overflow › overflowX - box before left edge of overflow container with border
+ok 355 - overflow › overflowX - box intersecting with left edge of overflow container
+ok 356 - overflow › overflowX - box intersecting with left edge of overflow container with border
+ok 357 - overflow › overflowX - box after right edge of overflow container
+ok 358 - overflow › overflowX - box intersecting with right edge of overflow container
+ok 359 - overflow › overflowY - single text node inside overflow container
+ok 360 - overflow › overflowY - single text node inside overflow container with border
+ok 361 - overflow › overflowY - multiple boxes inside overflow container
+ok 362 - overflow › overflowY - multiple boxes inside overflow container with border
+ok 363 - overflow › overflowY - box above top edge of overflow container
+ok 364 - overflow › overflowY - box above top edge of overflow container with border
+ok 365 - overflow › overflowY - box intersecting with top edge of overflow container
+ok 366 - overflow › overflowY - box intersecting with top edge of overflow container with border
+ok 367 - overflow › overflowY - box below bottom edge of overflow container
+ok 368 - overflow › overflowY - box below bottom edge of overflow container with border
+ok 369 - overflow › overflowY - box intersecting with bottom edge of overflow container
+ok 370 - overflow › overflowY - box intersecting with bottom edge of overflow container with border
+ok 371 - overflow › overflow - single text node inside overflow container
+ok 372 - overflow › overflow - single text node inside overflow container with border
+ok 373 - overflow › overflow - multiple boxes inside overflow container
+ok 374 - overflow › overflow - multiple boxes inside overflow container with border
+ok 375 - overflow › overflow - box intersecting with top left edge of overflow container
+ok 376 - overflow › overflow - box intersecting with top right edge of overflow container
+ok 377 - overflow › overflow - box intersecting with bottom left edge of overflow container
+ok 378 - overflow › overflow - box intersecting with bottom right edge of overflow container
+ok 379 - overflow › nested overflow
+ok 380 - overflow › out of bounds writes do not crash
+ok 381 - multi-char-text › multi-character emoji in fixed-width box with border - default width
+ok 382 - multi-char-text › multi-character emoji in fixed-width box with border - width 1 emojis
+ok 383 - multi-char-text › multi-character emoji in fixed-width box with border - width 2 emojis
+ok 384 - multi-char-text › multi-character emoji in fixed-width box with border - width 3 emojis
+ok 385 - multi-char-text › multi-character emoji wrapping in a box with border followed by some text - default width
+ok 386 - multi-char-text › multi-character emoji wrapping in a box with border followed by some text - width 1 emojis
+ok 387 - multi-char-text › multi-character emoji wrapping in a box with border followed by some text - width 2 emojis
+ok 388 - multi-char-text › multi-character emoji wrapping in a box with border followed by some text - width 3 emojis
+not ok 389 - multi-char-text › multi-character emoji with background color - default width
+  ---
+    name: AssertionError
+    message: Did not match snapshot
+    assertion: snapshot
+    values:
+      'Difference (- actual, + expected):': "  `╭──────────╮␊\n- │Hi \U0001F1FA\U0001F1F8     │␊\n+ │Hi \U0001F1FA\U0001F1F8     │␊\n  ╰──────────╯`"
+    at: '<anonymous> (test/multi-char-text.tsx:118:6)'
+  ...
+not ok 390 - multi-char-text › multi-character emoji with background color - width 1 emojis
+  ---
+    name: AssertionError
+    message: Did not match snapshot
+    assertion: snapshot
+    values:
+      'Difference (- actual, + expected):': "  `╭──────────╮␊\n- │Hi \U0001F1FA\U0001F1F8      │␊\n+ │Hi \U0001F1FA\U0001F1F8      │␊\n  ╰──────────╯`"
+    at: '<anonymous> (test/multi-char-text.tsx:118:6)'
+  ...
+not ok 391 - multi-char-text › multi-character emoji with background color - width 2 emojis
+  ---
+    name: AssertionError
+    message: Did not match snapshot
+    assertion: snapshot
+    values:
+      'Difference (- actual, + expected):': "  `╭──────────╮␊\n- │Hi \U0001F1FA\U0001F1F8     │␊\n+ │Hi \U0001F1FA\U0001F1F8     │␊\n  ╰──────────╯`"
+    at: '<anonymous> (test/multi-char-text.tsx:118:6)'
+  ...
+not ok 392 - multi-char-text › multi-character emoji with background color - width 3 emojis
+  ---
+    name: AssertionError
+    message: Did not match snapshot
+    assertion: snapshot
+    values:
+      'Difference (- actual, + expected):': "  `╭──────────╮␊\n- │Hi \U0001F1FA\U0001F1F8    │␊\n+ │Hi \U0001F1FA\U0001F1F8    │␊\n  ╰──────────╯`"
+    at: '<anonymous> (test/multi-char-text.tsx:118:6)'
+  ...
+not ok 393 - multi-char-text › multiple multi-character emojis with wrapping and background - default width
+  ---
+    name: AssertionError
+    message: Did not match snapshot
+    assertion: snapshot
+    values:
+      'Difference (- actual, + expected):': "  `╭────────╮␊\n- │\U0001F1FA\U0001F1F8 \U0001F468‍\U0001F469‍\U0001F467‍\U0001F466   │␊\n+ │\U0001F1FA\U0001F1F8 \U0001F468‍\U0001F469‍\U0001F467‍\U0001F466   │␊\n  ╰────────╯`"
+    at: '<anonymous> (test/multi-char-text.tsx:118:6)'
+  ...
+not ok 394 - multi-char-text › multiple multi-character emojis with wrapping and background - width 1 emojis
+  ---
+    name: AssertionError
+    message: Did not match snapshot
+    assertion: snapshot
+    values:
+      'Difference (- actual, + expected):': "  `╭────────╮␊\n- │\U0001F1FA\U0001F1F8 \U0001F468‍\U0001F469‍\U0001F467‍\U0001F466     │␊\n+ │\U0001F1FA\U0001F1F8 \U0001F468‍\U0001F469‍\U0001F467‍\U0001F466     │␊\n  ╰────────╯`"
+    at: '<anonymous> (test/multi-char-text.tsx:118:6)'
+  ...
+not ok 395 - multi-char-text › multiple multi-character emojis with wrapping and background - width 2 emojis
+  ---
+    name: AssertionError
+    message: Did not match snapshot
+    assertion: snapshot
+    values:
+      'Difference (- actual, + expected):': "  `╭────────╮␊\n- │\U0001F1FA\U0001F1F8 \U0001F468‍\U0001F469‍\U0001F467‍\U0001F466   │␊\n+ │\U0001F1FA\U0001F1F8 \U0001F468‍\U0001F469‍\U0001F467‍\U0001F466   │␊\n  ╰────────╯`"
+    at: '<anonymous> (test/multi-char-text.tsx:118:6)'
+  ...
+not ok 396 - multi-char-text › multiple multi-character emojis with wrapping and background - width 3 emojis
+  ---
+    name: AssertionError
+    message: Did not match snapshot
+    assertion: snapshot
+    values:
+      'Difference (- actual, + expected):': "  `╭────────╮␊\n- │\U0001F1FA\U0001F1F8 \U0001F468‍\U0001F469‍\U0001F467‍\U0001F466 │␊\n+ │\U0001F1FA\U0001F1F8 \U0001F468‍\U0001F469‍\U0001F467‍\U0001F466 │␊\n  ╰────────╯`"
+    at: '<anonymous> (test/multi-char-text.tsx:118:6)'
+  ...
+ok 397 - multi-char-text › combining character in fixed-width box - default width
+ok 398 - multi-char-text › all multi-character strings in one box - default width
+ok 399 - multi-char-text › all multi-character strings in one box - width 1 emojis
+ok 400 - multi-char-text › all multi-character strings in one box - width 2 emojis
+ok 401 - multi-char-text › all multi-character strings in one box - width 3 emojis
+ok 402 - multi-char-text › box with many tabs - default width
+ok 403 - multi-char-text › box with backspace characters - default width
+ok 404 - multi-char-text › emoji truncation with wrap="wrap" - default width
+ok 405 - multi-char-text › emoji truncation with wrap="end" - default width
+ok 406 - multi-char-text › emoji truncation with wrap="middle" - default width
+ok 407 - multi-char-text › emoji truncation with wrap="truncate-end" - default width
+ok 408 - multi-char-text › emoji truncation with wrap="truncate" - default width
+ok 409 - multi-char-text › emoji truncation with wrap="truncate-middle" - default width
+ok 410 - multi-char-text › emoji truncation with wrap="truncate-start" - default width
+ok 411 - multi-char-text › wrapping of the same complex emoji repeated 20 times
+ok 412 - multi-char-text › multiline string starting with 2-char emoji wrapped in box with varying width and padding
+ok 413 - multi-char-text › recalculate layout on string width function change and rerender
+# multi-char-text › afterEach hook for multi-character emoji in fixed-width box with border - default width
+# multi-char-text › afterEach hook for multi-character emoji in fixed-width box with border - width 1 emojis
+# multi-char-text › afterEach hook for multi-character emoji in fixed-width box with border - width 2 emojis
+# multi-char-text › afterEach hook for multi-character emoji in fixed-width box with border - width 3 emojis
+# multi-char-text › afterEach hook for multi-character emoji wrapping in a box with border followed by some text - default width
+# multi-char-text › afterEach hook for multi-character emoji wrapping in a box with border followed by some text - width 1 emojis
+# multi-char-text › afterEach hook for multi-character emoji wrapping in a box with border followed by some text - width 2 emojis
+# multi-char-text › afterEach hook for multi-character emoji wrapping in a box with border followed by some text - width 3 emojis
+# multi-char-text › afterEach hook for combining character in fixed-width box - default width
+# multi-char-text › afterEach hook for all multi-character strings in one box - default width
+# multi-char-text › afterEach hook for all multi-character strings in one box - width 1 emojis
+# multi-char-text › afterEach hook for all multi-character strings in one box - width 2 emojis
+# multi-char-text › afterEach hook for all multi-character strings in one box - width 3 emojis
+# multi-char-text › afterEach hook for box with many tabs - default width
+# multi-char-text › afterEach hook for box with backspace characters - default width
+# multi-char-text › afterEach hook for emoji truncation with wrap="wrap" - default width
+# multi-char-text › afterEach hook for emoji truncation with wrap="end" - default width
+# multi-char-text › afterEach hook for emoji truncation with wrap="middle" - default width
+# multi-char-text › afterEach hook for emoji truncation with wrap="truncate-end" - default width
+# multi-char-text › afterEach hook for emoji truncation with wrap="truncate" - default width
+# multi-char-text › afterEach hook for emoji truncation with wrap="truncate-middle" - default width
+# multi-char-text › afterEach hook for emoji truncation with wrap="truncate-start" - default width
+# multi-char-text › afterEach hook for wrapping of the same complex emoji repeated 20 times
+# multi-char-text › afterEach hook for multiline string starting with 2-char emoji wrapped in box with varying width and padding
+# multi-char-text › afterEach hook for recalculate layout on string width function change and rerender
+ok 414 - render-worker-xterm › TerminalBufferWorker renders initial content correctly
+ok 415 - render-worker-xterm › TerminalBufferWorker preserves history on initial render
+ok 416 - render-worker-xterm › TerminalBufferWorker handles updates correctly
+ok 417 - render-worker-xterm › TerminalBufferWorker handles scrolling correctly
+ok 418 - render-worker › TerminalBufferWorker correctly tracks backbufferDirty
+ok 419 - render-worker › TerminalBufferWorker avoids duplicate backbuffer lines on scroll oscillation
+ok 420 - render-worker › TerminalBufferWorker correctly manages and clears cursor position
+ok 421 - focus › toggle focus management
+ok 422 - reconciler › update child
+ok 423 - reconciler › update text node
+ok 424 - reconciler › append child
+ok 425 - reconciler › insert child between other children
+ok 426 - reconciler › remove child
+ok 427 - reconciler › reorder children
+ok 428 - reconciler › replace child node with text
+ok 429 - focus › manually focus next component
+ok 430 - focus › manually focus previous component
+ok 431 - focus › doesnt crash when focusing next on unmounted children
+ok 432 - reconciler › support suspense
+ok 433 - focus › doesnt crash when focusing previous on unmounted children
+ok 434 - focus › focuses first non-disabled component
+ok 435 - repro-nested-scroll-backbuffer › TerminalBufferWorker should correctly render nested scrollables in root backbuffer by expanding them
+ok 436 - repro-nested-scroll-backbuffer › TerminalBufferWorker should correctly render inner overflow of nested scrollable in its own chunk
+ok 437 - repro-oscillation-corruption › Reproduction: 4-down/4-up oscillation leads to backbuffer corruption
+#   Initial (scrollTop: 0) -> baseY: 0, history: []
+#   --- SCROLLING DOWN 4 ---
+#   Down 1 (scrollTop: 1) -> baseY: 1, history: [Line 0]
+#   Down 2 (scrollTop: 2) -> baseY: 2, history: [Line 0, Line 1]
+#   Down 3 (scrollTop: 3) -> baseY: 3, history: [Line 0, Line 1, Line 2]
+#   Down 4 (scrollTop: 4) -> baseY: 4, history: [Line 0, Line 1, Line 2, Line 3]
+#   --- SCROLLING UP 4 ---
+#   Up 3 (scrollTop: 3) -> baseY: 4, history: [Line 0, Line 1, Line 2, Line 3]
+#   Up 2 (scrollTop: 2) -> baseY: 4, history: [Line 0, Line 1, Line 2, Line 3]
+#   Up 1 (scrollTop: 1) -> baseY: 4, history: [Line 0, Line 1, Line 2, Line 3]
+#   Up 0 (scrollTop: 0) -> baseY: 4, history: [Line 0, Line 1, Line 2, Line 3]
+#   --- SCROLLING DOWN 4 AGAIN ---
+#   Down Again 1 (scrollTop: 1) -> baseY: 4, history: [Line 0, Line 1, Line 2, Line 3]
+#   Down Again 2 (scrollTop: 2) -> baseY: 4, history: [Line 0, Line 1, Line 2, Line 3]
+#   Down Again 3 (scrollTop: 3) -> baseY: 4, history: [Line 0, Line 1, Line 2, Line 3]
+#   Down Again 4 (scrollTop: 4) -> baseY: 4, history: [Line 0, Line 1, Line 2, Line 3]
+#   --- SCROLLING UP 4 AGAIN ---
+#   Up Again 3 (scrollTop: 3) -> baseY: 4, history: [Line 0, Line 1, Line 2, Line 3]
+#   Up Again 2 (scrollTop: 2) -> baseY: 4, history: [Line 0, Line 1, Line 2, Line 3]
+#   Up Again 1 (scrollTop: 1) -> baseY: 4, history: [Line 0, Line 1, Line 2, Line 3]
+#   Up Again 0 (scrollTop: 0) -> baseY: 4, history: [Line 0, Line 1, Line 2, Line 3]
+ok 438 - focus › skips disabled elements when wrapping around
+ok 439 - focus › skips disabled elements when wrapping around from the front
+ok 440 - repro-clipping › clipping - nested scrollable box inside hidden overflow box should be visible
+ok 441 - repro-clipping › clipping - content should be clipped by parent hidden overflow
+ok 442 - repro-clipping › clipping - content should be clipped by nested hidden overflow
+not ok 443 - render › do not erase screen
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/render.tsx:64:13)
+      <anonymous> (test/render.tsx:104:13)
+  ...
+not ok 444 - render › do not erase screen where <Static> is taller than viewport
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/render.tsx:64:13)
+      <anonymous> (test/render.tsx:116:14)
+  ...
+not ok 445 - render › erase screen
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/render.tsx:64:13)
+      <anonymous> (test/render.tsx:128:13)
+  ...
+not ok 446 - render › erase screen where <Static> exists but interactive part is taller than viewport
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/render.tsx:64:13)
+      <anonymous> (test/render.tsx:140:14)
+  ...
+not ok 447 - render › erase screen where state changes
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/render.tsx:64:13)
+      <anonymous> (test/render.tsx:151:13)
+  ...
+not ok 448 - render › erase screen where state changes in small viewport
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/render.tsx:64:13)
+      <anonymous> (test/render.tsx:180:13)
+  ...
+not ok 449 - render › fullscreen mode should not add extra newline at the bottom
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/render.tsx:64:13)
+      <anonymous> (test/render.tsx:194:14)
+  ...
+not ok 450 - render › clear output
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/render.tsx:64:13)
+      <anonymous> (test/render.tsx:218:13)
+  ...
+not ok 451 - render › intercept console methods and display result above output
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'posix_spawnp failed.',
+        }
+    at: |-
+      new UnixTerminal (node_modules/node-pty/src/unixTerminal.ts:106:22)
+      spawn (node_modules/node-pty/src/index.ts:31:10)
+      term (test/render.tsx:64:13)
+      <anonymous> (test/render.tsx:231:14)
+  ...
+ok 452 - render › rerender on resize
+ok 453 - render › throttle renders to maxFps
+ok 454 - repro-scroll-box › debug standard scroll container clipping
+ok 455 - repro-sticky › nested scrollable sticky header position
+#   Full Output:
+#   0: Spacer Line 0
+#   1: Spacer Line 1
+#   2: Spacer Line 2
+#   3: Spacer Line 3
+#   4: Spacer Line 4
+#   5: Spacer Line 5
+#   6: Spacer Line 6
+#   7: Spacer Line 7
+#   8: Spacer Line 8
+#   9: Spacer Line 9
+#   10: ┌────────────────────────────────────────────────┐
+#   11: │Line 6                                          │
+#   12: │Line 12                                         │
+#   13: │Line 19                                         │
+#   14: │Line 25                                         │
+#   15: │Line 31                                         │
+#   16: │Line 38                                         │
+#   17: │Line 44                                         │
+#   18: │Line 50                                         │
+#   19: └────────────────────────────────────────────────┘
+#   20: 
+ok 456 - scroll-animation-first-frame › TerminalBufferWorker should not animate scroll on first frame of a region
+ok 457 - repro-sticky-static › sticky inside static render boundary test 4
+ok 458 - resize-observer › ResizeObserver detects size changes
+ok 459 - resize-observer › ResizeObserver handles multiple observers
+ok 460 - repro-virtualized-static › debug static render inside scroll container
+ok 461 - resize-observer › ResizeObserver unobserve works
+not ok 462 - render › outputs renderTime when onRender is passed
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        Error {
+          message: 'Timed out waiting for condition',
+        }
+    at: |-
+      waitFor (test/helpers/wait-for.ts:17:8)
+      async <anonymous> (test/render.tsx:344:2)
+  ...
+ok 463 - render › no throttled renders after unmount
+ok 464 - render › expose rootNode on instance
+ok 465 - screen-reader › render text for screen readers
+ok 466 - screen-reader › render text for screen readers with aria-hidden
+ok 467 - screen-reader › render text for screen readers with aria-role
+ok 468 - screen-reader › render select input for screen readers
+ok 469 - screen-reader › render aria-label only Text for screen readers
+ok 470 - screen-reader › render aria-label only Box for screen readers
+ok 471 - screen-reader › omit ANSI styling in screen-reader output
+ok 472 - screen-reader › skip nodes with display:none style in screen-reader output
+ok 473 - screen-reader › render multiple Text components
+ok 474 - screen-reader › render nested Box components with Text
+ok 475 - screen-reader › render component that returns null
+ok 476 - screen-reader › render with aria-state.busy
+ok 477 - screen-reader › render with aria-state.checked
+ok 478 - screen-reader › render with aria-state.disabled
+ok 479 - screen-reader › render with aria-state.expanded
+ok 480 - screen-reader › render with aria-state.multiline
+ok 481 - screen-reader › render with aria-state.multiselectable
+ok 482 - screen-reader › render with aria-state.readonly
+ok 483 - screen-reader › render with aria-state.required
+ok 484 - screen-reader › render with aria-state.selected
+ok 485 - screen-reader › render multi-line text
+ok 486 - screen-reader › render nested multi-line text
+ok 487 - screen-reader › render nested row
+ok 488 - screen-reader › render multi-line text with roles
+ok 489 - screen-reader › render listbox with multiselectable options
+ok 490 - scrollbar-backbuffer › scrollbar characters are not pushed to backbuffer
+ok 491 - scrollbar-leak-backbuffer › scrollbar characters are NOT leaked to backbuffer during local scroll optimization
+ok 492 - scrolling-efficiency › scrolling is efficient even with scrollbars
+#   Updates for 1-line scroll: 3
+ok 493 - scrolling-efficiency › scrolling is efficient (only new lines are updated)
+ok 494 - scrolling-optimization › scrolling oscillation (down-up-down) uses optimized scrolling
+#   Up updates: 4
+#   Down again updates: 2
+ok 495 - squash-text-nodes › squash text nodes with map - basic
+ok 496 - squash-text-nodes › squash text nodes with map - nested
+ok 497 - squash-text-nodes › squash text nodes with map - empty
+ok 498 - scroll-first-frame › scrollbar is shown on the VERY first frame in ScrollableContent
+# scroll › before hook
+ok 499 - scroll › vertical scroll
+ok 500 - scroll › vertical scroll narrow
+ok 501 - scroll › vertical scroll narrow with padding for scrollbar
+ok 502 - scroll › vertical scroll with scrollTop
+ok 503 - scroll › vertical scroll to bottom
+ok 504 - scroll › horizontal scroll
+ok 505 - scroll › horizontal scroll with scrollLeft
+ok 506 - scroll › horizontal scroll to end
+ok 507 - scroll › vertical and horizontal scroll
+ok 508 - scroll › vertical and horizontal scroll with scrollTop and scrollLeft
+ok 509 - scroll › dynamic scroll update
+ok 510 - scroll › scroll with flexGrow at top
+ok 511 - scroll › scroll with flexGrow at middle
+ok 512 - scroll › scroll with flexGrow at bottom
+ok 513 - scroll › scroll with padding and scrollTop 0
+ok 514 - scroll › scroll with padding and scrollTop 1
+ok 515 - scroll › scroll with padding and scrollTop 2
+ok 516 - scroll › scroll with padding and scrollTop max
+ok 517 - scroll › no scrollbar when content is smaller than container
+ok 518 - scroll › nested scrolling inner scroll partially in view
+ok 519 - scroll › nested scrolling inner fully in view
+ok 520 - scroll › nested scrolling both to bottom
+not ok 521 - scroll › scrollbar thumb color
+  ---
+    name: AssertionError
+    message: Did not match snapshot
+    assertion: snapshot
+    values:
+      'Difference (- actual, + expected):': |2-
+          `╭─────────────╮␊
+        - │Scroll me   █│␊
+        + │Scroll me   █│␊
+          │             │␊
+        - │█▌           │␊
+        + │█▌           │␊
+          ╰─────────────╯`
+    at: '<anonymous> (test/scroll.tsx:403:4)'
+  ...
+ok 522 - scroll › overflow hidden
+ok 523 - scroll › overflow visible
+ok 524 - scroll › no scrollbar when content is exactly the size of container
+ok 525 - scroll › dynamic content size causing scrollbars to appear and disappear
+ok 526 - scroll › cached scroll values are updated with dynamic content
+ok 527 - scroll › max-width
+ok 528 - scroll › max-height
+ok 529 - scroll › max-width-percent
+ok 530 - scroll › max-height-percent
+ok 531 - scroll › max-width-and-max-height
+ok 532 - scroll › max-width-and-max-height-percents
+ok 533 - scroll › scrollbar hidden when scrollbar=false
+# scroll › afterEach hook for vertical scroll
+# scroll › afterEach hook for vertical scroll narrow
+# scroll › afterEach hook for vertical scroll narrow with padding for scrollbar
+# scroll › afterEach hook for vertical scroll with scrollTop
+# scroll › afterEach hook for vertical scroll to bottom
+# scroll › afterEach hook for horizontal scroll
+# scroll › afterEach hook for horizontal scroll with scrollLeft
+# scroll › afterEach hook for horizontal scroll to end
+# scroll › afterEach hook for vertical and horizontal scroll
+# scroll › afterEach hook for vertical and horizontal scroll with scrollTop and scrollLeft
+# scroll › afterEach hook for dynamic scroll update
+# scroll › afterEach hook for scroll with flexGrow at top
+# scroll › afterEach hook for scroll with flexGrow at middle
+# scroll › afterEach hook for scroll with flexGrow at bottom
+# scroll › afterEach hook for scroll with padding and scrollTop 0
+# scroll › afterEach hook for scroll with padding and scrollTop 1
+# scroll › afterEach hook for scroll with padding and scrollTop 2
+# scroll › afterEach hook for scroll with padding and scrollTop max
+# scroll › afterEach hook for no scrollbar when content is smaller than container
+# scroll › afterEach hook for nested scrolling inner scroll partially in view
+# scroll › afterEach hook for nested scrolling inner fully in view
+# scroll › afterEach hook for nested scrolling both to bottom
+# scroll › afterEach hook for overflow hidden
+# scroll › afterEach hook for overflow visible
+# scroll › afterEach hook for no scrollbar when content is exactly the size of container
+# scroll › afterEach hook for dynamic content size causing scrollbars to appear and disappear
+# scroll › afterEach hook for cached scroll values are updated with dynamic content
+# scroll › afterEach hook for max-width
+# scroll › afterEach hook for max-height
+# scroll › afterEach hook for max-width-percent
+# scroll › afterEach hook for max-height-percent
+# scroll › afterEach hook for max-width-and-max-height
+# scroll › afterEach hook for max-width-and-max-height-percents
+# scroll › afterEach hook for scrollbar hidden when scrollbar=false
+ok 534 - scroll › interactive scroll
+# scroll › afterEach hook for interactive scroll
+# scrollbar-first-frame › before hook
+ok 535 - scrollbar-first-frame › scrollbar is shown on the first frame
+#   Output length: 189
+#   Output: "\u001b[?2026h\u001b[?25lLine 1             █\u001b[K\nLine 2             █\u001b[K\nLine 3             ▀\u001b[K\nLine 4\u001b[K\nLine 5\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\u001b[?2026l"
+# scrollbar-first-frame › after hook
+ok 536 - selection-snapshot › selection example renders correctly
+ok 537 - selection-snapshot › selection with StaticRender example renders correctly
+ok 538 - selection-whitespace › getText includes whitespace from padding and layout
+ok 539 - repro-issue › repro issue: sticky headers and spurious renders
+#   Content after pressing H (on):
+#   ─────────────────────────
+#                             Sticky Footer 4 (sticky bottom)
+#                                                            This is a demo showing 
+#   a scrollable box with sticky headers.
+#                                        Press up/down arrow or w/s to scroll vertic
+#   ally (w/s for 30 lines, Shift for
+#                                    10).
+#                                        Press 'space' to add a block, 'c' to clear 
+#   list.
+#        Press 'b' to toggle scrollbar (on), 't' to toggle border.
+#                                                                 Press 'f' to colla
+#   pse footer, 'a' to toggle alternate buffer + sticky headers
+#                                                              (current: off)
+#                                                                            Press '
+#   h' to toggle sticky headers in backbuffer (current: on)
+#                                                          Press 'v' to toggle stabl
+#   e scrollback (on)
+#                    Press 'e' to export current frame, 'r' to toggle recording (OFF
+#   )
+#    ScrollTop: 143, Size: 9, Content: 202, Added Scroll: 0
+
+#   Content after pressing H (off):
+#    ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,
+#    consectetur adipiscing elit.
+#                                                            This is a demo showing 
+#   a scrollable box with sticky headers.
+#                                        Press up/down arrow or w/s to scroll vertic
+#   ally (w/s for 30 lines, Shift for
+#                                    10).
+#                                        Press 'space' to add a block, 'c' to clear 
+#   list.
+#        Press 'b' to toggle scrollbar (on), 't' to toggle border.
+#                                                                 Press 'f' to colla
+#   pse footer, 'a' to toggle alternate buffer + sticky headers
+#                                                              (current: off)
+#                                                                            Press '
+#   h' to toggle sticky headers in backbuffer (current: on)
+#                                                          Press 'v' to toggle stabl
+#   Press 'h' to toggle sticky headers in backbuffer (current: off)
+#                    Press 'e' to export current frame, 'r' to toggle recording (OFF
+#   )
+#    ScrollTop: 143, Size: 9, Content: 202, Added Scroll: 0
+
+ok 540 - standard-react-layout-timing › standardReactLayoutTiming: true - effect runs before initial render to stdout
+ok 541 - standard-react-layout-timing › standardReactLayoutTiming: false - write happens before effect (reproducing current behavior)
+ok 542 - selection › getTextOffset behavior
+ok 543 - selection › getTextOffset handles wrapping and coordinates before start of line
+ok 544 - selection › getTextOffset handles wrapping with padding
+ok 545 - selection › getTextOffset handle borders
+ok 546 - selection › getText excludes userSelect: none content
+ok 547 - selection › Range: setStart and setEnd
+ok 548 - selection › Range: collapse
+ok 549 - selection › Range: selectNodeContents
+ok 550 - selection › Range: selectNode
+ok 551 - selection › Selection: addRange and removeRange
+ok 552 - selection › Selection: removeAllRanges
+ok 553 - selection › Selection: collapse
+ok 554 - selection › Selection: containsNode
+ok 555 - selection › Range: across multiple ink-text nodes
+ok 556 - static-render-sticky-children › StaticRender with stickyChildren (different height)
+not ok 557 - sticky-scroll-optimization › TerminalBufferWorker avoids rerendering stuck headers during scroll
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        RangeError {
+          code: 'ERR_BUFFER_OUT_OF_BOUNDS',
+          message: 'Attempt to access memory outside buffer bounds',
+        }
+    at: |-
+      Deserializer.readUint32 (src/serialization.ts:314:26)
+      Deserializer.deserialize (src/serialization.ts:230:26)
+      <anonymous> (src/worker/scene-manager.ts:102:57)
+      Array.map (<anonymous>)
+      SceneManager.update (src/worker/scene-manager.ts:100:44)
+      TerminalBufferWorker.update (src/worker/render-worker.ts:383:21)
+      <anonymous> (test/sticky-scroll-optimization.test.ts:75:9)
+  ...
+not ok 558 - sticky-scroll-optimization › TerminalBufferWorker handles sticky footers during scroll
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        RangeError {
+          code: 'ERR_BUFFER_OUT_OF_BOUNDS',
+          message: 'Attempt to access memory outside buffer bounds',
+        }
+    at: |-
+      Deserializer.readUint32 (src/serialization.ts:314:26)
+      Deserializer.deserialize (src/serialization.ts:230:26)
+      <anonymous> (src/worker/scene-manager.ts:102:57)
+      Array.map (<anonymous>)
+      SceneManager.update (src/worker/scene-manager.ts:100:44)
+      TerminalBufferWorker.update (src/worker/render-worker.ts:383:21)
+      <anonymous> (test/sticky-scroll-optimization.test.ts:191:9)
+  ...
+not ok 559 - sticky-scroll-optimization › TerminalBufferWorker handles headers scrolling off when stickyHeadersInBackbuffer is false
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        RangeError {
+          code: 'ERR_BUFFER_OUT_OF_BOUNDS',
+          message: 'Attempt to access memory outside buffer bounds',
+        }
+    at: |-
+      Deserializer.readUint32 (src/serialization.ts:314:26)
+      Deserializer.deserialize (src/serialization.ts:230:26)
+      <anonymous> (src/worker/scene-manager.ts:102:57)
+      Array.map (<anonymous>)
+      SceneManager.update (src/worker/scene-manager.ts:100:44)
+      TerminalBufferWorker.update (src/worker/render-worker.ts:383:21)
+      <anonymous> (test/sticky-scroll-optimization.test.ts:297:9)
+  ...
+not ok 560 - sticky-scroll-optimization › TerminalBufferWorker switches to stuckLines when stuck
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        RangeError {
+          code: 'ERR_BUFFER_OUT_OF_BOUNDS',
+          message: 'Attempt to access memory outside buffer bounds',
+        }
+    at: |-
+      Deserializer.readUint32 (src/serialization.ts:314:26)
+      Deserializer.deserialize (src/serialization.ts:230:26)
+      <anonymous> (src/worker/scene-manager.ts:102:57)
+      Array.map (<anonymous>)
+      SceneManager.update (src/worker/scene-manager.ts:100:44)
+      TerminalBufferWorker.update (src/worker/render-worker.ts:383:21)
+      <anonymous> (test/sticky-scroll-optimization.test.ts:379:9)
+  ...
+not ok 561 - sticky-scroll-optimization › TerminalBufferWorker handles stuck headers with more lines than natural
+  ---
+    name: AssertionError
+    message: Rejected promise returned by test
+    values:
+      'Rejected promise returned by test. Reason:': |-
+        RangeError {
+          code: 'ERR_BUFFER_OUT_OF_BOUNDS',
+          message: 'Attempt to access memory outside buffer bounds',
+        }
+    at: |-
+      Deserializer.readUint32 (src/serialization.ts:314:26)
+      Deserializer.deserialize (src/serialization.ts:230:26)
+      <anonymous> (src/worker/scene-manager.ts:102:57)
+      Array.map (<anonymous>)
+      SceneManager.update (src/worker/scene-manager.ts:100:44)
+      TerminalBufferWorker.update (src/worker/render-worker.ts:383:21)
+      <anonymous> (test/sticky-scroll-optimization.test.ts:472:9)
+  ...
+ok 562 - static-render-sticky › StaticRender with sticky header
+ok 563 - static-render-sticky › StaticRender containing multiple sticky headers
+ok 564 - static-render-sticky › StaticRender with multi-line sticky header
+ok 565 - terminal-buffer-in-process › TerminalBuffer uses fork by default
+ok 566 - terminal-buffer-in-process › TerminalBuffer uses in-process worker when renderInProcess is true
+ok 567 - static-render › StaticRender renders children
+#   Call count: 1
+ok 568 - static-render › StaticRender with Box and multiple children
+ok 569 - static-render › StaticRender respects style prop
+ok 570 - sticky-backbuffer-overlap › sticky header should not overlap with bottom border when pushed out
+#   Terminal row 0: "╰CONTENT───────────╯"
+ok 571 - terminal-buffer › update - correctly diffs sequential updates
+ok 572 - static-render-mixed-children › StaticRender output matches normal output for mixed children (simple stdout)
+#   Normal Output:
+#   ┌──────────────────────────────────────────────────────────────────────────────┐
+#   │Scrollable 1 Scrollable 1 Scrollable 1 Scrollable 1 Scrollable 1 Scrollable 1 │
+#   │Line 1       Line 2       Line 3       Line 4       Line 5       Line 6       │
+#   │                                                                              │
+#   └──────────────────────────────────────────────────────────────────────────────┘
+#     Non-scrollable child 1
+#   ╭──────────────────────────────────────────────────────────────────────────────╮
+#   │Scrollable 2   Scrollable 2 LinScrollable 2   Scrollable 2 LinScrollable 2    │
+#   │Line 1         2               Line 3         4               Line 5          │
+#   ╰──────────────────────────────────────────────────────────────────────────────╯
+#   Non-scrollable child 2
+#   Static Output:
+#   ┌──────────────────────────────────────────────────────────────────────────────┐
+#   │Scrollable 1 Scrollable 1 Scrollable 1 Scrollable 1 Scrollable 1 Scrollable 1 │
+#   │Line 1       Line 2       Line 3       Line 4       Line 5       Line 6       │
+#   │                                                                              │
+#   └──────────────────────────────────────────────────────────────────────────────┘
+#     Non-scrollable child 1
+#   ╭──────────────────────────────────────────────────────────────────────────────╮
+#   │Scrollable 2   Scrollable 2 LinScrollable 2   Scrollable 2 LinScrollable 2    │
+#   │Line 1         2               Line 3         4               Line 5          │
+#   ╰──────────────────────────────────────────────────────────────────────────────╯
+#   Non-scrollable child 2
+ok 573 - sticky-inline-bug › sticky header should be visible when rendered inline within StaticRender
+ok 574 - sticky-inline-bug › sticky footer should be visible when rendered inline within StaticRender
+ok 575 - sticky-inline-bug › sticky header should be sticky when scrolled within StaticRender
+not ok 576 - static-regression › static regression test - first item rendered
+  ---
+    name: AssertionError
+    assertion: 'true'
+    values:
+      'Value is not `true`:': 'false'
+    at: '<anonymous> (test/static-regression.test.tsx:77:8)'
+  ...
+ok 577 - terminal-writer-consistency › TerminalBufferWorker matches xterm state exactly after oscillation with StaticRender-like structure
+ok 578 - terminal-writer-xterm › TerminalWriter output matches xterm expectations for writeLines
+ok 579 - terminal-writer-xterm › TerminalWriter output matches xterm expectations for syncLine (update)
+ok 580 - terminal-writer-xterm › TerminalWriter output matches xterm expectations for scrollLines (up)
+ok 581 - terminal-writer-xterm › appendLinesBackbuffer pushes lines to xterm scrollback
+ok 582 - terminal-writer-xterm › syncLine on first render moves cursor to row 0
+ok 583 - terminal-writer-xterm › TerminalWriter.done() moves cursor to the bottom of the viewport
+ok 584 - sticky › parameterized sticky header states
+ok 585 - sticky › sticky header with alternate content with larger height
+ok 586 - sticky › sticky header ignores parent padding when stuck
+ok 587 - sticky › sticky footer transition boundary
+ok 588 - terminal-writer-rainbow › rainbow debug counts actual terminal updates
+ok 589 - terminal-writer-slow-flush › slowFlush is cancelled by another slowFlush
+ok 590 - terminal-writer-slow-flush › slowFlush is cancelled by flush
+ok 591 - terminal-cursor-render-buffer › terminal cursor position with terminalBuffer enabled
+ok 592 - terminal-cursor-render-buffer › terminal cursor position with scrolling in terminalBuffer
+ok 593 - worker-vscode-reset › TerminalWriter.clear() does NOT use ris in VSCode by default
+ok 594 - worker-vscode-reset › TerminalWriter.clear() DOES use ris in VSCode when forceScrollToBottomOnBackbufferRefresh is true
+ok 595 - terminal-cursor › Output.get() returns undefined cursorPosition when no focus
+ok 596 - terminal-cursor › Output.get() returns cursor at text end when terminalCursorPosition is undefined
+ok 597 - terminal-cursor › Output.get() returns cursor at position 0
+ok 598 - terminal-cursor › Output.get() returns cursor at middle position
+ok 599 - terminal-cursor › Output.get() clamps cursor position when exceeds text length
+ok 600 - terminal-cursor › Output.get() handles empty text with cursor focus
+ok 601 - terminal-cursor › Output.get() handles empty text alone (edge case - cursor clamped)
+ok 602 - terminal-cursor › Output.get() handles multiline text cursor at first line
+ok 603 - terminal-cursor › Output.get() handles multiline text cursor at second line
+ok 604 - terminal-cursor › Output.get() handles multiline text cursor at newline position
+ok 605 - terminal-cursor › Output.get() handles multiline text cursor right after newline
+ok 606 - terminal-cursor › Output.get() handles wide characters (Korean)
+ok 607 - terminal-cursor › Output.get() handles emoji characters
+ok 608 - terminal-cursor › Output.get() handles emoji at middle of string
+ok 609 - terminal-cursor › Output.get() handles x offset
+ok 610 - terminal-cursor › Output.get() handles y offset
+ok 611 - terminal-cursor › Output.get() handles both x and y offset with multiline
+ok 612 - terminal-cursor › Output.get() cursor position respects trimEnd
+ok 613 - terminal-cursor › Output.get() backward compatible - no terminalCursorPosition uses text end
+ok 614 - terminal-cursor › Output.get() backward compatible - multiline without terminalCursorPosition
+ok 615 - terminal-cursor › renderer returns correct cursorPosition for multiline Text
+ok 616 - terminal-cursor › renderer returns correct cursorPosition for wrapped Text
+ok 617 - terminal-cursor › renderer returns correct cursorPosition for Text with padding
+ok 618 - terminal-cursor › renderer returns correct cursorPosition for wrapped Text with dropped spaces
+ok 619 - terminal-cursor › renderer returns correct cursorPosition for wrapped Text with dropped spaces - after gap
+ok 620 - terminal-cursor › renderer returns correct cursorPosition when first line is empty
+ok 621 - terminal-cursor › renderer returns correct cursorPosition when first line is empty - cursor on second line
+ok 622 - terminal-cursor › renderer handles multiple leading newlines
+ok 623 - terminal-cursor › renderer handles cursor in middle of second line after empty first
+ok 624 - terminal-cursor › Text with terminalCursorFocus returns cursor position
+ok 625 - terminal-cursor › Text with terminalCursorFocus and terminalCursorPosition
+ok 626 - terminal-cursor › Text with undefined children and cursor focus
+ok 627 - terminal-cursor › Text with null children and cursor focus
+ok 628 - terminal-cursor › Multiple Text components - only focused one affects cursor
+ok 629 - terminal-cursor › Switching focus between Text components
+ok 630 - terminal-cursor › Output handles negative terminalCursorPosition gracefully
+ok 631 - terminal-cursor › Output handles very large width/height
+ok 632 - terminal-cursor › Output handles only newlines
+ok 633 - terminal-cursor › Output handles mixed content with emojis and Korean
+ok 634 - terminal-cursor › Output cursorFocusInfo is replaced by subsequent focused write
+ok 635 - terminal-cursor › Output non-focused write after focused write preserves cursor
+ok 636 - text-width › wide characters do not add extra space inside fixed-width Box
+ok 637 - text-wrap › text wrap - width 14
+ok 638 - text-wrap › text wrap - width 15
+ok 639 - text-wrap › text wrap - width 30
+ok 640 - text-wrap › text wrap - width 45
+ok 641 - text-wrap › text wrap - width 60
+ok 642 - text-wrap › text wrap - width 75
+ok 643 - text-wrap › text wrap with line numbers - width 14
+ok 644 - text-wrap › text wrap with line numbers - width 15
+ok 645 - text-wrap › text wrap with line numbers - width 30
+ok 646 - text-wrap › text wrap with line numbers - width 45
+ok 647 - text-wrap › text wrap with line numbers - width 60
+ok 648 - text-wrap › text wrap with line numbers - width 75
+ok 649 - text-wrap › preserves leading spaces after newline when wrapping
+ok 650 - text-wrap › preserves leading spaces when wrapping occurs naturally
+ok 651 - text-wrap › preserves space before long word that wraps
+ok 652 - replay › sticky-regression › sticky headers should not appear in backbuffer when stickyHeadersInBackbuffer is false
+ok 653 - replay › render-worker-scroll › Scroll snapshot: sticky-on
+ok 654 - replay › render-worker-scroll › Scroll snapshot: sticky-off
+ok 655 - replay › render-worker-scroll › Scroll snapshot: narrow-sticky-on
+ok 656 - replay › render-worker-scroll › Scroll snapshot: narrow-sticky-off
+ok 657 - replay › render-worker-scroll › Scroll snapshot: alternate-sticky
+ok 658 - text › <Text> with undefined children
+ok 659 - text › <Text> with null children
+ok 660 - text › text with standard color
+ok 661 - text › text with bold
+ok 662 - text › text with bold+color
+not ok 663 - text › text with dim+bold
+  ---
+    name: AssertionError
+    assertion: 'true'
+    values:
+      'Value is not `true`:': 'false'
+    at: '<anonymous> (test/text.tsx:47:8)'
+  ...
+ok 664 - text › text with dimmed color
+ok 665 - text › text with hex color
+ok 666 - text › text with rgb color
+ok 667 - text › text with ansi256 color
+ok 668 - text › text with standard background color
+ok 669 - text › text with hex background color
+ok 670 - text › text with rgb background color
+ok 671 - text › text with ansi256 background color
+ok 672 - text › text with inversion
+ok 673 - text › remeasure text when text is changed
+ok 674 - text › remeasure text when text nodes are changed
+ok 675 - text › text with content "constructor" wraps correctly
+ok 676 - unicode-marks › Latin text with combining diacritics
+ok 677 - unicode-marks › Thai text with combining vowels
+ok 678 - unicode-marks › Thai text with tone marks
+ok 679 - unicode-marks › Arabic text with combining marks
+ok 680 - unicode-marks › Hebrew text with combining marks
+ok 681 - unicode-marks › mixed scripts with combining marks
+not ok 682 - unicode-marks › Thai text with sara am
+  ---
+    name: AssertionError
+    assertion: is
+    values:
+      'Difference (- actual, + expected):': |-
+        - 16
+        + 12
+    at: '<anonymous> (test/unicode-marks.tsx:61:5)'
+  ...
+ok 683 - unicode-marks › Unicode marks in bordered box
+ok 684 - unicode-marks › Unicode marks wrapping in narrow box
+ok 685 - width-height › set width
+ok 686 - width-height › set width in percent
+ok 687 - width-height › set min width
+ok 688 - width-height › set min width in percent
+ok 689 - width-height › set height
+ok 690 - width-height › set height in percent
+ok 691 - width-height › cut text over the set height
+ok 692 - width-height › set min height
+ok 693 - replay › render-worker-replay › Replay snapshot: cli-snapshot.json
+ok 694 - replay › render-worker-replay › Replay snapshot: clipping-issue.json
+ok 695 - replay › render-worker-replay › Replay snapshot: scroll-blue-background.json
+ok 696 - replay › render-worker-replay › Replay snapshot: scroll-demo.json
+ok 697 - replay › render-worker-replay › Replay snapshot: sticky-bug.json
+ok 698 - replay › render-worker-replay › Replay snapshot: sticky-fullwidth.json
+ok 699 - replay › render-worker-replay › Replay snapshot: sticky-inner-bug.json
+ok 700 - replay › render-worker-replay › Replay snapshot: sticky-inner.json
+ok 701 - replay › render-worker-replay › Replay snapshot: sticky-issue.json
+ok 702 - replay › render-worker-replay › Replay snapshot: sticky-regression.json
+ok 703 - replay › render-worker-replay › Replay snapshot: sticky-scroll-demo.json
+not ok 704 - scroll-integration › scroll integration - verify repaint efficiency
+  ---
+    name: AssertionError
+    message: Should have scrolled to the bottom area
+    assertion: 'true'
+    values:
+      'Value is not `true`:': 'false'
+    at: '<anonymous> (test/scroll-integration.tsx:188:8)'
+  ...
+
+1..704
+# tests 703
+# pass 607
+# fail 97
+

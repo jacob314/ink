@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import xtermHeadless, {type Terminal} from '@xterm/headless';
-import {StyledChar} from '../src/tokenize.js';
+import {StyledChar} from '../../src/tokenize.js';
 import {TerminalBufferWorker} from '../../src/worker/render-worker.js';
 import {loadReplay} from '../../src/replay.js';
 import {type RenderLine} from '../../src/worker/terminal-writer.js';
