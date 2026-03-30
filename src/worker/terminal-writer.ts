@@ -417,8 +417,7 @@ export class TerminalWriter {
 				line.getBgColor(i),
 				line.getLink(i),
 			);
-			// eslint-disable-next-line unicorn/prefer-spread
-			const styledChars = line.slice(0, sliceIndex).concat(lastCharLine);
+			const styledChars = line.slice(0, sliceIndex).combine(lastCharLine);
 
 			return {
 				styledChars,

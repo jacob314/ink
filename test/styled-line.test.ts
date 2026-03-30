@@ -60,6 +60,29 @@ test('StyledLine setChar splits and merges spans', t => {
 	t.is(line.getSpans().length, 1);
 });
 
+test('StyledLine combine with multiple arguments', t => {
+	const line1 = StyledLine.legacyCreateStyledLine(
+		['a'],
+		[{length: 1, formatFlags: BOLD_MASK}],
+	);
+	const line2 = StyledLine.legacyCreateStyledLine(
+		['b'],
+		[{length: 1, formatFlags: 0, fgColor: 'red'}],
+	);
+	const line3 = StyledLine.legacyCreateStyledLine(
+		['c'],
+		[{length: 1, formatFlags: 0, bgColor: 'blue'}],
+	);
+
+	const result = line1.combine(line2, line3);
+
+	t.is(result.length, 3);
+	t.is(result.getText(), 'abc');
+	t.is(result.getFormatFlags(0), BOLD_MASK);
+	t.is(result.getFgColor(1), 'red');
+	t.is(result.getBgColor(2), 'blue');
+});
+
 test('StyledLine slice', t => {
 	const line = new StyledLine();
 	line.pushChar('a', BOLD_MASK);
@@ -107,7 +130,7 @@ test('StyledLine clone', t => {
 	t.is(line.getValue(0), 'a');
 });
 
-test('StyledLine slice(0) returns clone', t => {
+test('StyledLine slice(0, undefined) returns clone', t => {
 	const line = new StyledLine();
 	line.pushChar('a', BOLD_MASK, 'red');
 	line.pushChar('b', BOLD_MASK, 'red');
@@ -116,8 +139,7 @@ test('StyledLine slice(0) returns clone', t => {
 	t.not(sliced, line);
 	t.true(sliced.equals(line));
 
-	// eslint-disable-next-line unicorn/prefer-spread
-	const slicedNoArgs = line.slice(0);
+	const slicedNoArgs = line.slice(0, undefined);
 	t.not(slicedNoArgs, line);
 	t.true(slicedNoArgs.equals(line));
 });

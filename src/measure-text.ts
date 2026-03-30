@@ -246,25 +246,17 @@ export function wordBreakStyledChars(line: StyledLine): StyledLine[] {
 }
 
 export function splitStyledCharsByNewline(line: StyledLine): StyledLine[] {
-	const lines: StyledLine[] = [new StyledLine()];
+	const lines: StyledLine[] = [];
+	let start = 0;
 
 	for (let i = 0; i < line.length; i++) {
-		const val = line.getValue(i);
-		if (val === '\n') {
-			lines.push(new StyledLine());
-		} else {
-			lines
-				.at(-1)!
-				.pushChar(
-					val,
-					line.getFormatFlags(i),
-					line.getFgColor(i),
-					line.getBgColor(i),
-					line.getLink(i),
-				);
+		if (line.getValue(i) === '\n') {
+			lines.push(line.slice(start, i));
+			start = i + 1;
 		}
 	}
 
+	lines.push(line.slice(start));
 	return lines;
 }
 
