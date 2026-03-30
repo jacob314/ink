@@ -11,15 +11,6 @@ export type Props = {
 
 export default function StaticRender({children, width, style}: Props) {
 	const ref = useRef<DOMElement>(null);
-	const prevWidth = useRef(width);
-
-	if (prevWidth.current !== width) {
-		if (ref.current) {
-			ref.current.cachedRender = undefined;
-		}
-
-		prevWidth.current = width;
-	}
 
 	useEffect(() => {
 		const node = ref.current;
