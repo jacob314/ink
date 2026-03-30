@@ -6,6 +6,7 @@ import {
 	styledCharsWidth,
 } from './measure-text.js';
 import {type CursorPosition} from './log-update.js';
+import {getInternedChar} from './serialization.js';
 import {type StickyHeader, type DOMElement} from './dom.js';
 import {calculateScrollbarLayout} from './measure-element.js';
 import {renderScrollbar} from './render-scrollbar.js';
@@ -18,7 +19,10 @@ Handles the positioning and saving of the output of each node in the tree. Also 
 Used to generate the final output of all nodes before writing it to actual output stream (e.g. stdout)
 */
 
-export function clampCursorColumn(line: StyledChar[], col: number): number {
+export function clampCursorColumn(
+	line: readonly StyledChar[],
+	col: number,
+): number {
 	let currentLineCol = 0;
 	let lastContentCol = 0;
 
@@ -40,6 +44,7 @@ type Options = {
 	height: number;
 	node?: DOMElement;
 	id?: string | number;
+	trackSelection?: boolean;
 };
 
 type Clip = {
@@ -103,8 +108,8 @@ export type Region = {
 
 	// Content buffer for this region.
 	// Coordinates in `lines` are relative to (0,0) of this region.
-	lines: StyledChar[][];
-	styledOutput: StyledChar[][];
+	readonly lines: ReadonlyArray<readonly StyledChar[]>;
+	readonly styledOutput: ReadonlyArray<readonly StyledChar[]>;
 
 	isScrollable: boolean;
 	isVerticallyScrollable?: boolean;
@@ -146,6 +151,18 @@ export type RegionNode = {
 	id: string | number;
 	children: RegionNode[];
 };
+
+export function treesEqual(a: RegionNode, b: RegionNode): boolean {
+	if (a === b) return true;
+	if (a.id !== b.id) return false;
+	if (a.children.length !== b.children.length) return false;
+
+	for (let i = 0; i < a.children.length; i++) {
+		if (!treesEqual(a.children[i]!, b.children[i]!)) return false;
+	}
+
+	return true;
+}
 
 export type RegionUpdate = {
 	id: string | number;
@@ -239,6 +256,7 @@ export function copyRegionProperty<
 export default class Output {
 	width: number;
 	height: number;
+	trackSelection: boolean;
 
 	// The root region represents the main screen area (non-scrollable background)
 	root: Region;
@@ -247,10 +265,11 @@ export default class Output {
 	private readonly clips: Clip[] = [];
 
 	constructor(options: Options) {
-		const {width, height, node, id = 'root'} = options;
+		const {width, height, node, id = 'root', trackSelection = false} = options;
 
 		this.width = width;
 		this.height = height;
+		this.trackSelection = trackSelection;
 
 		this.root = {
 			id,
@@ -520,45 +539,16 @@ export default class Output {
 
 	addRegionTree(region: Region, x: number, y: number) {
 		const activeRegion = this.getActiveRegion();
-		const clonedRegion = this.cloneRegion(
-			region,
-			x,
-			y,
-			activeRegion.overflowToBackbuffer,
-		);
-		activeRegion.children.push(clonedRegion);
-	}
-
-	private cloneRegion(
-		region: Region,
-		x: number,
-		y: number,
-		inheritedOverflowToBackbuffer?: boolean,
-	): Region {
 		const overflowToBackbuffer = region.isScrollable
 			? region.overflowToBackbuffer
-			: (region.overflowToBackbuffer ?? inheritedOverflowToBackbuffer);
+			: (region.overflowToBackbuffer ?? activeRegion.overflowToBackbuffer);
 
-		const cloned: Region = {
-			...region,
-			overflowToBackbuffer,
-			x: region.x + x,
-			y: region.y + y,
-			lines: region.lines.map(line =>
-				line.map(char => ({...char, styles: [...char.styles]})),
-			),
-			selectableSpans: region.selectableSpans.map(span => ({...span})),
-			stickyHeaders: region.stickyHeaders.map(header => ({
-				...header,
-				x: header.x,
-				y: header.y,
-			})),
-			children: region.children.map(child =>
-				this.cloneRegion(child, 0, 0, overflowToBackbuffer),
-			),
-		};
+		const regionRef = Object.create(region) as Region;
+		regionRef.x = region.x + x;
+		regionRef.y = region.y + y;
+		regionRef.overflowToBackbuffer = overflowToBackbuffer;
 
-		return cloned;
+		activeRegion.children.push(regionRef);
 	}
 
 	private trimRegionLines(region: Region) {
@@ -575,7 +565,12 @@ export default class Output {
 				}
 			}
 
-			region.styledOutput[y] = line.slice(0, lastNonSpace + 1);
+			const trimmedLength = lastNonSpace + 1;
+
+			if (region.styledOutput[y]?.length !== trimmedLength) {
+				(region.styledOutput as Array<readonly StyledChar[]>)[y] =
+					trimmedLength === line.length ? line : line.slice(0, trimmedLength);
+			}
 		}
 
 		for (const child of region.children) {
@@ -599,19 +594,15 @@ export default class Output {
 	}
 
 	private initLines(region: Region, width: number, height: number) {
+		const emptyChar = getInternedChar(' ', false, []);
 		for (let y = 0; y < height; y++) {
 			const row: StyledChar[] = [];
 			for (let x = 0; x < width; x++) {
-				row.push({
-					type: 'char',
-					value: ' ',
-					fullWidth: false,
-					styles: [],
-				});
+				row.push(emptyChar);
 			}
 
-			region.lines.push(row);
-			region.styledOutput.push(row);
+			(region.lines as StyledChar[][]).push(row);
+			(region.styledOutput as StyledChar[][]).push(row);
 		}
 	}
 
@@ -658,8 +649,7 @@ export default class Output {
 			y = absoluteY - regionOffset.y;
 		}
 
-		const currentLine = lines[y];
-
+		const currentLine = lines[y] as StyledChar[];
 		if (!currentLine) {
 			return;
 		}
@@ -729,7 +719,7 @@ export default class Output {
 			relativeX += characterWidth;
 		}
 
-		if (isSelectable && spanStartX !== -1) {
+		if (this.trackSelection && isSelectable && spanStartX !== -1) {
 			region.selectableSpans.push({
 				y,
 				startX: spanStartX,
@@ -761,12 +751,7 @@ export default class Output {
 	) {
 		for (let offset = range.start; offset < range.end; offset++) {
 			if (offset >= 0 && offset < maxWidth) {
-				currentLine[offset] = {
-					type: 'char',
-					value,
-					fullWidth: false,
-					styles,
-				};
+				currentLine[offset] = getInternedChar(value, false, styles);
 			}
 		}
 	}
@@ -836,12 +821,7 @@ export function flattenRegion(
 	const {width, height} = root;
 
 	const lines: StyledChar[][] = Array.from({length: height}, () =>
-		Array.from({length: width}, () => ({
-			type: 'char',
-			value: ' ',
-			fullWidth: false,
-			styles: [],
-		})),
+		Array.from({length: width}, () => getInternedChar(' ', false, [])),
 	);
 
 	composeRegion(

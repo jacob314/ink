@@ -18,6 +18,7 @@ export function handleCachedRenderNode(
 		y: number;
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
 		selectionStyle?: (char: StyledChar) => StyledChar;
+		trackSelection?: boolean;
 	},
 ) {
 	const {x, y, selectionMap, selectionStyle} = options;
@@ -27,9 +28,7 @@ export function handleCachedRenderNode(
 		const range = selectionMap.get(node)!;
 		const clonedRegionObj = {
 			...node.cachedRender,
-			lines: node.cachedRender.lines.map(line =>
-				line.map(char => ({...char, styles: [...char.styles]})),
-			),
+			lines: node.cachedRender.lines.map(line => [...line]),
 			selectableSpans: node.cachedRender.selectableSpans.map(span => ({
 				...span,
 			})),

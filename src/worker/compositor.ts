@@ -9,7 +9,6 @@ import {type Region} from '../output.js';
 import {type StickyHeader} from '../dom.js';
 import {calculateScrollbarThumb} from '../measure-element.js';
 import {renderScrollbar} from '../render-scrollbar.js';
-import {toStyledCharacters} from '../measure-text.js';
 import colorize from '../colorize.js';
 import {type Canvas, type Rect} from './canvas.js';
 
@@ -427,8 +426,21 @@ export class Compositor {
 			return Compositor.lastBackgroundStyles;
 		}
 
-		const styled = toStyledCharacters(colorize(' ', color, 'background'))[0];
-		const styles = styled?.styles ?? [];
+		let styles: StyledChar['styles'] = [];
+		const colorized = colorize('x', color, 'background');
+
+		if (colorized !== 'x') {
+			const parts = colorized.split('x');
+			if (parts.length === 2 && parts[0] && parts[1]) {
+				styles = [
+					{
+						type: 'ansi',
+						code: parts[0],
+						endCode: parts[1],
+					},
+				];
+			}
+		}
 
 		Compositor.lastBackgroundColor = color;
 		Compositor.lastBackgroundStyles = styles;

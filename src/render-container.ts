@@ -42,6 +42,7 @@ export function handleContainerNode(
 		selectionStyle?: (char: StyledChar) => StyledChar;
 		absoluteOffsetX: number;
 		absoluteOffsetY: number;
+		trackSelection?: boolean;
 	},
 ) {
 	const {
@@ -57,6 +58,7 @@ export function handleContainerNode(
 		selectionStyle,
 		absoluteOffsetX,
 		absoluteOffsetY,
+		trackSelection,
 	} = options;
 	const {yogaNode} = node;
 	if (!yogaNode) return;
@@ -205,6 +207,7 @@ export function handleContainerNode(
 						skipStickyHeaders: false,
 						selectionMap,
 						selectionStyle,
+						trackSelection,
 					});
 				}
 
@@ -215,6 +218,7 @@ export function handleContainerNode(
 					skipStaticElements,
 					selectionMap,
 					selectionStyle,
+					trackSelection,
 				});
 
 				output.endChildRegion();
@@ -247,6 +251,7 @@ export function handleContainerNode(
 					skipStickyHeaders,
 					selectionMap,
 					selectionStyle,
+					trackSelection,
 				});
 			}
 		}

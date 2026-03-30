@@ -31,9 +31,9 @@ export type NodeNames = ElementNames | TextName;
 
 export type StickyHeader = {
 	nodeId: number;
-	lines: StyledChar[][]; // Natural (scrolling) version
-	stuckLines?: StyledChar[][]; // Alternate (sticky) version
-	styledOutput: StyledChar[][]; // Legacy property
+	lines: ReadonlyArray<readonly StyledChar[]>; // Natural (scrolling) version
+	stuckLines?: ReadonlyArray<readonly StyledChar[]>; // Alternate (sticky) version
+	styledOutput: ReadonlyArray<readonly StyledChar[]>; // Legacy property
 	x: number; // Stuck X position relative to region
 	y: number; // Stuck Y position relative to region
 	naturalRow: number; // Natural row offset relative to content start
@@ -64,7 +64,10 @@ export type DOMElement = {
 	internal_transform?: OutputTransformer;
 	internal_terminalCursorFocus?: boolean;
 	internal_terminalCursorPosition?: number;
-	internalOnBeforeRender?: (node: DOMElement) => void;
+	internalOnBeforeRender?: (
+		node: DOMElement,
+		options?: {trackSelection?: boolean},
+	) => void;
 	cachedRender?: Region;
 
 	internal_accessibility?: {
@@ -235,7 +238,11 @@ export const removeChildNode = (
 	removeNode: DOMNode,
 ): void => {
 	if (removeNode.yogaNode) {
-		removeNode.parentNode?.yogaNode?.removeChild(removeNode.yogaNode);
+		const parentYogaNode = removeNode.yogaNode.getParent();
+
+		if (parentYogaNode) {
+			parentYogaNode.removeChild(removeNode.yogaNode);
+		}
 	}
 
 	removeNode.parentNode = undefined;

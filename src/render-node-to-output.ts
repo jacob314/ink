@@ -26,6 +26,7 @@ export const renderToStatic = (
 		isStickyRender?: boolean;
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
 		selectionStyle?: (char: StyledChar) => StyledChar;
+		trackSelection?: boolean;
 	} = {},
 ) => {
 	if (options.calculateLayout && node.yogaNode) {
@@ -44,6 +45,7 @@ export const renderToStatic = (
 				skipStaticElements: options.skipStaticElements ?? false,
 				selectionMap: options.selectionMap,
 				selectionStyle: options.selectionStyle,
+				trackSelection: options.trackSelection,
 			});
 
 		const parent = stickyNode.parentNode;
@@ -97,6 +99,7 @@ export const renderToStatic = (
 		width,
 		height,
 		id: node.internalId,
+		trackSelection: options.trackSelection,
 	});
 
 	for (const childNode of node.childNodes) {
@@ -108,12 +111,17 @@ export const renderToStatic = (
 			isStickyRender: options.isStickyRender,
 			selectionMap: options.selectionMap,
 			selectionStyle: options.selectionStyle,
+			trackSelection: options.trackSelection,
 		});
 	}
 
 	const rootRegion = staticOutput.get();
 	rootRegion.cachedStickyHeaders = cachedStickyHeaders;
-	rootRegion.selectableText = extractSelectableText(rootRegion.selectableSpans);
+	if (options.trackSelection) {
+		rootRegion.selectableText = extractSelectableText(
+			rootRegion.selectableSpans,
+		);
+	}
 
 	setCachedRender(node, rootRegion);
 };
@@ -133,6 +141,7 @@ function renderNodeToOutput(
 		skipStickyHeaders?: boolean;
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
 		selectionStyle?: (char: StyledChar) => StyledChar;
+		trackSelection?: boolean;
 	},
 ) {
 	const {
@@ -146,6 +155,7 @@ function renderNodeToOutput(
 		skipStickyHeaders = false,
 		selectionMap,
 		selectionStyle,
+		trackSelection,
 	} = options;
 
 	if (skipStaticElements && node.internal_static) {
@@ -213,6 +223,7 @@ function renderNodeToOutput(
 				y,
 				selectionMap,
 				selectionStyle,
+				trackSelection,
 			});
 			return;
 		}
@@ -224,6 +235,7 @@ function renderNodeToOutput(
 				newTransformers,
 				selectionMap,
 				selectionStyle,
+				trackSelection,
 			});
 			return;
 		}
@@ -241,6 +253,7 @@ function renderNodeToOutput(
 			selectionStyle,
 			absoluteOffsetX: absX,
 			absoluteOffsetY: absY,
+			trackSelection,
 		});
 	}
 }

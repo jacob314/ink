@@ -5,6 +5,7 @@
  */
 
 import {Buffer} from 'node:buffer';
+import {type StyledChar} from '@alcalzone/ansi-tokenize';
 import {
 	type RegionNode,
 	type RegionUpdate,
@@ -100,12 +101,13 @@ export class SceneManager {
 
 			// Apply line updates
 			if (update.lines) {
-				while (r.lines.length < update.lines.totalLength) {
-					r.lines.push([]);
+				const mutableLines = r.lines as StyledChar[][];
+				while (mutableLines.length < update.lines.totalLength) {
+					mutableLines.push([]);
 				}
 
-				if (r.lines.length > update.lines.totalLength) {
-					r.lines.length = update.lines.totalLength;
+				if (mutableLines.length > update.lines.totalLength) {
+					mutableLines.length = update.lines.totalLength;
 				}
 
 				for (const chunk of update.lines.updates) {
@@ -113,7 +115,7 @@ export class SceneManager {
 					const chunkLines = deserializer.deserialize();
 
 					for (const [i, line] of chunkLines.entries()) {
-						r.lines[chunk.start + i] = line!;
+						mutableLines[chunk.start + i] = line!;
 					}
 				}
 			}

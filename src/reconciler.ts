@@ -4,7 +4,7 @@ import {
 	DefaultEventPriority,
 	NoEventPriority,
 } from 'react-reconciler/constants.js';
-import Yoga, {type Node as YogaNode} from 'yoga-layout';
+import Yoga from 'yoga-layout';
 import {createContext} from 'react';
 import {
 	createTextNode,
@@ -19,6 +19,7 @@ import {
 	type TextNode,
 	type ElementNames,
 	type DOMElement,
+	type DOMNode,
 } from './dom.js';
 import applyStyles, {type Styles} from './styles.js';
 import {type OutputTransformer} from './render-node-to-output.js';
@@ -83,9 +84,34 @@ const diff = (before: AnyObject, after: AnyObject): AnyObject | undefined => {
 	return isChanged ? changed : undefined;
 };
 
-const cleanupYogaNode = (node?: YogaNode): void => {
-	node?.unsetMeasureFunc();
-	node?.freeRecursive();
+const cleanupNodeTree = (node?: DOMNode): void => {
+	if (!node) {
+		return;
+	}
+
+	node.yogaNode?.unsetMeasureFunc();
+
+	if ('resizeObservers' in node) {
+		node.resizeObservers?.clear();
+	}
+
+	if ('childNodes' in node && node.childNodes) {
+		for (const child of node.childNodes) {
+			cleanupNodeTree(child);
+		}
+	}
+
+	node.yogaNode?.free();
+
+	if ('cachedRender' in node) {
+		node.cachedRender = undefined;
+	}
+
+	if ('childNodes' in node) {
+		node.childNodes = [];
+	}
+
+	node.parentNode = undefined;
 };
 
 type Props = Record<string, unknown>;
@@ -281,7 +307,7 @@ export default createReconciler<
 	insertInContainerBefore: insertBeforeNode,
 	removeChildFromContainer(node, removeNode) {
 		removeChildNode(node, removeNode);
-		cleanupYogaNode(removeNode.yogaNode);
+		cleanupNodeTree(removeNode);
 	},
 	commitUpdate(node, _type, oldProps, newProps) {
 		if (currentRootNode && node.internal_static) {
@@ -364,7 +390,7 @@ export default createReconciler<
 	},
 	removeChild(node, removeNode) {
 		removeChildNode(node, removeNode);
-		cleanupYogaNode(removeNode.yogaNode);
+		cleanupNodeTree(removeNode);
 	},
 	setCurrentUpdatePriority(newPriority: number) {
 		currentUpdatePriority = newPriority;

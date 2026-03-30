@@ -18,13 +18,31 @@ import {
 	flattenRegion,
 	regionLayoutProperties,
 	copyRegionProperty,
+	treesEqual,
 } from './output.js';
 import {type InkOptions} from './components/AppContext.js';
 
 const debugEdits = false;
 
 export default class TerminalBuffer {
-	public lines: StyledChar[][] = [];
+	public get lines(): StyledChar[][] {
+		if (this._cachedLines) {
+			return this._cachedLines;
+		}
+
+		if (this.lastRootRegion) {
+			this._cachedLines = flattenRegion(this.lastRootRegion, {
+				skipScrollbars: true,
+				skipStickyHeaders: true,
+			});
+			return this._cachedLines;
+		}
+
+		return [];
+	}
+
+	private _cachedLines?: StyledChar[][];
+	private lastRootRegion?: Region;
 	private readonly serializer = new Serializer();
 	private readonly worker?: ChildProcess;
 	private readonly workerInstance?: TerminalBufferWorker;
@@ -34,6 +52,7 @@ export default class TerminalBuffer {
 	// Track previous state of all regions by ID
 	private lastRegions = new Map<string | number, Region>();
 	private lastCursorPosition?: {row: number; col: number};
+	private lastTree?: RegionNode;
 
 	private lastOptions?: InkOptions;
 	private optionsChanged = false;
@@ -55,6 +74,7 @@ export default class TerminalBuffer {
 			backbufferUpdateDelay?: number;
 			maxScrollbackLength?: number;
 			forceScrollToBottomOnBackbufferRefresh?: boolean;
+			cacheToStyledCharacters?: boolean;
 		},
 	) {
 		this.lastOptions = {
@@ -115,6 +135,7 @@ export default class TerminalBuffer {
 					maxScrollbackLength: options?.maxScrollbackLength,
 					forceScrollToBottomOnBackbufferRefresh:
 						options?.forceScrollToBottomOnBackbufferRefresh,
+					cacheToStyledCharacters: options?.cacheToStyledCharacters,
 				},
 				'Failed to send init message to worker:',
 			);
@@ -231,10 +252,8 @@ export default class TerminalBuffer {
 		root: Region,
 		cursorPosition?: {row: number; col: number},
 	): boolean {
-		this.lines = flattenRegion(root, {
-			skipScrollbars: true,
-			skipStickyHeaders: true,
-		});
+		this.lastRootRegion = root;
+		this._cachedLines = undefined;
 		const currentRegionsMap = new Map<string | number, Region>();
 		const nodeIdToElement = new Map<number, DOMElement>();
 		const updates: RegionUpdate[] = [];
@@ -263,6 +282,9 @@ export default class TerminalBuffer {
 
 		const tree = buildTree(root);
 
+		const treeChanged = !this.lastTree || !treesEqual(this.lastTree, tree);
+		this.lastTree = tree;
+
 		// Update local state to current frame
 		this.lastRegions = currentRegionsMap;
 
@@ -275,7 +297,12 @@ export default class TerminalBuffer {
 
 		this.lastCursorPosition = cursorPosition;
 
-		if (updates.length > 0 || cursorChanged || this.optionsChanged) {
+		if (
+			updates.length > 0 ||
+			cursorChanged ||
+			this.optionsChanged ||
+			treeChanged
+		) {
 			this.optionsChanged = false;
 			this.sendEdits(tree, updates, cursorPosition);
 			return true;
@@ -485,14 +512,18 @@ export default class TerminalBuffer {
 	}
 
 	private diffLines(
-		oldLines: StyledChar[][],
-		newLines: StyledChar[][],
+		oldLines: ReadonlyArray<readonly StyledChar[]>,
+		newLines: ReadonlyArray<readonly StyledChar[]>,
 	): Array<{
 		start: number;
 		end: number;
 		data: Uint8Array;
 		source?: Uint8Array;
 	}> {
+		if (oldLines === newLines) {
+			return [];
+		}
+
 		const updates: Array<{
 			start: number;
 			end: number;
@@ -502,9 +533,8 @@ export default class TerminalBuffer {
 
 		const limit = Math.max(oldLines.length, newLines.length);
 		let chunkStart = -1;
-		let chunkLines: StyledChar[][] = [];
-		let chunkSource: StyledChar[][] = [];
-
+		let chunkLines: Array<readonly StyledChar[]> = [];
+		let chunkSource: Array<readonly StyledChar[]> = [];
 		for (let i = 0; i < limit; i++) {
 			const newLine = newLines[i];
 			const oldLine = oldLines[i];

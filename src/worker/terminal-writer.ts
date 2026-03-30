@@ -52,8 +52,8 @@ export type RenderLine = {
 };
 
 export function linesEqual(
-	lineA: StyledChar[] | undefined,
-	lineB: StyledChar[] | undefined,
+	lineA: readonly StyledChar[] | undefined,
+	lineB: readonly StyledChar[] | undefined,
 ): boolean {
 	if (lineA === lineB) {
 		return true;
@@ -67,21 +67,23 @@ export function linesEqual(
 		return false;
 	}
 
-	for (const [i, charA] of lineA.entries()) {
-		const charB = lineB[i];
+	for (const [i, element] of lineA.entries()) {
+		const charA = element;
+		const charB = lineB[i]!;
 
-		if (charA.value !== charB!.value || charA.fullWidth !== charB!.fullWidth) {
+		if (charA.value !== charB.value || charA.fullWidth !== charB.fullWidth) {
 			return false;
 		}
 
-		if (charA.styles.length !== charB!.styles.length) {
+		if (charA.styles.length !== charB.styles.length) {
 			return false;
 		}
 
-		for (const [j, styleA] of charA.styles.entries()) {
-			const styleB = charB!.styles[j];
+		for (let j = 0; j < charA.styles.length; j++) {
+			const styleA = charA.styles[j]!;
+			const styleB = charB.styles[j]!;
 
-			if (styleA.code !== styleB!.code || styleA.endCode !== styleB!.endCode) {
+			if (styleA.code !== styleB.code || styleA.endCode !== styleB.endCode) {
 				return false;
 			}
 		}
@@ -404,7 +406,8 @@ export class TerminalWriter {
 		}
 
 		if (visualWidth <= width) {
-			const styledChars = line.slice(0, trimmedLength);
+			const styledChars =
+				trimmedLength === line.length ? line : line.slice(0, trimmedLength);
 			return {
 				styledChars,
 				text: styledCharsToString(styledChars),
