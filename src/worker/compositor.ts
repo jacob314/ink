@@ -10,7 +10,6 @@ import {calculateScrollbarThumb} from '../measure-element.js';
 import {renderScrollbar} from '../render-scrollbar.js';
 import colorize from '../colorize.js';
 import {type Canvas, type Rect} from './canvas.js';
-import {StyledLine} from '../styled-line.js';
 
 export type CompositionOptions = {
 	skipStickyHeaders?: boolean;
@@ -79,29 +78,29 @@ export class Compositor {
 						if (region.backgroundColor) {
 							const bgColor = this.getBackgroundStyles(region.backgroundColor);
 							if (bgColor) {
-								const newChar = new StyledLine();
-								newChar.pushChar(
+								canvas.setChar(
+									sx,
+									sy,
 									val,
 									line.getFormatFlags(contentX),
 									line.getFgColor(contentX),
 									bgColor,
 									line.getLink(contentX),
 								);
-								canvas.setChar(sx, sy, newChar);
 								continue;
 							}
 						}
 					}
 
-					const newChar = new StyledLine();
-					newChar.pushChar(
+					canvas.setChar(
+						sx,
+						sy,
 						val,
 						line.getFormatFlags(contentX),
 						line.getFgColor(contentX),
 						line.getBgColor(contentX),
 						line.getLink(contentX),
 					);
-					canvas.setChar(sx, sy, newChar);
 				}
 			}
 		}
@@ -218,15 +217,15 @@ export class Compositor {
 				for (let sx = hx1; sx < hx2; sx++) {
 					const cx = sx - headerX;
 					if (cx < line.length) {
-						const newChar = new StyledLine();
-						newChar.pushChar(
+						canvas.setChar(
+							sx,
+							sy,
 							line.getValue(cx),
 							line.getFormatFlags(cx),
 							line.getFgColor(cx),
 							line.getBgColor(cx),
 							line.getLink(cx),
 						);
-						canvas.setChar(sx, sy, newChar);
 					}
 				}
 			}
@@ -304,8 +303,8 @@ export class Compositor {
 				clip,
 				axis: 'vertical',
 				color: region.scrollbarThumbColor,
-				setChar(x, y, char) {
-					canvas.setChar(x, y, char);
+				setChar(x, y, value, formatFlags, fgColor, bgColor, link) {
+					canvas.setChar(x, y, value, formatFlags, fgColor, bgColor, link);
 				},
 				getExistingChar(x, y) {
 					return canvas.getChar(x, y);
@@ -348,8 +347,8 @@ export class Compositor {
 				clip,
 				axis: 'horizontal',
 				color: region.scrollbarThumbColor,
-				setChar(x, y, char) {
-					canvas.setChar(x, y, char);
+				setChar(x, y, value, formatFlags, fgColor, bgColor, link) {
+					canvas.setChar(x, y, value, formatFlags, fgColor, bgColor, link);
 				},
 				getExistingChar(x, y) {
 					return canvas.getChar(x, y);

@@ -1021,20 +1021,20 @@ function composeRegion(
 					clip: myClip,
 					axis: 'vertical',
 					color: region.scrollbarThumbColor,
-					setChar(x, y, char) {
+					setChar(x, y, value, formatFlags, fgColor, bgColor, link) {
 						if (
 							y >= 0 &&
 							y < targetLines.length &&
 							x >= 0 &&
-							x < targetLines[0]!.length
+							x < (targetLines[0]?.length ?? 0)
 						) {
 							targetLines[y]!.setChar(
 								x,
-								char.getValue(0),
-								char.getFormatFlags(0),
-								char.getFgColor(0),
-								char.getBgColor(0),
-								char.getLink(0),
+								value,
+								formatFlags,
+								fgColor,
+								bgColor,
+								link,
 							);
 						}
 					},
@@ -1063,20 +1063,20 @@ function composeRegion(
 					clip: myClip,
 					axis: 'horizontal',
 					color: region.scrollbarThumbColor,
-					setChar(x, y, char) {
+					setChar(x, y, value, formatFlags, fgColor, bgColor, link) {
 						if (
 							y >= 0 &&
 							y < targetLines.length &&
 							x >= 0 &&
-							x < targetLines[0]!.length
+							x < (targetLines[0]?.length ?? 0)
 						) {
 							targetLines[y]!.setChar(
 								x,
-								char.getValue(0),
-								char.getFormatFlags(0),
-								char.getFgColor(0),
-								char.getBgColor(0),
-								char.getLink(0),
+								value,
+								formatFlags,
+								fgColor,
+								bgColor,
+								link,
 							);
 						}
 					},

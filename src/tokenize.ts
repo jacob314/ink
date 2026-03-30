@@ -267,7 +267,7 @@ export function tokenize(
 	return ret;
 }
 
-export const BOLD_MASK = Math.trunc(1);
+export const BOLD_MASK = 1;
 export const DIM_MASK = 1 << 1;
 export const ITALIC_MASK = 1 << 2;
 export const UNDERLINE_MASK = 1 << 3;

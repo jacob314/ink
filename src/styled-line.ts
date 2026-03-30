@@ -1,3 +1,9 @@
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import {FULL_WIDTH_MASK, INVERSE_MASK} from './tokenize.js';
 
 export type StyleSpan = {
@@ -8,17 +14,20 @@ export type StyleSpan = {
 	link?: string;
 };
 
+const MAX_SAFE_OFFSET = 0x7f_ff;
+
 export class StyledLine {
 	static empty(length: number): StyledLine {
+		const safeLength = Math.min(length, MAX_SAFE_OFFSET);
 		const line = new StyledLine();
-		line.length = length;
-		line.text = ' '.repeat(length);
-		line.charData = new Uint16Array(Math.max(length, 16));
-		for (let i = 0; i < length; i++) {
+		line.length = safeLength;
+		line.text = ' '.repeat(safeLength);
+		line.charData = new Uint16Array(Math.max(safeLength, 16));
+		for (let i = 0; i < safeLength; i++) {
 			line.charData[i] = i;
 		}
 
-		line.spans = length > 0 ? [{length, formatFlags: 0}] : [];
+		line.spans = safeLength > 0 ? [{length: safeLength, formatFlags: 0}] : [];
 		return line;
 	}
 
@@ -28,15 +37,27 @@ export class StyledLine {
 	private spans: StyleSpan[];
 
 	constructor(values: string[] = [], spans: StyleSpan[] = []) {
-		this.length = values.length;
-		this.text = values.join('');
+		let totalTextLen = 0;
+		let visibleChars = 0;
+		for (const val of values) {
+			if (totalTextLen + val.length > MAX_SAFE_OFFSET - 1) {
+				break;
+			}
+
+			totalTextLen += val.length;
+			visibleChars++;
+		}
+
+		const truncated = visibleChars < values.length;
+		this.length = visibleChars + (truncated ? 1 : 0);
+		this.text = values.slice(0, visibleChars).join('') + (truncated ? '…' : '');
 		this.charData = new Uint16Array(Math.max(this.length, 16));
 
 		let currentOffset = 0;
 		let spanIdx = 0;
 		let spanPos = 0;
 
-		for (let i = 0; i < this.length; i++) {
+		for (let i = 0; i < visibleChars; i++) {
 			const val = values[i]!;
 			let isFullWidth = false;
 
@@ -57,10 +78,31 @@ export class StyledLine {
 			currentOffset += val.length;
 		}
 
-		this.spans = spans.map(s => ({
-			...s,
-			formatFlags: s.formatFlags & ~FULL_WIDTH_MASK,
-		}));
+		if (truncated) {
+			this.charData[visibleChars] = currentOffset;
+		}
+
+		if (truncated) {
+			const newSpans: StyleSpan[] = [];
+			let remaining = visibleChars;
+			let sIdx = 0;
+			while (remaining > 0 && sIdx < spans.length) {
+				const span = spans[sIdx]!;
+				const take = Math.min(remaining, span.length);
+				newSpans.push({...span, length: take});
+				remaining -= take;
+				sIdx++;
+			}
+
+			newSpans.push({length: 1, formatFlags: 0});
+			this.spans = newSpans;
+		} else {
+			this.spans = spans.map(s => ({
+				...s,
+				formatFlags: s.formatFlags & ~FULL_WIDTH_MASK,
+			}));
+		}
+
 		this.mergeSpans();
 	}
 
@@ -201,12 +243,21 @@ export class StyledLine {
 				? this.charData[index + 1]! & 0x7f_ff
 				: this.text.length;
 		const oldLen = end - start;
-		const newLen = value.length;
+
+		let newValue = value;
+		if (this.text.length - oldLen + value.length > MAX_SAFE_OFFSET) {
+			newValue = value.slice(
+				0,
+				Math.max(0, MAX_SAFE_OFFSET - (this.text.length - oldLen)),
+			);
+		}
+
+		const newLen = newValue.length;
 
 		if (oldLen === newLen) {
-			this.text = this.text.slice(0, start) + value + this.text.slice(end);
+			this.text = this.text.slice(0, start) + newValue + this.text.slice(end);
 		} else {
-			this.text = this.text.slice(0, start) + value + this.text.slice(end);
+			this.text = this.text.slice(0, start) + newValue + this.text.slice(end);
 			const diff = newLen - oldLen;
 			for (let i = index + 1; i < this.length; i++) {
 				const data = this.charData[i]!;
@@ -253,6 +304,18 @@ export class StyledLine {
 		const cleanFormatFlags = formatFlags & ~FULL_WIDTH_MASK;
 
 		const offset = this.text.length;
+		if (value !== '…' && offset + value.length > MAX_SAFE_OFFSET - 1) {
+			if (offset < MAX_SAFE_OFFSET && !this.text.endsWith('…')) {
+				this.pushChar('…', formatFlags, fgColor, bgColor, link);
+			}
+
+			return;
+		}
+
+		if (offset + value.length > MAX_SAFE_OFFSET) {
+			return;
+		}
+
 		this.text += value;
 
 		if (this.length >= this.charData.length) {
@@ -349,22 +412,67 @@ export class StyledLine {
 	}
 
 	concat(other: StyledLine): StyledLine {
+		const spaceForOther = MAX_SAFE_OFFSET - 1 - this.text.length;
+		if (spaceForOther <= 0) {
+			if (this.text.length < MAX_SAFE_OFFSET && !this.text.endsWith('…')) {
+				const result = this.clone();
+				result.pushChar('…', 0);
+				return result;
+			}
+
+			return this.clone();
+		}
+
+		let otherTextLenToTake = 0;
+		let otherCharsToTake = 0;
+		for (let i = 0; i < other.length; i++) {
+			const val = other.getValue(i);
+			if (otherTextLenToTake + val.length > spaceForOther) {
+				break;
+			}
+
+			otherTextLenToTake += val.length;
+			otherCharsToTake++;
+		}
+
+		const truncated = otherCharsToTake < other.length;
 		const result = new StyledLine();
-		result.length = this.length + other.length;
-		result.text = this.text + other.text;
+		result.length = this.length + otherCharsToTake + (truncated ? 1 : 0);
+		result.text =
+			this.text +
+			other.text.slice(0, otherTextLenToTake) +
+			(truncated ? '…' : '');
 		result.charData = new Uint16Array(Math.max(result.length, 16));
 
 		result.charData.set(this.charData.subarray(0, this.length), 0);
 
 		const textOffset = this.text.length;
-		for (let i = 0; i < other.length; i++) {
+		for (let i = 0; i < otherCharsToTake; i++) {
 			const oldData = other.charData[i]!;
 			const oldOffset = oldData & 0x7f_ff;
 			const fw = oldData & 0x80_00;
 			result.charData[this.length + i] = (oldOffset + textOffset) | fw;
 		}
 
-		result.spans = [...this.spans, ...other.spans.map(s => ({...s}))];
+		if (truncated) {
+			result.charData[this.length + otherCharsToTake] =
+				this.text.length + otherTextLenToTake;
+		}
+
+		const otherSpans: StyleSpan[] = [];
+		let remaining = otherCharsToTake;
+		for (const span of other.spans) {
+			if (remaining <= 0) break;
+			const take = Math.min(remaining, span.length);
+			otherSpans.push({...span, length: take});
+			remaining -= take;
+		}
+
+		result.spans = [...this.spans, ...otherSpans];
+		if (truncated) {
+			result.spans.push({length: 1, formatFlags: 0});
+		}
+
 		result.mergeSpans();
 		return result;
 	}

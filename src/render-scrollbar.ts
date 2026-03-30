@@ -1,7 +1,6 @@
 import colorize from './colorize.js';
 import {toStyledCharacters} from './measure-text.js';
 import {type ScrollbarBoundingBox} from './measure-element.js';
-import {StyledLine} from './styled-line.js';
 
 export type ScrollbarThumb = {
 	startIndex: number;
@@ -20,7 +19,15 @@ export type DrawOptions = {
 	};
 	axis: 'vertical' | 'horizontal';
 	color?: string;
-	setChar: (x: number, y: number, char: StyledLine) => void;
+	setChar: (
+		x: number,
+		y: number,
+		value: string,
+		formatFlags: number,
+		fgColor?: string,
+		bgColor?: string,
+		link?: string,
+	) => void;
 	getExistingChar?: (x: number, y: number) => {bgColor?: string} | undefined;
 };
 
@@ -42,29 +49,6 @@ export const renderScrollbar = ({
 			endHalf: thumbEndHalf,
 		},
 	} = layout;
-
-	const applyBackground = (
-		char: StyledLine,
-		existingChar?: {bgColor?: string},
-	) => {
-		if (!existingChar) return char;
-
-		const backgroundStyle = existingChar.bgColor;
-
-		if (backgroundStyle) {
-			const newChar = new StyledLine();
-			newChar.pushChar(
-				char.getValue(0),
-				char.getFormatFlags(0),
-				char.getFgColor(0),
-				backgroundStyle,
-				char.getLink(0),
-			);
-			return newChar;
-		}
-
-		return char;
-	};
 
 	if (axis === 'vertical') {
 		for (let i = startIndex; i < endIndex; i++) {
@@ -89,15 +73,26 @@ export const renderScrollbar = ({
 				}
 
 				const charString = color ? colorize(char, color, 'foreground') : char;
-				let styled = toStyledCharacters(charString);
+				const styled = toStyledCharacters(charString);
 
 				if (styled.length > 0) {
+					let bgColor = styled.getBgColor(0);
 					if (getExistingChar && (char === '▀' || char === '▄')) {
 						const existing = getExistingChar(drawX, drawY);
-						styled = applyBackground(styled, existing);
+						if (existing?.bgColor) {
+							bgColor = existing.bgColor;
+						}
 					}
 
-					setChar(drawX, drawY, styled);
+					setChar(
+						drawX,
+						drawY,
+						styled.getValue(0),
+						styled.getFormatFlags(0),
+						styled.getFgColor(0),
+						bgColor,
+						styled.getLink(0),
+					);
 				}
 			}
 		}
@@ -124,15 +119,26 @@ export const renderScrollbar = ({
 				}
 
 				const charString = color ? colorize(char, color, 'foreground') : char;
-				let styled = toStyledCharacters(charString);
+				const styled = toStyledCharacters(charString);
 
 				if (styled.length > 0) {
+					let bgColor = styled.getBgColor(0);
 					if (getExistingChar && (char === '▌' || char === '▐')) {
 						const existing = getExistingChar(drawX, drawY);
-						styled = applyBackground(styled, existing);
+						if (existing?.bgColor) {
+							bgColor = existing.bgColor;
+						}
 					}
 
-					setChar(drawX, drawY, styled);
+					setChar(
+						drawX,
+						drawY,
+						styled.getValue(0),
+						styled.getFormatFlags(0),
+						styled.getFgColor(0),
+						bgColor,
+						styled.getLink(0),
+					);
 				}
 			}
 		}
