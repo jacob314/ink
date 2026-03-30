@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {type StyledChar} from './tokenize.js';
+import {StyledChar} from './styled-line.js';
 import {type DOMElement, type DOMNode} from './dom.js';
 import type Output from './output.js';
 import {toStyledCharacters} from './measure-text.js';
@@ -28,7 +28,7 @@ export function handleCachedRenderNode(
 		const range = selectionMap.get(node)!;
 		const clonedRegionObj = {
 			...node.cachedRender,
-			lines: node.cachedRender.lines.map(line => [...line]),
+			lines: node.cachedRender.lines.map(line => line.slice(0, line.length)),
 			selectableSpans: node.cachedRender.selectableSpans.map(span => ({
 				...span,
 			})),
@@ -62,15 +62,27 @@ export function handleCachedRenderNode(
 			let spanCharX = span.startX;
 			const styledChars = toStyledCharacters(span.text);
 			for (const char of styledChars) {
-				const charLen = char.getValue().length;
-				const charWidth = char.getFullWidth() ? 2 : 1;
+				const charLen = char.value.length;
+				const charWidth = char.fullWidth ? 2 : 1;
 
 				if (currentOffset >= range.start && currentOffset < range.end) {
 					const line = clonedRegionObj.lines[span.y];
-					if (line?.[spanCharX]) {
-						line[spanCharX] = applySelectionStyle(
-							line[spanCharX]!,
-							selectionStyle,
+					if (line && spanCharX < line.length) {
+						const existingChar = new StyledChar(
+							line.getValue(spanCharX),
+							line.getFormatFlags(spanCharX),
+							line.getFgColor(spanCharX),
+							line.getBgColor(spanCharX),
+							line.getLink(spanCharX),
+						);
+						const newChar = applySelectionStyle(existingChar, selectionStyle);
+						line.setChar(
+							spanCharX,
+							newChar.getValue(),
+							newChar.formatFlags,
+							newChar.fgColor,
+							newChar.bgColor,
+							newChar.link,
 						);
 					}
 				}

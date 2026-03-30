@@ -1,12 +1,11 @@
 import test from 'ava';
 import xtermHeadless, {type Terminal} from '@xterm/headless';
 import chalk from 'chalk';
-import {StyledChar} from '../src/tokenize.js';
+import {StyledLine} from '../src/styled-line.js';
 import {TerminalBufferWorker} from '../src/worker/render-worker.js';
 import {Serializer} from '../src/serialization.js';
 import {rainbowColors} from '../src/worker/terminal-writer.js';
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 const {Terminal: XtermTerminal} = xtermHeadless;
 
 // Force color support for testing rainbow colors
@@ -14,15 +13,13 @@ chalk.level = 3;
 
 const serializer = new Serializer();
 
-const createStyledChar = (char: string) => new StyledChar(char, 0);
-
-const createStyledLine = (text: string, width = 80) => {
-	const chars = [...text].map(char => createStyledChar(char));
-	while (chars.length < width) {
-		chars.push(createStyledChar(' '));
+const createStyledLine = (text: string): StyledLine => {
+	const line = new StyledLine();
+	for (const char of text) {
+		line.pushChar(char, 0);
 	}
 
-	return chars;
+	return line;
 };
 
 const writeToTerm = async (term: Terminal, data: string): Promise<void> =>

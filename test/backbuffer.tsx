@@ -1,6 +1,6 @@
 import React from 'react';
 import test from 'ava';
-import {StyledChar} from '../src/tokenize.js';
+import {type StyledLine} from '../src/styled-line.js';
 import {type Region} from '../src/output.js';
 import {render} from '../src/index.js';
 import instances from '../src/instances.js';
@@ -17,13 +17,13 @@ class WriteStream {
 
 const createStyledChar = (char: string): StyledChar => new StyledChar(char, 0);
 
-const createLine = (text: string): StyledChar[] =>
+const createLine = (text: string): StyledLine =>
 	[...text].map(char => createStyledChar(char));
 
 test('captures clipped cachedRender content into backbuffer', t => {
 	const stdout = new WriteStream() as unknown as NodeJS.WriteStream;
 
-	const cachedOutput: StyledChar[][] = [
+	const cachedOutput: StyledLine[] = [
 		createLine('Line 1 (cached)'),
 		createLine('Line 2 (cached)'),
 		createLine('Line 3 (cached)'),
@@ -86,7 +86,7 @@ test('captures clipped cachedRender content into backbuffer', t => {
 
 	// Inspect lines in terminalBuffer
 	// terminalBuffer.lines is private, cast to any
-	const lines = terminalBuffer.lines as StyledChar[][];
+	const lines = terminalBuffer.lines as StyledLine[];
 
 	// We expect lines 1 and 2 to be in the backbuffer because they are shifted up by 2.
 	const line0 = lines[0]

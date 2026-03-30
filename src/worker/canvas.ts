@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {StyledChar} from '../tokenize.js';
+import {StyledLine} from '../styled-line.js';
 import {type RenderLine} from './terminal-writer.js';
 
 export type Rect = {
@@ -19,21 +19,15 @@ export type Rect = {
  * Handles clipping and bounds checking.
  */
 export class Canvas {
-	/**
-	 * Creates a new Canvas from a set of lines.
-	 */
 	static fromLines(width: number, height: number, lines: RenderLine[]): Canvas {
 		return new Canvas(width, height, lines);
 	}
 
-	/**
-	 * Creates an empty Canvas with the given dimensions.
-	 */
 	static create(width: number, height: number, tainted = false): Canvas {
 		const lines: RenderLine[] = [];
 		for (let i = 0; i < height; i++) {
 			lines.push({
-				styledChars: [],
+				styledChars: new StyledLine(),
 				text: '',
 				length: 0,
 				tainted,
@@ -49,26 +43,20 @@ export class Canvas {
 		private readonly lines: RenderLine[],
 	) {}
 
-	/**
-	 * Returns the character at the given coordinates.
-	 */
-	getChar(x: number, y: number): StyledChar | undefined {
+	getChar(x: number, y: number): {bgColor?: string} | undefined {
 		if (y < 0 || y >= this.height || x < 0 || x >= this.width) {
 			return undefined;
 		}
 
 		const line = this.lines[y];
-		if (!line) {
+		if (!line || x >= line.styledChars.length) {
 			return undefined;
 		}
 
-		return line.styledChars[x];
+		return {bgColor: line.styledChars.getBgColor(x)};
 	}
 
-	/**
-	 * Sets a character at the given coordinates, respecting clipping.
-	 */
-	setChar(x: number, y: number, char: StyledChar, clip?: Rect) {
+	setChar(x: number, y: number, char: StyledLine, clip?: Rect) {
 		if (y < 0 || y >= this.height || x < 0 || x >= this.width) {
 			return;
 		}
@@ -85,20 +73,34 @@ export class Canvas {
 			return;
 		}
 
-		// Ensure the line is long enough
 		while (line.styledChars.length <= x) {
-			line.styledChars.push(new StyledChar(' ', 0));
+			line.styledChars.pushChar(' ', 0);
 		}
 
-		line.styledChars[x] = char;
+		line.styledChars.setChar(
+			x,
+			char.getValue(0),
+			char.getFormatFlags(0),
+			char.getFgColor(0),
+			char.getBgColor(0),
+			char.getLink(0),
+		);
 	}
 
 	/**
 	 * Draws a sequence of characters starting at (x, y).
 	 */
-	drawStyledChars(x: number, y: number, chars: StyledChar[], clip?: Rect) {
-		for (const [i, char] of chars.entries()) {
-			this.setChar(x + i, y, char, clip);
+	drawStyledChars(x: number, y: number, chars: StyledLine, clip?: Rect) {
+		for (let i = 0; i < chars.length; i++) {
+			const styledChar = new StyledLine();
+			styledChar.pushChar(
+				chars.getValue(i),
+				chars.getFormatFlags(i),
+				chars.getFgColor(i),
+				chars.getBgColor(i),
+				chars.getLink(i),
+			);
+			this.setChar(x + i, y, styledChar, clip);
 		}
 	}
 

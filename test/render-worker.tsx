@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
 import test from 'ava';
-import {StyledChar} from '../src/tokenize.js';
+import {type StyledLine} from '../src/styled-line.js';
 import {TerminalBufferWorker} from '../src/worker/render-worker.js';
 import {Serializer} from '../src/serialization.js';
 
@@ -8,18 +8,18 @@ const serializer = new Serializer();
 
 const createStyledChar = (char: string): StyledChar => new StyledChar(char, 0);
 
-const createLine = (text: string): StyledChar[] =>
+const createLine = (text: string): StyledLine =>
 	[...text].map(char => createStyledChar(char));
 
 class TestWorkerWrapper {
-	lines: StyledChar[][] = [];
+	lines: StyledLine[] = [];
 
 	constructor(public worker: TerminalBufferWorker) {}
 
 	// Simulate an update (overwrite)
 	update(
 		start: number,
-		newLines: StyledChar[][],
+		newLines: StyledLine[],
 		cursorPosition?: {row: number; col: number},
 	) {
 		// Update local model
@@ -52,10 +52,7 @@ class TestWorkerWrapper {
 		);
 	}
 
-	append(
-		newLines: StyledChar[][],
-		cursorPosition?: {row: number; col: number},
-	) {
+	append(newLines: StyledLine[], cursorPosition?: {row: number; col: number}) {
 		const start = this.lines.length;
 		this.lines.push(...newLines);
 		const data = serializer.serialize(newLines);

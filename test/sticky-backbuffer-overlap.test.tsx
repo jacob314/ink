@@ -24,7 +24,7 @@ test('sticky header should not overlap with bottom border when pushed out', asyn
 		off() {},
 		removeListener() {},
 		end() {},
-		// eslint-disable-next-line @typescript-eslint/naming-convention
+
 		isTTY: true,
 	} as unknown as NodeJS.WriteStream;
 

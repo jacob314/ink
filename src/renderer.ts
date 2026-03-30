@@ -1,4 +1,4 @@
-import {type StyledChar, styledCharsToString} from './tokenize.js';
+import {type StyledLine, type StyledChar} from './styled-line.js';
 import renderNodeToOutput from './render-node-to-output.js';
 import {renderNodeToScreenReaderOutput} from './render-screen-reader.js';
 import Output, {
@@ -18,7 +18,7 @@ type Result = {
 	output: string;
 	outputHeight: number;
 	staticOutput: string;
-	styledOutput: StyledChar[][];
+	styledOutput: StyledLine[];
 	cursorPosition?: {row: number; col: number};
 	stickyHeaders: StickyHeader[];
 	root?: Region;
@@ -388,8 +388,7 @@ function regionToOutput(
 	// Flatten the root region for legacy string output
 	const generatedOutput = lines
 		.map(line => {
-			const lineWithoutEmptyItems = line.filter(item => item !== undefined);
-			return styledCharsToString(lineWithoutEmptyItems).trimEnd();
+			return line.trimEnd().getValues().join('');
 		})
 		.join('\n');
 

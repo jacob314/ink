@@ -1,17 +1,20 @@
 import test from 'ava';
-import {StyledChar} from '../src/tokenize.js';
+import {StyledLine} from '../src/styled-line.js';
 import xtermHeadless, {type Terminal as XtermTerminal} from '@xterm/headless';
 import {TerminalBufferWorker} from '../src/worker/render-worker.js';
 import {Serializer} from '../src/serialization.js';
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 const {Terminal} = xtermHeadless;
 const serializer = new Serializer();
 
-const createStyledChar = (char: string): StyledChar => new StyledChar(char, 0);
+const createStyledLine = (text: string): StyledLine => {
+	const line = new StyledLine();
+	for (const char of text) {
+		line.pushChar(char, 0);
+	}
 
-const createStyledLine = (text: string): StyledChar[] =>
-	[...text].map(char => createStyledChar(char));
+	return line;
+};
 
 const writeToTerm = async (term: XtermTerminal, data: string): Promise<void> =>
 	new Promise(resolve => {

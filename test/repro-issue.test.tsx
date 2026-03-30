@@ -32,7 +32,7 @@ const createTestEnv = (
 		off() {},
 		removeListener() {},
 		end() {},
-		// eslint-disable-next-line @typescript-eslint/naming-convention
+
 		isTTY: true,
 	} as unknown as NodeJS.WriteStream;
 

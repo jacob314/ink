@@ -1,15 +1,13 @@
 import {Buffer} from 'node:buffer';
-import {StyledChar, FULL_WIDTH_MASK} from './tokenize.js';
+import {FULL_WIDTH_MASK} from './tokenize.js';
+import {StyledLine} from './styled-line.js';
 
 const hasStylesMask = 0b0000_0010;
 const fullWidthMask = 0b0000_0001;
 const isRepeatedCharMask = 0b0000_0100;
 const isAsciiMixedMask = 0b0000_1000;
 
-export type StyledLine = StyledChar[];
-
 export class Serializer {
-	// eslint-disable-next-line @typescript-eslint/ban-types
 	private buffer: Buffer;
 	private currentSize = 0;
 
@@ -17,7 +15,7 @@ export class Serializer {
 		this.buffer = Buffer.allocUnsafe(initialSize);
 	}
 
-	serialize(lines: ReadonlyArray<readonly StyledChar[]>): Uint8Array {
+	serialize(lines: readonly StyledLine[]): Uint8Array {
 		this.currentSize = 0;
 		this.writeUint32(lines.length);
 		for (const line of lines) {
@@ -41,75 +39,51 @@ export class Serializer {
 		}
 	}
 
-	private writeLine(line: readonly StyledChar[]) {
+	private writeLine(line: StyledLine) {
 		if (line.length === 0) {
 			this.writeUint32(0);
 			return;
 		}
 
-		let spanCount = 0;
-		for (let i = 0; i < line.length; i++) {
-			if (i === 0 || !this.isSameStyle(line[i - 1]!, line[i]!)) {
-				spanCount++;
-			}
-		}
+		const spans = line.getSpans();
+		this.writeUint32(spans.length);
 
-		this.writeUint32(spanCount);
-
-		let currentSpanStart = 0;
-		for (let i = 1; i <= line.length; i++) {
-			if (i === line.length || !this.isSameStyle(line[i - 1]!, line[i]!)) {
-				this.writeSpan(line, currentSpanStart, i);
-				currentSpanStart = i;
-			}
+		let offset = 0;
+		for (const span of spans) {
+			this.writeSpan(line, span, offset);
+			offset += span.length;
 		}
 	}
 
-	private isSameStyle(charA: StyledChar, charB: StyledChar): boolean {
-		if (charA.hasStyles() !== charB.hasStyles()) {
-			return false;
-		}
+	private writeSpan(line: StyledLine, span: any, start: number) {
+		this.writeUint32(span.length);
 
-		if (!charA.hasStyles()) {
-			return true;
-		}
-
-		// Internal access for performance during serialization
-		const a = charA;
-		const b = charB;
-
-		return (
-			a.formatFlags === b.formatFlags &&
-			a.fgColor === b.fgColor &&
-			a.bgColor === b.bgColor &&
-			a.link === b.link
-		);
-	}
-
-	private writeSpan(line: readonly StyledChar[], start: number, end: number) {
-		const spanLength = end - start;
-		this.writeUint32(spanLength);
-
-		const firstChar = line[start]!;
+		const end = start + span.length;
+		const firstVal = line.getValue(start);
+		const firstFullWidth = line.getFullWidth(start);
 		let isRepeatedChar = true;
 		let isAsciiMixed = true;
 
 		for (let i = start; i < end; i++) {
-			const char = line[i]!;
-			if (
-				char.getValue() !== firstChar.getValue() ||
-				char.getFullWidth() !== firstChar.getFullWidth()
-			) {
+			const val = line.getValue(i);
+			if (val !== firstVal || line.getFullWidth(i) !== firstFullWidth) {
 				isRepeatedChar = false;
 			}
 
-			if (char.getFullWidth() || char.getValue().length !== 1) {
+			if (line.getFullWidth(i) || val.length !== 1) {
 				isAsciiMixed = false;
 			}
 		}
 
 		let flags = 0;
-		if (firstChar.hasStyles()) {
+		// A span has styles if its format flags are anything but 0 (or just full-width)
+		// Or if it has colors.
+		const hasStyles =
+			(span.formatFlags & ~FULL_WIDTH_MASK) !== 0 ||
+			span.fgColor ||
+			span.bgColor ||
+			span.link;
+		if (hasStyles) {
 			flags |= hasStylesMask;
 		}
 
@@ -121,39 +95,37 @@ export class Serializer {
 
 		this.writeUint8(flags);
 
-		if (flags & hasStylesMask) {
-			const fc = firstChar;
-			this.writeUint8(fc.formatFlags);
-			this.writeString(fc.fgColor || '');
-			this.writeString(fc.bgColor || '');
-			this.writeString(fc.link || '');
+		if (hasStyles) {
+			this.writeUint8(span.formatFlags);
+			this.writeString(span.fgColor || '');
+			this.writeString(span.bgColor || '');
+			this.writeString(span.link || '');
 		}
 
 		if (isRepeatedChar) {
 			let charFlags = 0;
-			if (firstChar.getFullWidth()) {
+			if (firstFullWidth) {
 				charFlags |= fullWidthMask;
 			}
 
 			this.writeUint8(charFlags);
-			this.writeString(firstChar.getValue() || '');
+			this.writeString(firstVal || '');
 		} else if (isAsciiMixed) {
 			let concat = '';
 			for (let i = start; i < end; i++) {
-				concat += line[i]!.getValue();
+				concat += line.getValue(i);
 			}
 
 			this.writeString(concat);
 		} else {
 			for (let i = start; i < end; i++) {
-				const char = line[i]!;
 				let charFlags = 0;
-				if (char.getFullWidth()) {
+				if (line.getFullWidth(i)) {
 					charFlags |= fullWidthMask;
 				}
 
 				this.writeUint8(charFlags);
-				this.writeString(char.getValue() || '');
+				this.writeString(line.getValue(i) || '');
 			}
 		}
 	}
@@ -180,44 +152,8 @@ export class Serializer {
 	}
 }
 
-const commonCharCache = new Map<string, StyledChar>();
-
-export function getInternedChar(
-	value: string,
-	fullWidth: boolean,
-	charTemplate: StyledChar | undefined,
-): StyledChar {
-	if (!charTemplate?.hasStyles()) {
-		const key = fullWidth ? value + '|fw' : value;
-		let cached = commonCharCache.get(key);
-		if (!cached) {
-			cached = new StyledChar(value, fullWidth ? FULL_WIDTH_MASK : 0);
-			commonCharCache.set(key, cached);
-		}
-
-		return cached;
-	}
-
-	// Just copy over properties from template, plus fullwidth and value
-	let flags = charTemplate.formatFlags;
-	if (fullWidth) {
-		flags |= FULL_WIDTH_MASK;
-	} else {
-		flags &= ~FULL_WIDTH_MASK;
-	}
-
-	return new StyledChar(
-		value,
-		flags,
-		charTemplate.fgColor,
-		charTemplate.bgColor,
-		charTemplate.link,
-	);
-}
-
 export class Deserializer {
 	private offset = 0;
-	// eslint-disable-next-line @typescript-eslint/ban-types
 	private readonly buf: Buffer;
 
 	constructor(buffer: Uint8Array) {
@@ -239,66 +175,62 @@ export class Deserializer {
 
 	private readLine(): StyledLine {
 		const spanCount = this.readUint32();
-		const chars: StyledChar[] = [];
+		const line = new StyledLine();
 
 		for (let i = 0; i < spanCount; i++) {
-			this.readSpan(chars);
+			this.readSpan(line);
 		}
 
-		return chars;
+		return line;
 	}
 
-	private readSpan(line: StyledChar[]) {
+	private readSpan(line: StyledLine) {
 		const spanLength = this.readUint32();
 		const flags = this.readUint8();
 
 		const hasStyles = (flags & hasStylesMask) !== 0;
-
 		const isRepeatedChar = (flags & isRepeatedCharMask) !== 0;
-
 		const isAsciiMixed = (flags & isAsciiMixedMask) !== 0;
 
-		let charTemplate: StyledChar | undefined;
+		let formatFlags = 0;
+		let fgColor: string | undefined;
+		let bgColor: string | undefined;
+		let link: string | undefined;
 
 		if (hasStyles) {
-			const formatFlags = this.readUint8();
-			const fgColor = this.readString();
-			const bgColor = this.readString();
-			const link = this.readString();
-
-			charTemplate = new StyledChar(
-				'',
-				formatFlags,
-				fgColor || undefined,
-				bgColor || undefined,
-				link || undefined,
-			);
+			formatFlags = this.readUint8();
+			fgColor = this.readString() || undefined;
+			bgColor = this.readString() || undefined;
+			link = this.readString() || undefined;
 		}
 
 		if (isRepeatedChar) {
 			const charFlags = this.readUint8();
-
 			const fullWidth = (charFlags & fullWidthMask) !== 0;
 			const value = this.readString();
-			const char = getInternedChar(value, fullWidth, charTemplate);
+
+			let ff = formatFlags;
+			if (fullWidth) ff |= FULL_WIDTH_MASK;
 
 			for (let i = 0; i < spanLength; i++) {
-				line.push(char);
+				line.pushChar(value, ff, fgColor, bgColor, link);
 			}
 		} else if (isAsciiMixed) {
 			const value = this.readString();
-
 			for (let i = 0; i < spanLength; i++) {
-				line.push(getInternedChar(value[i]!, false, charTemplate));
+				line.pushChar(value[i]!, formatFlags, fgColor, bgColor, link);
 			}
 		} else {
 			for (let i = 0; i < spanLength; i++) {
 				const charFlags = this.readUint8();
-
 				const fullWidth = (charFlags & fullWidthMask) !== 0;
 				const value = this.readString();
 
-				line.push(getInternedChar(value, fullWidth, charTemplate));
+				let ff = formatFlags;
+				if (fullWidth) ff |= FULL_WIDTH_MASK;
+				else ff &= ~FULL_WIDTH_MASK;
+
+				line.pushChar(value, ff, fgColor, bgColor, link);
 			}
 		}
 	}

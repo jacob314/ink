@@ -1,5 +1,5 @@
 import Yoga from 'yoga-layout';
-import {type StyledChar} from './tokenize.js';
+import {type StyledChar} from './styled-line.js';
 import {
 	type DOMElement,
 	type DOMNode,

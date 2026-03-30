@@ -1,5 +1,6 @@
 import isFullwidthCodePoint from 'is-fullwidth-code-point';
 import ansiStyles from 'ansi-styles';
+import {StyledLine} from './styled-line.js';
 
 // --- consts.ts ---
 const BEL = '\u0007';
@@ -266,7 +267,6 @@ export function tokenize(
 	return ret;
 }
 
-// --- StyledChar.ts ---
 export const BOLD_MASK = Math.trunc(1);
 export const DIM_MASK = 1 << 1;
 export const ITALIC_MASK = 1 << 2;
@@ -276,115 +276,8 @@ export const INVERSE_MASK = 1 << 5;
 export const HIDDEN_MASK = 1 << 6;
 export const FULL_WIDTH_MASK = 1 << 7;
 
-export class StyledChar {
-	constructor(
-		private readonly _value: string,
-		private _formatFlags: number,
-		private readonly _fgColor?: string,
-		private _bgColor?: string,
-		private readonly _link?: string,
-	) {}
-
-	getValue() {
-		return this._value;
-	}
-
-	getFullWidth() {
-		return (this._formatFlags & FULL_WIDTH_MASK) !== 0;
-	}
-
-	getForegroundColor() {
-		return this._fgColor;
-	}
-
-	getBackgroundColor() {
-		return this._bgColor;
-	}
-
-	getBold() {
-		return (this._formatFlags & BOLD_MASK) !== 0;
-	}
-
-	getDim() {
-		return (this._formatFlags & DIM_MASK) !== 0;
-	}
-
-	getItalic() {
-		return (this._formatFlags & ITALIC_MASK) !== 0;
-	}
-
-	getUnderline() {
-		return (this._formatFlags & UNDERLINE_MASK) !== 0;
-	}
-
-	getStrikethrough() {
-		return (this._formatFlags & STRIKETHROUGH_MASK) !== 0;
-	}
-
-	getInverse() {
-		return (this._formatFlags & INVERSE_MASK) !== 0;
-	}
-
-	getHidden() {
-		return (this._formatFlags & HIDDEN_MASK) !== 0;
-	}
-
-	getLink() {
-		return this._link;
-	}
-
-	get formatFlags(): number {
-		return this._formatFlags;
-	}
-
-	get fgColor(): string | undefined {
-		return this._fgColor;
-	}
-
-	get bgColor(): string | undefined {
-		return this._bgColor;
-	}
-
-	get link(): string | undefined {
-		return this._link;
-	}
-
-	setFormatFlag(mask: number): void {
-		this._formatFlags |= mask;
-	}
-
-	clearFormatFlag(mask: number): void {
-		this._formatFlags &= ~mask;
-	}
-
-	setBackgroundColor(color: string | undefined): void {
-		this._bgColor = color;
-	}
-
-	hasStyles(): boolean {
-		// If there are any formatting flags (except FULL_WIDTH) or any color/link set.
-		return (
-			(this._formatFlags & ~FULL_WIDTH_MASK) !== 0 ||
-			this._fgColor !== undefined ||
-			this._bgColor !== undefined ||
-			this._link !== undefined
-		);
-	}
-
-	copyWith(overrides: {value?: string}): StyledChar {
-		return new StyledChar(
-			overrides.value ?? this._value,
-			this._formatFlags,
-			this._fgColor,
-			this._bgColor,
-			this._link,
-		);
-	}
-}
-
-// --- styledCharsFromTokens.ts ---
-export function styledCharsFromTokens(tokens: Token[]): StyledChar[] {
-	const ret: StyledChar[] = [];
+export function styledLineFromTokens(tokens: Token[]): StyledLine {
+	const line = new StyledLine([], []);
 
 	let formatFlags = 0;
 	let fgColor: string | undefined;
@@ -400,88 +293,73 @@ export function styledCharsFromTokens(tokens: Token[]): StyledChar[] {
 					fgColor = undefined;
 					bgColor = undefined;
 					link = undefined;
-
 					break;
 				}
 
 				case ansiStyles.bold.open: {
 					formatFlags |= BOLD_MASK;
-
 					break;
 				}
 
 				case ansiStyles.dim.open: {
 					formatFlags |= DIM_MASK;
-
 					break;
 				}
 
 				case ansiStyles.italic.open: {
 					formatFlags |= ITALIC_MASK;
-
 					break;
 				}
 
 				case ansiStyles.underline.open: {
 					formatFlags |= UNDERLINE_MASK;
-
 					break;
 				}
 
 				case ansiStyles.strikethrough.open: {
 					formatFlags |= STRIKETHROUGH_MASK;
-
 					break;
 				}
 
 				case ansiStyles.inverse.open: {
 					formatFlags |= INVERSE_MASK;
-
 					break;
 				}
 
 				case ansiStyles.hidden.open: {
 					formatFlags |= HIDDEN_MASK;
-
 					break;
 				}
 
 				case ansiStyles.bold.close:
 				case ansiStyles.dim.close: {
-					// 22m closes both bold and dim
 					formatFlags &= ~BOLD_MASK;
 					formatFlags &= ~DIM_MASK;
-
 					break;
 				}
 
 				case ansiStyles.italic.close: {
 					formatFlags &= ~ITALIC_MASK;
-
 					break;
 				}
 
 				case ansiStyles.underline.close: {
 					formatFlags &= ~UNDERLINE_MASK;
-
 					break;
 				}
 
 				case ansiStyles.strikethrough.close: {
 					formatFlags &= ~STRIKETHROUGH_MASK;
-
 					break;
 				}
 
 				case ansiStyles.inverse.close: {
 					formatFlags &= ~INVERSE_MASK;
-
 					break;
 				}
 
 				case ansiStyles.hidden.close: {
 					formatFlags &= ~HIDDEN_MASK;
-
 					break;
 				}
 
@@ -519,15 +397,14 @@ export function styledCharsFromTokens(tokens: Token[]): StyledChar[] {
 				finalFlags |= FULL_WIDTH_MASK;
 			}
 
-			ret.push(new StyledChar(token.value, finalFlags, fgColor, bgColor, link));
+			line.pushChar(token.value, finalFlags, fgColor, bgColor, link);
 		}
 	}
 
-	return ret;
+	return line;
 }
 
-// --- styledCharsToString.ts ---
-export function styledCharsToString(chars: StyledChar[]): string {
+export function styledLineToString(line: StyledLine): string {
 	let ret = '';
 
 	let prevFormatFlags = 0;
@@ -535,25 +412,17 @@ export function styledCharsToString(chars: StyledChar[]): string {
 	let prevBgColor: string | undefined;
 	let prevLink: string | undefined;
 
-	for (let i = 0; i < chars.length; i++) {
-		const char = chars[i]!;
-		const {formatFlags} = char;
-		const {fgColor} = char;
-		const {bgColor} = char;
-		const {link} = char;
-		// Fast path: if styling matches previous char, just append value.
+	for (const {value, formatFlags, fgColor, bgColor, link} of line) {
 		if (
 			formatFlags === prevFormatFlags &&
 			fgColor === prevFgColor &&
 			bgColor === prevBgColor &&
 			link === prevLink
 		) {
-			ret += char.getValue();
+			ret += value;
 			continue;
 		}
 
-		// If bold or dim changed to false, we have to emit reset (22m), which resets both.
-		// So if we need to restore one, we have to emit it again.
 		let needResetBoldDim = false;
 		if (
 			(prevFormatFlags & BOLD_MASK && !(formatFlags & BOLD_MASK)) ||
@@ -562,10 +431,8 @@ export function styledCharsToString(chars: StyledChar[]): string {
 			needResetBoldDim = true;
 		}
 
-		
-
 		if (needResetBoldDim) {
-			ret += ansiStyles.bold.close; // 22m closes both
+			ret += ansiStyles.bold.close;
 		}
 
 		if (
@@ -612,23 +479,19 @@ export function styledCharsToString(chars: StyledChar[]): string {
 		if (!(formatFlags & HIDDEN_MASK) && prevFormatFlags & HIDDEN_MASK)
 			ret += ansiStyles.hidden.close;
 
-		
+		if (fgColor !== prevFgColor) {
+			ret += fgColor === undefined ? ansiStyles.color.close : fgColor;
+		}
 
-		
+		if (bgColor !== prevBgColor) {
+			ret += bgColor === undefined ? ansiStyles.bgColor.close : bgColor;
+		}
 
-                if (fgColor !== prevFgColor) {
-                        ret += fgColor === undefined ? ansiStyles.color.close : fgColor;
-                }
-
-                if (bgColor !== prevBgColor) {
-                        ret += bgColor === undefined ? ansiStyles.bgColor.close : bgColor;
-                }
-
-                if (link !== prevLink) {
+		if (link !== prevLink) {
 			ret += link === undefined ? linkEndCode : link;
 		}
 
-		ret += char.getValue();
+		ret += value;
 
 		prevFormatFlags = formatFlags;
 		prevFgColor = fgColor;

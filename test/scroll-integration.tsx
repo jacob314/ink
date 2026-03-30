@@ -14,7 +14,6 @@ const wait = async (ms: number) =>
 
 const writeToTerm = async (term: any, data: string): Promise<void> =>
 	new Promise(resolve => {
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 		term.write(data, () => {
 			resolve();
 		});
@@ -46,7 +45,7 @@ test('scroll integration - verify repaint efficiency', async t => {
 		off() {},
 		removeListener() {},
 		end() {},
-		// eslint-disable-next-line @typescript-eslint/naming-convention
+
 		isTTY: true,
 	} as any;
 
@@ -135,7 +134,7 @@ test('scroll integration - verify repaint efficiency', async t => {
 	const initialBgs = Array.from({length: termRows}, (_, i) => getLineBg(i));
 
 	// Scroll down 1 line
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
 	stdin.write('\u001B[B');
 	await wait(1000);
 	await writeToTerm(term, '');
@@ -166,7 +165,7 @@ test('scroll integration - verify repaint efficiency', async t => {
 	);
 
 	// Scroll back up
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
 	stdin.write('\u001B[A');
 	// Wait longer for scroll up to process and render
 	await wait(2000);
@@ -179,7 +178,7 @@ test('scroll integration - verify repaint efficiency', async t => {
 	);
 
 	// Scroll to bottom
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
 	stdin.write('b');
 	await wait(5000);
 	await writeToTerm(term, '');

@@ -2,7 +2,7 @@ import {type Writable} from 'node:stream';
 import process from 'node:process';
 import ansiEscapes from 'ansi-escapes';
 import cliCursor from 'cli-cursor';
-import {type StyledChar} from './tokenize.js';
+import {type StyledLine} from './styled-line.js';
 import colorize from './colorize.js';
 
 // Debugging option to simulate flicker if for terminals that do not support enableSynchronizedOutput.
@@ -64,7 +64,7 @@ export type LogUpdate = {
 	sync: (str: string, cursorPosition?: CursorPosition) => void;
 	(
 		str: string,
-		styledOutput: StyledChar[][],
+		styledOutput: StyledLine[],
 		debugRainbowColor?: string,
 		cursorPosition?: CursorPosition,
 	): void;
@@ -153,22 +153,19 @@ const moveCursorDown = (buffer: string[], skippedLines: number): number => {
 	return 0;
 };
 
-const getLineLength = (styledChars: StyledChar[] | undefined): number => {
+const getLineLength = (styledChars: StyledLine | undefined): number => {
 	if (styledChars === undefined) {
 		return 0;
 	}
 
 	for (let j = styledChars.length - 1; j >= 0; j--) {
-		const char = styledChars[j];
-		if (char === undefined) {
+		const char = styledChars.getValue(j);
+		if (!char) {
 			continue;
 		}
 
-		if (
-			(char.getValue() !== ' ' && char.getValue() !== '') ||
-			char.hasStyles()
-		) {
-			return j + (char.getFullWidth() ? 2 : 1);
+		if ((char !== ' ' && char !== '') || styledChars.hasStyles(j)) {
+			return j + (styledChars.getFullWidth(j) ? 2 : 1);
 		}
 	}
 
@@ -208,7 +205,7 @@ const createStandard = (
 
 	const render = (
 		str: string,
-		_styledOutput: StyledChar[][],
+		_styledOutput: StyledLine[],
 		debugRainbowColor?: string,
 		cursorPosition?: CursorPosition,
 	) => {
@@ -407,7 +404,7 @@ const createIncremental = (
 	let previousRows = 0;
 	let previousColumns = 0;
 	let hasHiddenCursor = false;
-	let alternateBufferStyledOutput: StyledChar[][] = [];
+	let alternateBufferStyledOutput: StyledLine[] = [];
 	let previousCursorPosition: CursorPosition | undefined;
 
 	if (alternateBuffer) {
@@ -416,7 +413,7 @@ const createIncremental = (
 
 	const render = (
 		str: string,
-		styledOutput: StyledChar[][],
+		styledOutput: StyledLine[],
 		debugRainbowColor?: string,
 		cursorPosition?: CursorPosition,
 	) => {

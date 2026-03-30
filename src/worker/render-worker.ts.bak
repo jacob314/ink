@@ -1221,7 +1221,10 @@ export class TerminalBufferWorker {
 			if (region.lines.length > 0) {
 				debugLog(`${indent}  Content:`);
 				for (const line of region.lines) {
-					const plainText = line.getValues().join('').trimEnd();
+					const plainText = line
+						.map(c => c.getValue())
+						.join('')
+						.trimEnd();
 					if (plainText) {
 						debugLog(`${indent}    ${plainText}`);
 					}
@@ -1262,7 +1265,10 @@ export class TerminalBufferWorker {
 						`${indent}    Header Content (${isStuck ? 'STUCK' : 'NATURAL'}):`,
 					);
 					for (const line of linesToLog) {
-						const plainText = line.getValues().join('').trimEnd();
+						const plainText = line
+							.map(c => c.getValue())
+							.join('')
+							.trimEnd();
 						if (plainText) {
 							debugLog(`${indent}      ${plainText}`);
 						}

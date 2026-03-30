@@ -1,7 +1,7 @@
 import {Stream} from 'node:stream';
 import process from 'node:process';
 import type {ReactNode} from 'react';
-import {type StyledChar} from './tokenize.js';
+import {type StyledChar} from './styled-line.js';
 import Ink, {type Options as InkOptions, type RenderMetrics} from './ink.js';
 import instances from './instances.js';
 import {type Selection} from './selection.js';

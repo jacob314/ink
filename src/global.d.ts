@@ -1,6 +1,6 @@
 import {type ReactNode, type Key, type LegacyRef} from 'react';
 import {type Except} from 'type-fest';
-import {type StyledChar} from './tokenize.js';
+import {type StyledChar} from './styled-line.js';
 import {type DOMElement} from './dom.js';
 import {type Styles} from './styles.js';
 import {type Region} from './output.js';

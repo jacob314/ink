@@ -5,7 +5,7 @@
  */
 
 import {Buffer} from 'node:buffer';
-import {type StyledChar} from '../tokenize.js';
+import {StyledLine} from '../styled-line.js';
 import {
 	type RegionNode,
 	type RegionUpdate,
@@ -111,9 +111,9 @@ export class SceneManager {
 
 			// Apply line updates
 			if (update.lines) {
-				const mutableLines = r.lines as StyledChar[][];
+				const mutableLines = r.lines as StyledLine[];
 				while (mutableLines.length < update.lines.totalLength) {
-					mutableLines.push([]);
+					mutableLines.push(new StyledLine());
 				}
 
 				if (mutableLines.length > update.lines.totalLength) {

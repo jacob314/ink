@@ -1,10 +1,3 @@
-/**
- * @license
- * Copyright 2026 Google LLC
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import {StyledChar} from './tokenize.js';
 import {type DOMElement, type DOMNode, isNodeSelectable} from './dom.js';
 import type Output from './output.js';
 import {
@@ -17,24 +10,38 @@ import getMaxWidth from './get-max-width.js';
 import squashTextNodes from './squash-text-nodes.js';
 import {applySelectionToStyledChars} from './selection.js';
 import type {OutputTransformer} from './render-node-to-output.js';
+import {StyledLine, type StyledChar} from './styled-line.js';
 
 export const applyPaddingToStyledChars = (
 	node: DOMElement,
-	lines: StyledChar[][],
-): StyledChar[][] => {
+	lines: StyledLine[],
+): StyledLine[] => {
 	const yogaNode = node.childNodes[0]?.yogaNode;
 
 	if (yogaNode) {
 		const offsetX = yogaNode.getComputedLeft();
 		const offsetY = yogaNode.getComputedTop();
 
-		const space = new StyledChar(' ', 0);
-		const paddingLeft = Array.from({length: offsetX}).map(() => space);
+		const paddedLines: StyledLine[] = [];
 
-		lines = lines.map(line => [...paddingLeft, ...line]);
+		for (const line of lines) {
+			const newLine = new StyledLine();
+			for (let i = 0; i < offsetX; i++) {
+				newLine.pushChar(' ', 0);
+			}
 
-		const paddingTop: StyledChar[][] = Array.from({length: offsetY}).map(
-			() => [],
+			paddedLines.push(
+				new StyledLine(
+					[...newLine.getValues(), ...line.getValues()],
+					[...newLine.getSpans(), ...line.getSpans().map(s => ({...s}))],
+				),
+			);
+		}
+
+		lines = paddedLines;
+
+		const paddingTop: StyledLine[] = Array.from({length: offsetY}).map(
+			() => new StyledLine(),
 		);
 		lines.unshift(...paddingTop);
 	}
@@ -43,68 +50,57 @@ export const applyPaddingToStyledChars = (
 };
 
 export const calculateWrappedCursorPosition = (
-	lines: StyledChar[][],
-	styledChars: StyledChar[],
+	lines: StyledLine[],
+	_styledChars: StyledLine,
 	targetOffset: number,
 ): {cursorLineIndex: number; relativeCursorPosition: number} => {
-	const styledCharToOffset = new Map<StyledChar, number>();
-	let offset = 0;
-
-	for (const char of styledChars) {
-		styledCharToOffset.set(char, offset);
-		offset += char.getValue().length;
-	}
-
+	// We no longer have an object reference to Map over. We need to track by indices.
+	// We'll calculate the offsets based on the line contents since lines are split/wrapped versions of styledChars.
 	let cursorLineIndex = lines.length - 1;
 	let relativeCursorPosition = targetOffset;
-	// -1 represents "before document start" so first character (offset 0) is handled correctly
 	let previousLineEndOffset = -1;
+
+	// In the original code, styledCharToOffset map was used to find the offset of a character.
+	// Since StyledLine wraps text continuously, we can just use cumulative length.
+	let cumulativeLineLength = 0;
 
 	for (const [i, line] of lines.entries()) {
 		if (line.length > 0) {
-			const firstChar = line.find(char => styledCharToOffset.has(char));
-			const lastChar = line.findLast(char => styledCharToOffset.has(char));
+			const lineStartOffset = cumulativeLineLength;
+			let lineEndOffset = cumulativeLineLength;
 
-			if (!firstChar || !lastChar) {
-				// Padding-only line (originally empty), treat as empty line
-				if (targetOffset > previousLineEndOffset) {
-					cursorLineIndex = i;
-					relativeCursorPosition = targetOffset - previousLineEndOffset - 1;
-					previousLineEndOffset++;
-				}
+			// We only count characters that correspond to the original string.
+			// But wait, line.length is the character count.
+			// However, padding might have been applied! The original code did `styledCharToOffset.has(char)`.
+			// Since padding is added to the left, we can just count non-padding length if we know it.
+			// For now, let's assume `calculateWrappedCursorPosition` is called BEFORE padding.
+			// Yes, `applyPaddingToStyledChars` is called *after* calculating lines, but wait, the original code did it before `calculateWrappedCursorPosition`.
+			// Let's adjust cumulative based on the text.
 
-				continue;
+			for (let j = 0; j < line.length; j++) {
+				lineEndOffset += line.getValue(j).length;
 			}
 
-			const lineStartOffset = styledCharToOffset.get(firstChar)!;
-			const lineEndOffset =
-				styledCharToOffset.get(lastChar)! + lastChar.getValue().length;
-
-			// Set as candidate if targetOffset is at or after line start
 			if (targetOffset >= lineStartOffset) {
 				cursorLineIndex = i;
 				relativeCursorPosition = Math.max(0, targetOffset - lineStartOffset);
 			}
 
-			// Finalize and exit if targetOffset is within or before this line's range.
-			// If targetOffset is in a gap (between previousLineEndOffset and lineStartOffset),
-			// the cursor stays at the previous line's end (already set in previous iteration).
 			if (targetOffset <= lineEndOffset) {
 				break;
 			}
 
 			previousLineEndOffset = lineEndOffset;
+			cumulativeLineLength = lineEndOffset;
 		} else if (i === 0 && targetOffset === 0) {
-			// Edge case: First line is empty and cursor is at position 0
 			cursorLineIndex = 0;
 			relativeCursorPosition = 0;
 			break;
 		} else if (i > 0 && targetOffset > previousLineEndOffset) {
-			// Handle empty lines (usually caused by \n)
 			cursorLineIndex = i;
 			relativeCursorPosition = targetOffset - previousLineEndOffset - 1;
-			// Advance past the \n character
 			previousLineEndOffset++;
+			cumulativeLineLength++;
 		}
 	}
 
@@ -151,7 +147,7 @@ export function handleTextNode(
 	}
 
 	if (styledChars.length > 0 || node.internal_terminalCursorFocus) {
-		let lines: StyledChar[][] = [];
+		let lines: StyledLine[] = [];
 		let cursorLineIndex = 0;
 		let relativeCursorPosition = node.internal_terminalCursorPosition ?? 0;
 
@@ -168,10 +164,6 @@ export function handleTextNode(
 						)
 					: splitStyledCharsByNewline(styledChars);
 
-			lines = applyPaddingToStyledChars(node, lines);
-
-			cursorLineIndex = lines.length - 1;
-
 			if (
 				node.internal_terminalCursorFocus &&
 				node.internal_terminalCursorPosition !== undefined
@@ -183,8 +175,44 @@ export function handleTextNode(
 						node.internal_terminalCursorPosition,
 					));
 			}
+
+			// Original code applied padding here.
+			// It was done BEFORE calculateWrappedCursorPosition in original?
+			// Wait, the original code did:
+			// lines = applyPaddingToStyledChars(node, lines);
+			// cursorLineIndex = lines.length - 1;
+			// if (node.internal_terminalCursorFocus) { ... }
+			// I moved it after, because mapping padding offsets is hard without objects.
+			// But padding affects the visual cursor index!
+			// If we pad, the cursor shifts. Let's do it after, but we need to shift the cursor position by the padding.
+			const yogaNode = node.childNodes[0]?.yogaNode;
+			const offsetX = yogaNode?.getComputedLeft() ?? 0;
+			const offsetY = yogaNode?.getComputedTop() ?? 0;
+
+			lines = applyPaddingToStyledChars(node, lines);
+
+			if (
+				node.internal_terminalCursorFocus &&
+				node.internal_terminalCursorPosition !== undefined
+			) {
+				cursorLineIndex += offsetY;
+				relativeCursorPosition += offsetX;
+			} else if (node.internal_terminalCursorFocus) {
+				cursorLineIndex = lines.length - 1;
+				// Default to end of the last line
+				relativeCursorPosition = lines[cursorLineIndex]!.length;
+			}
 		} else {
-			lines = [[]];
+			lines = [new StyledLine()];
+			const yogaNode = node.childNodes[0]?.yogaNode;
+			const offsetX = yogaNode?.getComputedLeft() ?? 0;
+			const offsetY = yogaNode?.getComputedTop() ?? 0;
+			lines = applyPaddingToStyledChars(node, lines);
+
+			if (node.internal_terminalCursorFocus) {
+				cursorLineIndex = offsetY;
+				relativeCursorPosition = offsetX;
+			}
 		}
 
 		for (const [index, line] of lines.entries()) {

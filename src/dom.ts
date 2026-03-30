@@ -1,5 +1,5 @@
 import Yoga, {type Node as YogaNode} from 'yoga-layout';
-import {type StyledChar} from './tokenize.js';
+import {type StyledLine} from './styled-line.js';
 import {
 	measureStyledChars,
 	toStyledCharacters,
@@ -31,9 +31,9 @@ export type NodeNames = ElementNames | TextName;
 
 export type StickyHeader = {
 	nodeId: number;
-	lines: ReadonlyArray<readonly StyledChar[]>; // Natural (scrolling) version
-	stuckLines?: ReadonlyArray<readonly StyledChar[]>; // Alternate (sticky) version
-	styledOutput: ReadonlyArray<readonly StyledChar[]>; // Legacy property
+	lines: readonly StyledLine[]; // Natural (scrolling) version
+	stuckLines?: readonly StyledLine[]; // Alternate (sticky) version
+	styledOutput: readonly StyledLine[]; // Legacy property
 	x: number; // Stuck X position relative to region
 	y: number; // Stuck Y position relative to region
 	naturalRow: number; // Natural row offset relative to content start

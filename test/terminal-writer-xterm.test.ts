@@ -1,9 +1,8 @@
 import test from 'ava';
-import {StyledChar} from '../src/tokenize.js';
+import {StyledLine} from '../src/styled-line.js';
 import xtermHeadless, {type Terminal} from '@xterm/headless';
 import {TerminalWriter} from '../src/worker/terminal-writer.js';
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 const {Terminal: XtermTerminal} = xtermHeadless;
 
 const createStyledChar = (char: string): StyledChar => new StyledChar(char, 0);

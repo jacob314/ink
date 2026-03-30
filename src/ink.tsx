@@ -1,3 +1,4 @@
+import {type StyledLine, type StyledChar} from './styled-line.js';
 import process from 'node:process';
 import React, {type ReactNode} from 'react';
 import {throttle} from 'es-toolkit/compat';
@@ -10,7 +11,6 @@ import {LegacyRoot} from 'react-reconciler/constants.js';
 import {type FiberRoot} from 'react-reconciler';
 import Yoga from 'yoga-layout';
 import wrapAnsi from 'wrap-ansi';
-import {type StyledChar} from './tokenize.js';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
@@ -104,7 +104,7 @@ type RenderModeOptions = {
 	output: string;
 	outputHeight: number;
 	staticOutput: string;
-	styledOutput: StyledChar[][];
+	styledOutput: StyledLine[];
 	cursorPosition: {row: number; col: number} | undefined;
 	debugRainbowColor: string | undefined;
 	hasStaticOutput: boolean;
@@ -492,10 +492,10 @@ export default class Ink {
 		);
 
 		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
 		reconciler.updateContainerSync(tree, this.container, null, noop);
 		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
 		reconciler.flushSyncWork();
 	}
 
@@ -581,10 +581,10 @@ export default class Ink {
 		this.isUnmounted = true;
 
 		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
 		reconciler.updateContainerSync(null, this.container, null, noop);
 		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
 		reconciler.flushSyncWork();
 		instances.delete(this.options.stdout);
 

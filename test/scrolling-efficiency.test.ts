@@ -4,7 +4,6 @@ import {TerminalBufferWorker} from '../src/worker/render-worker.js';
 import {Serializer} from '../src/serialization.js';
 import {writeToTerm, createStyledLine} from './helpers/replay-lib.js';
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 const {Terminal: XtermTerminal} = xtermHeadless;
 const serializer = new Serializer();
 

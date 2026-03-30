@@ -1,126 +1,133 @@
-import {StyledChar} from './tokenize.js';
+import {StyledLine} from './styled-line.js';
 import {inkCharacterWidth, styledCharsWidth} from './measure-text.js';
 
 export const sliceStyledChars = (
-	styledChars: StyledChar[],
+	line: StyledLine,
 	begin: number,
 	end?: number,
-): StyledChar[] => {
+): StyledLine => {
 	let width = 0;
-	const result: StyledChar[] = [];
+	let startIndex = -1;
+	let endIndex = line.length;
 
-	for (const char of styledChars) {
-		const charWidth = inkCharacterWidth(char.getValue());
+	for (let i = 0; i < line.length; i++) {
+		const charWidth = inkCharacterWidth(line.getValue(i));
 		const charStart = width;
 		const charEnd = width + charWidth;
 
 		if (end !== undefined && charEnd > end) {
+			endIndex = i;
 			break;
 		}
 
-		if (charStart >= begin) {
-			result.push(char);
+		if (charStart >= begin && startIndex === -1) {
+			startIndex = i;
 		}
 
 		width += charWidth;
 	}
 
-	return result;
+	if (startIndex === -1) return new StyledLine();
+	return line.slice(startIndex, endIndex);
 };
 
 export const truncateStyledChars = (
-	styledChars: StyledChar[],
+	line: StyledLine,
 	columns: number,
 	options: {position?: 'start' | 'middle' | 'end'} = {},
-): StyledChar[] => {
+): StyledLine => {
 	const {position = 'end'} = options;
 	const truncationCharacter = '…';
-	const truncationStyledChar: StyledChar = new StyledChar(
-		truncationCharacter,
-		0, // 0 means no formatting flags (and therefore fullWidth = false)
-	);
+	const truncationStyledLine = new StyledLine();
+	truncationStyledLine.pushChar(truncationCharacter, 0);
+
 	if (columns < 1) {
-		return [];
+		return new StyledLine();
 	}
 
 	if (columns === 1) {
-		return [truncationStyledChar];
+		return truncationStyledLine;
 	}
 
-	const textWidth = styledCharsWidth(styledChars);
+	const textWidth = styledCharsWidth(line);
 
 	if (textWidth <= columns) {
-		return styledChars;
+		return line;
 	}
 
 	const truncationWidth = inkCharacterWidth(truncationCharacter);
 
 	if (position === 'start') {
 		const right = sliceStyledChars(
-			styledChars,
+			line,
 			textWidth - columns + truncationWidth,
 			textWidth,
 		);
-		return [truncationStyledChar, ...right];
+		return new StyledLine([...truncationStyledLine.getValues(), ...right.getValues()], [...truncationStyledLine.getSpans(), ...right.getSpans().map(s => ({...s}))]);
 	}
 
 	if (position === 'middle') {
 		const leftWidth = Math.ceil(columns / 2);
 		const rightWidth = columns - leftWidth;
-		const left = sliceStyledChars(styledChars, 0, leftWidth - truncationWidth);
-		const right = sliceStyledChars(
-			styledChars,
-			textWidth - rightWidth,
-			textWidth,
-		);
-		return [...left, truncationStyledChar, ...right];
+		const left = sliceStyledChars(line, 0, leftWidth - truncationWidth);
+		const right = sliceStyledChars(line, textWidth - rightWidth, textWidth);
+		return new StyledLine([...left.getValues(), ...truncationStyledLine.getValues(), ...right.getValues()], [...left.getSpans(), ...truncationStyledLine.getSpans().map(s => ({...s})), ...right.getSpans().map(s => ({...s}))]);
 	}
 
-	const left = sliceStyledChars(styledChars, 0, columns - truncationWidth);
-	return [...left, truncationStyledChar];
+	const left = sliceStyledChars(line, 0, columns - truncationWidth);
+	return new StyledLine([...left.getValues(), ...truncationStyledLine.getValues()], [...left.getSpans(), ...truncationStyledLine.getSpans().map(s => ({...s}))]);
 };
 
-const wrapWord = (
-	rows: StyledChar[][],
-	word: StyledChar[],
-	columns: number,
-) => {
+const wrapWord = (rows: StyledLine[], word: StyledLine, columns: number) => {
 	let currentLine = rows.at(-1)!;
 	let visible = styledCharsWidth(currentLine);
 
-	for (const character of word) {
-		const characterLength = inkCharacterWidth(character.getValue());
+	for (let i = 0; i < word.length; i++) {
+		const val = word.getValue(i);
+		const flags = word.getFormatFlags(i);
+		const fg = word.getFgColor(i);
+		const bg = word.getBgColor(i);
+		const link = word.getLink(i);
+
+		const characterLength = inkCharacterWidth(val);
 
 		if (visible + characterLength > columns && visible > 0) {
-			rows.push([]);
-
+			rows.push(new StyledLine());
 			currentLine = rows.at(-1)!;
 			visible = styledCharsWidth(currentLine);
 		}
 
-		currentLine.push(character);
+		currentLine.pushChar(val, flags, fg, bg, link);
 		visible += characterLength;
 	}
 };
 
 export const wrapStyledChars = (
-	styledChars: StyledChar[],
+	line: StyledLine,
 	columns: number,
-): StyledChar[][] => {
-	const rows: StyledChar[][] = [[]];
-	const words: StyledChar[][] = [];
-	let currentWord: StyledChar[] = [];
+): StyledLine[] => {
+	const rows: StyledLine[] = [new StyledLine()];
+	const words: StyledLine[] = [];
+	let currentWord = new StyledLine();
 
-	for (const char of styledChars) {
-		if (char.getValue() === '\n' || char.getValue() === ' ') {
+	for (let i = 0; i < line.length; i++) {
+		const val = line.getValue(i);
+		const flags = line.getFormatFlags(i);
+		const fg = line.getFgColor(i);
+		const bg = line.getBgColor(i);
+		const link = line.getLink(i);
+
+		if (val === '\n' || val === ' ') {
 			if (currentWord.length > 0) {
 				words.push(currentWord);
 			}
 
-			currentWord = [];
-			words.push([char]);
+			currentWord = new StyledLine();
+			const spaceLine = new StyledLine();
+			spaceLine.pushChar(val, flags, fg, bg, link);
+			words.push(spaceLine);
 		} else {
-			currentWord.push(char);
+			currentWord.pushChar(val, flags, fg, bg, link);
 		}
 	}
 
@@ -135,8 +142,8 @@ export const wrapStyledChars = (
 			continue;
 		}
 
-		if (word[0]!.getValue() === '\n') {
-			rows.push([]);
+		if (word.getValue(0) === '\n') {
+			rows.push(new StyledLine());
 			isAtStartOfLogicalLine = true;
 			continue;
 		}
@@ -147,7 +154,7 @@ export const wrapStyledChars = (
 		if (rowWidth + wordWidth > columns) {
 			if (
 				!isAtStartOfLogicalLine &&
-				word[0]!.getValue() === ' ' &&
+				word.getValue(0) === ' ' &&
 				word.length === 1
 			) {
 				continue;
@@ -156,29 +163,31 @@ export const wrapStyledChars = (
 			if (!isAtStartOfLogicalLine) {
 				while (
 					rows.at(-1)!.length > 0 &&
-					rows.at(-1)!.at(-1)!.getValue() === ' '
+					rows.at(-1)!.getValue(rows.at(-1)!.length - 1) === ' '
 				) {
-					rows.at(-1)!.pop();
+					rows[rows.length - 1] = rows
+						.at(-1)!
+						.slice(0, rows.at(-1)!.length - 1);
 				}
 			}
 
 			if (wordWidth > columns) {
 				if (rowWidth > 0) {
-					rows.push([]);
+					rows.push(new StyledLine());
 				}
 
 				wrapWord(rows, word, columns);
 			} else {
-				rows.push([]);
-				rows.at(-1)!.push(...word);
+				rows.push(new StyledLine());
+				rows[rows.length - 1] = rows.at(-1)!.concat(word);
 			}
 		} else {
-			rows.at(-1)!.push(...word);
+			rows[rows.length - 1] = rows.at(-1)!.concat(word);
 		}
 
 		if (
 			isAtStartOfLogicalLine &&
-			!(word[0]!.getValue() === ' ' && word.length === 1)
+			!(word.getValue(0) === ' ' && word.length === 1)
 		) {
 			isAtStartOfLogicalLine = false;
 		}
@@ -188,10 +197,10 @@ export const wrapStyledChars = (
 };
 
 export const wrapOrTruncateStyledChars = (
-	styledChars: StyledChar[],
+	line: StyledLine,
 	maxWidth: number,
 	textWrap = 'wrap',
-): StyledChar[][] => {
+): StyledLine[] => {
 	if (textWrap.startsWith('truncate')) {
 		let position: 'start' | 'middle' | 'end' = 'end';
 		if (textWrap === 'truncate-middle') {
@@ -200,8 +209,8 @@ export const wrapOrTruncateStyledChars = (
 			position = 'start';
 		}
 
-		return [truncateStyledChars(styledChars, maxWidth, {position})];
+		return [truncateStyledChars(line, maxWidth, {position})];
 	}
 
-	return wrapStyledChars(styledChars, maxWidth);
+	return wrapStyledChars(line, maxWidth);
 };

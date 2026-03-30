@@ -357,7 +357,11 @@ export class TerminalWriter {
 		}
 
 		let i = line.length - 1;
-		while (i >= 0 && line.getValue(i) === ' ' && !line.hasStyles(i)) {
+		while (
+			i >= 0 &&
+			line.getValue(i) === ' ' &&
+			!line.hasStyles(i)
+		) {
 			i--;
 		}
 
@@ -410,13 +414,7 @@ export class TerminalWriter {
 		if (hasBoxChar) {
 			const boxWidth = lastFullWidth ? 2 : 1;
 			const lastCharLine = new StyledLine();
-			lastCharLine.pushChar(
-				lastVal,
-				line.getFormatFlags(i),
-				line.getFgColor(i),
-				line.getBgColor(i),
-				line.getLink(i),
-			);
+			lastCharLine.pushChar(lastVal, line.getFormatFlags(i), line.getFgColor(i), line.getBgColor(i), line.getLink(i));
 			const styledChars = line.slice(0, sliceIndex).concat(lastCharLine);
 
 			return {
@@ -657,8 +655,8 @@ export class TerminalWriter {
 			) {
 				debugLog(
 					`Line ${r} on screen inconsistent between terminalWriter and ground truth. Expected "${styledLineToString(
-						lines[index]?.styledChars ?? new StyledLine(),
-					)}", got "${styledLineToString(this.screen[r]?.styledChars ?? new StyledLine())}"`,
+						lines[index]?.styledChars ?? [],
+					)}", got "${styledLineToString(this.screen[r]?.styledChars ?? [])}"`,
 				);
 			}
 		}
@@ -673,8 +671,8 @@ export class TerminalWriter {
 			) {
 				debugLog(
 					`Line ${i} in backbuffer inconsistent. Expected "${styledLineToString(
-						lines[i]?.styledChars ?? new StyledLine(),
-					)}", got "${styledLineToString(this.backbuffer[i]?.styledChars ?? new StyledLine())}"`,
+						lines[i]?.styledChars ?? [],
+					)}", got "${styledLineToString(this.backbuffer[i]?.styledChars ?? [])}"`,
 				);
 			}
 		}
@@ -763,12 +761,7 @@ export class TerminalWriter {
 			this.screen[i] = this.screen[i - 1]!;
 		}
 
-		this.screen[start] = {
-			styledChars: new StyledLine(),
-			text: '',
-			length: 0,
-			tainted: false,
-		};
+		this.screen[start] = {styledChars: new StyledLine(), text: '', length: 0, tainted: false};
 	}
 
 	private performScroll(options: {

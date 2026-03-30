@@ -562,7 +562,7 @@ export const getText = (node: DOMNode): string => {
 	if (node.nodeName === 'ink-text' || node.nodeName === 'ink-virtual-text') {
 		const text = squashTextNodes(node);
 		const styledChars = toStyledCharacters(text);
-		const plainText = styledChars.map(char => char.getValue()).join('');
+		const plainText = styledChars.getValues().join('');
 
 		const textWrap = node.style.textWrap ?? 'wrap';
 
@@ -799,79 +799,44 @@ const getTextOffsetForTextNode = (
 	const textWrap = node.style.textWrap ?? 'wrap';
 
 	const lines = wrapOrTruncateStyledChars(styledChars, maxWidth, textWrap);
+	const fullText = styledChars.getValues().join('');
 
 	let currentY = 0;
+	let searchOffset = 0;
+
 	for (const line of lines) {
+		const lineStr = line.getValues().join('');
+		const searchStr = lineStr.replace('…', '');
+		const lineStartOffset = fullText.indexOf(searchStr, searchOffset);
+		const actualStartOffset =
+			lineStartOffset === -1 ? searchOffset : lineStartOffset;
+
 		if (y === currentY) {
 			let currentX = 0;
+			let currentOffset = actualStartOffset;
+
 			for (const char of line) {
-				const charWidth = inkCharacterWidth(char.getValue());
+				const charWidth = inkCharacterWidth(char.value);
 				if (x < currentX + charWidth) {
-					const index = styledChars.indexOf(char);
-					if (index !== -1) {
-						let currentOffset = 0;
-						for (let i = 0; i < index; i++) {
-							currentOffset += styledChars[i]!.getValue().length;
-						}
-
-						if (options?.snapToChar === 'end' && x >= currentX) {
-							currentOffset += char.getValue().length;
-						}
-
-						return currentOffset;
-					}
-
-					return getText(node).length;
-				}
-
-				currentX += charWidth;
-			}
-
-			const lastChar = line.at(-1);
-			if (lastChar) {
-				const index = styledChars.indexOf(lastChar);
-				if (index !== -1) {
-					let currentOffset = 0;
-					for (let i = 0; i <= index; i++) {
-						currentOffset += styledChars[i]!.getValue().length;
+					if (options?.snapToChar === 'end' && x >= currentX) {
+						currentOffset += char.value.length;
 					}
 
 					return currentOffset;
 				}
 
-				return getText(node).length;
+				currentX += charWidth;
+				currentOffset += char.value.length;
 			}
 
-			// If we are here, we finished the line loop.
-			// This happens if the line is empty, or if x was greater than the line width.
-			// But wait, if x < 0, we should have returned inside the loop (first char).
-			// Unless the line is empty.
-
-			// If the line is empty, we should return the offset at the start of this line.
-			// We need to find the offset corresponding to the start of this line.
-			// Since we don't track offsets easily, we can find the first char of the line (if any) or the char after the previous line.
-
-			// However, the issue in the test was returning 1 instead of 5.
-			// This means it matched index 1.
-			// Index 1 is '2'.
-			// This means `x` was interpreted as matching '2'.
-			// This implies `x` was not < width of '1'.
-			// If `x` was 1.
-			// `visualX` must have been 0.
-			// But we saw `visualX` should be 2.
-
-			// Let's look at the logs I added.
-			// I need to run the test again and see the logs.
-			// I missed checking the logs in the previous turn output because I was focused on the failure message.
-			// The logs should be in the output.
-
-			return 0;
+			return currentOffset;
 		}
 
+		searchOffset = actualStartOffset + searchStr.length;
 		currentY++;
 	}
 
-	return getText(node).length;
+	return fullText.length;
 };
 
 export const getTextOffset = (

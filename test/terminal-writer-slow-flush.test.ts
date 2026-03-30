@@ -1,5 +1,5 @@
 import test from 'ava';
-import {StyledChar} from '../src/tokenize.js';
+import {StyledLine} from '../src/styled-line.js';
 import {TerminalWriter} from '../src/worker/terminal-writer.js';
 
 const createStyledChar = (char: string): StyledChar => new StyledChar(char, 0);

@@ -182,12 +182,7 @@ export function createHumanReadableDump(data: LoadedReplayData): string {
 							return {
 								start: u.start,
 								end: u.end,
-								text: lines.map(line =>
-									line
-										.map(c => c.getValue())
-										.join('')
-										.trimEnd(),
-								),
+								text: lines.map(line => line.getValues().join('').trimEnd()),
 							};
 						}),
 					};
@@ -198,30 +193,15 @@ export function createHumanReadableDump(data: LoadedReplayData): string {
 						...h,
 						lines: new Deserializer(Buffer.from(h.lines))
 							.deserialize()
-							.map(line =>
-								line
-									.map(c => c.getValue())
-									.join('')
-									.trimEnd(),
-							),
+							.map(line => line.getValues().join('').trimEnd()),
 						stuckLines: h.stuckLines
 							? new Deserializer(Buffer.from(h.stuckLines))
 									.deserialize()
-									.map(line =>
-										line
-											.map(c => c.getValue())
-											.join('')
-											.trimEnd(),
-									)
+									.map(line => line.getValues().join('').trimEnd())
 							: undefined,
 						styledOutput: new Deserializer(Buffer.from(h.styledOutput))
 							.deserialize()
-							.map(line =>
-								line
-									.map(c => c.getValue())
-									.join('')
-									.trimEnd(),
-							),
+							.map(line => line.getValues().join('').trimEnd()),
 						node: undefined,
 					}));
 				}
