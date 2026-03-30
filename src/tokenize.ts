@@ -562,13 +562,7 @@ export function styledCharsToString(chars: StyledChar[]): string {
 			needResetBoldDim = true;
 		}
 
-		if (fgColor !== prevFgColor) {
-			ret += fgColor === undefined ? ansiStyles.color.close : fgColor;
-		}
-
-		if (bgColor !== prevBgColor) {
-			ret += bgColor === undefined ? ansiStyles.bgColor.close : bgColor;
-		}
+		
 
 		if (needResetBoldDim) {
 			ret += ansiStyles.bold.close; // 22m closes both
@@ -618,19 +612,19 @@ export function styledCharsToString(chars: StyledChar[]): string {
 		if (!(formatFlags & HIDDEN_MASK) && prevFormatFlags & HIDDEN_MASK)
 			ret += ansiStyles.hidden.close;
 
-		if (needResetBoldDim) {
-			ret += ansiStyles.bold.close; // 22m closes both
-		}
+		
 
-		if (fgColor !== prevFgColor && fgColor === undefined) {
-			ret += ansiStyles.color.close;
-		}
+		
 
-		if (bgColor !== prevBgColor && bgColor === undefined) {
-			ret += ansiStyles.bgColor.close;
-		}
+                if (fgColor !== prevFgColor) {
+                        ret += fgColor === undefined ? ansiStyles.color.close : fgColor;
+                }
 
-		if (link !== prevLink) {
+                if (bgColor !== prevBgColor) {
+                        ret += bgColor === undefined ? ansiStyles.bgColor.close : bgColor;
+                }
+
+                if (link !== prevLink) {
 			ret += link === undefined ? linkEndCode : link;
 		}
 
