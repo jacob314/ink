@@ -238,10 +238,10 @@ export const removeChildNode = (
 	removeNode: DOMNode,
 ): void => {
 	if (removeNode.yogaNode) {
-		try {
-			removeNode.parentNode?.yogaNode?.removeChild(removeNode.yogaNode);
-		} catch {
-			// Ignore error if node was already detached (e.g. by StaticRender optimization)
+		const parentYogaNode = removeNode.yogaNode.getParent();
+
+		if (parentYogaNode) {
+			parentYogaNode.removeChild(removeNode.yogaNode);
 		}
 	}
 
