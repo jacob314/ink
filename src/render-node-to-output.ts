@@ -15,7 +15,7 @@ import {renderStickyNode, getStickyDescendants} from './render-sticky.js';
 import {handleContainerNode} from './render-container.js';
 import {handleCachedRenderNode} from './render-cached.js';
 import {getRelativeLeft, getRelativeTop} from './measure-element.js';
-import {debugLog} from './debug-log.js';
+import {debugLog, isDebugLogEnabled} from './debug-log.js';
 
 export type OutputTransformer = (s: string, index: number) => string;
 
@@ -37,9 +37,11 @@ export const renderToStatic = (
 	const width = node.yogaNode?.getComputedWidth() ?? 0;
 	const height = node.yogaNode?.getComputedHeight() ?? 0;
 
-	debugLog(
-		`renderToStatic called. Content size: width ${width}, height ${height}`,
-	);
+	if (isDebugLogEnabled) {
+		debugLog(
+			`renderToStatic called. Content size: width ${width}, height ${height}`,
+		);
+	}
 
 	const stickyNodes = getStickyDescendants(node);
 	const cachedStickyHeaders: StickyHeader[] = [];
@@ -147,8 +149,23 @@ function renderNodeToOutput(
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
 		selectionStyle?: (line: StyledLine, index: number) => void;
 		trackSelection?: boolean;
+		dirtyRegion?: {x: number; y: number; w: number; h: number};
 	},
 ) {
+	if (node.nodeName === 'ink-root') {
+		const frameWidth = options.dirtyRegion
+			? options.dirtyRegion.w
+			: (node.yogaNode?.getComputedWidth() ?? 0);
+		const frameHeight = options.dirtyRegion
+			? options.dirtyRegion.h
+			: (node.yogaNode?.getComputedHeight() ?? 0);
+		if (isDebugLogEnabled) {
+			debugLog(
+				`Starting renderNodeToOutput. Frame size: ${frameWidth}x${frameHeight}`,
+			);
+		}
+	}
+
 	const {
 		offsetX = 0,
 		offsetY = 0,
@@ -161,6 +178,7 @@ function renderNodeToOutput(
 		selectionMap,
 		selectionStyle,
 		trackSelection,
+		dirtyRegion,
 	} = options;
 
 	if (skipStaticElements && node.internal_static) {
@@ -188,9 +206,40 @@ function renderNodeToOutput(
 
 		const width = yogaNode.getComputedWidth();
 		const height = yogaNode.getComputedHeight();
-		const clip = output.getCurrentClip();
 
-		if (clip) {
+		let effectiveClip = output.getCurrentClip();
+		if (dirtyRegion) {
+			const dirtyClip = {
+				x1: dirtyRegion.x,
+				y1: dirtyRegion.y,
+				x2: dirtyRegion.x + dirtyRegion.w,
+				y2: dirtyRegion.y + dirtyRegion.h,
+			};
+			if (effectiveClip) {
+				effectiveClip = {
+					x1:
+						effectiveClip.x1 === undefined
+							? dirtyClip.x1
+							: Math.max(effectiveClip.x1, dirtyClip.x1),
+					y1:
+						effectiveClip.y1 === undefined
+							? dirtyClip.y1
+							: Math.max(effectiveClip.y1, dirtyClip.y1),
+					x2:
+						effectiveClip.x2 === undefined
+							? dirtyClip.x2
+							: Math.min(effectiveClip.x2, dirtyClip.x2),
+					y2:
+						effectiveClip.y2 === undefined
+							? dirtyClip.y2
+							: Math.min(effectiveClip.y2, dirtyClip.y2),
+				};
+			} else {
+				effectiveClip = dirtyClip;
+			}
+		}
+
+		if (effectiveClip) {
 			const absoluteNodeLeft = absX;
 			const absoluteNodeRight = absoluteNodeLeft + width;
 			const absoluteNodeTop = absY;
@@ -203,7 +252,7 @@ function renderNodeToOutput(
 					x2: absoluteNodeRight,
 					y2: absoluteNodeBottom,
 				},
-				clip,
+				effectiveClip,
 			);
 
 			if (!isVisible) {

@@ -3,7 +3,7 @@ import {tokenize, styledLineFromTokens} from './tokenize.js';
 import {StyledLine} from './styled-line.js';
 import {DataLimitedLruMap} from './data-limited-lru-map.js';
 import {type DOMNode} from './dom.js';
-import {debugLog} from './debug-log.js';
+import {debugLog, isDebugLogEnabled} from './debug-log.js';
 
 export type StringWidth = (text: string) => number;
 
@@ -62,7 +62,9 @@ export function clearToStyledCharactersCache() {
 }
 
 export function toStyledCharacters(text: string): StyledLine {
-	debugLog(`toStyledChars called. length: ${text.length}, text: ${text}`);
+	if (isDebugLogEnabled) {
+		debugLog(`toStyledChars called. length: ${text.length}, text: ${text}`);
+	}
 
 	if (toStyledCharactersCacheEnabled) {
 		const cached = toStyledCharactersCache.get(text);

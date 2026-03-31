@@ -43,6 +43,7 @@ export function handleContainerNode(
 		absoluteOffsetX: number;
 		absoluteOffsetY: number;
 		trackSelection?: boolean;
+		dirtyRegion?: {x: number; y: number; w: number; h: number};
 	},
 ) {
 	const {
@@ -59,6 +60,7 @@ export function handleContainerNode(
 		absoluteOffsetX,
 		absoluteOffsetY,
 		trackSelection,
+		dirtyRegion,
 	} = options;
 	const {yogaNode} = node;
 	if (!yogaNode) return;
@@ -208,6 +210,7 @@ export function handleContainerNode(
 						selectionMap,
 						selectionStyle,
 						trackSelection,
+						dirtyRegion,
 					});
 				}
 
@@ -252,6 +255,7 @@ export function handleContainerNode(
 					selectionMap,
 					selectionStyle,
 					trackSelection,
+					dirtyRegion,
 				});
 			}
 		}

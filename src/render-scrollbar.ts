@@ -81,15 +81,7 @@ export const renderScrollbar = ({
 					}
 				}
 
-				setChar(
-					drawX,
-					drawY,
-					char,
-					0,
-					fgColor,
-					bgColor,
-					undefined,
-				);
+				setChar(drawX, drawY, char, 0, fgColor, bgColor, undefined);
 			}
 		}
 	} else {
@@ -122,15 +114,7 @@ export const renderScrollbar = ({
 					}
 				}
 
-				setChar(
-					drawX,
-					drawY,
-					char,
-					0,
-					fgColor,
-					bgColor,
-					undefined,
-				);
+				setChar(drawX, drawY, char, 0, fgColor, bgColor, undefined);
 			}
 		}
 	}

@@ -7,7 +7,7 @@
 import fs from 'node:fs';
 import process from 'node:process';
 import ansiEscapes from 'ansi-escapes';
-import {debugLog, clearDebugLog} from '../debug-log.js';
+import {debugLog, clearDebugLog, isDebugLogEnabled} from '../debug-log.js';
 import {
 	type RegionNode,
 	type RegionUpdate,
@@ -67,6 +67,8 @@ export class TerminalBufferWorker {
 	// Ground truth on what lines should be rendered (composed frame)
 	screen: RenderLine[] = [];
 	backbuffer: RenderLine[] = [];
+
+	private dirtyRegion?: {x: number; y: number; w: number; h: number};
 
 	private renderPromise?: Promise<void>;
 
@@ -359,6 +361,10 @@ export class TerminalBufferWorker {
 		const treeChanged =
 			!this.sceneManager.root || !treesEqual(this.sceneManager.root, tree);
 
+		const rootRegionBefore = this.sceneManager.getRootRegion();
+		const oldCameraY = rootRegionBefore ? this.getCameraY(rootRegionBefore) : 0;
+		const oldBounds = this.getRegionBounds(oldCameraY);
+
 		if (this.isRecording) {
 			this.recordedFrames.push({
 				tree,
@@ -370,7 +376,7 @@ export class TerminalBufferWorker {
 
 		if (this.animatedScroll) {
 			if (updates.length > 0) {
-				if (debugWorker) {
+				if (debugWorker && isDebugLogEnabled) {
 					debugLog(`[RENDER-WORKER] Interrupting animation for jump\n`);
 				}
 
@@ -401,6 +407,66 @@ export class TerminalBufferWorker {
 				this.scrollOptimizer.resetTracking(id);
 			},
 		});
+
+		const newRootRegion = this.sceneManager.getRootRegion();
+		const newCameraY = newRootRegion ? this.getCameraY(newRootRegion) : 0;
+		const newBounds = this.getRegionBounds(newCameraY);
+		const cameraShift = newCameraY - oldCameraY;
+
+		if (cameraShift > 0) {
+			this.addDirtyRect(0, this.rows - cameraShift, this.columns, cameraShift);
+		}
+
+		for (const update of updates) {
+			const ob = oldBounds.get(update.id);
+			const nb = newBounds.get(update.id);
+
+			const isOnlyScroll =
+				update.lines === undefined &&
+				update.x === undefined &&
+				update.y === undefined &&
+				update.width === undefined &&
+				update.height === undefined;
+
+			if (!isOnlyScroll) {
+				if (ob) this.addDirtyRect(ob.x, ob.y - cameraShift, ob.w, ob.h);
+				if (nb) this.addDirtyRect(nb.x, nb.y, nb.w, nb.h);
+			} else if (nb) {
+				// Only scroll changed.
+				// Dirty scrollbars: vertical (right edge) and horizontal (bottom edge)
+				this.addDirtyRect(nb.x + nb.w - 1, nb.y, 1, nb.h);
+				this.addDirtyRect(nb.x, nb.y + nb.h - 1, nb.w, 1);
+
+				// Dirty sticky headers if present
+				const region = this.sceneManager.getRegion(update.id);
+				if (region?.stickyHeaders) {
+					for (const header of region.stickyHeaders) {
+						const linesToRender = header.stuckLines ?? header.lines;
+						this.addDirtyRect(nb.x, nb.y, nb.w, linesToRender.length);
+						this.addDirtyRect(
+							nb.x,
+							nb.y + nb.h - linesToRender.length,
+							nb.w,
+							linesToRender.length,
+						);
+					}
+				}
+			}
+		}
+
+		if (treeChanged) {
+			for (const [id, ob] of oldBounds) {
+				if (!newBounds.has(id)) {
+					this.addDirtyRect(ob.x, ob.y - cameraShift, ob.w, ob.h);
+				}
+			}
+
+			for (const [id, nb] of newBounds) {
+				if (!oldBounds.has(id)) {
+					this.addDirtyRect(nb.x, nb.y, nb.w, nb.h);
+				}
+			}
+		}
 
 		// Track regionWasAtEnd for scrollbars
 		for (const update of updates) {
@@ -473,6 +539,26 @@ export class TerminalBufferWorker {
 				cursorPosition.row !== previousCursorPosition.row ||
 				cursorPosition.col !== previousCursorPosition.col);
 
+		if (cursorChanged) {
+			if (previousCursorPosition) {
+				this.addDirtyRect(
+					previousCursorPosition.col,
+					previousCursorPosition.row - newCameraY,
+					1,
+					1,
+				);
+			}
+
+			if (cursorPosition) {
+				this.addDirtyRect(
+					cursorPosition.col,
+					cursorPosition.row - newCameraY,
+					1,
+					1,
+				);
+			}
+		}
+
 		const shouldRender =
 			updates.length > 0 ||
 			cursorChanged ||
@@ -491,7 +577,7 @@ export class TerminalBufferWorker {
 		this.columns = columns;
 		this.rows = rows;
 
-		if (debugWorker) {
+		if (debugWorker && isDebugLogEnabled) {
 			debugLog(`XXXXX [RENDER-WORKER] Resize to ${columns}x${rows}\n`);
 		}
 
@@ -517,7 +603,7 @@ export class TerminalBufferWorker {
 			return;
 		}
 
-		if (debugWorker) {
+		if (debugWorker && isDebugLogEnabled) {
 			debugLog(`XXXXX [RENDER-WORKER] True full render triggered\n`);
 		}
 
@@ -648,6 +734,44 @@ export class TerminalBufferWorker {
 		return updates;
 	}
 
+	private addDirtyRect(x: number, y: number, w: number, h: number) {
+		if (this.dirtyRegion) {
+			const x1 = Math.min(this.dirtyRegion.x, x);
+			const y1 = Math.min(this.dirtyRegion.y, y);
+			const x2 = Math.max(this.dirtyRegion.x + this.dirtyRegion.w, x + w);
+			const y2 = Math.max(this.dirtyRegion.y + this.dirtyRegion.h, y + h);
+			this.dirtyRegion = {x: x1, y: y1, w: x2 - x1, h: y2 - y1};
+		} else {
+			this.dirtyRegion = {x, y, w, h};
+		}
+	}
+
+	private getRegionBounds(
+		cameraY: number,
+	): Map<string | number, {x: number; y: number; w: number; h: number}> {
+		const bounds = new Map<
+			string | number,
+			{x: number; y: number; w: number; h: number}
+		>();
+		const traverse = (node: RegionNode, offsetX: number, offsetY: number) => {
+			const r = this.sceneManager.getRegion(node.id);
+			if (r) {
+				const x = r.x + offsetX;
+				const y = r.y + offsetY;
+				bounds.set(node.id, {x, y, w: r.width, h: r.height});
+				for (const child of node.children) {
+					traverse(child, x - (r.scrollLeft ?? 0), y - (r.scrollTop ?? 0));
+				}
+			}
+		};
+
+		if (this.sceneManager.root) {
+			traverse(this.sceneManager.root, 0, -cameraY);
+		}
+
+		return bounds;
+	}
+
 	private async _render() {
 		if (clearDebugLogPerFrame) {
 			clearDebugLog();
@@ -668,6 +792,16 @@ export class TerminalBufferWorker {
 
 		this.forceNextRender = false;
 
+		if (isDebugLogEnabled) {
+			if (this.dirtyRegion) {
+				debugLog(
+					`[RENDER-WORKER] Dirty Region: ${JSON.stringify(this.dirtyRegion)}`,
+				);
+			} else {
+				debugLog(`[RENDER-WORKER] Dirty Region: FULL FRAME`);
+			}
+		}
+
 		if (this.debugRainbowEnabled) {
 			this.frameIndex++;
 			this.terminalWriter.debugRainbowColor =
@@ -686,7 +820,7 @@ export class TerminalBufferWorker {
 			const linesToScroll = cameraY - maxPushed;
 
 			if (linesToScroll > 0) {
-				if (debugWorker) {
+				if (debugWorker && isDebugLogEnabled) {
 					debugLog(
 						`[RENDER-WORKER] Root region ${rootRegion.id} pushing ${linesToScroll} lines to backbuffer (cameraY: ${cameraY}, maxPushed: ${maxPushed})`,
 					);
@@ -753,7 +887,7 @@ export class TerminalBufferWorker {
 
 				for (const op of operations) {
 					if (op.scrollToBackbuffer) {
-						if (debugWorker) {
+						if (debugWorker && isDebugLogEnabled) {
 							debugLog(
 								`[RENDER-WORKER] Region ${op.regionId} scrolling ${op.linesToScroll} lines to backbuffer`,
 							);
@@ -768,6 +902,35 @@ export class TerminalBufferWorker {
 					this.terminalWriter.scrollLines(op);
 					if (op.newMaxPushed !== undefined) {
 						this.scrollOptimizer.updateMaxPushed(op.regionId, op.newMaxPushed);
+					}
+
+					if (op.direction === 'up') {
+						this.addDirtyRect(
+							0,
+							op.end - op.linesToScroll,
+							this.columns,
+							op.linesToScroll,
+						);
+					} else {
+						this.addDirtyRect(0, op.start, this.columns, op.linesToScroll);
+					}
+
+					const opRegion = this.sceneManager.getRegion(op.regionId);
+					if (opRegion) {
+						const rx = opRegion.x;
+						const rw = opRegion.width;
+						if (rx > 0) {
+							this.addDirtyRect(0, op.start, rx, op.end - op.start);
+						}
+
+						if (rx + rw < this.columns) {
+							this.addDirtyRect(
+								rx + rw,
+								op.start,
+								this.columns - (rx + rw),
+								op.end - op.start,
+							);
+						}
 					}
 				}
 			}
@@ -832,7 +995,7 @@ export class TerminalBufferWorker {
 		}
 
 		if (!canScrollMore) {
-			if (debugWorker) {
+			if (debugWorker && isDebugLogEnabled) {
 				debugLog(`[RENDER-WORKER] Stopping animation: all targets reached\n`);
 			}
 
@@ -886,12 +1049,15 @@ export class TerminalBufferWorker {
 				}
 			};
 
-			const rootBackbufferHeight = cameraY;
+			const maxBackbuffer = this.maxScrollbackLength;
+			const linesToRender = Math.min(cameraY, maxBackbuffer);
+			const startOffset = Math.max(0, cameraY - maxBackbuffer);
+
 			composeToBackbuffer(
 				this.sceneManager.root!,
 				rootRegion,
-				rootBackbufferHeight,
-				0,
+				linesToRender,
+				startOffset,
 			);
 
 			for (const region of this.sceneManager.regions.values()) {
@@ -906,13 +1072,51 @@ export class TerminalBufferWorker {
 			}
 		}
 
-		const canvas = Canvas.create(this.columns, this.rows, this.resized);
+		const canUseDirtyRegion =
+			this.dirtyRegion &&
+			!this.resized &&
+			this.screen.length === this.rows &&
+			!this.terminalWriter.isFirstRender;
+
+		const canvas = canUseDirtyRegion
+			? Canvas.fromLines(
+					this.columns,
+					this.rows,
+					this.screen.map(l => ({...l, styledChars: l.styledChars.clone()})),
+				)
+			: Canvas.create(this.columns, this.rows, this.resized);
+
+		if (canUseDirtyRegion) {
+			const dx = Math.max(0, Math.floor(this.dirtyRegion!.x));
+			const dy = Math.max(0, Math.floor(this.dirtyRegion!.y));
+			const dw = Math.min(this.columns - dx, Math.ceil(this.dirtyRegion!.w));
+			const dh = Math.min(this.rows - dy, Math.ceil(this.dirtyRegion!.h));
+
+			for (let y = dy; y < dy + dh; y++) {
+				const line = canvas.getLines()[y];
+				if (line) {
+					for (let x = dx; x < dx + dw; x++) {
+						line.styledChars.setChar(
+							x,
+							' ',
+							0,
+							undefined,
+							undefined,
+							undefined,
+						);
+					}
+				}
+			}
+		}
+
 		this.composeNode(this.sceneManager.root!, canvas, {
-			clip: undefined,
+			clip: canUseDirtyRegion ? this.dirtyRegion : undefined,
 			offsetY: -cameraY,
 		});
+
 		this.screen = canvas.getLines();
 		this.resized = false;
+		this.dirtyRegion = undefined;
 	}
 
 	/**
@@ -1144,7 +1348,7 @@ export class TerminalBufferWorker {
 	}
 
 	private logScene(scrolledToBackbuffer?: Map<string | number, number>) {
-		if (!debugWorker) {
+		if (!debugWorker || !isDebugLogEnabled) {
 			return;
 		}
 

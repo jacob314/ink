@@ -8,7 +8,7 @@ import process from 'node:process';
 import ansiEscapes from 'ansi-escapes';
 import {styledLineToString} from '../tokenize.js';
 import {StyledLine} from '../styled-line.js';
-import {debugLog} from '../debug-log.js';
+import {debugLog, isDebugLogEnabled} from '../debug-log.js';
 import colorize from '../colorize.js';
 import {debugWorker} from './render-worker.js';
 import {
@@ -653,7 +653,8 @@ export class TerminalWriter {
 
 			if (
 				!linesEqual(this.screen[r]?.styledChars, lines[index]?.styledChars) &&
-				debugWorker
+				debugWorker &&
+				isDebugLogEnabled
 			) {
 				debugLog(
 					`Line ${r} on screen inconsistent between terminalWriter and ground truth. Expected "${styledLineToString(
@@ -669,7 +670,8 @@ export class TerminalWriter {
 		for (let i = 0; i < backbufferLimit; i++) {
 			if (
 				!linesEqual(this.backbuffer[i]?.styledChars, lines[i]?.styledChars) &&
-				debugWorker
+				debugWorker &&
+				isDebugLogEnabled
 			) {
 				debugLog(
 					`Line ${i} in backbuffer inconsistent. Expected "${styledLineToString(
@@ -781,7 +783,7 @@ export class TerminalWriter {
 	}) {
 		const {start, end, linesToScroll, lines, direction, scrollToBackbuffer} =
 			options;
-		if (debugWorker) {
+		if (debugWorker && isDebugLogEnabled) {
 			debugLog(
 				`[terminal-writer] SCROLLING LINES ${start}-${end} by ${linesToScroll} ${direction}`,
 			);
