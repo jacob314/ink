@@ -133,11 +133,7 @@ export const wrapStyledChars = (
 
 			// Wrap: finish previous row
 			let trimEnd = i;
-			while (
-				trimEnd > currentRowStart &&
-				line.getValue(trimEnd - 1) === ' ' &&
-				!line.hasStyles(trimEnd - 1)
-			) {
+			while (trimEnd > currentRowStart && line.getValue(trimEnd - 1) === ' ') {
 				trimEnd--;
 			}
 
