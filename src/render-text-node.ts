@@ -22,28 +22,20 @@ export const applyPaddingToStyledChars = (
 		const offsetX = yogaNode.getComputedLeft();
 		const offsetY = yogaNode.getComputedTop();
 
-		const paddedLines: StyledLine[] = [];
+		if (offsetX > 0 || offsetY > 0) {
+			const paddedLines: StyledLine[] = [];
+			const paddingLeft = offsetX > 0 ? StyledLine.empty(offsetX) : undefined;
 
-		for (const line of lines) {
-			const newLine = new StyledLine();
-			for (let i = 0; i < offsetX; i++) {
-				newLine.pushChar(' ', 0);
+			for (const line of lines) {
+				paddedLines.push(paddingLeft ? paddingLeft.combine(line) : line);
 			}
 
-			paddedLines.push(
-				new StyledLine(
-					[...newLine.getValues(), ...line.getValues()],
-					[...newLine.getSpans(), ...line.getSpans().map(s => ({...s}))],
-				),
-			);
+			lines = paddedLines;
+
+			for (let i = 0; i < offsetY; i++) {
+				lines.unshift(new StyledLine());
+			}
 		}
-
-		lines = paddedLines;
-
-		const paddingTop: StyledLine[] = Array.from({length: offsetY}).map(
-			() => new StyledLine(),
-		);
-		lines.unshift(...paddingTop);
 	}
 
 	return lines;
@@ -207,11 +199,16 @@ export function handleTextNode(
 				relativeCursorPosition = lines[cursorLineIndex]!.length;
 			}
 		} else {
-			lines = [new StyledLine()];
 			const yogaNode = node.childNodes[0]?.yogaNode;
 			const offsetX = yogaNode?.getComputedLeft() ?? 0;
 			const offsetY = yogaNode?.getComputedTop() ?? 0;
-			lines = applyPaddingToStyledChars(node, lines);
+
+			const line = StyledLine.empty(offsetX);
+			lines = [line];
+
+			for (let i = 0; i < offsetY; i++) {
+				lines.unshift(new StyledLine());
+			}
 
 			if (node.internal_terminalCursorFocus) {
 				cursorLineIndex = offsetY;

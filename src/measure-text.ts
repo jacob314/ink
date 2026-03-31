@@ -215,56 +215,40 @@ export function inkCharacterWidth(text: string): number {
 
 export function wordBreakStyledChars(line: StyledLine): StyledLine[] {
 	const words: StyledLine[] = [];
-	let currentWord = new StyledLine();
+	let start = 0;
 
 	for (let i = 0; i < line.length; i++) {
 		const val = line.getValue(i);
-		const flags = line.getFormatFlags(i);
-		const fg = line.getFgColor(i);
-		const bg = line.getBgColor(i);
-		const link = line.getLink(i);
 
 		if (val === '\n' || val === ' ') {
-			if (currentWord.length > 0) {
-				words.push(currentWord);
+			if (i > start) {
+				words.push(line.slice(start, i));
 			}
 
-			currentWord = new StyledLine();
-			const spaceLine = new StyledLine();
-			spaceLine.pushChar(val, flags, fg, bg, link);
-			words.push(spaceLine);
-		} else {
-			currentWord.pushChar(val, flags, fg, bg, link);
+			words.push(line.slice(i, i + 1));
+			start = i + 1;
 		}
 	}
 
-	if (currentWord.length > 0) {
-		words.push(currentWord);
+	if (start < line.length) {
+		words.push(line.slice(start));
 	}
 
 	return words;
 }
 
 export function splitStyledCharsByNewline(line: StyledLine): StyledLine[] {
-	const lines: StyledLine[] = [new StyledLine()];
+	const lines: StyledLine[] = [];
+	let start = 0;
 
 	for (let i = 0; i < line.length; i++) {
-		const val = line.getValue(i);
-		if (val === '\n') {
-			lines.push(new StyledLine());
-		} else {
-			lines
-				.at(-1)!
-				.pushChar(
-					val,
-					line.getFormatFlags(i),
-					line.getFgColor(i),
-					line.getBgColor(i),
-					line.getLink(i),
-				);
+		if (line.getValue(i) === '\n') {
+			lines.push(line.slice(start, i));
+			start = i + 1;
 		}
 	}
 
+	lines.push(line.slice(start));
 	return lines;
 }
 

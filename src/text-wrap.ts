@@ -1,3 +1,9 @@
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import {StyledLine} from './styled-line.js';
 import {inkCharacterWidth, styledCharsWidth} from './measure-text.js';
 
@@ -63,13 +69,7 @@ export const truncateStyledChars = (
 			textWidth - columns + truncationWidth,
 			textWidth,
 		);
-		return new StyledLine(
-			[...truncationStyledLine.getValues(), ...right.getValues()],
-			[
-				...truncationStyledLine.getSpans(),
-				...right.getSpans().map(s => ({...s})),
-			],
-		);
+		return truncationStyledLine.combine(right);
 	}
 
 	if (position === 'middle') {
@@ -77,142 +77,110 @@ export const truncateStyledChars = (
 		const rightWidth = columns - leftWidth;
 		const left = sliceStyledChars(line, 0, leftWidth - truncationWidth);
 		const right = sliceStyledChars(line, textWidth - rightWidth, textWidth);
-		return new StyledLine(
-			[
-				...left.getValues(),
-				...truncationStyledLine.getValues(),
-				...right.getValues(),
-			],
-			[
-				...left.getSpans(),
-				...truncationStyledLine.getSpans().map(s => ({...s})),
-				...right.getSpans().map(s => ({...s})),
-			],
-		);
+		return left.combine(truncationStyledLine).combine(right);
 	}
 
 	const left = sliceStyledChars(line, 0, columns - truncationWidth);
-	return new StyledLine(
-		[...left.getValues(), ...truncationStyledLine.getValues()],
-		[...left.getSpans(), ...truncationStyledLine.getSpans().map(s => ({...s}))],
-	);
-};
-
-const wrapWord = (rows: StyledLine[], word: StyledLine, columns: number) => {
-	let currentLine = rows.at(-1)!;
-	let visible = styledCharsWidth(currentLine);
-
-	for (let i = 0; i < word.length; i++) {
-		const val = word.getValue(i);
-		const flags = word.getFormatFlags(i);
-		const fg = word.getFgColor(i);
-		const bg = word.getBgColor(i);
-		const link = word.getLink(i);
-
-		const characterLength = inkCharacterWidth(val);
-
-		if (visible + characterLength > columns && visible > 0) {
-			rows.push(new StyledLine());
-			currentLine = rows.at(-1)!;
-			visible = styledCharsWidth(currentLine);
-		}
-
-		currentLine.pushChar(val, flags, fg, bg, link);
-		visible += characterLength;
-	}
+	return left.combine(truncationStyledLine);
 };
 
 export const wrapStyledChars = (
 	line: StyledLine,
 	columns: number,
 ): StyledLine[] => {
-	const rows: StyledLine[] = [new StyledLine()];
-	const words: StyledLine[] = [];
-	let currentWord = new StyledLine();
-
-	for (let i = 0; i < line.length; i++) {
-		const val = line.getValue(i);
-		const flags = line.getFormatFlags(i);
-		const fg = line.getFgColor(i);
-		const bg = line.getBgColor(i);
-		const link = line.getLink(i);
-
-		if (val === '\n' || val === ' ') {
-			if (currentWord.length > 0) {
-				words.push(currentWord);
-			}
-
-			currentWord = new StyledLine();
-			const spaceLine = new StyledLine();
-			spaceLine.pushChar(val, flags, fg, bg, link);
-			words.push(spaceLine);
-		} else {
-			currentWord.pushChar(val, flags, fg, bg, link);
-		}
-	}
-
-	if (currentWord.length > 0) {
-		words.push(currentWord);
-	}
-
+	const rows: StyledLine[] = [];
+	let currentRowStart = 0;
+	let currentRowWidth = 0;
 	let isAtStartOfLogicalLine = true;
 
-	for (const word of words) {
-		if (word.length === 0) {
-			continue;
-		}
+	let i = 0;
+	while (i < line.length) {
+		const firstVal = line.getValue(i);
 
-		if (word.getValue(0) === '\n') {
-			rows.push(new StyledLine());
+		if (firstVal === '\n') {
+			rows.push(line.slice(currentRowStart, i));
+			currentRowStart = i + 1;
+			currentRowWidth = 0;
 			isAtStartOfLogicalLine = true;
+			i++;
 			continue;
 		}
 
-		const wordWidth = styledCharsWidth(word);
-		const rowWidth = styledCharsWidth(rows.at(-1)!);
-
-		if (rowWidth + wordWidth > columns) {
-			if (
-				!isAtStartOfLogicalLine &&
-				word.getValue(0) === ' ' &&
-				word.length === 1
+		// Find word/delimiter boundary
+		let j = i;
+		let wordWidth = 0;
+		if (firstVal === ' ') {
+			wordWidth = inkCharacterWidth(' ');
+			j = i + 1;
+		} else {
+			while (
+				j < line.length &&
+				line.getValue(j) !== ' ' &&
+				line.getValue(j) !== '\n'
 			) {
+				wordWidth += inkCharacterWidth(line.getValue(j));
+				j++;
+			}
+		}
+
+		// Word/space is [i, j)
+		if (currentRowWidth + wordWidth > columns && currentRowWidth > 0) {
+			if (firstVal === ' ' && !isAtStartOfLogicalLine && !line.hasStyles(i)) {
+				// Drop space that causes wrap
+				i = j;
 				continue;
 			}
 
-			if (!isAtStartOfLogicalLine) {
-				while (
-					rows.at(-1)!.length > 0 &&
-					rows.at(-1)!.getValue(rows.at(-1)!.length - 1) === ' '
-				) {
-					rows[rows.length - 1] = rows
-						.at(-1)!
-						.slice(0, rows.at(-1)!.length - 1);
-				}
+			// Wrap: finish previous row
+			let trimEnd = i;
+			while (
+				trimEnd > currentRowStart &&
+				line.getValue(trimEnd - 1) === ' ' &&
+				!line.hasStyles(trimEnd - 1)
+			) {
+				trimEnd--;
 			}
 
-			if (wordWidth > columns) {
-				if (rowWidth > 0) {
-					rows.push(new StyledLine());
-				}
+			rows.push(line.slice(currentRowStart, trimEnd));
 
-				wrapWord(rows, word, columns);
-			} else {
-				rows.push(new StyledLine());
-				// eslint-disable-next-line unicorn/prefer-spread
-				rows[rows.length - 1] = rows.at(-1)!.concat(word);
-			}
-		} else {
-			// eslint-disable-next-line unicorn/prefer-spread
-			rows[rows.length - 1] = rows.at(-1)!.concat(word);
+			currentRowStart = i;
+			currentRowWidth = 0;
+			// Note: isAtStartOfLogicalLine remains unchanged as we just wrapped.
+			// It ensures that subsequent spaces on the new row are also dropped if needed.
+			continue;
 		}
 
-		if (
-			isAtStartOfLogicalLine &&
-			!(word.getValue(0) === ' ' && word.length === 1)
-		) {
+		if (currentRowWidth === 0 && wordWidth > columns) {
+			// Hard wrap long word
+			let k = i;
+			let chunkWidth = 0;
+			while (k < j) {
+				const cw = inkCharacterWidth(line.getValue(k));
+				if (chunkWidth + cw > columns && chunkWidth > 0) {
+					rows.push(line.slice(currentRowStart, k));
+					currentRowStart = k;
+					chunkWidth = 0;
+				}
+
+				chunkWidth += cw;
+				k++;
+			}
+
+			currentRowWidth = chunkWidth;
+			i = j;
 			isAtStartOfLogicalLine = false;
+		} else {
+			// Fit
+			currentRowWidth += wordWidth;
+			i = j;
+			if (firstVal !== ' ') {
+				isAtStartOfLogicalLine = false;
+			}
 		}
+	}
+
+	if (currentRowStart < line.length || rows.length === 0) {
+		rows.push(line.slice(currentRowStart));
 	}
 
 	return rows;

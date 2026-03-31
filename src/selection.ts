@@ -16,69 +16,46 @@ type PlainTextResultWithMap = {
 };
 
 const getPlainTextFromDomNode = (node: DOMNode): PlainTextResultWithMap => {
-	const result: PlainTextResultWithMap = {
-		styledChars: new StyledLine(),
-		charOffsetMap: new Map(),
-	};
+	const isTextNode = node.nodeName === '#text';
+	const isStaticRender = node.nodeName === 'ink-static-render';
 
-	if (node.nodeName === '#text') {
-		const styledChars = toStyledCharacters(node.nodeValue);
-		result.styledChars = new StyledLine(
-			[...result.styledChars.getValues(), ...styledChars.getValues()],
-			[
-				...result.styledChars.getSpans(),
-				...styledChars.getSpans().map(s => ({...s})),
-			],
-		);
-		result.charOffsetMap.set(node, {
-			start: 0,
-			end: styledChars.length,
-		});
-		return result;
-	}
-
-	if (node.nodeName === 'ink-static-render') {
-		const text = node.cachedRender?.selectableText ?? '';
+	if (isTextNode || isStaticRender) {
+		const text = isTextNode
+			? node.nodeValue
+			: (node.cachedRender?.selectableText ?? '');
 		const styledChars = toStyledCharacters(text);
-		result.styledChars = new StyledLine(
-			[...result.styledChars.getValues(), ...styledChars.getValues()],
-			[
-				...result.styledChars.getSpans(),
-				...styledChars.getSpans().map(s => ({...s})),
-			],
-		);
-		result.charOffsetMap.set(node, {
-			start: 0,
-			end: styledChars.length,
-		});
-		return result;
+		return {
+			styledChars: styledChars.clone(),
+			charOffsetMap: new Map([[node, {start: 0, end: styledChars.length}]]),
+		};
 	}
 
 	const {state} = processLayout(node, {
-		initialState: (): PlainTextResultWithMap => ({
-			styledChars: new StyledLine(),
+		initialState: (): {
+			styledChars: StyledLine | undefined;
+			charOffsetMap: CharOffsetMap;
+		} => ({
+			styledChars: undefined,
 			charOffsetMap: new Map<DOMNode, {start: number; end: number}>(),
 		}),
 		onNewline(count, state) {
+			state.styledChars ||= new StyledLine();
 			for (let i = 0; i < count; i++) {
 				state.styledChars.pushChar('\n', 0);
 			}
 		},
 		onSpace(count, state) {
+			state.styledChars ||= new StyledLine();
 			for (let i = 0; i < count; i++) {
 				state.styledChars.pushChar(' ', 0);
 			}
 		},
 		onText(fragment, state) {
 			const styledChars = toStyledCharacters(fragment.text);
-			const fragmentStartOffset = state.styledChars.length;
-			state.styledChars = new StyledLine(
-				[...state.styledChars.getValues(), ...styledChars.getValues()],
-				[
-					...state.styledChars.getSpans(),
-					...styledChars.getSpans().map(s => ({...s})),
-				],
-			);
+			const fragmentStartOffset = state.styledChars?.length ?? 0;
+			state.styledChars = state.styledChars
+				? state.styledChars.combine(styledChars)
+				: styledChars.clone();
 
 			const map = new Map<DOMNode, {start: number; end: number}>();
 			const offsetRef = {current: 0};
@@ -98,10 +75,13 @@ const getPlainTextFromDomNode = (node: DOMNode): PlainTextResultWithMap => {
 		},
 	});
 
-	result.styledChars = state.styledChars;
-	result.charOffsetMap = state.charOffsetMap;
+	const resultStyledChars = state.styledChars ?? new StyledLine();
+	const result: PlainTextResultWithMap = {
+		styledChars: resultStyledChars,
+		charOffsetMap: state.charOffsetMap,
+	};
 
-	result.charOffsetMap.set(node, {start: 0, end: result.styledChars.length});
+	result.charOffsetMap.set(node, {start: 0, end: resultStyledChars.length});
 
 	return result;
 };
@@ -469,31 +449,22 @@ export const applySelectionToStyledChars = (
 ): StyledLine => {
 	const {range, currentOffset} = selectionState;
 	const {start, end} = range;
+	const newStyledChars = styledChars.clone();
+
 	let charCodeUnitOffset = 0;
-	const newStyledChars = new StyledLine();
-
-	for (let i = 0; i < styledChars.length; i++) {
-		const val = styledChars.getValue(i);
-		const charLength = val.length;
+	for (let i = 0; i < newStyledChars.length; i++) {
+		const val = newStyledChars.getValue(i);
 		const globalOffset = currentOffset + charCodeUnitOffset;
-
-		newStyledChars.pushChar(
-			val,
-			styledChars.getFormatFlags(i),
-			styledChars.getFgColor(i),
-			styledChars.getBgColor(i),
-			styledChars.getLink(i),
-		);
 
 		if (globalOffset >= start && globalOffset < end) {
 			if (selectionStyle) {
-				selectionStyle(newStyledChars, newStyledChars.length - 1);
+				selectionStyle(newStyledChars, i);
 			} else {
-				newStyledChars.setInverted(newStyledChars.length - 1, true);
+				newStyledChars.setInverted(i, true);
 			}
 		}
 
-		charCodeUnitOffset += charLength;
+		charCodeUnitOffset += val.length;
 	}
 
 	selectionState.currentOffset += charCodeUnitOffset;

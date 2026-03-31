@@ -277,7 +277,7 @@ export const HIDDEN_MASK = 1 << 6;
 export const FULL_WIDTH_MASK = 1 << 7;
 
 export function styledLineFromTokens(tokens: Token[]): StyledLine {
-	const line = new StyledLine([], []);
+	const line = new StyledLine();
 
 	let formatFlags = 0;
 	let fgColor: string | undefined;

@@ -2,6 +2,15 @@ import React from 'react';
 import test from 'ava';
 import {Box, Text} from '../src/index.js';
 import {renderToString} from './helpers/render-to-string.js';
+import {enableTestColors, disableTestColors} from './helpers/force-colors.js';
+
+test.before(() => {
+	enableTestColors();
+});
+
+test.after(() => {
+	disableTestColors();
+});
 
 const tsExample = `import React, {useState, useEffect} from 'react';
 import {render, Box, Text, useInput} from 'ink';
@@ -102,4 +111,16 @@ test('preserves space before long word that wraps', t => {
 	);
 
 	t.is(output, 'foo\nthiisthere\nstofalongl\ninethatnee\ndstowrap');
+});
+
+test('does not drop or trim trailing styled spaces when wrapping', t => {
+	const output = renderToString(
+		<Box width={5}>
+			<Text>
+				foo<Text backgroundColor="red">{'   '}</Text>bar
+			</Text>
+		</Box>,
+	);
+
+	t.is(output, 'foo\u001B[41m  \u001B[49m\n\u001B[41m \u001B[49mbar');
 });

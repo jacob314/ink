@@ -12,7 +12,7 @@ test('StyledLine.empty caps length', t => {
 
 test('StyledLine constructor truncates massive input and adds ellipsis', t => {
 	const massiveValues = Array.from({length: MAX_SAFE_OFFSET + 10}, () => 'a');
-	const line = new StyledLine(massiveValues);
+	const line = StyledLine.legacyCreateStyledLine(massiveValues);
 
 	t.is(line.length, MAX_SAFE_OFFSET);
 	t.is(line.getValue(MAX_SAFE_OFFSET - 1), '…');
@@ -50,12 +50,11 @@ test('setChar handles overflow', t => {
 	t.is(line.getText().length, MAX_SAFE_OFFSET);
 });
 
-test('concat respects limit', t => {
+test('combine respects limit', t => {
 	const line1 = StyledLine.empty(MAX_SAFE_OFFSET - 5);
 	const line2 = StyledLine.empty(10);
 
-	// eslint-disable-next-line unicorn/prefer-spread
-	const result = line1.concat(line2);
+	const result = line1.combine(line2);
 	t.is(result.length, MAX_SAFE_OFFSET);
 	t.is(result.getValue(MAX_SAFE_OFFSET - 1), '…');
 });
