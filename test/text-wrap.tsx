@@ -113,7 +113,7 @@ test('preserves space before long word that wraps', t => {
 	t.is(output, 'foo\nthiisthere\nstofalongl\ninethatnee\ndstowrap');
 });
 
-test('does not drop or trim trailing styled spaces when wrapping', t => {
+test('avoids leading spaces and preserves trailing styled spaces when wrapping', t => {
 	const output = renderToString(
 		<Box width={5}>
 			<Text>
@@ -122,5 +122,5 @@ test('does not drop or trim trailing styled spaces when wrapping', t => {
 		</Box>,
 	);
 
-	t.is(output, 'foo\u001B[41m  \u001B[49m\n\u001B[41m \u001B[49mbar');
+	t.is(output, 'foo\u001B[41m   \u001B[49m\nbar');
 });

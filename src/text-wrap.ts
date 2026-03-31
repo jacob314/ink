@@ -125,7 +125,7 @@ export const wrapStyledChars = (
 
 		// Word/space is [i, j)
 		if (currentRowWidth + wordWidth > columns && currentRowWidth > 0) {
-			if (firstVal === ' ' && !isAtStartOfLogicalLine && !line.hasStyles(i)) {
+			if (firstVal === ' ' && !isAtStartOfLogicalLine) {
 				// Drop space that causes wrap
 				i = j;
 				continue;
