@@ -562,16 +562,7 @@ export default class Output {
 	private trimRegionLines(region: Region) {
 		for (let y = 0; y < region.lines.length; y++) {
 			const line = region.lines[y]!;
-			let lastNonSpace = -1;
-
-			for (let i = line.length - 1; i >= 0; i--) {
-				if (line.getValue(i) !== ' ' || line.hasStyles(i)) {
-					lastNonSpace = i;
-					break;
-				}
-			}
-
-			const trimmedLength = lastNonSpace + 1;
+			const trimmedLength = line.getTrimmedLength();
 
 			if (region.styledOutput[y]?.length !== trimmedLength) {
 				(region.styledOutput as StyledLine[])[y] =
@@ -600,8 +591,10 @@ export default class Output {
 	}
 
 	private initLines(region: Region, width: number, height: number) {
+		if (height <= 0) return;
+		const baseRow = StyledLine.empty(width);
 		for (let y = 0; y < height; y++) {
-			const row = StyledLine.empty(width);
+			const row = y === 0 ? baseRow : baseRow.clone();
 			(region.lines as StyledLine[]).push(row);
 			(region.styledOutput as StyledLine[]).push(row);
 		}

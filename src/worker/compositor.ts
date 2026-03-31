@@ -8,7 +8,7 @@ import {type Region} from '../output.js';
 import {type StickyHeader} from '../dom.js';
 import {calculateScrollbarThumb} from '../measure-element.js';
 import {renderScrollbar} from '../render-scrollbar.js';
-import colorize from '../colorize.js';
+import {getBackgroundColorEscape} from '../colorize.js';
 import {type Canvas, type Rect} from './canvas.js';
 
 export type CompositionOptions = {
@@ -444,15 +444,7 @@ export class Compositor {
 			return Compositor.lastBackgroundStyles;
 		}
 
-		let styles: string | undefined;
-		const colorized = colorize('x', color, 'background');
-
-		if (colorized !== 'x') {
-			const parts = colorized.split('x');
-			if (parts.length === 2 && parts[0] && parts[1]) {
-				styles = parts[0];
-			}
-		}
+		const styles = getBackgroundColorEscape(color);
 
 		Compositor.lastBackgroundColor = color;
 		Compositor.lastBackgroundStyles = styles;
