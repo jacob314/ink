@@ -1,43 +1,57 @@
 import React, {useRef, useEffect} from 'react';
 import test from 'ava';
-import {render, Box, ResizeObserver, type DOMElement} from '../src/index.js';
+import {
+	render,
+	Box,
+	Text,
+	StaticRender,
+	ResizeObserver,
+	type DOMElement,
+} from '../src/index.js';
 import {waitFor} from './helpers/wait-for.js';
 import createStdout from './helpers/create-stdout.js';
+
+function ObservedBox({
+	onResize,
+	children,
+	...props
+}: {
+	readonly onResize: (dims: {width: number; height: number}) => void;
+	readonly children?: React.ReactNode;
+} & React.ComponentProps<typeof Box>) {
+	const ref = useRef<DOMElement>(null);
+
+	useEffect(() => {
+		if (!ref.current) {
+			return;
+		}
+
+		const observer = new ResizeObserver(entries => {
+			const entry = entries[0];
+			if (entry) {
+				onResize(entry.contentRect);
+			}
+		});
+
+		observer.observe(ref.current);
+
+		return () => {
+			observer.disconnect();
+		};
+	}, [onResize]);
+
+	return (
+		<Box ref={ref} {...props}>
+			{children}
+		</Box>
+	);
+}
 
 test('ResizeObserver detects size changes', async t => {
 	const resizeCalls: Array<{width: number; height: number}> = [];
 	const onResize = (dims: {width: number; height: number}) => {
 		resizeCalls.push(dims);
 	};
-
-	function Child({
-		onResize,
-	}: {
-		readonly onResize: (dims: {width: number; height: number}) => void;
-	}) {
-		const ref = useRef<DOMElement>(null);
-
-		useEffect(() => {
-			if (!ref.current) {
-				return;
-			}
-
-			const observer = new ResizeObserver(entries => {
-				const entry = entries[0];
-				if (entry) {
-					onResize(entry.contentRect);
-				}
-			});
-
-			observer.observe(ref.current);
-
-			return () => {
-				observer.disconnect();
-			};
-		}, [onResize]);
-
-		return <Box ref={ref} width="100%" height="100%" />;
-	}
 
 	function App({
 		width,
@@ -50,7 +64,7 @@ test('ResizeObserver detects size changes', async t => {
 	}) {
 		return (
 			<Box width={width} height={height}>
-				<Child onResize={onResize} />
+				<ObservedBox width="100%" height="100%" onResize={onResize} />
 			</Box>
 		);
 	}
@@ -203,5 +217,86 @@ test('ResizeObserver unobserve works', async t => {
 	});
 	t.is(callCount, 1);
 
+	unmount();
+});
+
+test('ResizeObserver attached to child of a StaticRender element still gets successfully called the very time it is rendered with a valid height', async t => {
+	const resizeCalls: Array<{width: number; height: number}> = [];
+	const onResize = (dims: {width: number; height: number}) => {
+		resizeCalls.push(dims);
+	};
+
+	const stdout = createStdout();
+	const {unmount} = render(
+		<StaticRender width={100} style={{flexDirection: 'column'}}>
+			<ObservedBox width={20} height={10} onResize={onResize} />
+		</StaticRender>,
+		{stdout},
+	);
+
+	await waitFor(() => resizeCalls.length === 1);
+
+	t.is(resizeCalls.length, 1);
+	t.deepEqual(resizeCalls[0], {width: 20, height: 10});
+
+	unmount();
+});
+
+test('ResizeObserver inside StaticRender does not yield NaN', async t => {
+	const resizeCalls: Array<{width: number; height: number}> = [];
+	const onResize = (dims: {width: number; height: number}) => {
+		resizeCalls.push(dims);
+	};
+
+	const stdout = createStdout();
+	const {unmount} = render(
+		<StaticRender width={100}>
+			<ObservedBox width="100%" height="100%" onResize={onResize} />
+		</StaticRender>,
+		{stdout},
+	);
+
+	await waitFor(() => resizeCalls.length === 1);
+
+	t.is(resizeCalls.length, 1);
+	t.deepEqual(resizeCalls[0], {width: 100, height: 0});
+
+	unmount();
+});
+
+test('ResizeObserver attached to parent of a StaticRender element does not get spurious updates', async t => {
+	const resizeCalls: Array<{width: number; height: number}> = [];
+	const onResize = (dims: {width: number; height: number}) => {
+		resizeCalls.push(dims);
+	};
+
+	const stdout = createStdout();
+	const {unmount} = render(
+		<ObservedBox
+			width={50}
+			flexDirection="column"
+			borderStyle="single"
+			onResize={onResize}
+		>
+			<Text>Parent</Text>
+			<StaticRender width={50}>
+				<Box width={30} height={5}>
+					<Text>Static Content</Text>
+				</Box>
+			</StaticRender>
+		</ObservedBox>,
+		{stdout},
+	);
+
+	await waitFor(() => resizeCalls.length === 1);
+
+	// The parent has fixed width of 50, but auto height based on its children.
+	// Initial render height is 8 (1 line text "Parent" + 5 line Static Content + 2 lines border).
+	// When StaticRender gets evaluated, it outputs static content directly to the terminal,
+	// but it shouldn't cause spurious height adjustments in its parent Box when its
+	// internal children are cached and removed from the main layout tree.
+	// Therefore, we expect exactly 1 resize event with {width: 50, height: 8}.
+	t.is(resizeCalls.length, 1);
+	t.deepEqual(resizeCalls[0], {width: 50, height: 8});
 	unmount();
 });
