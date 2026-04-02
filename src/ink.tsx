@@ -20,8 +20,11 @@ import App from './components/App.js';
 import {type InkOptions} from './components/AppContext.js';
 import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
 import {calculateScroll} from './scroll.js';
-// eslint-disable-next-line @typescript-eslint/consistent-type-imports
-import ResizeObserver, {ResizeObserverEntry} from './resize-observer.js';
+import {
+	measureAndExtractObservers,
+	type default as ResizeObserver,
+	type ResizeObserverEntry,
+} from './resize-observer.js'; // Removed unused imports
 import {Selection} from './selection.js';
 import TerminalBuffer from './terminal-buffer.js';
 import {type Region} from './output.js';
@@ -340,28 +343,13 @@ export default class Ink {
 			}
 		}
 
+		measureAndExtractObservers(node, observerEntries);
+
 		if (
-			node.resizeObservers &&
-			node.resizeObservers.size > 0 &&
-			node.yogaNode
+			node.internal_static ||
+			(node.nodeName === 'ink-static-render' && node.cachedRender)
 		) {
-			const width = node.yogaNode.getComputedWidth();
-			const height = node.yogaNode.getComputedHeight();
-			const lastSize = node.internal_lastMeasuredSize;
-
-			if (!lastSize || lastSize.width !== width || lastSize.height !== height) {
-				const entry = new ResizeObserverEntry(node, {width, height});
-
-				for (const observer of node.resizeObservers) {
-					if (!observerEntries.has(observer)) {
-						observerEntries.set(observer, []);
-					}
-
-					observerEntries.get(observer)!.push(entry);
-				}
-
-				node.internal_lastMeasuredSize = {width, height};
-			}
+			return;
 		}
 
 		for (const child of node.childNodes) {
