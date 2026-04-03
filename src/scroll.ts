@@ -59,7 +59,10 @@ export function getScrollWidth(node: DOMElement): number {
 	return node.internal_scrollState?.scrollWidth ?? 0;
 }
 
-export function calculateScroll(node: DOMElement): void {
+export function calculateScroll(
+	node: DOMElement,
+	isTerminalResized = false,
+): void {
 	const {yogaNode} = node;
 	if (!yogaNode) {
 		return;
@@ -75,28 +78,43 @@ export function calculateScroll(node: DOMElement): void {
 		yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM);
 
 	if (node.style.stableScrollback && node.style.overflowToBackbuffer) {
-		// When stableScrollback is enabled, we track the maximum scroll position ever reached
-		// (unless the buffer is cleared). This avoids needing to clear the entire scrollback
-		// buffer in order to change the content rendered to it. It ensures that even if child
-		// nodes are removed from the DOM, the scrollable area doesn't shrink, allowing users
-		// to still scroll up and view content that has 'fallen off' into the virtual backbuffer.
-		const actualMaxScrollTop = Math.max(0, actualScrollHeight - clientHeight);
-
-		if (node.internalIsScrollbackDirty) {
-			node.internalMaxScrollTop = actualMaxScrollTop;
+		if (isTerminalResized) {
+			node.internalMaxScrollTop = 0;
 			node.internalIsScrollbackDirty = false;
 		} else {
-			node.internalMaxScrollTop = Math.max(
-				node.internalMaxScrollTop ?? 0,
-				actualMaxScrollTop,
+			// When stableScrollback is enabled, we track the maximum scroll position ever reached
+			// (unless the buffer is cleared). This avoids needing to clear the entire scrollback
+			// buffer in order to change the content rendered to it. It ensures that even if child
+			// nodes are removed from the DOM, the scrollable area doesn't shrink, allowing users
+			// to still scroll up and view content that has 'fallen off' into the virtual backbuffer.
+			const actualMaxScrollTop = Math.max(0, actualScrollHeight - clientHeight);
+
+			if (node.internalIsScrollbackDirty) {
+				node.internalMaxScrollTop = actualMaxScrollTop;
+				node.internalIsScrollbackDirty = false;
+			} else {
+				node.internalMaxScrollTop = Math.max(
+					node.internalMaxScrollTop ?? 0,
+					actualMaxScrollTop,
+				);
+			}
+
+			// Ensure we have enough scrollHeight to accommodate internalMaxScrollTop,
+			// but cap the padding so that at least one line of actual content remains
+			// visible (even if it's pushed to the top of the viewport).
+			// We use actualScrollHeight - 1 so that the viewport (of size clientHeight)
+			// positioned at clampedMaxScrollTop will intersect with the last line of actual content.
+			const maxAllowedScrollTop = Math.max(0, actualScrollHeight - 1);
+			const clampedMaxScrollTop = Math.min(
+				node.internalMaxScrollTop,
+				maxAllowedScrollTop,
+			);
+
+			scrollHeight = Math.max(
+				actualScrollHeight,
+				clampedMaxScrollTop + clientHeight,
 			);
 		}
-
-		// Ensure we have enough scrollHeight to accommodate internalMaxScrollTop
-		scrollHeight = Math.max(
-			actualScrollHeight,
-			node.internalMaxScrollTop + clientHeight,
-		);
 	}
 
 	const scrollTop = Math.max(
