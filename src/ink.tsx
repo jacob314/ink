@@ -138,6 +138,7 @@ export default class Ink {
 	private readonly unsubscribeResize?: () => void;
 	private readonly unsubscribeSelection?: () => void;
 	private frameIndex = 0;
+	private isTerminalResized = false;
 
 	constructor(options: Options) {
 		autoBind(this);
@@ -293,6 +294,8 @@ export default class Ink {
 
 		clearToStyledCharactersCache();
 		this.terminalBuffer?.resize(terminalWidth, terminalHeight);
+		this.resetScrollbackPadding(this.rootNode);
+		this.isTerminalResized = true;
 		this.calculateLayout();
 		void this.onRender();
 	};
@@ -319,7 +322,12 @@ export default class Ink {
 		);
 
 		const observerEntries = new Map<ResizeObserver, ResizeObserverEntry[]>();
-		this.calculateLayoutAndTriggerObservers(this.rootNode, observerEntries);
+		this.calculateLayoutAndTriggerObservers(
+			this.rootNode,
+			observerEntries,
+			this.isTerminalResized,
+		);
+		this.isTerminalResized = false;
 
 		for (const [observer, entries] of observerEntries) {
 			observer.internalTrigger(entries);
@@ -329,6 +337,7 @@ export default class Ink {
 	calculateLayoutAndTriggerObservers(
 		node: dom.DOMElement,
 		observerEntries: Map<ResizeObserver, ResizeObserverEntry[]>,
+		isTerminalResized = false,
 	) {
 		if (node.nodeName === 'ink-box') {
 			const {style} = node;
@@ -337,7 +346,7 @@ export default class Ink {
 			const overflowY = style.overflowY ?? overflow;
 
 			if (overflowX === 'scroll' || overflowY === 'scroll') {
-				calculateScroll(node);
+				calculateScroll(node, isTerminalResized);
 			} else if (node.internal_scrollState) {
 				delete node.internal_scrollState;
 			}
@@ -354,7 +363,11 @@ export default class Ink {
 
 		for (const child of node.childNodes) {
 			if (child.nodeName !== '#text') {
-				this.calculateLayoutAndTriggerObservers(child, observerEntries);
+				this.calculateLayoutAndTriggerObservers(
+					child,
+					observerEntries,
+					isTerminalResized,
+				);
 			}
 		}
 	}
@@ -433,6 +446,7 @@ export default class Ink {
 
 		this.log.clear();
 		this.lastOutput = '';
+		this.resetScrollbackPadding(this.rootNode);
 		void this.onRender();
 	};
 
@@ -836,6 +850,16 @@ export default class Ink {
 		for (const child of node.childNodes) {
 			if (child.nodeName !== '#text') {
 				this.markAllTextNodesDirty(child);
+			}
+		}
+	}
+
+	private resetScrollbackPadding(node: dom.DOMElement) {
+		node.internalMaxScrollTop = 0;
+		node.internalIsScrollbackDirty = false;
+		for (const child of node.childNodes) {
+			if (child.nodeName !== '#text') {
+				this.resetScrollbackPadding(child);
 			}
 		}
 	}
