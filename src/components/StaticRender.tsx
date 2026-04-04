@@ -1,6 +1,5 @@
 import React, {useRef, useEffect, type ReactNode} from 'react';
 import {type DOMElement} from '../dom.js';
-import {renderToStatic} from '../render-node-to-output.js';
 import {type Styles} from '../styles.js';
 
 export type Props = {
@@ -22,15 +21,7 @@ export default function StaticRender({children, width, style}: Props) {
 	}, []);
 
 	return (
-		<ink-static-render
-			ref={ref}
-			style={{...style, width}}
-			internalOnBeforeRender={(node: DOMElement) => {
-				if (node && !node.cachedRender) {
-					renderToStatic(node);
-				}
-			}}
-		>
+		<ink-static-render ref={ref} style={{...style, width}}>
 			{children}
 		</ink-static-render>
 	);

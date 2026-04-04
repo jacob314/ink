@@ -29,7 +29,22 @@ export const squashTextNodesWithMap = (
 	map: CharOffsetMap,
 	offsetRef: {current: number},
 ): string => {
+	if (node.internal_textCache) {
+		const {text, map: cachedMap} = node.internal_textCache;
+		for (const [k, v] of cachedMap.entries()) {
+			map.set(k, {
+				start: v.start + offsetRef.current,
+				end: v.end + offsetRef.current,
+			});
+		}
+
+		offsetRef.current += text.length;
+		return text;
+	}
+
 	let text = '';
+	const localMap: CharOffsetMap = new Map();
+	const localOffsetRef = {current: 0};
 
 	for (let index = 0; index < node.childNodes.length; index++) {
 		const childNode = node.childNodes[index];
@@ -39,24 +54,24 @@ export const squashTextNodesWithMap = (
 		}
 
 		let nodeText = '';
-		const startOffset = offsetRef.current;
+		const startOffset = localOffsetRef.current;
 
 		if (childNode.nodeName === '#text') {
 			nodeText = childNode.nodeValue;
-			map.set(childNode, {
+			localMap.set(childNode, {
 				start: startOffset,
 				end: startOffset + nodeText.length,
 			});
-			offsetRef.current += nodeText.length;
+			localOffsetRef.current += nodeText.length;
 		} else {
 			if (
 				childNode.nodeName === 'ink-text' ||
 				childNode.nodeName === 'ink-virtual-text'
 			) {
-				nodeText = squashTextNodesWithMap(childNode, map, offsetRef);
-				map.set(childNode, {
+				nodeText = squashTextNodesWithMap(childNode, localMap, localOffsetRef);
+				localMap.set(childNode, {
 					start: startOffset,
-					end: offsetRef.current,
+					end: localOffsetRef.current,
 				});
 			}
 
@@ -72,6 +87,20 @@ export const squashTextNodesWithMap = (
 
 		text += nodeText;
 	}
+
+	node.internal_textCache = {
+		text,
+		map: localMap,
+	};
+
+	for (const [k, v] of localMap.entries()) {
+		map.set(k, {
+			start: v.start + offsetRef.current,
+			end: v.end + offsetRef.current,
+		});
+	}
+
+	offsetRef.current += text.length;
 
 	return text;
 };
