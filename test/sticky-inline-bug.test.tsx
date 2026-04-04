@@ -105,7 +105,7 @@ for (const {
 					height={5}
 					scrollTop={scrollTop}
 				>
-					<StaticRender width={20}>{content}</StaticRender>
+					<StaticRender width={20}>{() => content}</StaticRender>
 				</Box>
 			</Box>,
 			{stdin, stdout, debug: true},
