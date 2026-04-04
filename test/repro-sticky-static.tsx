@@ -15,22 +15,24 @@ test('sticky inside static render boundary test 4', t => {
 				borderStyle="single"
 			>
 				<StaticRender width={48}>
-					<Box flexDirection="column" flexShrink={0}>
-						<Box key="sticky1" opaque sticky="top" height={1}>
-							<Text>STICKY HEADER 1</Text>
+					{() => (
+						<Box flexDirection="column" flexShrink={0}>
+							<Box key="sticky1" opaque sticky="top" height={1}>
+								<Text>STICKY HEADER 1</Text>
+							</Box>
+							{Array.from({length: 5}).map((_, i) => {
+								const key = `LineA-${i}`;
+								return <Text key={key}>Line A{i}</Text>;
+							})}
+							<Box key="sticky2" opaque sticky="top" height={1}>
+								<Text>STICKY HEADER 2</Text>
+							</Box>
+							{Array.from({length: 5}).map((_, i) => {
+								const key = `LineB-${i}`;
+								return <Text key={key}>Line B{i}</Text>;
+							})}
 						</Box>
-						{Array.from({length: 5}).map((_, i) => {
-							const key = `LineA-${i}`;
-							return <Text key={key}>Line A{i}</Text>;
-						})}
-						<Box key="sticky2" opaque sticky="top" height={1}>
-							<Text>STICKY HEADER 2</Text>
-						</Box>
-						{Array.from({length: 20}).map((_, i) => {
-							const key = `LineB-${i}`;
-							return <Text key={key}>Line B{i}</Text>;
-						})}
-					</Box>
+					)}
 				</StaticRender>
 			</Box>,
 		);

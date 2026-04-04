@@ -15,6 +15,7 @@ import {
 	setTextNodeValue,
 	createNode,
 	setAttribute,
+	markNodeAsDirty,
 	type DOMNodeAttribute,
 	type TextNode,
 	type ElementNames,
@@ -23,6 +24,7 @@ import {
 } from './dom.js';
 import applyStyles, {type Styles} from './styles.js';
 import {type OutputTransformer} from './render-node-to-output.js';
+import {type Region} from './output.js';
 
 // We need to conditionally perform devtools connection to avoid
 // accidentally breaking other third-party code.
@@ -230,8 +232,8 @@ export default createReconciler<
 				continue;
 			}
 
-			if (key === 'internalOnBeforeRender') {
-				node.internalOnBeforeRender = value as () => void;
+			if (key === 'internal_onRendered') {
+				node.internal_onRendered = value as () => void;
 				continue;
 			}
 
@@ -243,6 +245,11 @@ export default createReconciler<
 				// Save reference to <Static> node to skip traversal of entire
 				// node tree to find it
 				rootNode.staticNode = node;
+				continue;
+			}
+
+			if (key === 'cachedRender') {
+				node.cachedRender = value as Region;
 				continue;
 			}
 
@@ -334,6 +341,7 @@ export default createReconciler<
 
 				if (key === 'internal_transform') {
 					node.internal_transform = value as OutputTransformer;
+					markNodeAsDirty(node);
 					continue;
 				}
 
@@ -357,13 +365,18 @@ export default createReconciler<
 					continue;
 				}
 
-				if (key === 'internalOnBeforeRender') {
-					node.internalOnBeforeRender = value as (node: DOMElement) => void;
+				if (key === 'internal_onRendered') {
+					node.internal_onRendered = value as () => void;
 					continue;
 				}
 
 				if (key === 'internal_static') {
 					node.internal_static = true;
+					continue;
+				}
+
+				if (key === 'cachedRender') {
+					node.cachedRender = value as Region;
 					continue;
 				}
 
