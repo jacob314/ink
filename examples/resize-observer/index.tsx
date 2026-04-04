@@ -116,9 +116,11 @@ function App() {
 			</Box>
 
 			<StaticRender width={80}>
-				<Box padding={1} borderStyle="single" borderColor="magenta">
-					<Text>I am a StaticRender block to test layout sizing.</Text>
-				</Box>
+				{() => (
+					<Box padding={1} borderStyle="single" borderColor="magenta">
+						<Text>I am a StaticRender block to test layout sizing.</Text>
+					</Box>
+				)}
 			</StaticRender>
 
 			<Text>

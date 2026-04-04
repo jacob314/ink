@@ -15,11 +15,12 @@ import {getScrollTop} from './scroll.js';
 import {getRelativeTop, getRelativeLeft} from './measure-element.js';
 
 export type StickyNodeInfo = {
-	node: DOMElement;
+	node?: DOMElement;
 	type: 'top' | 'bottom';
 	cached?: StickyHeader;
 	anchor?: DOMElement;
 };
+<<<<<<< HEAD
 
 export type ResolvedStickyHeaderInfo = {
 	stickyNodeTop: number;
@@ -124,11 +125,10 @@ export function resolveStickyHeaderInfo(
 		relativeY,
 		nodeId,
 	};
-}
+	}
 
-export function getStickyDescendants(node: DOMElement): StickyNodeInfo[] {
+	export function getStickyDescendants(node: DOMElement): StickyNodeInfo[] {
 	const stickyDescendants: StickyNodeInfo[] = [];
-
 	for (const child of node.childNodes) {
 		if (child.nodeName === '#text') {
 			continue;
@@ -150,14 +150,11 @@ export function getStickyDescendants(node: DOMElement): StickyNodeInfo[] {
 			domChild.cachedRender?.cachedStickyHeaders
 		) {
 			for (const header of domChild.cachedRender.cachedStickyHeaders) {
-				if (header.node) {
-					stickyDescendants.push({
-						node: header.node,
-						type: header.node.internalSticky === 'bottom' ? 'bottom' : 'top',
-						cached: header,
-						anchor: domChild,
-					});
-				}
+				stickyDescendants.push({
+					type: header.type ?? 'top',
+					cached: header,
+					anchor: domChild,
+				});
 			}
 		} else {
 			const overflow = domChild.style.overflow ?? 'visible';
@@ -269,7 +266,7 @@ export function identifyActiveStickyNodes(
 	}
 
 	const activeStickyNodes: Array<{
-		stickyNode: DOMElement;
+		stickyNode?: DOMElement;
 		type: 'top' | 'bottom';
 		nextStickyNode?: DOMElement;
 		nextStickyNodeInfo?: StickyNodeInfo;
@@ -326,7 +323,7 @@ export function identifyActiveStickyNodes(
 
 export function renderActiveStickyNodes(
 	activeStickyNodes: Array<{
-		stickyNode: DOMElement;
+		stickyNode?: DOMElement;
 		type: 'top' | 'bottom';
 		nextStickyNode?: DOMElement;
 		nextStickyNodeInfo?: StickyNodeInfo;
@@ -477,7 +474,7 @@ export function renderActiveStickyNodes(
 			stuckLines = cached.stuckLines;
 			naturalHeight = cached.endRow - cached.startRow;
 		} else {
-			const rendered = renderStickyNode(stickyNode, {
+			const rendered = renderStickyNode(stickyNode!, {
 				transformers: newTransformers,
 				skipStaticElements,
 				selectionMap,

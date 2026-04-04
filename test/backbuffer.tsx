@@ -48,14 +48,7 @@ test('captures clipped cachedRender content into backbuffer', t => {
 
 	// We need to bypass type checking to pass cachedRender to ink-static-render
 	function CachedBox(props: any) {
-		return React.createElement('ink-static-render', {
-			...props,
-			internalOnBeforeRender(node: {cachedRender?: Region}) {
-				if (node) {
-					node.cachedRender = cachedRender;
-				}
-			},
-		});
+		return React.createElement('ink-static-render', props);
 	}
 
 	const {unmount} = render(

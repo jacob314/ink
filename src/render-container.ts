@@ -67,7 +67,7 @@ export function handleContainerNode(
 	let childrenOffsetY = y;
 	let childrenOffsetX = x;
 	const activeStickyNodes: Array<{
-		stickyNode: DOMElement;
+		stickyNode?: DOMElement;
 		type: 'top' | 'bottom';
 		nextStickyNode?: DOMElement;
 		nextStickyNodeInfo?: StickyNodeInfo;
