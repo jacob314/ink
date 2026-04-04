@@ -128,6 +128,9 @@ export const renderToStatic = (
 	}
 
 	setCachedRender(node, rootRegion);
+	if (node.internal_onRendered) {
+		node.internal_onRendered();
+	}
 };
 
 // After nodes are laid out, render each to output object, which later gets rendered to terminal

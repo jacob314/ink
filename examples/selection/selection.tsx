@@ -450,45 +450,54 @@ const Selection = forwardRef<SelectionReference, SelectionProperties>(
 				>
 					{useStaticRender ? (
 						<StaticRender width={28}>
-							<Box flexDirection="column" width="100%">
-								<Text>
-									<Text color="red">Hello</Text> <Text color="blue">World</Text>
-								</Text>
-								<Box borderStyle="single">
+							{() => (
+								<Box flexDirection="column" width="100%">
 									<Text>
-										This is a <Text color="green">test</Text>
+										<Text color="red">Hello</Text>{' '}
+										<Text color="blue">World</Text>
 									</Text>
-								</Box>
-								<Box flexDirection="row">
-									<Text>
-										<Text color="red">Row</Text> <Text color="blue">A</Text>
-									</Text>
-									<Text>
-										<Text color="red">Row</Text> <Text color="green">B</Text>
-									</Text>
-								</Box>
-								<Text>{longText}</Text>
-								{insertedLines.map(line => (
-									<Text key={line}>{line}</Text>
-								))}
-								<Box flexDirection="column" marginTop={1} borderStyle="single">
-									{codeExample.map((line, i) => (
-										<Box key={line.id} flexDirection="row">
-											<Box
-												width={3}
-												flexShrink={0}
-												userSelect={lineNumbersSelectable ? undefined : 'none'}
-											>
-												<Text dimColor>{i + 1}</Text>
-											</Box>
-											<Text>
-												{' '.repeat(line.indent)}
-												{line.content}
-											</Text>
-										</Box>
+									<Box borderStyle="single">
+										<Text>
+											This is a <Text color="green">test</Text>
+										</Text>
+									</Box>
+									<Box flexDirection="row">
+										<Text>
+											<Text color="red">Row</Text> <Text color="blue">A</Text>
+										</Text>
+										<Text>
+											<Text color="red">Row</Text> <Text color="green">B</Text>
+										</Text>
+									</Box>
+									<Text>{longText}</Text>
+									{insertedLines.map(line => (
+										<Text key={line}>{line}</Text>
 									))}
+									<Box
+										flexDirection="column"
+										marginTop={1}
+										borderStyle="single"
+									>
+										{codeExample.map((line, i) => (
+											<Box key={line.id} flexDirection="row">
+												<Box
+													width={3}
+													flexShrink={0}
+													userSelect={
+														lineNumbersSelectable ? undefined : 'none'
+													}
+												>
+													<Text dimColor>{i + 1}</Text>
+												</Box>
+												<Text>
+													{' '.repeat(line.indent)}
+													{line.content}
+												</Text>
+											</Box>
+										))}
+									</Box>
 								</Box>
-							</Box>
+							)}
 						</StaticRender>
 					) : (
 						<Box flexDirection="column" width="100%">

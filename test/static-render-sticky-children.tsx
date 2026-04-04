@@ -27,26 +27,28 @@ test('StaticRender with stickyChildren (different height)', t => {
 				scrollTop={scrollTop}
 			>
 				<StaticRender width={30}>
-					<Box flexDirection="column">
-						<Box height={5} flexDirection="column">
-							<Box
-								opaque
-								sticky
-								stickyChildren={
-									<Box opaque flexDirection="column">
-										<Text>STICKY HEADER LINE 1</Text>
-										<Text>STICKY HEADER LINE 2</Text>
-									</Box>
-								}
-							>
-								<Text>Normal Header</Text>
+					{() => (
+						<Box flexDirection="column">
+							<Box height={5} flexDirection="column">
+								<Box
+									opaque
+									sticky
+									stickyChildren={
+										<Box opaque flexDirection="column">
+											<Text>STICKY HEADER LINE 1</Text>
+											<Text>STICKY HEADER LINE 2</Text>
+										</Box>
+									}
+								>
+									<Text>NATURAL HEADER</Text>
+								</Box>
+								<Text>Item 1</Text>
+								<Text>Item 2</Text>
+								<Text>Item 3</Text>
 							</Box>
-							<Text>Item 1</Text>
-							<Text>Item 2</Text>
-							<Text>Item 3</Text>
+							<Text>End of list</Text>
 						</Box>
-						<Text>End of list</Text>
-					</Box>
+					)}
 				</StaticRender>
 			</Box>,
 		);

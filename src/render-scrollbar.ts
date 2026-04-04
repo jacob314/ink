@@ -1,3 +1,4 @@
+/* eslint-disable max-depth */
 import colorize from './colorize.js';
 import {toStyledCharacters} from './measure-text.js';
 import {type ScrollbarBoundingBox} from './measure-element.js';

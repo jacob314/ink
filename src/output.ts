@@ -1,3 +1,5 @@
+/* eslint-disable max-params */
+/* eslint-disable max-depth */
 import {styledLineToString} from './tokenize.js';
 import {type OutputTransformer} from './render-node-to-output.js';
 import {

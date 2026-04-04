@@ -1,3 +1,4 @@
+/* eslint-disable no-warning-comments */
 import {useEffect} from 'react';
 import parseKeypress, {nonAlphanumericKeys} from '../parse-keypress.js';
 import reconciler from '../reconciler.js';

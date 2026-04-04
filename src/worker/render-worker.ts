@@ -1,3 +1,5 @@
+/* eslint-disable max-params */
+/* eslint-disable max-depth */
 /**
  * @license
  * Copyright 2026 Google LLC
@@ -709,18 +711,27 @@ export class TerminalBufferWorker {
 					this.rows,
 					this.columns,
 					cameraY,
-					(scrollStart, count, start, end) => {
+					(scrollStart, count, start, end, isScrollingToBackbuffer) => {
 						const originalScrollTop = region.scrollTop;
 						region.scrollTop = scrollStart;
 						try {
 							const getLines = (skipScrollbars: boolean) => {
-								const canvas = Canvas.create(this.columns, this.rows + count);
+								const canvas = Canvas.create(
+									this.columns,
+									isScrollingToBackbuffer
+										? Math.max(this.rows, end + count)
+										: this.rows,
+								);
 								this.composeNode(
 									this.sceneManager.root!,
 									canvas,
 									{
 										clip: undefined,
 										offsetY: -cameraY,
+										overrideHeight: isScrollingToBackbuffer
+											? Math.max(this.rows, end + count)
+											: undefined,
+										isExpanded: isScrollingToBackbuffer,
 									},
 									{skipStickyHeaders: true, skipScrollbars},
 								);

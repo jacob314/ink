@@ -1,3 +1,4 @@
+/* eslint-disable max-params */
 /**
  * @license
  * Copyright 2026 Google LLC
@@ -39,6 +40,7 @@ export class ScrollOptimizer {
 			count: number,
 			start: number,
 			end: number,
+			isScrollingToBackbuffer?: boolean,
 		) => RenderLine[],
 		calculateStuckTopHeight: (
 			region: Region,
@@ -137,6 +139,7 @@ export class ScrollOptimizer {
 						newLinesToPush,
 						adjustedStart,
 						adjustedEnd,
+						true,
 					),
 					direction: 'up',
 					scrollToBackbuffer: true,

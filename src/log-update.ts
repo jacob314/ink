@@ -1,3 +1,4 @@
+/* eslint-disable max-depth */
 import {type Writable} from 'node:stream';
 import process from 'node:process';
 import ansiEscapes from 'ansi-escapes';

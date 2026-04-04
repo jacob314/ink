@@ -1,3 +1,4 @@
+/* eslint-disable max-depth */
 import stringWidth from 'string-width';
 import {tokenize, styledLineFromTokens} from './tokenize.js';
 import {StyledLine} from './styled-line.js';

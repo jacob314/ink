@@ -1,3 +1,5 @@
+/* eslint-disable max-params */
+/* eslint-disable max-depth */
 import Yoga from 'yoga-layout';
 import {type DOMElement, type DOMNode, type TextNode} from './dom.js';
 import {getScrollLeft, getScrollTop} from './scroll.js';

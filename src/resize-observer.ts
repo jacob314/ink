@@ -1,3 +1,4 @@
+/* eslint-disable max-depth */
 import {type DOMElement} from './dom.js';
 
 export type ResizeObserverCallback = (

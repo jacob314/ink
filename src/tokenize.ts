@@ -1,3 +1,4 @@
+/* eslint-disable max-depth */
 import isFullwidthCodePoint from 'is-fullwidth-code-point';
 import ansiStyles from 'ansi-styles';
 import {StyledLine} from './styled-line.js';

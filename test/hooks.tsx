@@ -1,3 +1,4 @@
+/* eslint-disable no-warning-comments */
 import process from 'node:process';
 import url from 'node:url';
 import path from 'node:path';

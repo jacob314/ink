@@ -63,11 +63,12 @@ export type DOMElement = {
 	internal_transform?: OutputTransformer;
 	internal_terminalCursorFocus?: boolean;
 	internal_terminalCursorPosition?: number;
-	internalOnBeforeRender?: (
-		node: DOMElement,
-		options?: {trackSelection?: boolean},
-	) => void;
+	internal_onRendered?: () => void;
 	cachedRender?: Region;
+	internal_textCache?: {
+		text: string;
+		map: Map<DOMNode, {start: number; end: number}>;
+	};
 
 	internal_accessibility?: {
 		role?:
@@ -104,6 +105,7 @@ export type DOMElement = {
 
 	// Internal properties
 	isStaticDirty?: boolean;
+	isYogaTreeDetached?: boolean;
 	staticNode?: DOMElement;
 	onComputeLayout?: () => void;
 	onRender?: () => void;
@@ -334,13 +336,31 @@ export const setCachedRender = (node: DOMElement, cachedRender: Region) => {
 		while (node.yogaNode.getChildCount() > 0) {
 			node.yogaNode.removeChild(node.yogaNode.getChild(0));
 		}
+
+		node.isYogaTreeDetached = true;
 	}
 };
 
-const markNodeAsDirty = (node?: DOMNode): void => {
+export const markNodeAsDirty = (node?: DOMNode): void => {
 	// Mark closest Yoga node as dirty to measure text dimensions again
 	const yogaNode = findClosestYogaNode(node);
 	yogaNode?.markDirty();
+
+	let current = node;
+	while (current) {
+		if (
+			current.nodeName === 'ink-text' ||
+			current.nodeName === 'ink-virtual-text'
+		) {
+			current.internal_textCache = undefined;
+		}
+
+		if ('cachedRender' in current) {
+			current.cachedRender = undefined;
+		}
+
+		current = current.parentNode;
+	}
 };
 
 export const setTextNodeValue = (node: TextNode, text: string): void => {
