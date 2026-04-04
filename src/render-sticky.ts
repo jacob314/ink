@@ -15,12 +15,11 @@ import {getScrollTop} from './scroll.js';
 import {getRelativeTop, getRelativeLeft} from './measure-element.js';
 
 export type StickyNodeInfo = {
-	node: DOMElement;
+	node?: DOMElement;
 	type: 'top' | 'bottom';
 	cached?: StickyHeader;
 	anchor?: DOMElement;
 };
-
 export type ResolvedStickyHeaderInfo = {
 	stickyNodeTop: number;
 	stickyNodeHeight: number;
@@ -80,7 +79,7 @@ export function resolveStickyHeaderInfo(
 			currentBorderLeft;
 		relativeY = stickyNodeTop - currentBorderTop;
 		nodeId = cached.nodeId;
-	} else {
+	} else if (stickyNode) {
 		stickyNodeTop = getRelativeTop(stickyNode, node) ?? 0;
 		naturalStickyNodeHeight = Math.round(
 			stickyNode.yogaNode?.getComputedHeight() ?? 0,
@@ -110,6 +109,10 @@ export function resolveStickyHeaderInfo(
 		relativeX = (getRelativeLeft(stickyNode, node) ?? 0) - currentBorderLeft;
 		relativeY = stickyNodeTop - currentBorderTop;
 		nodeId = stickyNode.internalId;
+	} else {
+		throw new Error(
+			'stickyNodeInfo must have a node if not using cached headers',
+		);
 	}
 
 	return {
@@ -128,7 +131,6 @@ export function resolveStickyHeaderInfo(
 
 export function getStickyDescendants(node: DOMElement): StickyNodeInfo[] {
 	const stickyDescendants: StickyNodeInfo[] = [];
-
 	for (const child of node.childNodes) {
 		if (child.nodeName === '#text') {
 			continue;
@@ -150,14 +152,11 @@ export function getStickyDescendants(node: DOMElement): StickyNodeInfo[] {
 			domChild.cachedRender?.cachedStickyHeaders
 		) {
 			for (const header of domChild.cachedRender.cachedStickyHeaders) {
-				if (header.node) {
-					stickyDescendants.push({
-						node: header.node,
-						type: header.node.internalSticky === 'bottom' ? 'bottom' : 'top',
-						cached: header,
-						anchor: domChild,
-					});
-				}
+				stickyDescendants.push({
+					type: header.type ?? 'top',
+					cached: header,
+					anchor: domChild,
+				});
 			}
 		} else {
 			const overflow = domChild.style.overflow ?? 'visible';
@@ -269,7 +268,7 @@ export function identifyActiveStickyNodes(
 	}
 
 	const activeStickyNodes: Array<{
-		stickyNode: DOMElement;
+		stickyNode?: DOMElement;
 		type: 'top' | 'bottom';
 		nextStickyNode?: DOMElement;
 		nextStickyNodeInfo?: StickyNodeInfo;
@@ -326,7 +325,7 @@ export function identifyActiveStickyNodes(
 
 export function renderActiveStickyNodes(
 	activeStickyNodes: Array<{
-		stickyNode: DOMElement;
+		stickyNode?: DOMElement;
 		type: 'top' | 'bottom';
 		nextStickyNode?: DOMElement;
 		nextStickyNodeInfo?: StickyNodeInfo;
@@ -477,7 +476,7 @@ export function renderActiveStickyNodes(
 			stuckLines = cached.stuckLines;
 			naturalHeight = cached.endRow - cached.startRow;
 		} else {
-			const rendered = renderStickyNode(stickyNode, {
+			const rendered = renderStickyNode(stickyNode!, {
 				transformers: newTransformers,
 				skipStaticElements,
 				selectionMap,

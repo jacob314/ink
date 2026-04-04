@@ -32,17 +32,19 @@ test('StaticRender with sticky header', t => {
 				scrollTop={scrollTop}
 			>
 				<StaticRender width={20}>
-					<Box flexDirection="column">
-						<Box height={4} flexDirection="column">
-							<Box sticky opaque>
-								<Text>Header</Text>
+					{() => (
+						<Box flexDirection="column">
+							<Box height={4} flexDirection="column">
+								<Box sticky opaque>
+									<Text>Header</Text>
+								</Box>
+								<Text>Item 1</Text>
+								<Text>Item 2</Text>
+								<Text>Item 3</Text>
 							</Box>
-							<Text>Item 1</Text>
-							<Text>Item 2</Text>
-							<Text>Item 3</Text>
+							<Text>End of list</Text>
 						</Box>
-						<Text>End of list</Text>
-					</Box>
+					)}
 				</StaticRender>
 			</Box>,
 		);
@@ -77,24 +79,27 @@ test('StaticRender containing multiple sticky headers', t => {
 				scrollTop={scrollTop}
 			>
 				<StaticRender width={20}>
-					<Box flexDirection="column">
-						<Box height={4} flexDirection="column">
-							<Box sticky opaque>
-								<Text>Header 1</Text>
+					{() => (
+						<Box flexDirection="column">
+							<Box height={4} flexDirection="column">
+								<Box sticky opaque>
+									<Text>Header 1</Text>
+								</Box>
+								<Text>Item 1-1</Text>
+								<Text>Item 1-2</Text>
+								<Text>Item 1-3</Text>
 							</Box>
-							<Text>Item 1-1</Text>
-							<Text>Item 1-2</Text>
-							<Text>Item 1-3</Text>
-						</Box>
-						<Box height={4} flexDirection="column">
-							<Box sticky opaque>
-								<Text>Header 2</Text>
+							<Box height={4} flexDirection="column">
+								<Box sticky opaque>
+									<Text>Header 2</Text>
+								</Box>
+								<Text>Item 2-1</Text>
+								<Text>Item 2-2</Text>
+								<Text>Item 2-3</Text>
 							</Box>
-							<Text>Item 2-1</Text>
-							<Text>Item 2-2</Text>
-							<Text>Item 2-3</Text>
+							<Text>End of list</Text>
 						</Box>
-					</Box>
+					)}
 				</StaticRender>
 			</Box>,
 		);
@@ -113,25 +118,27 @@ test('StaticRender with multi-line sticky header', t => {
 			scrollTop={5}
 		>
 			<StaticRender width={20}>
-				<Box flexDirection="column">
-					<Box
-						sticky
-						opaque
-						width="100%"
-						stickyChildren={
-							<Box flexDirection="column" width="100%">
-								<Text>STICKY LINE 1</Text>
-								<Text>STICKY LINE 2</Text>
-							</Box>
-						}
-					>
-						<Text>Normal Header</Text>
+				{() => (
+					<Box flexDirection="column">
+						<Box
+							sticky
+							opaque
+							width="100%"
+							stickyChildren={
+								<Box flexDirection="column" width="100%">
+									<Text>STICKY LINE 1</Text>
+									<Text>STICKY LINE 2</Text>
+								</Box>
+							}
+						>
+							<Text>Normal Header</Text>
+						</Box>
+						{Array.from({length: 20}).map((_, i) => {
+							const text = `Line ${i}`;
+							return <Text key={text}>{text}</Text>;
+						})}
 					</Box>
-					{Array.from({length: 20}).map((_, i) => {
-						const text = `Line ${i}`;
-						return <Text key={text}>{text}</Text>;
-					})}
-				</Box>
+				)}
 			</StaticRender>
 		</Box>,
 	);

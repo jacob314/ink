@@ -1,4 +1,19 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import process from 'node:process';
 import {type Terminal} from '@xterm/headless';
+
+export function verifySvgSnapshot(t: any, svg: string, snapshotPath: string) {
+	fs.mkdirSync(path.dirname(snapshotPath), {recursive: true});
+
+	if (process.env['UPDATE_SNAPSHOTS'] ?? !fs.existsSync(snapshotPath)) {
+		fs.writeFileSync(snapshotPath, svg, 'utf8');
+		t.pass();
+	} else {
+		const expected = fs.readFileSync(snapshotPath, 'utf8');
+		t.is(svg, expected);
+	}
+}
 
 export function generateSvgForTerminal(terminal: Terminal): string {
 	const activeBuffer = terminal.buffer.active;
@@ -94,7 +109,7 @@ export function generateSvgForTerminal(terminal: Terminal): string {
 	// Find the actual number of rows with content to avoid rendering trailing blank space.
 	let contentRows = terminal.rows;
 	for (let y = terminal.rows - 1; y >= 0; y--) {
-		const line = activeBuffer.getLine(y);
+		const line = activeBuffer.getLine(y + activeBuffer.viewportY);
 		if (line && line.translateToString(true).trim().length > 0) {
 			contentRows = y + 1;
 			break;
@@ -114,7 +129,7 @@ export function generateSvgForTerminal(terminal: Terminal): string {
 	svg += `  <g transform="translate(${padding}, ${padding})">\n`;
 
 	for (let y = 0; y < contentRows; y++) {
-		const line = activeBuffer.getLine(y);
+		const line = activeBuffer.getLine(y + activeBuffer.viewportY);
 		if (!line) continue;
 
 		let currentFgHex: string | undefined = null;
