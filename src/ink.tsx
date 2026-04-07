@@ -885,7 +885,10 @@ export default class Ink {
 			}
 		}
 
-		if (node.nodeName === 'ink-static-render' && !node.cachedRender) {
+		if (
+			node.nodeName === 'ink-static-render' &&
+			(!node.cachedRender || node.isStaticDirty)
+		) {
 			const terminalWidth = this.options.stdout.columns ?? 80;
 			const {width} = node.style;
 
@@ -893,6 +896,7 @@ export default class Ink {
 				node.yogaNode.setWidth(
 					typeof width === 'number' ? width : terminalWidth,
 				);
+				node.yogaNode.setHeightAuto();
 				node.yogaNode.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
 			}
 
@@ -902,6 +906,8 @@ export default class Ink {
 				skipStaticElements: false,
 				trackSelection: this.options.trackSelection,
 			});
+
+			node.isStaticDirty = false;
 		}
 	}
 

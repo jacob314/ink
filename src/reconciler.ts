@@ -286,9 +286,27 @@ export default createReconciler<
 	unhideInstance(node) {
 		node.yogaNode?.setDisplay(Yoga.DISPLAY_FLEX);
 	},
-	appendInitialChild: appendChildNode,
-	appendChild: appendChildNode,
-	insertBefore: insertBeforeNode,
+	appendInitialChild(parent, child) {
+		appendChildNode(parent, child as DOMElement);
+		if (parent.nodeName === 'ink-static-render') {
+			parent.isStaticDirty = true;
+			if (currentRootNode) currentRootNode.isStaticDirty = true;
+		}
+	},
+	appendChild(parent, child) {
+		appendChildNode(parent, child as DOMElement);
+		if (parent.nodeName === 'ink-static-render') {
+			parent.isStaticDirty = true;
+			if (currentRootNode) currentRootNode.isStaticDirty = true;
+		}
+	},
+	insertBefore(parent, child, beforeChild) {
+		insertBeforeNode(parent, child as DOMElement, beforeChild);
+		if (parent.nodeName === 'ink-static-render') {
+			parent.isStaticDirty = true;
+			if (currentRootNode) currentRootNode.isStaticDirty = true;
+		}
+	},
 	finalizeInitialChildren() {
 		return false;
 	},

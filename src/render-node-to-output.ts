@@ -119,15 +119,77 @@ export const renderToStatic = (
 		});
 	}
 
-	const rootRegion = staticOutput.get();
-	rootRegion.cachedStickyHeaders = cachedStickyHeaders;
+	const newRegion = staticOutput.get();
+	newRegion.cachedStickyHeaders = cachedStickyHeaders;
 	if (options.trackSelection) {
-		rootRegion.selectableText = extractSelectableText(
-			rootRegion.selectableSpans,
-		);
+		newRegion.selectableText = extractSelectableText(newRegion.selectableSpans);
 	}
 
-	setCachedRender(node, rootRegion);
+	if (node.cachedRender) {
+		const base = node.cachedRender;
+		const offsetY = base.height;
+		base.height += newRegion.height;
+
+		(base as any).lines = [...(base.lines as StyledLine[]), ...newRegion.lines];
+		(base as any).styledOutput = [
+			...(base.styledOutput as StyledLine[]),
+			...newRegion.styledOutput,
+		];
+
+		for (const header of newRegion.stickyHeaders) {
+			const newHeader = {...header};
+			newHeader.y += offsetY;
+			newHeader.naturalRow += offsetY;
+			newHeader.startRow += offsetY;
+			newHeader.endRow += offsetY;
+			if (newHeader.maxStuckY !== undefined) newHeader.maxStuckY += offsetY;
+			if (newHeader.minStuckY !== undefined) newHeader.minStuckY += offsetY;
+			base.stickyHeaders.push(newHeader);
+		}
+
+		if (newRegion.cachedStickyHeaders) {
+			base.cachedStickyHeaders ??= [];
+			for (const cachedHeader of newRegion.cachedStickyHeaders) {
+				const newCachedHeader = {...cachedHeader};
+				newCachedHeader.y += offsetY;
+				newCachedHeader.relativeY! += offsetY;
+				newCachedHeader.naturalRow += offsetY;
+				newCachedHeader.startRow += offsetY;
+				newCachedHeader.endRow += offsetY;
+				if (newCachedHeader.maxStuckY !== undefined)
+					newCachedHeader.maxStuckY += offsetY;
+				if (newCachedHeader.minStuckY !== undefined)
+					newCachedHeader.minStuckY += offsetY;
+				base.cachedStickyHeaders.push(newCachedHeader);
+			}
+		}
+
+		for (const child of newRegion.children) {
+			const newChild = {...child};
+			newChild.y += offsetY;
+			base.children.push(newChild);
+		}
+
+		for (const span of newRegion.selectableSpans) {
+			base.selectableSpans.push({
+				...span,
+				y: span.y + offsetY,
+			});
+		}
+
+		if (options.trackSelection) {
+			base.selectableText = extractSelectableText(base.selectableSpans);
+		}
+
+		if (node.yogaNode) {
+			node.yogaNode.setHeight(base.height);
+			while (node.yogaNode.getChildCount() > 0) {
+				node.yogaNode.removeChild(node.yogaNode.getChild(0));
+			}
+		}
+	} else {
+		setCachedRender(node, newRegion);
+	}
 };
 
 // After nodes are laid out, render each to output object, which later gets rendered to terminal

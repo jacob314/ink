@@ -108,56 +108,59 @@ export function useTerminalSize(): {columns: number; rows: number} {
 
 const InnerStatic = React.memo(({id}: {readonly id: string}) => {
 	return (
-		<StaticRender width={50}>
-			<Box
-				flexDirection="column"
-				borderStyle="single"
-				borderColor="yellow"
-				paddingX={1}
-			>
-				<TrackedText name={`inner-${id}`} color="yellow">
-					Inner Item {id}
-				</TrackedText>
-				<Text dimColor>
-					Lorem ipsum dolor sit amet, consectetur adipiscing elit.{'\n'}
-					Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-					{'\n'}
-					Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
-					{'\n'}
-					Nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in.
-					{'\n'}
-					Reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla.
-				</Text>
-			</Box>
-		</StaticRender>
+		<Box
+			flexDirection="column"
+			borderStyle="single"
+			borderColor="yellow"
+			paddingX={1}
+		>
+			<TrackedText name={`inner-${id}`} color="yellow">
+				Inner Item {id}
+			</TrackedText>
+			<Text dimColor>
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit.{'\n'}
+				Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+				{'\n'}
+				Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+				{'\n'}
+				Nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in.
+				{'\n'}
+				Reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla.
+			</Text>
+		</Box>
 	);
 });
 
 const OuterGroup = React.memo(
 	({groupId, items}: {readonly groupId: number; readonly items: number[]}) => {
 		return (
-			<StaticRender width={60}>
-				<Box
-					flexDirection="column"
-					borderStyle="double"
-					borderColor="blue"
-					marginBottom={1}
-					paddingX={1}
-				>
-					<TrackedText name={`outer-${groupId}`} color="cyan">
-						Outer Group {groupId}
-					</TrackedText>
+			<Box
+				flexDirection="column"
+				borderStyle="double"
+				borderColor="blue"
+				marginBottom={1}
+				paddingX={1}
+				flexShrink={0}
+			>
+				<StaticRender width={58} items={[groupId]}>
+					{id => (
+						<TrackedText key={`outer-${id}`} name={`outer-${id}`} color="cyan">
+							Outer Group {id}
+						</TrackedText>
+					)}
+				</StaticRender>
 
-					<Box flexDirection="column" gap={1} marginTop={1}>
-						{items.map(itemId => (
+				<Box flexDirection="column" gap={1} marginTop={1}>
+					<StaticRender width={50} items={items}>
+						{itemId => (
 							<InnerStatic
 								key={`inner-${groupId}-${itemId}`}
 								id={`${groupId}-${itemId}`}
 							/>
-						))}
-					</Box>
+						)}
+					</StaticRender>
 				</Box>
-			</StaticRender>
+			</Box>
 		);
 	},
 );
