@@ -9,6 +9,7 @@ import {
 import Output, {
 	isRectIntersectingClip,
 	extractSelectableText,
+	type Region,
 } from './output.js';
 import {handleTextNode} from './render-text-node.js';
 import {renderStickyNode, getStickyDescendants} from './render-sticky.js';
@@ -128,13 +129,23 @@ export const renderToStatic = (
 	if (node.cachedRender) {
 		const base = node.cachedRender;
 		const offsetY = base.height;
-		base.height += newRegion.height;
 
-		(base as any).lines = [...(base.lines as StyledLine[]), ...newRegion.lines];
-		(base as any).styledOutput = [
-			...(base.styledOutput as StyledLine[]),
-			...newRegion.styledOutput,
-		];
+		const newBase: Region = {
+			...base,
+			height: base.height + newRegion.height,
+			lines: [...(base.lines as StyledLine[]), ...newRegion.lines],
+			styledOutput: [
+				...(base.styledOutput as StyledLine[]),
+				...newRegion.styledOutput,
+			],
+			stickyHeaders: [...base.stickyHeaders],
+			children: [...base.children],
+			selectableSpans: [...base.selectableSpans],
+		};
+
+		if (base.cachedStickyHeaders) {
+			newBase.cachedStickyHeaders = [...base.cachedStickyHeaders];
+		}
 
 		for (const header of newRegion.stickyHeaders) {
 			const newHeader = {...header};
@@ -144,11 +155,11 @@ export const renderToStatic = (
 			newHeader.endRow += offsetY;
 			if (newHeader.maxStuckY !== undefined) newHeader.maxStuckY += offsetY;
 			if (newHeader.minStuckY !== undefined) newHeader.minStuckY += offsetY;
-			base.stickyHeaders.push(newHeader);
+			newBase.stickyHeaders.push(newHeader);
 		}
 
 		if (newRegion.cachedStickyHeaders) {
-			base.cachedStickyHeaders ??= [];
+			newBase.cachedStickyHeaders ??= [];
 			for (const cachedHeader of newRegion.cachedStickyHeaders) {
 				const newCachedHeader = {...cachedHeader};
 				newCachedHeader.y += offsetY;
@@ -160,33 +171,35 @@ export const renderToStatic = (
 					newCachedHeader.maxStuckY += offsetY;
 				if (newCachedHeader.minStuckY !== undefined)
 					newCachedHeader.minStuckY += offsetY;
-				base.cachedStickyHeaders.push(newCachedHeader);
+				newBase.cachedStickyHeaders.push(newCachedHeader);
 			}
 		}
 
 		for (const child of newRegion.children) {
 			const newChild = {...child};
 			newChild.y += offsetY;
-			base.children.push(newChild);
+			newBase.children.push(newChild);
 		}
 
 		for (const span of newRegion.selectableSpans) {
-			base.selectableSpans.push({
+			newBase.selectableSpans.push({
 				...span,
 				y: span.y + offsetY,
 			});
 		}
 
 		if (options.trackSelection) {
-			base.selectableText = extractSelectableText(base.selectableSpans);
+			newBase.selectableText = extractSelectableText(newBase.selectableSpans);
 		}
 
 		if (node.yogaNode) {
-			node.yogaNode.setHeight(base.height);
+			node.yogaNode.setHeight(newBase.height);
 			while (node.yogaNode.getChildCount() > 0) {
 				node.yogaNode.removeChild(node.yogaNode.getChild(0));
 			}
 		}
+
+		node.cachedRender = newBase;
 	} else {
 		setCachedRender(node, newRegion);
 	}
