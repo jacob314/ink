@@ -15,6 +15,7 @@ import {
 	setTextNodeValue,
 	createNode,
 	setAttribute,
+	markNodeAsDirty,
 	type DOMNodeAttribute,
 	type TextNode,
 	type ElementNames,
@@ -23,6 +24,7 @@ import {
 } from './dom.js';
 import applyStyles, {type Styles} from './styles.js';
 import {type OutputTransformer} from './render-node-to-output.js';
+import {type Region} from './output.js';
 
 // We need to conditionally perform devtools connection to avoid
 // accidentally breaking other third-party code.
@@ -230,11 +232,6 @@ export default createReconciler<
 				continue;
 			}
 
-			if (key === 'internalOnBeforeRender') {
-				node.internalOnBeforeRender = value as () => void;
-				continue;
-			}
-
 			if (key === 'internal_static') {
 				currentRootNode = rootNode;
 				node.internal_static = true;
@@ -243,6 +240,11 @@ export default createReconciler<
 				// Save reference to <Static> node to skip traversal of entire
 				// node tree to find it
 				rootNode.staticNode = node;
+				continue;
+			}
+
+			if (key === 'cachedRender') {
+				node.cachedRender = value as Region;
 				continue;
 			}
 
@@ -284,9 +286,27 @@ export default createReconciler<
 	unhideInstance(node) {
 		node.yogaNode?.setDisplay(Yoga.DISPLAY_FLEX);
 	},
-	appendInitialChild: appendChildNode,
-	appendChild: appendChildNode,
-	insertBefore: insertBeforeNode,
+	appendInitialChild(parent, child) {
+		appendChildNode(parent, child as DOMElement);
+		if (parent.nodeName === 'ink-static-render') {
+			parent.isStaticDirty = true;
+			if (currentRootNode) currentRootNode.isStaticDirty = true;
+		}
+	},
+	appendChild(parent, child) {
+		appendChildNode(parent, child as DOMElement);
+		if (parent.nodeName === 'ink-static-render') {
+			parent.isStaticDirty = true;
+			if (currentRootNode) currentRootNode.isStaticDirty = true;
+		}
+	},
+	insertBefore(parent, child, beforeChild) {
+		insertBeforeNode(parent, child as DOMElement, beforeChild);
+		if (parent.nodeName === 'ink-static-render') {
+			parent.isStaticDirty = true;
+			if (currentRootNode) currentRootNode.isStaticDirty = true;
+		}
+	},
 	finalizeInitialChildren() {
 		return false;
 	},
@@ -334,6 +354,7 @@ export default createReconciler<
 
 				if (key === 'internal_transform') {
 					node.internal_transform = value as OutputTransformer;
+					markNodeAsDirty(node);
 					continue;
 				}
 
@@ -357,13 +378,13 @@ export default createReconciler<
 					continue;
 				}
 
-				if (key === 'internalOnBeforeRender') {
-					node.internalOnBeforeRender = value as (node: DOMElement) => void;
+				if (key === 'internal_static') {
+					node.internal_static = true;
 					continue;
 				}
 
-				if (key === 'internal_static') {
-					node.internal_static = true;
+				if (key === 'cachedRender') {
+					node.cachedRender = value as Region;
 					continue;
 				}
 

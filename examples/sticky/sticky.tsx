@@ -259,18 +259,19 @@ function ScrollableContent({
 					</Box>
 				);
 
-				elements.push(
-					useStatic ? (
+				if (useStatic) {
+					elements.push(
 						<StaticRender
 							key={`static-inner-scroll-${headerId}`}
 							width={contentWidth}
+							items={[innerBox]}
 						>
-							{innerBox}
-						</StaticRender>
-					) : (
-						innerBox
-					),
-				);
+							{box => box}
+						</StaticRender>,
+					);
+				} else {
+					elements.push(innerBox);
+				}
 
 				continue;
 			}
@@ -345,32 +346,41 @@ function ScrollableContent({
 				</Box>
 			);
 
-			elements.push(
-				useStatic ? (
-					<StaticRender key={`static-group-${headerId}`} width={contentWidth}>
-						{groupInnerBox}
-					</StaticRender>
-				) : (
-					groupInnerBox
-				),
-				...nextItems.map(item => {
-					const itemInnerBox = (
+			if (useStatic) {
+				elements.push(
+					<StaticRender
+						key={`static-group-${headerId}`}
+						width={contentWidth}
+						items={[groupInnerBox]}
+					>
+						{box => box}
+					</StaticRender>,
+					<StaticRender
+						key={`static-items-${headerId}`}
+						width={contentWidth}
+						items={nextItems}
+					>
+						{item => (
+							<Box key={item.id} flexDirection="column" paddingLeft={1}>
+								<Text color="#999999">
+									[body line for header {headerId}] {item.text}
+								</Text>
+							</Box>
+						)}
+					</StaticRender>,
+				);
+			} else {
+				elements.push(
+					groupInnerBox,
+					...nextItems.map(item => (
 						<Box key={item.id} flexDirection="column" paddingLeft={1}>
-							<Text key={item.id} color="#999999">
+							<Text color="#999999">
 								[body line for header {headerId}] {item.text}
 							</Text>
 						</Box>
-					);
-
-					return useStatic ? (
-						<StaticRender key={`static-item-${item.id}`} width={contentWidth}>
-							{itemInnerBox}
-						</StaticRender>
-					) : (
-						itemInnerBox
-					);
-				}),
-			);
+					)),
+				);
+			}
 		}
 
 		const content = (

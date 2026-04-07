@@ -9,6 +9,7 @@ import {
 import Output, {
 	isRectIntersectingClip,
 	extractSelectableText,
+	type Region,
 } from './output.js';
 import {handleTextNode} from './render-text-node.js';
 import {renderStickyNode, getStickyDescendants} from './render-sticky.js';
@@ -119,15 +120,89 @@ export const renderToStatic = (
 		});
 	}
 
-	const rootRegion = staticOutput.get();
-	rootRegion.cachedStickyHeaders = cachedStickyHeaders;
+	const newRegion = staticOutput.get();
+	newRegion.cachedStickyHeaders = cachedStickyHeaders;
 	if (options.trackSelection) {
-		rootRegion.selectableText = extractSelectableText(
-			rootRegion.selectableSpans,
-		);
+		newRegion.selectableText = extractSelectableText(newRegion.selectableSpans);
 	}
 
-	setCachedRender(node, rootRegion);
+	if (node.cachedRender) {
+		const base = node.cachedRender;
+		const offsetY = base.height;
+
+		const newBase: Region = {
+			...base,
+			height: base.height + newRegion.height,
+			lines: [...(base.lines as StyledLine[]), ...newRegion.lines],
+			styledOutput: [
+				...(base.styledOutput as StyledLine[]),
+				...newRegion.styledOutput,
+			],
+			stickyHeaders: [...base.stickyHeaders],
+			children: [...base.children],
+			selectableSpans: [...base.selectableSpans],
+		};
+
+		if (base.cachedStickyHeaders) {
+			newBase.cachedStickyHeaders = [...base.cachedStickyHeaders];
+		}
+
+		for (const header of newRegion.stickyHeaders) {
+			const newHeader = {...header};
+			newHeader.y += offsetY;
+			newHeader.naturalRow += offsetY;
+			newHeader.startRow += offsetY;
+			newHeader.endRow += offsetY;
+			if (newHeader.maxStuckY !== undefined) newHeader.maxStuckY += offsetY;
+			if (newHeader.minStuckY !== undefined) newHeader.minStuckY += offsetY;
+			newBase.stickyHeaders.push(newHeader);
+		}
+
+		if (newRegion.cachedStickyHeaders) {
+			newBase.cachedStickyHeaders ??= [];
+			for (const cachedHeader of newRegion.cachedStickyHeaders) {
+				const newCachedHeader = {...cachedHeader};
+				newCachedHeader.y += offsetY;
+				newCachedHeader.relativeY! += offsetY;
+				newCachedHeader.naturalRow += offsetY;
+				newCachedHeader.startRow += offsetY;
+				newCachedHeader.endRow += offsetY;
+				if (newCachedHeader.maxStuckY !== undefined)
+					newCachedHeader.maxStuckY += offsetY;
+				if (newCachedHeader.minStuckY !== undefined)
+					newCachedHeader.minStuckY += offsetY;
+				newBase.cachedStickyHeaders.push(newCachedHeader);
+			}
+		}
+
+		for (const child of newRegion.children) {
+			const newChild = {...child};
+			newChild.y += offsetY;
+			newBase.children.push(newChild);
+		}
+
+		for (const span of newRegion.selectableSpans) {
+			newBase.selectableSpans.push({
+				...span,
+				y: span.y + offsetY,
+			});
+		}
+
+		if (options.trackSelection) {
+			newBase.selectableText = extractSelectableText(newBase.selectableSpans);
+		}
+
+		if (node.yogaNode) {
+			node.yogaNode.setHeight(newBase.height);
+			while (node.yogaNode.getChildCount() > 0) {
+				node.yogaNode.removeChild(node.yogaNode.getChild(0));
+			}
+		}
+
+		node.cachedRender = newBase;
+	} else {
+		setCachedRender(node, newRegion);
+	}
 };
 
 // After nodes are laid out, render each to output object, which later gets rendered to terminal
