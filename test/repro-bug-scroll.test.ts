@@ -22,55 +22,72 @@ test('TerminalBufferWorker scroll down without backbuffer', async t => {
 
 	const worker = new TerminalBufferWorker(columns, rows, {stdout});
 	const serializer = new Serializer();
-	
-	const lines = Array.from({length: 20}, (_, i) => createStyledLine(`Line ${i}`));
+
+	const lines = Array.from({length: 20}, (_, i) =>
+		createStyledLine(`Line ${i}`),
+	);
 	const data = serializer.serialize(lines);
 
-	worker.update({
-		id: 'root',
-		children: [{id: 'scroll', children: []}]
-	}, [
+	worker.update(
 		{
 			id: 'root',
-			y: 0,
-			width: columns,
-			height: rows,
-			lines: {updates: [], totalLength: 0}
+			children: [{id: 'scroll', children: []}],
 		},
-		{
-			id: 'scroll',
-			y: 0,
-			width: columns,
-			height: rows,
-			isScrollable: true,
-			overflowToBackbuffer: false,
-			scrollTop: 0,
-			scrollHeight: 20,
-			scrollWidth: columns,
-			lines: {
-				updates: [{start: 0, end: 20, data}],
-				totalLength: 20
-			}
-		}
-	]);
+		[
+			{
+				id: 'root',
+				y: 0,
+				width: columns,
+				height: rows,
+				lines: {updates: [], totalLength: 0},
+			},
+			{
+				id: 'scroll',
+				y: 0,
+				width: columns,
+				height: rows,
+				isScrollable: true,
+				overflowToBackbuffer: false,
+				scrollTop: 0,
+				scrollHeight: 20,
+				scrollWidth: columns,
+				lines: {
+					updates: [{start: 0, end: 20, data}],
+					totalLength: 20,
+				},
+			},
+		],
+	);
 
 	await worker.render();
 
-	worker.update({
-		id: 'root',
-		children: [{id: 'scroll', children: []}]
-	}, [
+	worker.update(
 		{
-			id: 'scroll',
-			scrollTop: 1
-		}
-	]);
+			id: 'root',
+			children: [{id: 'scroll', children: []}],
+		},
+		[
+			{
+				id: 'scroll',
+				scrollTop: 1,
+			},
+		],
+	);
 
 	await worker.render();
 
-	const term = new Terminal({cols: columns, rows, allowProposedApi: true, convertEol: true});
-	await new Promise<void>((resolve) => term.write(output, resolve));
-	
+	const term = new Terminal({
+		cols: columns,
+		rows,
+		allowProposedApi: true,
+		convertEol: true,
+	});
+	await new Promise<void>(resolve => {
+		term.write(output, resolve);
+	});
 	// Expect the screen to have lines 1 to 10
-	t.is(term.buffer.active.getLine(9)?.translateToString(true).trim(), 'Line 10');
+	t.is(
+		term.buffer.active.getLine(9)?.translateToString(true).trim(),
+		'Line 10',
+	);
 });
