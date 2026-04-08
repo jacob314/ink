@@ -43,8 +43,10 @@ const renderBorder = (
 		const showLeftBorder = node.style.borderLeft !== false;
 		const showRightBorder = node.style.borderRight !== false;
 
-		const contentWidth =
-			width - (showLeftBorder ? 1 : 0) - (showRightBorder ? 1 : 0);
+		const contentWidth = Math.max(
+			0,
+			width - (showLeftBorder ? 1 : 0) - (showRightBorder ? 1 : 0),
+		);
 
 		let topBorder = showTopBorder
 			? colorize(
@@ -69,6 +71,8 @@ const renderBorder = (
 		if (showBottomBorder) {
 			verticalBorderHeight -= 1;
 		}
+
+		verticalBorderHeight = Math.max(0, verticalBorderHeight);
 
 		let leftBorder = (
 			colorize(box.left, leftBorderColor, 'foreground') + '\n'

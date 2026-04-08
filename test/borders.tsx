@@ -90,6 +90,31 @@ test('single node - fixed width and height box', t => {
 	);
 });
 
+const negativeBorderTests = [
+	{
+		name: 'regression - negative border width or height (width 1, height 1)',
+		width: 1,
+		height: 1,
+	},
+	{
+		name: 'regression - negative border width or height (width 0, height 0)',
+		width: 0,
+		height: 0,
+	},
+];
+
+for (const {name, width, height} of negativeBorderTests) {
+	test(name, t => {
+		t.notThrows(() => {
+			renderToString(
+				<Box borderStyle="round" width={width} height={height}>
+					<Text>Hello World</Text>
+				</Box>,
+			);
+		});
+	});
+}
+
 test('single node - box with padding', t => {
 	const output = renderToString(
 		<Box borderStyle="round" padding={1} alignSelf="flex-start">
