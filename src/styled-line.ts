@@ -37,6 +37,7 @@ export class StyledLine {
 		}
 
 		line.spans = [{length: safeLength, formatFlags: 0}];
+		line._cachedTrimmedLength = 0;
 
 		if (StyledLine.emptyCache.size > 100) {
 			StyledLine.emptyCache.clear();
@@ -67,6 +68,7 @@ export class StyledLine {
 	private text: string | undefined;
 	private charData: Uint16Array | undefined;
 	private spans: StyleSpan[] | undefined;
+	private _cachedTrimmedLength?: number;
 
 	constructor() {
 		this.length = 0;
@@ -134,6 +136,7 @@ export class StyledLine {
 
 	setInverted(index: number, inverted: boolean) {
 		if (index < 0 || index >= this.length) return;
+		this._cachedTrimmedLength = undefined;
 		this.ensureInitialized();
 		this.splitSpansAt(index);
 		this.splitSpansAt(index + 1);
@@ -204,6 +207,7 @@ export class StyledLine {
 		link?: string,
 	) {
 		if (index < 0 || index >= this.length) return;
+		this._cachedTrimmedLength = undefined;
 		this.ensureInitialized();
 
 		const isFullWidth = (formatFlags & FULL_WIDTH_MASK) !== 0;
@@ -272,6 +276,7 @@ export class StyledLine {
 		bgColor?: string,
 		link?: string,
 	) {
+		this._cachedTrimmedLength = undefined;
 		this.ensureInitialized();
 		const isFullWidth = (formatFlags & FULL_WIDTH_MASK) !== 0;
 		const cleanFormatFlags = formatFlags & ~FULL_WIDTH_MASK;
@@ -329,6 +334,7 @@ export class StyledLine {
 		result.text = this.text;
 		result.charData = this.charData.slice(0, Math.max(this.length, 16));
 		result.spans = this.spans!.map(span => ({...span}));
+		result._cachedTrimmedLength = this._cachedTrimmedLength;
 		return result;
 	}
 
@@ -583,6 +589,7 @@ export class StyledLine {
 	}
 
 	private applyValuesAndSpans(values: string[], spans: StyleSpan[]) {
+		this._cachedTrimmedLength = undefined;
 		let totalTextLen = 0;
 		let visibleChars = 0;
 		for (const val of values) {

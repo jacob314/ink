@@ -40,6 +40,7 @@ test('captures clipped cachedRender content into backbuffer', t => {
 		lines: cachedOutput,
 		styledOutput: cachedOutput,
 		isScrollable: false,
+		maxWrittenY: 5,
 		stickyHeaders: [],
 		children: [],
 		selectableSpans: [],
