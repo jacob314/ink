@@ -68,25 +68,17 @@ export class Canvas {
 	/**
 	 * Sets a character at the given coordinates, respecting clipping.
 	 */
-	setChar({
-		x,
-		y,
-		value,
-		formatFlags,
-		fgColor,
-		bgColor,
-		link,
-		clip,
-	}: {
-		x: number;
-		y: number;
-		value: string;
-		formatFlags: number;
-		fgColor?: string;
-		bgColor?: string;
-		link?: string;
-		clip?: Rect;
-	}) {
+	// eslint-disable-next-line max-params
+	setChar(
+		x: number,
+		y: number,
+		value: string,
+		formatFlags: number,
+		fgColor?: string,
+		bgColor?: string,
+		link?: string,
+		clip?: Rect,
+	) {
 		if (y < 0 || y >= this.height || x < 0 || x >= this.width) {
 			return;
 		}
@@ -115,16 +107,16 @@ export class Canvas {
 	 */
 	drawStyledChars(x: number, y: number, chars: StyledLine, clip?: Rect) {
 		for (let i = 0; i < chars.length; i++) {
-			this.setChar({
-				x: x + i,
+			this.setChar(
+				x + i,
 				y,
-				value: chars.getValue(i),
-				formatFlags: chars.getFormatFlags(i),
-				fgColor: chars.getFgColor(i),
-				bgColor: chars.getBgColor(i),
-				link: chars.getLink(i),
+				chars.getValue(i),
+				chars.getFormatFlags(i),
+				chars.getFgColor(i),
+				chars.getBgColor(i),
+				chars.getLink(i),
 				clip,
-			});
+			);
 		}
 	}
 

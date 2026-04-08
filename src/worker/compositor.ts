@@ -30,19 +30,13 @@ export class Compositor {
 
 	constructor(private readonly options: CompositionOptions) {}
 
-	drawContent({
-		canvas,
-		region,
-		absX,
-		absY,
-		clip,
-	}: {
-		canvas: Canvas;
-		region: Region;
-		absX: number;
-		absY: number;
-		clip: Rect;
-	}) {
+	drawContent(
+		canvas: Canvas,
+		region: Region,
+		absX: number,
+		absY: number,
+		clip: Rect,
+	) {
 		const scrollTop = region.scrollTop ?? 0;
 		const scrollLeft = region.scrollLeft ?? 0;
 
@@ -84,47 +78,41 @@ export class Compositor {
 						if (region.backgroundColor) {
 							const bgColor = this.getBackgroundStyles(region.backgroundColor);
 							if (bgColor) {
-								canvas.setChar({
-									x: sx,
-									y: sy,
-									value: val,
-									formatFlags: line.getFormatFlags(contentX),
-									fgColor: line.getFgColor(contentX),
+								canvas.setChar(
+									sx,
+									sy,
+									val,
+									line.getFormatFlags(contentX),
+									line.getFgColor(contentX),
 									bgColor,
-									link: line.getLink(contentX),
-								});
+									line.getLink(contentX),
+								);
 								continue;
 							}
 						}
 					}
 
-					canvas.setChar({
-						x: sx,
-						y: sy,
-						value: val,
-						formatFlags: line.getFormatFlags(contentX),
-						fgColor: line.getFgColor(contentX),
-						bgColor: line.getBgColor(contentX),
-						link: line.getLink(contentX),
-					});
+					canvas.setChar(
+						sx,
+						sy,
+						val,
+						line.getFormatFlags(contentX),
+						line.getFgColor(contentX),
+						line.getBgColor(contentX),
+						line.getLink(contentX),
+					);
 				}
 			}
 		}
 	}
 
-	drawStickyHeaders({
-		canvas,
-		region,
-		absX,
-		absY,
-		clip,
-	}: {
-		canvas: Canvas;
-		region: Region;
-		absX: number;
-		absY: number;
-		clip: Rect;
-	}) {
+	drawStickyHeaders(
+		canvas: Canvas,
+		region: Region,
+		absX: number,
+		absY: number,
+		clip: Rect,
+	) {
 		if (this.options.skipStickyHeaders) {
 			return;
 		}
@@ -229,34 +217,28 @@ export class Compositor {
 				for (let sx = hx1; sx < hx2; sx++) {
 					const cx = sx - headerX;
 					if (cx < line.length) {
-						canvas.setChar({
-							x: sx,
-							y: sy,
-							value: line.getValue(cx),
-							formatFlags: line.getFormatFlags(cx),
-							fgColor: line.getFgColor(cx),
-							bgColor: line.getBgColor(cx),
-							link: line.getLink(cx),
-						});
+						canvas.setChar(
+							sx,
+							sy,
+							line.getValue(cx),
+							line.getFormatFlags(cx),
+							line.getFgColor(cx),
+							line.getBgColor(cx),
+							line.getLink(cx),
+						);
 					}
 				}
 			}
 		}
 	}
 
-	drawScrollbars({
-		canvas,
-		region,
-		absX,
-		absY,
-		clip,
-	}: {
-		canvas: Canvas;
-		region: Region;
-		absX: number;
-		absY: number;
-		clip: Rect;
-	}) {
+	drawScrollbars(
+		canvas: Canvas,
+		region: Region,
+		absX: number,
+		absY: number,
+		clip: Rect,
+	) {
 		if (
 			Boolean(this.options.skipScrollbars && region.overflowToBackbuffer) ||
 			!region.isScrollable ||
@@ -322,15 +304,7 @@ export class Compositor {
 				axis: 'vertical',
 				color: region.scrollbarThumbColor,
 				setChar(x, y, value, formatFlags, fgColor, bgColor, link) {
-					canvas.setChar({
-						x,
-						y,
-						value,
-						formatFlags,
-						fgColor,
-						bgColor,
-						link,
-					});
+					canvas.setChar(x, y, value, formatFlags, fgColor, bgColor, link);
 				},
 				getExistingChar(x, y) {
 					return canvas.getChar(x, y);
@@ -374,15 +348,7 @@ export class Compositor {
 				axis: 'horizontal',
 				color: region.scrollbarThumbColor,
 				setChar(x, y, value, formatFlags, fgColor, bgColor, link) {
-					canvas.setChar({
-						x,
-						y,
-						value,
-						formatFlags,
-						fgColor,
-						bgColor,
-						link,
-					});
+					canvas.setChar(x, y, value, formatFlags, fgColor, bgColor, link);
 				},
 				getExistingChar(x, y) {
 					return canvas.getChar(x, y);
