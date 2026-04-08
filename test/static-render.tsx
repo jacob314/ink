@@ -15,9 +15,7 @@ import createStdout from './helpers/create-stdout.js';
 test('StaticRender renders children', async t => {
 	const stdout = createStdout();
 	const {unmount} = render(
-		<StaticRender width={100}>
-			<Text>Hello Static</Text>
-		</StaticRender>,
+		<StaticRender width={100}>{() => <Text>Hello Static</Text>}</StaticRender>,
 		{stdout},
 	);
 
@@ -34,10 +32,12 @@ test('StaticRender with Box and multiple children', async t => {
 	const stdout = createStdout();
 	const {unmount} = render(
 		<StaticRender width={100}>
-			<Box flexDirection="column">
-				<Text>Line 1</Text>
-				<Text>Line 2</Text>
-			</Box>
+			{() => (
+				<Box flexDirection="column">
+					<Text>Line 1</Text>
+					<Text>Line 2</Text>
+				</Box>
+			)}
 		</StaticRender>,
 		{stdout},
 	);
@@ -66,7 +66,7 @@ test('StaticRender respects style prop', async t => {
 	const stdout = createStdout();
 	const {unmount} = render(
 		<StaticRender width={100} style={{paddingLeft: 2}}>
-			<Text>Indented</Text>
+			{() => <Text>Indented</Text>}
 		</StaticRender>,
 		{stdout},
 	);

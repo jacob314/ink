@@ -721,6 +721,8 @@ export class TerminalBufferWorker {
 									{
 										clip: undefined,
 										offsetY: -cameraY,
+										overrideHeight: this.rows + count,
+										isExpanded: true,
 									},
 									{skipStickyHeaders: true, skipScrollbars},
 								);
