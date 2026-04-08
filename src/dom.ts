@@ -309,7 +309,7 @@ const measureTextNode = function (
 	const textWrap = node.style?.textWrap ?? 'wrap';
 	const wrappedLines =
 		textWrap === 'wrap' || textWrap.startsWith('truncate')
-			? wrapOrTruncateStyledChars(styledChars, width, textWrap)
+			? wrapOrTruncateStyledChars(styledChars, Math.floor(width), textWrap)
 			: [styledChars];
 
 	const newWidth = widestLineFromStyledChars(wrappedLines);
