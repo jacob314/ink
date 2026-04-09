@@ -68,15 +68,25 @@ export class TerminalBufferWorker {
 	screen: RenderLine[] = [];
 	backbuffer: RenderLine[] = [];
 
-	private renderPromise?: Promise<void>;
+	/**
+	 * Visible for testing.
+	 */
+	readonly sceneManager = new SceneManager();
 
-	private readonly sceneManager = new SceneManager();
+	/**
+	 * Visible for testing.
+	 */
+	readonly scrollOptimizer = new ScrollOptimizer();
+
+	private renderPromise?: Promise<void>;
 	private readonly animationController: AnimationController;
-	private readonly scrollOptimizer = new ScrollOptimizer();
 	private readonly primaryTerminalWriter: TerminalWriter;
 	private readonly alternateTerminalWriter: TerminalWriter;
 
-	private get terminalWriter(): TerminalWriter {
+	/**
+	 * Visible for testing.
+	 */
+	get terminalWriter(): TerminalWriter {
 		return this.isAlternateBufferEnabled
 			? this.alternateTerminalWriter
 			: this.primaryTerminalWriter;
@@ -420,28 +430,29 @@ export class TerminalBufferWorker {
 		// Check backbuffer dirty
 		const rootRegion = this.sceneManager.getRootRegion();
 		if (rootRegion) {
-		        const cameraY = Math.max(0, rootRegion.height - this.rows);
+			const cameraY = Math.max(0, rootRegion.height - this.rows);
 
-		        for (const update of updates) {
-		                const region = this.sceneManager.getRegion(update.id);
+			for (const update of updates) {
+				const region = this.sceneManager.getRegion(update.id);
 
-		                if (region && update.lines) {
-		                        const scrollTop = region.scrollTop ?? 0;
-		                        for (const chunk of update.lines.updates) {
-		                                if (region.overflowToBackbuffer && chunk.start < scrollTop) {
-		                                        this.terminalWriter.backbufferDirty = true;
-		                                        this.terminalWriter.backbufferDirtyCurrentFrame = true;
-		                                }
+				if (region && update.lines) {
+					const scrollTop = region.scrollTop ?? 0;
+					for (const chunk of update.lines.updates) {
+						if (region.overflowToBackbuffer && chunk.start < scrollTop) {
+							this.terminalWriter.backbufferDirty = true;
+							this.terminalWriter.backbufferDirtyCurrentFrame = true;
+						}
 
-		                                const absStart = region.y + chunk.start;
-		                                if (absStart < cameraY) {
-		                                        this.terminalWriter.backbufferDirty = true;
-		                                        this.terminalWriter.backbufferDirtyCurrentFrame = true;
-		                                }
-		                        }
-		                }
-		        }
+						const absStart = region.y + chunk.start;
+						if (absStart < cameraY) {
+							this.terminalWriter.backbufferDirty = true;
+							this.terminalWriter.backbufferDirtyCurrentFrame = true;
+						}
+					}
+				}
+			}
 		}
+
 		const cursorChanged =
 			cursorPosition !== previousCursorPosition &&
 			(!cursorPosition ||

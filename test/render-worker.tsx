@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
 import test from 'ava';
 import {type StyledLine} from '../src/styled-line.js';
 import {TerminalBufferWorker} from '../src/worker/render-worker.js';
@@ -131,17 +130,9 @@ test('TerminalBufferWorker correctly tracks backbufferDirty', t => {
 	);
 });
 
-test('TerminalBufferWorker avoids duplicate backbuffer lines on scroll oscillation', async t => {
-	const worker = new TerminalBufferWorker(20, 5, {
-		stdout: {write() {}} as any,
-	});
-	const {terminalWriter} = worker as any;
-
-	const regionId = 'scrollable';
-	const lines = Array.from({length: 20}, (_, i) => createLine(`Line ${i}`));
-	const data = serializer.serialize(lines);
-
-	const updateScroll = (scrollTop: number) => {
+const createUpdateScroll =
+	(worker: TerminalBufferWorker, regionId: string, data: Uint8Array) =>
+	(scrollTop: number) => {
 		worker.update(
 			{
 				id: 'root',
@@ -157,8 +148,7 @@ test('TerminalBufferWorker avoids duplicate backbuffer lines on scroll oscillati
 					id: 'root',
 					width: 20,
 					height: 5,
-					children: [regionId],
-				} as any,
+				},
 				{
 					id: regionId,
 					width: 20,
@@ -177,11 +167,22 @@ test('TerminalBufferWorker avoids duplicate backbuffer lines on scroll oscillati
 						],
 						totalLength: 20,
 					},
-				} as any,
+				},
 			],
 		);
 	};
 
+test('TerminalBufferWorker avoids duplicate backbuffer lines on scroll oscillation', async t => {
+	const worker = new TerminalBufferWorker(20, 5, {
+		stdout: {write() {}} as unknown as NodeJS.WriteStream,
+	});
+	const {terminalWriter} = worker;
+
+	const regionId = 'scrollable';
+	const lines = Array.from({length: 20}, (_, i) => createLine(`Line ${i}`));
+	const data = serializer.serialize(lines);
+
+	const updateScroll = createUpdateScroll(worker, regionId, data);
 	// Initial
 	updateScroll(0);
 	await worker.render();
@@ -191,7 +192,7 @@ test('TerminalBufferWorker avoids duplicate backbuffer lines on scroll oscillati
 	updateScroll(5);
 	await worker.render();
 	t.is(terminalWriter.backbuffer.length, 5);
-	t.is(terminalWriter.backbuffer[4].text, 'Line 4');
+	t.is(terminalWriter.backbuffer[4]!.text, 'Line 4');
 
 	// Scroll up
 	updateScroll(2);
@@ -202,14 +203,13 @@ test('TerminalBufferWorker avoids duplicate backbuffer lines on scroll oscillati
 	updateScroll(6);
 	await worker.render();
 	t.is(terminalWriter.backbuffer.length, 6);
-	t.is(terminalWriter.backbuffer[5].text, 'Line 5');
+	t.is(terminalWriter.backbuffer[5]!.text, 'Line 5');
 });
-
 test('TerminalBufferWorker correctly manages and clears cursor position', async t => {
 	const worker = new TerminalBufferWorker(80, 10, {
-		stdout: {write() {}} as any,
+		stdout: {write() {}} as unknown as NodeJS.WriteStream,
 	});
-	const {terminalWriter} = worker as any;
+	const {terminalWriter} = worker;
 	const wrapper = new TestWorkerWrapper(worker);
 
 	let lastTargetRow = -2;
@@ -265,54 +265,14 @@ test('TerminalBufferWorker correctly manages and clears cursor position', async 
 
 test('TerminalBufferWorker catches invalid scroll during animation tick', async t => {
 	const worker = new TerminalBufferWorker(20, 5, {
-		stdout: {write() {}} as any,
+		stdout: {write() {}} as unknown as NodeJS.WriteStream,
 	});
 
 	const regionId = 'scrollable';
 	const lines = Array.from({length: 20}, (_, i) => createLine(`Line ${i}`));
 	const data = serializer.serialize(lines);
 
-	const updateScroll = (scrollTop: number) => {
-		worker.update(
-			{
-				id: 'root',
-				children: [
-					{
-						id: regionId,
-						children: [],
-					},
-				],
-			},
-			[
-				{
-					id: 'root',
-					width: 20,
-					height: 5,
-					children: [regionId],
-				} as any,
-				{
-					id: regionId,
-					width: 20,
-					height: 5,
-					isScrollable: true,
-					overflowToBackbuffer: true,
-					scrollTop,
-					scrollHeight: 20,
-					lines: {
-						updates: [
-							{
-								start: 0,
-								end: 20,
-								data,
-							},
-						],
-						totalLength: 20,
-					},
-				} as any,
-			],
-		);
-	};
-
+	const updateScroll = createUpdateScroll(worker, regionId, data);
 	// Initial
 	updateScroll(0);
 	await worker.render();
@@ -320,7 +280,7 @@ test('TerminalBufferWorker catches invalid scroll during animation tick', async 
 	// Scroll down to 10
 	updateScroll(10);
 	await worker.render();
-	t.is((worker as any).scrollOptimizer.maxRegionScrollTops.get(regionId), 10);
+	t.is(worker.scrollOptimizer.maxRegionScrollTops.get(regionId), 10);
 
 	// Reset flags
 	worker.backbufferDirty = false;
@@ -328,14 +288,14 @@ test('TerminalBufferWorker catches invalid scroll during animation tick', async 
 
 	// Manually set region scrollTop to 5 without calling update()
 	// This simulates an animation tick changing scrollTop.
-	const region = (worker as any).sceneManager.getRegion(regionId);
+	const region = worker.sceneManager.getRegion(regionId);
 	region.scrollTop = 5;
 
 	// Call render() directly to simulate the animation tick
 	await worker.render();
 
 	t.true(
-		(worker as any).terminalWriter.backbufferDirty,
+		worker.terminalWriter.backbufferDirty,
 		'backbufferDirty should be set to true when animated scrollTop drops below maxPushed',
 	);
 });
