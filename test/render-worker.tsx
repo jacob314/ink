@@ -262,3 +262,80 @@ test('TerminalBufferWorker correctly manages and clears cursor position', async 
 	t.is(lastTargetRow, -1);
 	t.is(lastTargetCol, -1);
 });
+
+test('TerminalBufferWorker catches invalid scroll during animation tick', async t => {
+	const worker = new TerminalBufferWorker(20, 5, {
+		stdout: {write() {}} as any,
+	});
+
+	const regionId = 'scrollable';
+	const lines = Array.from({length: 20}, (_, i) => createLine(`Line ${i}`));
+	const data = serializer.serialize(lines);
+
+	const updateScroll = (scrollTop: number) => {
+		worker.update(
+			{
+				id: 'root',
+				children: [
+					{
+						id: regionId,
+						children: [],
+					},
+				],
+			},
+			[
+				{
+					id: 'root',
+					width: 20,
+					height: 5,
+					children: [regionId],
+				} as any,
+				{
+					id: regionId,
+					width: 20,
+					height: 5,
+					isScrollable: true,
+					overflowToBackbuffer: true,
+					scrollTop,
+					scrollHeight: 20,
+					lines: {
+						updates: [
+							{
+								start: 0,
+								end: 20,
+								data,
+							},
+						],
+						totalLength: 20,
+					},
+				} as any,
+			],
+		);
+	};
+
+	// Initial
+	updateScroll(0);
+	await worker.render();
+
+	// Scroll down to 10
+	updateScroll(10);
+	await worker.render();
+	t.is((worker as any).scrollOptimizer.maxRegionScrollTops.get(regionId), 10);
+
+	// Reset flags
+	worker.backbufferDirty = false;
+	worker.backbufferDirtyCurrentFrame = false;
+
+	// Manually set region scrollTop to 5 without calling update()
+	// This simulates an animation tick changing scrollTop.
+	const region = (worker as any).sceneManager.getRegion(regionId);
+	region.scrollTop = 5;
+
+	// Call render() directly to simulate the animation tick
+	await worker.render();
+
+	t.true(
+		(worker as any).terminalWriter.backbufferDirty,
+		'backbufferDirty should be set to true when animated scrollTop drops below maxPushed',
+	);
+});
