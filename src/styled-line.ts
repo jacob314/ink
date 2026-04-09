@@ -499,14 +499,7 @@ export class StyledLine {
 		const anyHasSpans = allLines.some(l => (l as any).spans !== undefined);
 
 		if (anyHasSpans) {
-			result.spans = allLines.flatMap(l => {
-				const spans = l.getSpans();
-				if (spans.length === 0 && l.length > 0) {
-					return [{length: l.length, formatFlags: 0}];
-				}
-
-				return spans.map(s => ({...s}));
-			});
+			result.spans = allLines.flatMap(l => l.getSpans().map(s => ({...s})));
 			result.mergeSpans();
 		}
 
