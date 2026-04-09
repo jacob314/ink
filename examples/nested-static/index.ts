@@ -9,7 +9,10 @@ import {render} from '../../src/index.js';
 import NestedStaticDemo from './nested-static.js';
 
 render(React.createElement(NestedStaticDemo), {
-	renderProcess: true,
+	renderProcess: false,
 	terminalBuffer: true,
 	incrementalRendering: true,
+	standardReactLayoutTiming: true,
+	maxFps: 1000,
+	debugRainbow: true,
 });
