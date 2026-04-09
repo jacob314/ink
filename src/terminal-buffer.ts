@@ -12,7 +12,7 @@ import {StyledLine} from './styled-line.js';
 import {Serializer} from './serialization.js';
 import {TerminalBufferWorker} from './worker/render-worker.js';
 import {linesEqual} from './worker/terminal-writer.js';
-import {type DOMElement} from './dom.js';
+import {type DOMElement, type StickyHeader} from './dom.js';
 import {
 	type Region,
 	type RegionUpdate,
@@ -505,15 +505,7 @@ export default class TerminalBuffer {
 			}
 		}
 
-		// Deep compare sticky headers? For now assuming reference change or simple length change is enough,
-		// or we can rely on the fact they are rebuilt every frame.
-		// Let's just resend if length differs or assume they might change.
-		// To be safe and simple: always send sticky headers if they exist or existed.
-		if (
-			current.stickyHeaders !== last.stickyHeaders ||
-			current.stickyHeaders.length > 0 ||
-			last.stickyHeaders.length > 0
-		) {
+		if (!this.stickyHeadersEqual(last.stickyHeaders, current.stickyHeaders)) {
 			update.stickyHeaders = current.stickyHeaders.map(h => ({
 				...h,
 				node: undefined,
@@ -560,6 +552,54 @@ export default class TerminalBuffer {
 		}
 
 		return hasChanges ? update : undefined;
+	}
+
+	private stickyHeadersEqual(
+		oldHeaders: StickyHeader[],
+		newHeaders: StickyHeader[],
+	): boolean {
+		if (oldHeaders.length !== newHeaders.length) {
+			return false;
+		}
+
+		for (let i = 0; i < oldHeaders.length; i++) {
+			const oldH = oldHeaders[i]!;
+			const newH = newHeaders[i]!;
+
+			if (
+				oldH.x !== newH.x ||
+				oldH.y !== newH.y ||
+				oldH.naturalRow !== newH.naturalRow ||
+				oldH.startRow !== newH.startRow ||
+				oldH.endRow !== newH.endRow ||
+				oldH.scrollContainerId !== newH.scrollContainerId ||
+				oldH.nodeId !== newH.nodeId
+			) {
+				return false;
+			}
+
+			if (oldH.lines.length !== newH.lines.length) return false;
+			for (let j = 0; j < oldH.lines.length; j++) {
+				if (!linesEqual(oldH.lines[j], newH.lines[j])) return false;
+			}
+
+			if (oldH.stuckLines && newH.stuckLines) {
+				if (oldH.stuckLines.length !== newH.stuckLines.length) return false;
+				for (let j = 0; j < oldH.stuckLines.length; j++) {
+					if (!linesEqual(oldH.stuckLines[j], newH.stuckLines[j])) return false;
+				}
+			} else if (oldH.stuckLines !== newH.stuckLines) {
+				return false;
+			}
+
+			if (oldH.styledOutput.length !== newH.styledOutput.length) return false;
+			for (let j = 0; j < oldH.styledOutput.length; j++) {
+				if (!linesEqual(oldH.styledOutput[j], newH.styledOutput[j]))
+					return false;
+			}
+		}
+
+		return true;
 	}
 
 	private diffLines(

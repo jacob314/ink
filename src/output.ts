@@ -262,6 +262,8 @@ export function copyRegionProperty<
 	}
 }
 
+const EMPTY_STICKY_HEADERS: StickyHeader[] = [];
+
 export default class Output {
 	width: number;
 	height: number;
@@ -289,7 +291,7 @@ export default class Output {
 			lines: [],
 			styledOutput: [],
 			isScrollable: false,
-			stickyHeaders: [],
+			stickyHeaders: EMPTY_STICKY_HEADERS,
 			children: [],
 			node,
 			selectableSpans: [],
@@ -419,7 +421,7 @@ export default class Output {
 			borderTop: borderTop === undefined ? undefined : Math.round(borderTop),
 			borderBottom:
 				borderBottom === undefined ? undefined : Math.round(borderBottom),
-			stickyHeaders: [],
+			stickyHeaders: EMPTY_STICKY_HEADERS,
 			children: [],
 			nodeId,
 			stableScrollback,
@@ -442,6 +444,10 @@ export default class Output {
 	}
 
 	addStickyHeader(header: StickyHeader) {
+		if (this.getActiveRegion().stickyHeaders === EMPTY_STICKY_HEADERS) {
+			this.getActiveRegion().stickyHeaders = [];
+		}
+
 		this.getActiveRegion().stickyHeaders.push(header);
 	}
 
