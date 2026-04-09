@@ -84,8 +84,10 @@ export function renderStickyNode(
 		childNode => (childNode as DOMElement).internalStickyAlternate,
 	) as DOMElement | undefined;
 
-	const naturalHeight = stickyNode.yogaNode!.getComputedHeight();
-	const stuckHeight = alternateStickyNode?.yogaNode?.getComputedHeight() ?? 0;
+	const naturalHeight = Math.round(stickyNode.yogaNode!.getComputedHeight());
+	const stuckHeight = Math.round(
+		alternateStickyNode?.yogaNode?.getComputedHeight() ?? 0,
+	);
 	const maxHeaderHeight = Math.max(naturalHeight, stuckHeight);
 
 	const renderHeader = (isSticky: boolean) => {
@@ -144,12 +146,12 @@ export function identifyActiveStickyNodes(
 			if (!stickyNode) continue;
 			if (!stickyNode.yogaNode) continue;
 			stickyNodeTop = getRelativeTop(stickyNode, node) ?? 0;
-			stickyNodeHeight = stickyNode.yogaNode.getComputedHeight();
+			stickyNodeHeight = Math.round(stickyNode.yogaNode.getComputedHeight());
 
 			const parent = stickyNode.parentNode!;
 			if (parent?.yogaNode) {
 				parentTop = getRelativeTop(parent, node) ?? 0;
-				parentHeight = parent.yogaNode.getComputedHeight();
+				parentHeight = Math.round(parent.yogaNode.getComputedHeight());
 			} else {
 				parentTop = 0;
 				parentHeight = Number.MAX_SAFE_INTEGER;
@@ -295,19 +297,22 @@ export function renderActiveStickyNodes(
 		} else {
 			if (!stickyNode) continue;
 			stickyNodeTop = getRelativeTop(stickyNode, node) ?? 0;
-			const naturalHeight = stickyNode.yogaNode!.getComputedHeight();
+			const naturalHeight = Math.round(
+				stickyNode.yogaNode!.getComputedHeight(),
+			);
 			const alternateStickyNode = stickyNode.childNodes.find(
 				childNode => (childNode as DOMElement).internalStickyAlternate,
 			) as DOMElement | undefined;
-			const stuckHeight =
-				alternateStickyNode?.yogaNode?.getComputedHeight() ?? 0;
+			const stuckHeight = Math.round(
+				alternateStickyNode?.yogaNode?.getComputedHeight() ?? 0,
+			);
 			stickyNodeHeight = Math.max(naturalHeight, stuckHeight);
 
 			const parent = stickyNode.parentNode!;
 
 			if (parent?.yogaNode) {
 				parentTop = getRelativeTop(parent, node) ?? 0;
-				parentHeight = parent.yogaNode.getComputedHeight();
+				parentHeight = Math.round(parent.yogaNode.getComputedHeight());
 			} else {
 				parentTop = 0;
 				parentHeight = Number.MAX_SAFE_INTEGER;
@@ -385,7 +390,9 @@ export function renderActiveStickyNodes(
 					nextNodeTop =
 						staticRenderPosTop + nextStickyNodeInfo.cached.relativeY!;
 				} else if (nextStickyNodeInfo.node?.yogaNode) {
-					nextNodeHeight = nextStickyNodeInfo.node.yogaNode.getComputedHeight();
+					nextNodeHeight = Math.round(
+						nextStickyNodeInfo.node.yogaNode.getComputedHeight(),
+					);
 					nextNodeTop = getRelativeTop(nextStickyNodeInfo.node, node) ?? 0;
 				}
 

@@ -37,8 +37,8 @@ export const renderToStatic = (
 	// Cache dimensions of the static tree before we render it out and cache/destroy its Yoga children
 	triggerResizeObservers(node, true);
 
-	const width = node.yogaNode?.getComputedWidth() ?? 0;
-	const height = node.yogaNode?.getComputedHeight() ?? 0;
+	const width = Math.round(node.yogaNode?.getComputedWidth() ?? 0);
+	const height = Math.round(node.yogaNode?.getComputedHeight() ?? 0);
 
 	const stickyNodes = getStickyDescendants(node);
 	const cachedStickyHeaders: StickyHeader[] = [];
@@ -102,7 +102,7 @@ export const renderToStatic = (
 				? (getRelativeTop(parent, node) ?? 0) - currentBorderTop
 				: 0;
 			parentHeight = parentYogaNode
-				? parentYogaNode.getComputedHeight()
+				? Math.round(parentYogaNode.getComputedHeight())
 				: Number.MAX_SAFE_INTEGER;
 			parentBorderTop = parentYogaNode
 				? parentYogaNode.getComputedBorder(Yoga.EDGE_TOP)
@@ -224,15 +224,15 @@ function renderNodeToOutput(
 		}
 
 		// Left and top positions in Yoga are relative to their parent node
-		const x = offsetX + yogaNode.getComputedLeft();
-		const y = offsetY + yogaNode.getComputedTop();
+		const x = Math.round(offsetX + yogaNode.getComputedLeft());
+		const y = Math.round(offsetY + yogaNode.getComputedTop());
 
 		// Absolute screen coordinates (for clipping/visibility check)
-		const absX = absoluteOffsetX + yogaNode.getComputedLeft();
-		const absY = absoluteOffsetY + yogaNode.getComputedTop();
+		const absX = Math.round(absoluteOffsetX + yogaNode.getComputedLeft());
+		const absY = Math.round(absoluteOffsetY + yogaNode.getComputedTop());
 
-		const width = yogaNode.getComputedWidth();
-		const height = yogaNode.getComputedHeight();
+		const width = Math.round(yogaNode.getComputedWidth());
+		const height = Math.round(yogaNode.getComputedHeight());
 		const clip = output.getCurrentClip();
 
 		if (clip) {

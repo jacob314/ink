@@ -28,8 +28,8 @@ type Output = {
 Measure the dimensions of a particular `<Box>` element.
 */
 const measureElement = (node: DOMElement): Output => ({
-	width: node.yogaNode?.getComputedWidth() ?? 0,
-	height: node.yogaNode?.getComputedHeight() ?? 0,
+	width: Math.round(node.yogaNode?.getComputedWidth() ?? 0),
+	height: Math.round(node.yogaNode?.getComputedHeight() ?? 0),
 });
 
 /**
@@ -46,7 +46,7 @@ export const getInnerWidth = (node: DOMElement): number => {
 	const borderLeft = yogaNode.getComputedBorder(Yoga.EDGE_LEFT);
 	const borderRight = yogaNode.getComputedBorder(Yoga.EDGE_RIGHT);
 
-	return width - borderLeft - borderRight;
+	return Math.round(width - borderLeft - borderRight);
 };
 
 /*
@@ -63,7 +63,7 @@ export const getInnerHeight = (node: DOMElement): number => {
 	const borderTop = yogaNode.getComputedBorder(Yoga.EDGE_TOP);
 	const borderBottom = yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM);
 
-	return height - borderTop - borderBottom;
+	return Math.round(height - borderTop - borderBottom);
 };
 
 /**
@@ -106,7 +106,12 @@ export const getBoundingBox = (
 		parent = parent.parentNode;
 	}
 
-	return {x, y, width, height};
+	return {
+		x: Math.round(x),
+		y: Math.round(y),
+		width: Math.round(width),
+		height: Math.round(height),
+	};
 };
 
 export type ScrollbarBoundingBox = {
@@ -420,12 +425,12 @@ export const collectSortedFragments = (
 				fragments.push({
 					node: currentNode,
 					text,
-					x,
-					y,
-					visualX,
-					visualY,
-					width: currentNode.yogaNode?.getComputedWidth() ?? 0,
-					height: currentNode.yogaNode?.getComputedHeight() ?? 0,
+					x: Math.round(x),
+					y: Math.round(y),
+					visualX: Math.round(visualX),
+					visualY: Math.round(visualY),
+					width: Math.round(currentNode.yogaNode?.getComputedWidth() ?? 0),
+					height: Math.round(currentNode.yogaNode?.getComputedHeight() ?? 0),
 				});
 
 				return {v: 0, h: 0, hasContent: true};
@@ -540,7 +545,11 @@ export const collectSortedFragments = (
 		return a.x - b.x;
 	});
 
-	return {fragments, removedVertical: v, removedHorizontal: h};
+	return {
+		fragments,
+		removedVertical: Math.round(v),
+		removedHorizontal: Math.round(h),
+	};
 };
 
 export const getText = (node: DOMNode): string => {
@@ -595,7 +604,7 @@ export const getText = (node: DOMNode): string => {
 
 		// Trailing newlines
 		const {removedVertical} = collectSortedFragments(node);
-		const height = node.yogaNode?.getComputedHeight() ?? 0;
+		const height = Math.round(node.yogaNode?.getComputedHeight() ?? 0);
 		const innerHeight = height - removedVertical;
 
 		if (innerHeight > lineBottom) {
@@ -944,7 +953,7 @@ export const getTextOffset = (
 			return state.trailingCandidate;
 		}
 
-		const height = node.yogaNode?.getComputedHeight() ?? 0;
+		const height = Math.round(node.yogaNode?.getComputedHeight() ?? 0);
 		const innerHeight = height - removedVertical;
 
 		if (innerHeight > state.lineBottom) {
@@ -1216,7 +1225,7 @@ export function getRelativeTop(
 		return undefined;
 	}
 
-	return top;
+	return Math.round(top);
 }
 
 export function getRelativeLeft(
@@ -1242,5 +1251,5 @@ export function getRelativeLeft(
 		return undefined;
 	}
 
-	return left;
+	return Math.round(left);
 }
