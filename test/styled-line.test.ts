@@ -143,3 +143,93 @@ test('StyledLine slice(0, undefined) returns clone', t => {
 	t.not(slicedNoArgs, line);
 	t.true(slicedNoArgs.equals(line));
 });
+
+test('StyledLine optimization: empty lines have undefined charData and spans', t => {
+	const line = StyledLine.empty(5);
+	t.is(line.internalGetCharData(), undefined);
+	t.is(line.internalGetSpans(), undefined);
+});
+
+test('StyledLine optimization: unstyled 1-width pushChar avoids initializing charData and spans', t => {
+	const line = new StyledLine();
+	line.pushChar('a', 0);
+	line.pushChar('b', 0);
+
+	t.is(line.internalGetCharData(), undefined);
+	t.is(line.internalGetSpans(), undefined);
+	t.is(line.length, 2);
+	t.is(line.getText(), 'ab');
+});
+
+test('StyledLine optimization: unstyled 1-width setChar avoids initializing charData and spans', t => {
+	const line = StyledLine.empty(2);
+	line.setChar(0, 'a', 0);
+	line.setChar(1, 'b', 0);
+
+	t.is(line.internalGetCharData(), undefined);
+	t.is(line.internalGetSpans(), undefined);
+	t.is(line.length, 2);
+	t.is(line.getText(), 'ab');
+});
+
+test('StyledLine optimization: legacyCreateStyledLine avoids initializing charData and spans for unstyled 1-width strings', t => {
+	const line = StyledLine.legacyCreateStyledLine(
+		['a', 'b', 'c'],
+		[{length: 3, formatFlags: 0}],
+	);
+	t.is(line.internalGetCharData(), undefined);
+	t.is(line.internalGetSpans(), undefined);
+});
+
+test('StyledLine optimization: clone, slice, and combine preserve undefined charData and spans', t => {
+	const line1 = new StyledLine();
+	line1.pushChar('a', 0);
+
+	const line2 = StyledLine.empty(1);
+	line2.setChar(0, 'b', 0);
+
+	const cloned = line1.clone();
+	t.is(cloned.internalGetCharData(), undefined);
+	t.is(cloned.internalGetSpans(), undefined);
+
+	const sliced = line1.slice(0, 1);
+	t.is(sliced.internalGetCharData(), undefined);
+	t.is(sliced.internalGetSpans(), undefined);
+
+	const combined = line1.combine(line2);
+	t.is(combined.internalGetCharData(), undefined);
+	t.is(combined.internalGetSpans(), undefined);
+	t.is(combined.getText(), 'ab');
+});
+
+test('StyledLine optimization: equals fast paths', t => {
+	const line1 = new StyledLine();
+	line1.pushChar('a', 0);
+
+	const line2 = new StyledLine();
+	line2.pushChar('a', 0);
+
+	const line3 = new StyledLine();
+	line3.pushChar('a', 1); // Diff style
+
+	const line4 = new StyledLine();
+	line4.pushChar('b', 0); // Diff text
+
+	// both undefined
+	t.true(line1.equals(line2));
+
+	// One undefined, one defined but equivalent
+	const lineEquivalent = new StyledLine();
+	lineEquivalent.pushChar('a', 0);
+	// Force initialization of charData/spans without actually adding styles or multi-chars
+	lineEquivalent.setChar(0, 'a', 0);
+
+	t.true(line1.equals(lineEquivalent));
+	t.true(lineEquivalent.equals(line1));
+
+	// Diff text
+	t.false(line1.equals(line4));
+
+	// Diff style
+	t.false(line1.equals(line3));
+});
