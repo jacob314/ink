@@ -420,50 +420,28 @@ export class TerminalBufferWorker {
 		// Check backbuffer dirty
 		const rootRegion = this.sceneManager.getRootRegion();
 		if (rootRegion) {
-			const cameraY = Math.max(0, rootRegion.height - this.rows);
+		        const cameraY = Math.max(0, rootRegion.height - this.rows);
 
-			if (!this.isAlternateBufferEnabled) {
-				const maxPushedRoot =
-					this.scrollOptimizer.maxRegionScrollTops.get(rootRegion.id) ?? 0;
-				if (cameraY < maxPushedRoot) {
-					this.terminalWriter.backbufferDirtyCurrentFrame = true;
-				}
-			}
+		        for (const update of updates) {
+		                const region = this.sceneManager.getRegion(update.id);
 
-			for (const update of updates) {
-				const region = this.sceneManager.getRegion(update.id);
+		                if (region && update.lines) {
+		                        const scrollTop = region.scrollTop ?? 0;
+		                        for (const chunk of update.lines.updates) {
+		                                if (region.overflowToBackbuffer && chunk.start < scrollTop) {
+		                                        this.terminalWriter.backbufferDirty = true;
+		                                        this.terminalWriter.backbufferDirtyCurrentFrame = true;
+		                                }
 
-				if (region && update.lines) {
-					const scrollTop = region.scrollTop ?? 0;
-					for (const chunk of update.lines.updates) {
-						if (region.overflowToBackbuffer && chunk.start < scrollTop) {
-							this.terminalWriter.backbufferDirty = true;
-							this.terminalWriter.backbufferDirtyCurrentFrame = true;
-						}
-
-						const absStart = region.y + chunk.start;
-						if (absStart < cameraY) {
-							this.terminalWriter.backbufferDirty = true;
-							this.terminalWriter.backbufferDirtyCurrentFrame = true;
-						}
-					}
-				}
-
-				if (
-					!this.isAlternateBufferEnabled &&
-					region &&
-					update.scrollTop !== undefined &&
-					region.overflowToBackbuffer
-				) {
-					const maxPushed =
-						this.scrollOptimizer.maxRegionScrollTops.get(region.id) ?? 0;
-					if (update.scrollTop < maxPushed) {
-						this.terminalWriter.backbufferDirtyCurrentFrame = true;
-					}
-				}
-			}
+		                                const absStart = region.y + chunk.start;
+		                                if (absStart < cameraY) {
+		                                        this.terminalWriter.backbufferDirty = true;
+		                                        this.terminalWriter.backbufferDirtyCurrentFrame = true;
+		                                }
+		                        }
+		                }
+		        }
 		}
-
 		const cursorChanged =
 			cursorPosition !== previousCursorPosition &&
 			(!cursorPosition ||
