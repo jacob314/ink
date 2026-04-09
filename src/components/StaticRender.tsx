@@ -11,6 +11,21 @@ export type Props = {
 export default function StaticRender({children, width, style}: Props) {
 	const ref = useRef<DOMElement>(null);
 	const [isRendered, setIsRendered] = useState(false);
+	const prevChildren = useRef(children);
+
+	let shouldRender = !isRendered;
+
+	if (children !== prevChildren.current) {
+		prevChildren.current = children;
+		shouldRender = true;
+		if (isRendered) {
+			setIsRendered(false);
+		}
+
+		if (ref.current) {
+			ref.current.cachedRender = undefined;
+		}
+	}
 
 	useEffect(() => {
 		const node = ref.current;
@@ -29,7 +44,7 @@ export default function StaticRender({children, width, style}: Props) {
 				setIsRendered(true);
 			}}
 		>
-			{isRendered ? null : children()}
+			{shouldRender ? children() : null}
 		</ink-static-render>
 	);
 }

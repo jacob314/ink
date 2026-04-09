@@ -33,17 +33,12 @@ function TrackedText({
 	readonly children: React.ReactNode;
 	readonly color?: string;
 }) {
+	const count = (renderCounts.get(name) || 0) + 1;
+	renderCounts.set(name, count);
+
 	return (
 		<Text color={color}>
-			<ink-text
-				internal_transform={text => {
-					const count = (renderCounts.get(name) || 0) + 1;
-					renderCounts.set(name, count);
-					return `${text} [Rebuilt: ${count}]`;
-				}}
-			>
-				{children}
-			</ink-text>
+			{children} [Rebuilt: {count}]
 		</Text>
 	);
 }
@@ -53,23 +48,29 @@ type ScrollState = {
 };
 
 type ScrollAction =
-	| {type: 'up'; delta: number}
+	| {type: 'up'; delta: number; max: number}
 	| {type: 'down'; delta: number; max: number}
 	| {type: 'setTop'; value: number};
 
 function scrollReducer(state: ScrollState, action: ScrollAction): ScrollState {
 	switch (action.type) {
 		case 'up': {
+			const currentScrollTop =
+				state.scrollTop >= action.max ? action.max : state.scrollTop;
 			return {
 				...state,
-				scrollTop: Math.max(0, state.scrollTop - action.delta),
+				scrollTop: Math.max(0, currentScrollTop - action.delta),
 			};
 		}
 
 		case 'down': {
+			const currentScrollTop =
+				state.scrollTop >= action.max ? action.max : state.scrollTop;
+			const newScrollTop = currentScrollTop + action.delta;
 			return {
 				...state,
-				scrollTop: Math.min(state.scrollTop + action.delta, action.max),
+				scrollTop:
+					newScrollTop >= action.max ? Number.MAX_SAFE_INTEGER : newScrollTop,
 			};
 		}
 
@@ -159,19 +160,8 @@ const InnerStatic = React.memo(({id}: {readonly id: string}) => {
 const OuterGroup = React.memo(
 	({groupId, items}: {readonly groupId: number; readonly items: number[]}) => {
 		return (
-			<Box
-				width={60}
-				flexDirection="column"
-				borderStyle="double"
-				borderColor="blue"
-				marginBottom={1}
-				paddingX={1}
-			>
-				<TrackedText name={`outer-${groupId}`} color="cyan">
-					Outer Group {groupId}
-				</TrackedText>
-
-				<Box flexDirection="column" gap={1} marginTop={1}>
+			<Box width={60} flexDirection="column" marginBottom={1} paddingX={1}>
+				<Box flexDirection="column" gap={1} marginBottom={1}>
 					{items.map(itemId => (
 						<InnerStatic
 							key={`inner-${groupId}-${itemId}`}
@@ -179,6 +169,10 @@ const OuterGroup = React.memo(
 						/>
 					))}
 				</Box>
+
+				<TrackedText name={`outer-${groupId}`} color="cyan">
+					Outer Group {groupId}
+				</TrackedText>
 			</Box>
 		);
 	},
@@ -186,28 +180,30 @@ const OuterGroup = React.memo(
 
 export default function NestedStaticDemo() {
 	const [count, setCount] = useState(0);
+	const [showTimer, setShowTimer] = useState(false);
 	const [groups, setGroups] = useState<Array<{id: number; items: number[]}>>([
 		{id: 1, items: Array.from({length: 1000}, (_, i) => i + 1)},
 	]);
-	const [scrollState, dispatch] = useReducer(scrollReducer, {scrollTop: 0});
+	const [scrollState, dispatch] = useReducer(scrollReducer, {
+		scrollTop: Number.MAX_SAFE_INTEGER,
+	});
 	const {scrollTop} = scrollState;
 	const {columns, rows} = useTerminalSize();
 
 	const reference = useRef<DOMElement>(null);
 	const sizeReference = useRef({innerHeight: 0, scrollHeight: 0});
 	const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
+	const isAtBottomReference = useRef(true);
 
 	useLayoutEffect(() => {
 		if (reference.current) {
-			const innerHeight = getInnerHeight(reference.current);
-			const scrollHeight = getScrollHeight(reference.current);
-
-			sizeReference.current = {innerHeight, scrollHeight};
+			sizeReference.current.innerHeight = getInnerHeight(reference.current);
+			sizeReference.current.scrollHeight = getScrollHeight(reference.current);
 
 			if (shouldScrollToBottom) {
 				dispatch({
 					type: 'setTop',
-					value: Math.max(0, scrollHeight - innerHeight),
+					value: Number.MAX_SAFE_INTEGER,
 				});
 				setShouldScrollToBottom(false);
 			}
@@ -215,6 +211,21 @@ export default function NestedStaticDemo() {
 	});
 
 	const [nextItemId, setNextItemId] = useState(1001);
+
+	const frameIndexReference = useRef(0);
+	const frameTimesReference = useRef<number[]>([]);
+
+	const now = Date.now();
+	frameIndexReference.current++;
+	frameTimesReference.current.push(now);
+	while (
+		frameTimesReference.current.length > 0 &&
+		frameTimesReference.current[0]! < now - 1000
+	) {
+		frameTimesReference.current.shift();
+	}
+
+	const currentFps = frameTimesReference.current.length;
 
 	useInput((input, key) => {
 		if (input === ' ') {
@@ -231,7 +242,10 @@ export default function NestedStaticDemo() {
 
 				return newGroups;
 			});
-			setShouldScrollToBottom(true);
+			if (isAtBottomReference.current) {
+				setShouldScrollToBottom(true);
+			}
+
 			return;
 		}
 
@@ -243,12 +257,23 @@ export default function NestedStaticDemo() {
 						: 1;
 				return [...previousGroups, {id: nextGroupId, items: [1]}];
 			});
-			setShouldScrollToBottom(true);
+			if (isAtBottomReference.current) {
+				setShouldScrollToBottom(true);
+			}
+
 			return;
 		}
 
 		if (key.upArrow || input === 'w') {
-			dispatch({type: 'up', delta: key.shift ? 10 : 1});
+			dispatch({
+				type: 'up',
+				delta: key.shift ? 10 : 1,
+				max: Math.max(
+					0,
+					sizeReference.current.scrollHeight -
+						sizeReference.current.innerHeight,
+				),
+			});
 			return;
 		}
 
@@ -269,6 +294,11 @@ export default function NestedStaticDemo() {
 			dispatch({
 				type: 'up',
 				delta: Math.floor(sizeReference.current.scrollHeight / 2),
+				max: Math.max(
+					0,
+					sizeReference.current.scrollHeight -
+						sizeReference.current.innerHeight,
+				),
 			});
 			return;
 		}
@@ -283,14 +313,29 @@ export default function NestedStaticDemo() {
 						sizeReference.current.innerHeight,
 				),
 			});
+			return;
+		}
+
+		if (input === 't') {
+			setShowTimer(previous => !previous);
 		}
 	});
 
 	useEffect(() => {
+		if (!showTimer) {
+			return;
+		}
+
 		const timer = setInterval(() => {
 			setCount(previous => previous + 1);
-		}, 5000);
+		}, 16);
 
+		return () => {
+			clearInterval(timer);
+		};
+	}, [showTimer]);
+
+	useEffect(() => {
 		const addTimer = setInterval(() => {
 			setGroups(previousGroups => {
 				const newGroups = [...previousGroups];
@@ -305,11 +350,12 @@ export default function NestedStaticDemo() {
 
 				return newGroups;
 			});
-			setShouldScrollToBottom(true);
-		}, 5000);
+			if (isAtBottomReference.current) {
+				setShouldScrollToBottom(true);
+			}
+		}, 1000);
 
 		return () => {
-			clearInterval(timer);
 			clearInterval(addTimer);
 		};
 	}, [nextItemId]);
@@ -353,7 +399,10 @@ export default function NestedStaticDemo() {
 					Arrows to scroll. [u]/[d] scroll up/down by half total height.
 					ScrollTop: {scrollTop}
 				</Text>
-				<Text>Timer: {count}</Text>
+				<Text>
+					Timer: {count} | FPS: {currentFps} | Frame:{' '}
+					{frameIndexReference.current}
+				</Text>
 			</Box>
 		</Box>
 	);

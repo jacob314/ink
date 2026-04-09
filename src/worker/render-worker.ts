@@ -707,8 +707,6 @@ export class TerminalBufferWorker {
 									{
 										clip: undefined,
 										offsetY: -cameraY,
-										overrideHeight: this.rows + count,
-										isExpanded: true,
 									},
 									{skipStickyHeaders: true, skipScrollbars},
 								);
@@ -875,7 +873,6 @@ export class TerminalBufferWorker {
 							offsetX: 0,
 							overrideHeight: height,
 							isExpanded: true,
-							forceResetScrollTop: true,
 						},
 						{
 							skipStickyHeaders: true,
@@ -893,8 +890,7 @@ export class TerminalBufferWorker {
 				}
 			};
 
-			const rootBackbufferHeight =
-				this.scrollOptimizer.maxRegionScrollTops.get(rootRegion.id) ?? cameraY;
+			const rootBackbufferHeight = cameraY;
 			composeToBackbuffer(
 				this.sceneManager.root!,
 				rootRegion,
@@ -904,10 +900,8 @@ export class TerminalBufferWorker {
 
 			for (const region of this.sceneManager.regions.values()) {
 				if (region.overflowToBackbuffer && region.isScrollable) {
-					const regionBackbufferHeight =
-						this.scrollOptimizer.maxRegionScrollTops.get(region.id) ??
-						region.scrollTop ??
-						0;
+					const scrollTop = region.scrollTop ?? 0;
+					const regionBackbufferHeight = scrollTop;
 					const node = this.findNodeForRegion(region.id);
 					if (node) {
 						composeToBackbuffer(node, region, regionBackbufferHeight, 0);
@@ -949,14 +943,12 @@ export class TerminalBufferWorker {
 			offsetX = 0,
 			overrideHeight,
 			isExpanded = false,
-			forceResetScrollTop = false,
 		}: {
 			clip?: {x: number; y: number; w: number; h: number};
 			offsetY?: number;
 			offsetX?: number;
 			overrideHeight?: number;
 			isExpanded?: boolean;
-			forceResetScrollTop?: boolean;
 		},
 		options?: {skipStickyHeaders?: boolean; skipScrollbars?: boolean},
 	) {
@@ -993,7 +985,6 @@ export class TerminalBufferWorker {
 
 		const originalScrollTop = region.scrollTop;
 		if (
-			forceResetScrollTop &&
 			inExpandedContext &&
 			region.isScrollable &&
 			overrideHeight === undefined
@@ -1030,7 +1021,6 @@ export class TerminalBufferWorker {
 						offsetX: absX - (region.scrollLeft ?? 0),
 						isExpanded:
 							inExpandedContext && Boolean(childRegion?.overflowToBackbuffer),
-						forceResetScrollTop,
 					},
 					childOptions,
 				);
@@ -1040,7 +1030,6 @@ export class TerminalBufferWorker {
 			compositor.drawScrollbars(canvas, region, absX, absY, myClip);
 		} finally {
 			if (
-				forceResetScrollTop &&
 				inExpandedContext &&
 				region.isScrollable &&
 				overrideHeight === undefined
@@ -1115,10 +1104,7 @@ export class TerminalBufferWorker {
 	) {
 		if (rootRegion) {
 			if (reset) {
-				const currentMax =
-					this.scrollOptimizer.maxRegionScrollTops.get(rootRegion.id) ??
-					cameraY;
-				this.scrollOptimizer.setMaxPushed(rootRegion.id, currentMax);
+				this.scrollOptimizer.setMaxPushed(rootRegion.id, cameraY);
 			} else {
 				this.scrollOptimizer.updateMaxPushed(rootRegion.id, cameraY);
 			}
@@ -1133,11 +1119,7 @@ export class TerminalBufferWorker {
 
 				if (region.overflowToBackbuffer) {
 					if (reset) {
-						const currentMax =
-							this.scrollOptimizer.maxRegionScrollTops.get(region.id) ??
-							region.scrollTop ??
-							0;
-						this.scrollOptimizer.setMaxPushed(region.id, currentMax);
+						this.scrollOptimizer.setMaxPushed(region.id, region.scrollTop ?? 0);
 					} else {
 						this.scrollOptimizer.updateMaxPushed(
 							region.id,
