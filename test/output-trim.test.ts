@@ -14,6 +14,6 @@ test('removes trailing unstyled spaces from styledOutput', t => {
 	t.is(result.styledOutput[0].length, 5, 'Row 0 should have length 5');
 	t.is(result.styledOutput[0]!.getValue(4), 'o');
 
-	// Row 1 should be empty (length 0)
-	t.is(result.styledOutput[1].length, 0, 'Row 1 should have length 0');
+	// Row 1 should be completely removed from the sparse array
+	t.is(result.styledOutput[1], undefined, 'Row 1 should be undefined');
 });

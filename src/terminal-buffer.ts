@@ -25,6 +25,7 @@ import {
 import {type InkOptions} from './components/AppContext.js';
 
 const debugEdits = false;
+const emptyStyledLine = new StyledLine();
 
 export default class TerminalBuffer {
 	public get lines(): StyledLine[] {
@@ -483,11 +484,12 @@ export default class TerminalBuffer {
 
 			// Send all lines
 			const serialized = this.serializer.serialize(current.lines);
+			const offsetY = current.linesOffsetY ?? 0;
 			update.lines = {
 				updates: [
 					{
-						start: 0,
-						end: current.lines.length,
+						start: offsetY,
+						end: offsetY + current.lines.length,
 						data: serialized,
 					},
 				],
@@ -509,11 +511,7 @@ export default class TerminalBuffer {
 		// or we can rely on the fact they are rebuilt every frame.
 		// Let's just resend if length differs or assume they might change.
 		// To be safe and simple: always send sticky headers if they exist or existed.
-		if (
-			current.stickyHeaders !== last.stickyHeaders ||
-			current.stickyHeaders.length > 0 ||
-			last.stickyHeaders.length > 0
-		) {
+		if (current.stickyHeaders.length > 0 || last.stickyHeaders.length > 0) {
 			update.stickyHeaders = current.stickyHeaders.map(h => ({
 				...h,
 				node: undefined,
@@ -527,10 +525,20 @@ export default class TerminalBuffer {
 		}
 
 		// Diff lines
-		const lineUpdates = this.diffLines(last.lines, current.lines);
+		const lineUpdates = this.diffLines(
+			last.lines,
+			last.linesOffsetY ?? 0,
+			current.lines,
+			current.linesOffsetY ?? 0,
+		);
 
-		if (lineUpdates.length > 0 || last.lines.length !== current.lines.length) {
+		if (
+			lineUpdates.length > 0 ||
+			last.lines.length !== current.lines.length ||
+			last.linesOffsetY !== current.linesOffsetY
+		) {
 			hasChanges = true;
+			update.linesOffsetY = current.linesOffsetY;
 			update.lines = {
 				updates: lineUpdates,
 				totalLength: current.lines.length,
@@ -548,10 +556,12 @@ export default class TerminalBuffer {
 					}
 
 					// Also check if lines were removed from the end of the content but still within the scrollback
+					const oldEnd = (last.linesOffsetY ?? 0) + last.lines.length;
+					const newEnd = (current.linesOffsetY ?? 0) + current.lines.length;
 					if (
 						!element.internalIsScrollbackDirty &&
-						current.lines.length < last.lines.length &&
-						current.lines.length < scrollTop
+						newEnd < oldEnd &&
+						newEnd < scrollTop
 					) {
 						element.internalIsScrollbackDirty = true;
 					}
@@ -564,14 +574,16 @@ export default class TerminalBuffer {
 
 	private diffLines(
 		oldLines: readonly StyledLine[],
+		oldOffsetY: number,
 		newLines: readonly StyledLine[],
+		newOffsetY: number,
 	): Array<{
 		start: number;
 		end: number;
 		data: Uint8Array;
 		source?: Uint8Array;
 	}> {
-		if (oldLines === newLines) {
+		if (oldLines === newLines && oldOffsetY === newOffsetY) {
 			return [];
 		}
 
@@ -582,50 +594,69 @@ export default class TerminalBuffer {
 			source?: Uint8Array;
 		}> = [];
 
-		const limit = Math.max(oldLines.length, newLines.length);
+		const minOffset = Math.min(oldOffsetY, newOffsetY);
+		const maxOld = oldOffsetY + oldLines.length;
+		const maxNew = newOffsetY + newLines.length;
+		const maxOffset = Math.max(maxOld, maxNew);
+
 		let chunkStart = -1;
 		let chunkLines: StyledLine[] = [];
 		let chunkSource: StyledLine[] = [];
-		for (let i = 0; i < limit; i++) {
-			const newLine = newLines[i];
-			const oldLine = oldLines[i];
+
+		const flushChunk = () => {
+			if (chunkStart !== -1) {
+				updates.push({
+					start: chunkStart,
+					end: chunkStart + chunkLines.length,
+					data: this.serializer.serialize(chunkLines),
+					source: debugEdits
+						? this.serializer.serialize(chunkSource)
+						: undefined,
+				});
+
+				chunkStart = -1;
+				chunkLines = [];
+				chunkSource = [];
+			}
+		};
+
+		for (let y = minOffset; y < maxOffset; y++) {
+			const oldLine =
+				y >= oldOffsetY && y < maxOld ? oldLines[y - oldOffsetY] : undefined;
+			const newLine =
+				y >= newOffsetY && y < maxNew ? newLines[y - newOffsetY] : undefined;
 
 			const areEqual = linesEqual(oldLine, newLine);
 			if (areEqual) {
-				if (chunkStart !== -1) {
-					updates.push({
-						start: chunkStart,
-						end: chunkStart + chunkLines.length,
-						data: this.serializer.serialize(chunkLines),
-						source: debugEdits
-							? this.serializer.serialize(chunkSource)
-							: undefined,
-					});
-					chunkStart = -1;
-					chunkLines = [];
-					chunkSource = [];
-				}
+				flushChunk();
 			} else {
-				if (chunkStart === -1) {
-					chunkStart = i;
+				// Skip leading empty lines for the chunk to save memory/IPC if they don't need to overwrite old content
+				const isNewLineEmpty = !newLine || newLine.length === 0;
+				const isOldLineEmpty = !oldLine || oldLine.length === 0;
+				if (chunkStart === -1 && isNewLineEmpty && isOldLineEmpty) {
+					continue;
 				}
 
-				chunkLines.push(newLine ?? new StyledLine());
+				if (chunkStart === -1) {
+					chunkStart = y;
+				}
+
+				// If newLine is undefined but oldLine is not, we still need to send an empty line to clear it.
+				// However, if newLine is genuinely undefined and we're pushing it into chunkLines,
+				// the serializer handles undefined elements by treating them as empty. Let's cast to
+				// any to bypass TS error or use a shared empty StyledLine.
+				// For now, since chunkLines is StyledLine[], we can push an empty one if we don't have it.
+				// Actually, we can push newLine as it is if we allow undefined in the type, but since
+				// it's defined as StyledLine[], we'll use a shared empty instance to avoid allocating.
+				chunkLines.push(newLine ?? emptyStyledLine);
 
 				if (debugEdits) {
-					chunkSource.push(oldLine ?? new StyledLine());
+					chunkSource.push(oldLine ?? emptyStyledLine);
 				}
 			}
 		}
 
-		if (chunkStart !== -1) {
-			updates.push({
-				start: chunkStart,
-				end: chunkStart + chunkLines.length,
-				data: this.serializer.serialize(chunkLines),
-				source: debugEdits ? this.serializer.serialize(chunkSource) : undefined,
-			});
-		}
+		flushChunk();
 
 		return updates;
 	}

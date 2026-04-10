@@ -1,16 +1,31 @@
-import React, {useRef, useEffect, type ReactNode} from 'react';
+import React, {useRef, useEffect, useState, type ReactNode} from 'react';
 import {type DOMElement} from '../dom.js';
-import {renderToStatic} from '../render-node-to-output.js';
 import {type Styles} from '../styles.js';
 
 export type Props = {
-	readonly children: ReactNode;
+	readonly children: () => ReactNode;
 	readonly width: number;
 	readonly style?: Styles;
 };
 
 export default function StaticRender({children, width, style}: Props) {
 	const ref = useRef<DOMElement>(null);
+	const [isRendered, setIsRendered] = useState(false);
+	const prevChildren = useRef(children);
+
+	let shouldRender = !isRendered;
+
+	if (children !== prevChildren.current) {
+		prevChildren.current = children;
+		shouldRender = true;
+		if (isRendered) {
+			setIsRendered(false);
+		}
+
+		if (ref.current) {
+			ref.current.cachedRender = undefined;
+		}
+	}
 
 	useEffect(() => {
 		const node = ref.current;
@@ -25,13 +40,11 @@ export default function StaticRender({children, width, style}: Props) {
 		<ink-static-render
 			ref={ref}
 			style={{...style, width}}
-			internalOnBeforeRender={(node: DOMElement) => {
-				if (node && !node.cachedRender) {
-					renderToStatic(node);
-				}
+			internal_onRendered={() => {
+				setIsRendered(true);
 			}}
 		>
-			{children}
+			{shouldRender ? children() : null}
 		</ink-static-render>
 	);
 }
