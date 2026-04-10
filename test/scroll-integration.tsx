@@ -105,7 +105,8 @@ test('scroll integration - verify repaint efficiency', async t => {
 
 	await waitFor(async () => {
 		await writeToTerm(term, '');
-		return getScrollHeightFromTerm() > 0;
+		const content = getFullContent();
+		return getScrollHeightFromTerm() > 0 && content.includes('ScrollTop: 0');
 	}, 10_000);
 
 	const scrollHeight = getScrollHeightFromTerm();
