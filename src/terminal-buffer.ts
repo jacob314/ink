@@ -25,6 +25,7 @@ import {
 import {type InkOptions} from './components/AppContext.js';
 
 const debugEdits = false;
+const emptyStyledLine = new StyledLine();
 
 export default class TerminalBuffer {
 	public get lines(): StyledLine[] {
@@ -640,10 +641,17 @@ export default class TerminalBuffer {
 					chunkStart = y;
 				}
 
-				chunkLines.push(newLine ?? new StyledLine());
+				// If newLine is undefined but oldLine is not, we still need to send an empty line to clear it.
+				// However, if newLine is genuinely undefined and we're pushing it into chunkLines,
+				// the serializer handles undefined elements by treating them as empty. Let's cast to
+				// any to bypass TS error or use a shared empty StyledLine.
+				// For now, since chunkLines is StyledLine[], we can push an empty one if we don't have it.
+				// Actually, we can push newLine as it is if we allow undefined in the type, but since
+				// it's defined as StyledLine[], we'll use a shared empty instance to avoid allocating.
+				chunkLines.push(newLine ?? emptyStyledLine);
 
 				if (debugEdits) {
-					chunkSource.push(oldLine ?? new StyledLine());
+					chunkSource.push(oldLine ?? emptyStyledLine);
 				}
 			}
 		}
