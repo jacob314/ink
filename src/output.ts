@@ -103,11 +103,13 @@ export type Region = {
 	y: number; // Position relative to parent region's content start
 	width: number;
 	height: number;
+	bufferWidth: number;
 
 	// Content buffer for this region.
 	// Coordinates in `lines` are relative to (0,0) of this region.
 	readonly lines: readonly StyledLine[];
 	readonly styledOutput: readonly StyledLine[];
+	linesOffsetY?: number;
 
 	isScrollable: boolean;
 	isVerticallyScrollable?: boolean;
@@ -175,6 +177,7 @@ export type SerializedStickyHeader = Omit<
 
 export type RegionUpdate = {
 	id: string | number;
+	linesOffsetY?: number;
 	x?: number;
 	y?: number;
 	width?: number;
@@ -228,6 +231,7 @@ export const regionLayoutProperties = [
 	'opaque',
 	'borderTop',
 	'borderBottom',
+	'linesOffsetY',
 ] as const;
 
 export type RegionLayoutProps = {
@@ -251,6 +255,7 @@ export type RegionLayoutProps = {
 	opaque?: boolean;
 	borderTop?: number;
 	borderBottom?: number;
+	linesOffsetY?: number;
 };
 
 export function copyRegionProperty<
@@ -286,6 +291,7 @@ export default class Output {
 			y: 0,
 			width,
 			height,
+			bufferWidth: width,
 			lines: [],
 			styledOutput: [],
 			isScrollable: false,
@@ -295,7 +301,6 @@ export default class Output {
 			selectableSpans: [],
 		};
 
-		this.initLines(this.root, width, height);
 		this.activeRegionStack.push(this.root);
 	}
 
@@ -373,7 +378,6 @@ export default class Output {
 		// The buffer size should match scrollDimensions if scrollable, or bounds if not.
 		// If scrollable, we want to capture the FULL content.
 		const bufferWidth = scrollState?.scrollWidth ?? width;
-		const bufferHeight = scrollState?.scrollHeight ?? height;
 
 		const activeRegion = this.getActiveRegion();
 		const inheritedOverflowToBackbuffer = isScrollable
@@ -386,6 +390,7 @@ export default class Output {
 			y,
 			width,
 			height,
+			bufferWidth,
 			lines: [],
 			styledOutput: [],
 			isScrollable,
@@ -410,8 +415,6 @@ export default class Output {
 			stableScrollback,
 			selectableSpans: [],
 		};
-
-		this.initLines(region, bufferWidth, bufferHeight);
 
 		// Add to current active region's children
 		this.getActiveRegion().children.push(region);
@@ -564,11 +567,20 @@ export default class Output {
 	private trimRegionLines(region: Region) {
 		if (region.isTrimmed) return;
 
+		let minY = -1;
+		let maxY = -1;
+
 		const limit = Math.min(region.lines.length, (region.maxWrittenY ?? -1) + 1);
 
 		for (let y = 0; y < limit; y++) {
-			const line = region.lines[y]!;
+			const line = region.lines[y];
+			if (!line) continue;
 			const trimmedLength = line.getTrimmedLength();
+
+			if (trimmedLength > 0) {
+				if (minY === -1) minY = y;
+				maxY = y;
+			}
 
 			if (region.styledOutput[y]?.length !== trimmedLength) {
 				(region.styledOutput as StyledLine[])[y] =
@@ -576,10 +588,17 @@ export default class Output {
 			}
 		}
 
-		for (let y = limit; y < region.lines.length; y++) {
-			if (region.styledOutput[y]?.length !== 0) {
-				(region.styledOutput as StyledLine[])[y] = StyledLine.empty(0);
-			}
+		if (minY === -1) {
+			region.linesOffsetY = 0;
+			(region.lines as StyledLine[]) = [];
+			(region.styledOutput as StyledLine[]) = [];
+		} else {
+			region.linesOffsetY = minY;
+			(region.lines as StyledLine[]) = region.lines.slice(minY, maxY + 1);
+			(region.styledOutput as StyledLine[]) = region.styledOutput.slice(
+				minY,
+				maxY + 1,
+			);
 		}
 
 		for (const child of region.children) {
@@ -594,23 +613,11 @@ export default class Output {
 			const {row, col} = region.cursorPosition;
 			const line = region.lines[row];
 
-			if (line) {
-				region.cursorPosition.col = clampCursorColumn(line, col);
-			}
+			region.cursorPosition.col = line ? clampCursorColumn(line, col) : 0;
 		}
 
 		for (const child of region.children) {
 			this.clampCursorPosition(child);
-		}
-	}
-
-	private initLines(region: Region, width: number, height: number) {
-		if (height <= 0) return;
-		const baseRow = StyledLine.empty(width);
-		for (let y = 0; y < height; y++) {
-			const row = y === 0 ? baseRow : baseRow.clone();
-			(region.lines as StyledLine[]).push(row);
-			(region.styledOutput as StyledLine[]).push(row);
 		}
 	}
 
@@ -624,8 +631,7 @@ export default class Output {
 		isSelectable: boolean,
 	) {
 		const region = this.getActiveRegion();
-		const {lines} = region;
-		const bufferWidth = lines[0]?.length ?? 0;
+		const {lines, bufferWidth} = region;
 
 		let chars: StyledLine =
 			typeof items === 'string' ? toStyledCharacters(items) : items;
@@ -655,9 +661,11 @@ export default class Output {
 			y = absoluteY - regionOffset.y;
 		}
 
-		const currentLine = lines[y]!;
+		let currentLine = lines[y]!;
 		if (!currentLine) {
-			return;
+			currentLine = StyledLine.empty(bufferWidth);
+			(lines as StyledLine[])[y] = currentLine;
+			(region.styledOutput as StyledLine[])[y] = currentLine;
 		}
 
 		region.maxWrittenY = Math.max(region.maxWrittenY ?? -1, y);
@@ -920,7 +928,8 @@ function composeRegion(
 		}
 
 		const localY = sy - absY + scrollTop;
-		const sourceLine = lines[localY];
+		const lineIndex = localY - (region.linesOffsetY ?? 0);
+		const sourceLine = lines[lineIndex];
 		if (!sourceLine) {
 			continue;
 		}
