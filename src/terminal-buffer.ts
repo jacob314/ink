@@ -499,12 +499,139 @@ export default class TerminalBuffer {
 			return update;
 		}
 
+		// Fast path for identical regions
+		if (
+			current.lines === last.lines &&
+			current.x === last.x &&
+			current.y === last.y &&
+			current.width === last.width &&
+			current.height === last.height &&
+			current.scrollTop === last.scrollTop &&
+			current.scrollLeft === last.scrollLeft &&
+			current.scrollHeight === last.scrollHeight &&
+			current.scrollWidth === last.scrollWidth &&
+			current.isScrollable === last.isScrollable &&
+			current.isVerticallyScrollable === last.isVerticallyScrollable &&
+			current.isHorizontallyScrollable === last.isHorizontallyScrollable &&
+			current.scrollbarVisible === last.scrollbarVisible &&
+			current.overflowToBackbuffer === last.overflowToBackbuffer &&
+			current.marginRight === last.marginRight &&
+			current.marginBottom === last.marginBottom &&
+			current.scrollbarThumbColor === last.scrollbarThumbColor &&
+			current.backgroundColor === last.backgroundColor &&
+			current.opaque === last.opaque &&
+			current.borderTop === last.borderTop &&
+			current.borderBottom === last.borderBottom &&
+			current.linesOffsetY === last.linesOffsetY
+		) {
+			// No changes!
+			return undefined;
+		}
+
 		// Check properties
-		for (const key of regionLayoutProperties) {
-			if (current[key] !== last[key]) {
-				copyRegionProperty(update, current, key);
-				hasChanges = true;
-			}
+		if (current.x !== last.x) {
+			update.x = current.x;
+			hasChanges = true;
+		}
+
+		if (current.y !== last.y) {
+			update.y = current.y;
+			hasChanges = true;
+		}
+
+		if (current.width !== last.width) {
+			update.width = current.width;
+			hasChanges = true;
+		}
+
+		if (current.height !== last.height) {
+			update.height = current.height;
+			hasChanges = true;
+		}
+
+		if (current.scrollTop !== last.scrollTop) {
+			update.scrollTop = current.scrollTop;
+			hasChanges = true;
+		}
+
+		if (current.scrollLeft !== last.scrollLeft) {
+			update.scrollLeft = current.scrollLeft;
+			hasChanges = true;
+		}
+
+		if (current.scrollHeight !== last.scrollHeight) {
+			update.scrollHeight = current.scrollHeight;
+			hasChanges = true;
+		}
+
+		if (current.scrollWidth !== last.scrollWidth) {
+			update.scrollWidth = current.scrollWidth;
+			hasChanges = true;
+		}
+
+		if (current.isScrollable !== last.isScrollable) {
+			update.isScrollable = current.isScrollable;
+			hasChanges = true;
+		}
+
+		if (current.isVerticallyScrollable !== last.isVerticallyScrollable) {
+			update.isVerticallyScrollable = current.isVerticallyScrollable;
+			hasChanges = true;
+		}
+
+		if (current.isHorizontallyScrollable !== last.isHorizontallyScrollable) {
+			update.isHorizontallyScrollable = current.isHorizontallyScrollable;
+			hasChanges = true;
+		}
+
+		if (current.scrollbarVisible !== last.scrollbarVisible) {
+			update.scrollbarVisible = current.scrollbarVisible;
+			hasChanges = true;
+		}
+
+		if (current.overflowToBackbuffer !== last.overflowToBackbuffer) {
+			update.overflowToBackbuffer = current.overflowToBackbuffer;
+			hasChanges = true;
+		}
+
+		if (current.marginRight !== last.marginRight) {
+			update.marginRight = current.marginRight;
+			hasChanges = true;
+		}
+
+		if (current.marginBottom !== last.marginBottom) {
+			update.marginBottom = current.marginBottom;
+			hasChanges = true;
+		}
+
+		if (current.scrollbarThumbColor !== last.scrollbarThumbColor) {
+			update.scrollbarThumbColor = current.scrollbarThumbColor;
+			hasChanges = true;
+		}
+
+		if (current.backgroundColor !== last.backgroundColor) {
+			update.backgroundColor = current.backgroundColor;
+			hasChanges = true;
+		}
+
+		if (current.opaque !== last.opaque) {
+			update.opaque = current.opaque;
+			hasChanges = true;
+		}
+
+		if (current.borderTop !== last.borderTop) {
+			update.borderTop = current.borderTop;
+			hasChanges = true;
+		}
+
+		if (current.borderBottom !== last.borderBottom) {
+			update.borderBottom = current.borderBottom;
+			hasChanges = true;
+		}
+
+		if (current.linesOffsetY !== last.linesOffsetY) {
+			update.linesOffsetY = current.linesOffsetY;
+			hasChanges = true;
 		}
 
 		// Deep compare sticky headers? For now assuming reference change or simple length change is enough,

@@ -147,6 +147,7 @@ export type Region = {
 	}>;
 	isTrimmed?: boolean;
 	maxWrittenY?: number;
+	hasCursor?: boolean;
 };
 
 export type RegionNode = {
@@ -301,6 +302,7 @@ export default class Output {
 			children: [],
 			node,
 			selectableSpans: [],
+			hasCursor: false,
 		};
 
 		this.activeRegionStack.push(this.root);
@@ -431,6 +433,7 @@ export default class Output {
 			nodeId,
 			stableScrollback,
 			selectableSpans: [],
+			hasCursor: false,
 		};
 
 		// Add to current active region's children
@@ -509,6 +512,10 @@ export default class Output {
 				row: y + row,
 				col: x + col,
 			};
+
+			for (const r of this.activeRegionStack) {
+				r.hasCursor = true;
+			}
 		}
 
 		if (items.length > 0) {
@@ -588,6 +595,12 @@ export default class Output {
 		regionRef.overflowToBackbuffer = overflowToBackbuffer;
 
 		activeRegion.children.push(regionRef);
+
+		if (regionRef.hasCursor) {
+			for (const r of this.activeRegionStack) {
+				r.hasCursor = true;
+			}
+		}
 	}
 
 	private trimRegionLines(region: Region) {
@@ -635,6 +648,8 @@ export default class Output {
 	}
 
 	private clampCursorPosition(region: Region) {
+		if (!region.hasCursor) return;
+
 		if (region.cursorPosition) {
 			const {row, col} = region.cursorPosition;
 			const line = region.lines[row];
