@@ -510,10 +510,7 @@ export default class TerminalBuffer {
 		// or we can rely on the fact they are rebuilt every frame.
 		// Let's just resend if length differs or assume they might change.
 		// To be safe and simple: always send sticky headers if they exist or existed.
-		if (
-			current.stickyHeaders.length > 0 ||
-			last.stickyHeaders.length > 0
-		) {
+		if (current.stickyHeaders.length > 0 || last.stickyHeaders.length > 0) {
 			update.stickyHeaders = current.stickyHeaders.map(h => ({
 				...h,
 				node: undefined,
@@ -607,26 +604,14 @@ export default class TerminalBuffer {
 
 		const flushChunk = () => {
 			if (chunkStart !== -1) {
-				// Trim trailing undefined/empty lines from the chunk before sending to avoid
-				// sending giant blocks of empty lines over IPC
-				let endTrim = chunkLines.length;
-				while (
-					endTrim > 0 &&
-					(!chunkLines[endTrim - 1] || chunkLines[endTrim - 1]!.length === 0)
-				) {
-					endTrim--;
-				}
-
-				if (endTrim > 0) {
-					updates.push({
-						start: chunkStart,
-						end: chunkStart + endTrim,
-						data: this.serializer.serialize(chunkLines.slice(0, endTrim)),
-						source: debugEdits
-							? this.serializer.serialize(chunkSource.slice(0, endTrim))
-							: undefined,
-					});
-				}
+				updates.push({
+					start: chunkStart,
+					end: chunkStart + chunkLines.length,
+					data: this.serializer.serialize(chunkLines),
+					source: debugEdits
+						? this.serializer.serialize(chunkSource)
+						: undefined,
+				});
 
 				chunkStart = -1;
 				chunkLines = [];
@@ -644,9 +629,10 @@ export default class TerminalBuffer {
 			if (areEqual) {
 				flushChunk();
 			} else {
-				// Skip leading empty lines for the chunk to save memory/IPC
+				// Skip leading empty lines for the chunk to save memory/IPC if they don't need to overwrite old content
 				const isNewLineEmpty = !newLine || newLine.length === 0;
-				if (chunkStart === -1 && isNewLineEmpty) {
+				const isOldLineEmpty = !oldLine || oldLine.length === 0;
+				if (chunkStart === -1 && isNewLineEmpty && isOldLineEmpty) {
 					continue;
 				}
 
