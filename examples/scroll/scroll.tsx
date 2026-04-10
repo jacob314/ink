@@ -438,8 +438,12 @@ function ScrollableContent({
 		if (useStatic) {
 			return (
 				<StaticRender key={`my-static-render-${columns}`} width={columns - 2}>
-					<Text>START OF STATIC BLOCK</Text>
-					{children}
+					{() => (
+						<>
+							<Text>START OF STATIC BLOCK</Text>
+							{children}
+						</>
+					)}
 				</StaticRender>
 			);
 		}

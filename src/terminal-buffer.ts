@@ -12,7 +12,7 @@ import {StyledLine} from './styled-line.js';
 import {Serializer} from './serialization.js';
 import {TerminalBufferWorker} from './worker/render-worker.js';
 import {linesEqual} from './worker/terminal-writer.js';
-import {type DOMElement} from './dom.js';
+import {type DOMElement, type StickyHeader} from './dom.js';
 import {
 	type Region,
 	type RegionUpdate,
@@ -497,7 +497,6 @@ export default class TerminalBuffer {
 			return update;
 		}
 
-		// Check properties
 		for (const key of regionLayoutProperties) {
 			if (current[key] !== last[key]) {
 				copyRegionProperty(update, current, key);
@@ -505,15 +504,7 @@ export default class TerminalBuffer {
 			}
 		}
 
-		// Deep compare sticky headers? For now assuming reference change or simple length change is enough,
-		// or we can rely on the fact they are rebuilt every frame.
-		// Let's just resend if length differs or assume they might change.
-		// To be safe and simple: always send sticky headers if they exist or existed.
-		if (
-			current.stickyHeaders !== last.stickyHeaders ||
-			current.stickyHeaders.length > 0 ||
-			last.stickyHeaders.length > 0
-		) {
+		if (!this.stickyHeadersEqual(last.stickyHeaders, current.stickyHeaders)) {
 			update.stickyHeaders = current.stickyHeaders.map(h => ({
 				...h,
 				node: undefined,
@@ -527,15 +518,19 @@ export default class TerminalBuffer {
 		}
 
 		// Diff lines
-		const lineUpdates = this.diffLines(last.lines, current.lines);
+		const lineUpdatesResult = this.diffLines(
+			last.lines,
+			current.lines,
+		);
+		const lineUpdates = lineUpdatesResult.updates;
 
 		if (lineUpdates.length > 0 || last.lines.length !== current.lines.length) {
 			hasChanges = true;
 			update.lines = {
 				updates: lineUpdates,
 				totalLength: current.lines.length,
+				contentShiftDelta: lineUpdatesResult.contentShiftDelta,
 			};
-
 			if (current.stableScrollback && current.nodeId !== undefined) {
 				const element = nodeIdToElement.get(current.nodeId);
 				if (element) {
@@ -562,17 +557,90 @@ export default class TerminalBuffer {
 		return hasChanges ? update : undefined;
 	}
 
+	private stickyHeadersEqual(
+		oldHeaders: StickyHeader[],
+		newHeaders: StickyHeader[],
+	): boolean {
+		if (oldHeaders.length !== newHeaders.length) {
+			return false;
+		}
+
+		for (let i = 0; i < oldHeaders.length; i++) {
+			const oldH = oldHeaders[i]!;
+			const newH = newHeaders[i]!;
+
+			if (
+				oldH.x !== newH.x ||
+				oldH.y !== newH.y ||
+				oldH.naturalRow !== newH.naturalRow ||
+				oldH.startRow !== newH.startRow ||
+				oldH.endRow !== newH.endRow ||
+				oldH.scrollContainerId !== newH.scrollContainerId ||
+				oldH.nodeId !== newH.nodeId
+			) {
+				return false;
+			}
+
+			if (oldH.lines.length !== newH.lines.length) return false;
+			for (let j = 0; j < oldH.lines.length; j++) {
+				if (!linesEqual(oldH.lines[j], newH.lines[j])) return false;
+			}
+
+			if (oldH.stuckLines && newH.stuckLines) {
+				if (oldH.stuckLines.length !== newH.stuckLines.length) return false;
+				for (let j = 0; j < oldH.stuckLines.length; j++) {
+					if (!linesEqual(oldH.stuckLines[j], newH.stuckLines[j])) return false;
+				}
+			} else if (oldH.stuckLines !== newH.stuckLines) {
+				return false;
+			}
+
+			if (oldH.styledOutput.length !== newH.styledOutput.length) return false;
+			for (let j = 0; j < oldH.styledOutput.length; j++) {
+				if (!linesEqual(oldH.styledOutput[j], newH.styledOutput[j]))
+					return false;
+			}
+		}
+
+		return true;
+	}
+
 	private diffLines(
 		oldLines: readonly StyledLine[],
 		newLines: readonly StyledLine[],
-	): Array<{
-		start: number;
-		end: number;
-		data: Uint8Array;
-		source?: Uint8Array;
-	}> {
+	): {
+		updates: Array<{
+			start: number;
+			end: number;
+			data: Uint8Array;
+			source?: Uint8Array;
+		}>;
+		contentShiftDelta?: number;
+	} {
 		if (oldLines === newLines) {
-			return [];
+			return {updates: []};
+		}
+
+		let contentShiftDelta = 0;
+
+		// Check if content was prepended (or appended and shifted) by looking for 
+		// exactly matching content at the very bottom of both buffers.
+		if (newLines.length > oldLines.length && oldLines.length > 0) {
+			const delta = newLines.length - oldLines.length;
+			let matchingFromBottom = 0;
+			
+			for (let i = 1; i <= oldLines.length; i++) {
+				if (linesEqual(oldLines[oldLines.length - i], newLines[newLines.length - i])) {
+					matchingFromBottom++;
+				} else {
+					break;
+				}
+			}
+
+			// If a significant portion matches from the bottom, we consider it a shift
+			if (matchingFromBottom > 0) {
+				contentShiftDelta = delta;
+			}
 		}
 
 		const updates: Array<{
@@ -586,9 +654,13 @@ export default class TerminalBuffer {
 		let chunkStart = -1;
 		let chunkLines: StyledLine[] = [];
 		let chunkSource: StyledLine[] = [];
+		
 		for (let i = 0; i < limit; i++) {
 			const newLine = newLines[i];
-			const oldLine = oldLines[i];
+			
+			// Adjust oldIndex by contentShiftDelta to compare correct lines
+			const oldIndex = i - contentShiftDelta;
+			const oldLine = oldIndex >= 0 && oldIndex < oldLines.length ? oldLines[oldIndex] : undefined;
 
 			const areEqual = linesEqual(oldLine, newLine);
 			if (areEqual) {
@@ -610,10 +682,10 @@ export default class TerminalBuffer {
 					chunkStart = i;
 				}
 
-				chunkLines.push(newLine ?? new StyledLine());
+				chunkLines.push(newLine ?? StyledLine.empty(this.columns));
 
 				if (debugEdits) {
-					chunkSource.push(oldLine ?? new StyledLine());
+					chunkSource.push(oldLine ?? StyledLine.empty(this.columns));
 				}
 			}
 		}
@@ -627,7 +699,10 @@ export default class TerminalBuffer {
 			});
 		}
 
-		return updates;
+		return {
+			updates,
+			contentShiftDelta: contentShiftDelta !== 0 ? contentShiftDelta : undefined
+		};
 	}
 
 	private sendEdits(

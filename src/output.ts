@@ -204,6 +204,7 @@ export type RegionUpdate = {
 			source?: Uint8Array;
 		}>;
 		totalLength: number;
+		contentShiftDelta?: number;
 	};
 };
 
@@ -262,6 +263,8 @@ export function copyRegionProperty<
 	}
 }
 
+const EMPTY_STICKY_HEADERS: StickyHeader[] = [];
+
 export default class Output {
 	width: number;
 	height: number;
@@ -276,20 +279,20 @@ export default class Output {
 	constructor(options: Options) {
 		const {width, height, node, id = 'root', trackSelection = false} = options;
 
-		this.width = width;
-		this.height = height;
+		this.width = Math.round(width);
+		this.height = Math.round(height);
 		this.trackSelection = trackSelection;
 
 		this.root = {
 			id,
 			x: 0,
 			y: 0,
-			width,
-			height,
+			width: this.width,
+			height: this.height,
 			lines: [],
 			styledOutput: [],
 			isScrollable: false,
-			stickyHeaders: [],
+			stickyHeaders: EMPTY_STICKY_HEADERS,
 			children: [],
 			node,
 			selectableSpans: [],
@@ -382,36 +385,51 @@ export default class Output {
 
 		const region: Region = {
 			id,
-			x,
-			y,
-			width,
-			height,
+			x: Math.round(x),
+			y: Math.round(y),
+			width: Math.round(width),
+			height: Math.round(height),
 			lines: [],
 			styledOutput: [],
 			isScrollable,
 			isVerticallyScrollable,
 			isHorizontallyScrollable,
-			scrollTop: scrollState?.scrollTop,
-			scrollLeft: scrollState?.scrollLeft,
-			scrollHeight: scrollState?.scrollHeight,
-			scrollWidth: scrollState?.scrollWidth,
+			scrollTop:
+				scrollState?.scrollTop === undefined
+					? undefined
+					: Math.round(scrollState.scrollTop),
+			scrollLeft:
+				scrollState?.scrollLeft === undefined
+					? undefined
+					: Math.round(scrollState.scrollLeft),
+			scrollHeight:
+				scrollState?.scrollHeight === undefined
+					? undefined
+					: Math.round(scrollState.scrollHeight),
+			scrollWidth:
+				scrollState?.scrollWidth === undefined
+					? undefined
+					: Math.round(scrollState.scrollWidth),
 			scrollbarVisible,
 			overflowToBackbuffer: inheritedOverflowToBackbuffer,
-			marginRight,
-			marginBottom,
+			marginRight:
+				marginRight === undefined ? undefined : Math.round(marginRight),
+			marginBottom:
+				marginBottom === undefined ? undefined : Math.round(marginBottom),
 			scrollbarThumbColor,
 			backgroundColor,
 			opaque,
-			borderTop,
-			borderBottom,
-			stickyHeaders: [],
+			borderTop: borderTop === undefined ? undefined : Math.round(borderTop),
+			borderBottom:
+				borderBottom === undefined ? undefined : Math.round(borderBottom),
+			stickyHeaders: EMPTY_STICKY_HEADERS,
 			children: [],
 			nodeId,
 			stableScrollback,
 			selectableSpans: [],
 		};
 
-		this.initLines(region, bufferWidth, bufferHeight);
+		this.initLines(region, Math.round(bufferWidth), Math.round(bufferHeight));
 
 		// Add to current active region's children
 		this.getActiveRegion().children.push(region);
@@ -427,6 +445,10 @@ export default class Output {
 	}
 
 	addStickyHeader(header: StickyHeader) {
+		if (this.getActiveRegion().stickyHeaders === EMPTY_STICKY_HEADERS) {
+			this.getActiveRegion().stickyHeaders = [];
+		}
+
 		this.getActiveRegion().stickyHeaders.push(header);
 	}
 
@@ -502,7 +524,12 @@ export default class Output {
 
 	clip(clip: Clip) {
 		const previousClip = this.clips.at(-1);
-		const nextClip = {...clip};
+		const nextClip = {
+			x1: clip.x1 === undefined ? undefined : Math.round(clip.x1),
+			x2: clip.x2 === undefined ? undefined : Math.round(clip.x2),
+			y1: clip.y1 === undefined ? undefined : Math.round(clip.y1),
+			y2: clip.y2 === undefined ? undefined : Math.round(clip.y2),
+		};
 
 		if (previousClip) {
 			nextClip.x1 =
@@ -554,8 +581,8 @@ export default class Output {
 			: (region.overflowToBackbuffer ?? activeRegion.overflowToBackbuffer);
 
 		const regionRef = Object.create(region) as Region;
-		regionRef.x = region.x + x;
-		regionRef.y = region.y + y;
+		regionRef.x = Math.round(region.x + x);
+		regionRef.y = Math.round(region.y + y);
 		regionRef.overflowToBackbuffer = overflowToBackbuffer;
 
 		activeRegion.children.push(regionRef);
