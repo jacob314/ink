@@ -196,8 +196,9 @@ export default function NestedStaticDemo() {
 	const [count, setCount] = useState(0);
 	const [showTimer, setShowTimer] = useState(false);
 	const [wrapFirstGroup, setWrapFirstGroup] = useState(true);
+	const [autoAdd, setAutoAdd] = useState(false);
 	const [groups, setGroups] = useState<Array<{id: number; items: number[]}>>([
-		{id: 1, items: Array.from({length: 1000}, (_, i) => i + 1)},
+		{id: 1, items: Array.from({length: 10_000}, (_, i) => i + 1)},
 	]);
 	const [scrollState, dispatch] = useReducer(scrollReducer, {
 		scrollTop: Number.MAX_SAFE_INTEGER,
@@ -284,6 +285,11 @@ export default function NestedStaticDemo() {
 			return;
 		}
 
+		if (input === 'a') {
+			setAutoAdd(previous => !previous);
+			return;
+		}
+
 		if (key.upArrow || input === 'w') {
 			dispatch({
 				type: 'up',
@@ -356,6 +362,10 @@ export default function NestedStaticDemo() {
 	}, [showTimer]);
 
 	useEffect(() => {
+		if (!autoAdd) {
+			return;
+		}
+
 		const addTimer = setInterval(() => {
 			setGroups(previousGroups => {
 				const newGroups = [...previousGroups];
@@ -378,7 +388,7 @@ export default function NestedStaticDemo() {
 		return () => {
 			clearInterval(addTimer);
 		};
-	}, [nextItemId]);
+	}, [nextItemId, autoAdd]);
 
 	return (
 		<Box flexDirection="column" height={rows} width={columns}>
@@ -417,7 +427,7 @@ export default function NestedStaticDemo() {
 				<Text color="green">Nested StaticRender Demo</Text>
 				<Text>
 					Press [Space] to add item to Group 1, [n] to add new Group, [c] to
-					toggle static wrap for Group 1.
+					toggle static wrap for Group 1, [a] to toggle auto-add.
 				</Text>
 				<Text>
 					Arrows to scroll. [u]/[d] scroll up/down by half total height.
@@ -426,7 +436,7 @@ export default function NestedStaticDemo() {
 				<Text>
 					Timer: {count} | FPS: {currentFps} | Frame:{' '}
 					{frameIndexReference.current} | G1 Static Wrap:{' '}
-					{wrapFirstGroup ? 'ON' : 'OFF'}
+					{wrapFirstGroup ? 'ON' : 'OFF'} | Auto Add: {autoAdd ? 'ON' : 'OFF'}
 				</Text>
 			</Box>
 		</Box>
