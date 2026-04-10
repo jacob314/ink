@@ -68,15 +68,25 @@ export class TerminalBufferWorker {
 	screen: RenderLine[] = [];
 	backbuffer: RenderLine[] = [];
 
-	private renderPromise?: Promise<void>;
+	/**
+	 * Visible for testing.
+	 */
+	readonly sceneManager = new SceneManager();
 
-	private readonly sceneManager = new SceneManager();
+	/**
+	 * Visible for testing.
+	 */
+	readonly scrollOptimizer = new ScrollOptimizer();
+
+	private renderPromise?: Promise<void>;
 	private readonly animationController: AnimationController;
-	private readonly scrollOptimizer = new ScrollOptimizer();
 	private readonly primaryTerminalWriter: TerminalWriter;
 	private readonly alternateTerminalWriter: TerminalWriter;
 
-	private get terminalWriter(): TerminalWriter {
+	/**
+	 * Visible for testing.
+	 */
+	get terminalWriter(): TerminalWriter {
 		return this.isAlternateBufferEnabled
 			? this.alternateTerminalWriter
 			: this.primaryTerminalWriter;
@@ -422,15 +432,6 @@ export class TerminalBufferWorker {
 		if (rootRegion) {
 			const cameraY = Math.max(0, rootRegion.height - this.rows);
 
-			if (!this.isAlternateBufferEnabled) {
-				const maxPushedRoot =
-					this.scrollOptimizer.maxRegionScrollTops.get(rootRegion.id) ?? 0;
-				if (cameraY < maxPushedRoot) {
-					this.terminalWriter.backbufferScrolledIncorrectly = true;
-					this.terminalWriter.backbufferDirtyCurrentFrame = true;
-				}
-			}
-
 			for (const update of updates) {
 				const region = this.sceneManager.getRegion(update.id);
 
@@ -447,20 +448,6 @@ export class TerminalBufferWorker {
 							this.terminalWriter.backbufferDirty = true;
 							this.terminalWriter.backbufferDirtyCurrentFrame = true;
 						}
-					}
-				}
-
-				if (
-					!this.isAlternateBufferEnabled &&
-					region &&
-					update.scrollTop !== undefined &&
-					region.overflowToBackbuffer
-				) {
-					const maxPushed =
-						this.scrollOptimizer.maxRegionScrollTops.get(region.id) ?? 0;
-					if (update.scrollTop < maxPushed) {
-						this.terminalWriter.backbufferScrolledIncorrectly = true;
-						this.terminalWriter.backbufferDirtyCurrentFrame = true;
 					}
 				}
 			}
@@ -522,7 +509,6 @@ export class TerminalBufferWorker {
 		}
 
 		this.terminalWriter.backbufferDirty = false;
-		this.terminalWriter.backbufferScrolledIncorrectly = false;
 		this.terminalWriter.backbufferDirtyCurrentFrame = false;
 
 		this.composeScene(true);
@@ -802,6 +788,24 @@ export class TerminalBufferWorker {
 
 		this.terminalWriter.finish();
 		this.terminalWriter.flush();
+
+		if (!this.isAlternateBufferEnabled) {
+			const maxPushedRoot =
+				this.scrollOptimizer.maxRegionScrollTops.get(rootRegion.id) ?? 0;
+			if (cameraY < maxPushedRoot) {
+				this.terminalWriter.backbufferDirtyCurrentFrame = true;
+			}
+
+			for (const region of this.sceneManager.regions.values()) {
+				if (region.overflowToBackbuffer) {
+					const maxPushed =
+						this.scrollOptimizer.maxRegionScrollTops.get(region.id) ?? 0;
+					if ((region.scrollTop ?? 0) < maxPushed) {
+						this.terminalWriter.backbufferDirtyCurrentFrame = true;
+					}
+				}
+			}
+		}
 
 		this.updateTrackingMaps(rootRegion, cameraY);
 

@@ -136,6 +136,7 @@ This module managed the actual output to the terminal `stdout` in the legacy ren
 
 ### Testing Guidelines
 
+- **Accessing Private Properties in Tests:** Never use `// @ts-expect-error accessing private property` in tests. Instead, if a property must be accessed for testing purposes, remove the `private` modifier and add a JSDoc comment `/** Visible for testing. */` to the member.
 - **End-to-End Testing:** When possible, tests SHOULD use `xterm.js` headless (via `@xterm/headless`) to verify the actual rendered output end-to-end, rather than taking test snapshots. This allows for asserting on the final state of the terminal buffer, including cursor position and alternate buffer state. For examples of the most complete such tests, see `test/render-worker-xterm.test.ts` and `test/terminal-writer-xterm.test.ts`.
 - **Visual/Snapshot Testing:** If you need to verify the exact output rendered, including styling and colors, you MUST use the test helpers in `test/helpers/render.tsx` and generate SVG snapshots using `test/helpers/svg.ts`. The SVG snapshots must be written to human-readable `.svg` files on the filesystem (e.g. `test/snapshots/.../*.svg`), rather than using `t.snapshot()` which writes binary or escaped string data to a legacy `.tsx.snap` file. This makes reviewing PRs and validating rendering results drastically clearer. Examples of this pattern can be found in `test/selection-snapshot.tsx`.
 
