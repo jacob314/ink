@@ -67,19 +67,21 @@ export class SceneManager {
 
 			if (!region) {
 				// Initialize new region
-				region = {
+				const newRegion: Region = {
 					id: update.id,
 					selectableSpans: [],
 					x: 0,
 					y: 0,
 					width: 0,
 					height: 0,
+					bufferWidth: 0,
 					lines: [],
 					styledOutput: [],
 					isScrollable: false,
 					stickyHeaders: [],
 					children: [],
 				};
+				region = newRegion;
 				this.regions.set(update.id, region);
 				this.regionWasAtEnd.set(update.id, true);
 			}
@@ -110,33 +112,15 @@ export class SceneManager {
 			}
 
 			// Apply line updates
+			const oldOffsetY = r.linesOffsetY ?? 0;
+			if (update.linesOffsetY !== undefined) {
+				r.linesOffsetY = update.linesOffsetY;
+			}
+
 			if (update.lines) {
-				// If lines shifted, move them before applying updates
-				if (update.lines.contentShiftDelta && update.lines.contentShiftDelta > 0) {
-					const delta = update.lines.contentShiftDelta;
-					const newLines: StyledLine[] = [];
-					for (let i = 0; i < update.lines.totalLength; i++) {
-						const oldIndex = i - delta;
-						newLines.push(
-							oldIndex >= 0 && oldIndex < r.lines.length
-								? r.lines[oldIndex]!
-								: StyledLine.empty(r.width),
-						);
-					}
-					
-					const targetLines = r.lines as StyledLine[];
-					targetLines.length = 0;
-					targetLines.push(...newLines);
-				}
-				
-				const targetLines = r.lines as StyledLine[];
-
-				while (targetLines.length < update.lines.totalLength) {
-					targetLines.push(StyledLine.empty(r.width));
-				}
-
-				if (targetLines.length > update.lines.totalLength) {
-					targetLines.length = update.lines.totalLength;
+				const sparseLines: StyledLine[] = [];
+				for (let i = 0; i < r.lines.length; i++) {
+					sparseLines[oldOffsetY + i] = r.lines[i]!;
 				}
 
 				for (const chunk of update.lines.updates) {
@@ -144,9 +128,22 @@ export class SceneManager {
 					const chunkLines = deserializer.deserialize();
 
 					for (const [i, line] of chunkLines.entries()) {
-						targetLines[chunk.start + i] = line!;
+						if (line && line.length > 0) {
+							sparseLines[chunk.start + i] = line;
+						} else {
+							sparseLines[chunk.start + i] = undefined as unknown as StyledLine;
+						}
 					}
 				}
+
+				const newOffsetY = r.linesOffsetY ?? 0;
+				const newLines: StyledLine[] = [];
+				const newLength = update.lines.totalLength ?? 0;
+				for (let i = 0; i < newLength; i++) {
+					newLines.push(sparseLines[newOffsetY + i] || new StyledLine());
+				}
+
+				(r.lines as StyledLine[]) = newLines;
 			}
 		}
 

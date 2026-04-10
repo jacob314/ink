@@ -4,70 +4,71 @@
   </style>
   <rect width="1649" height="581" fill="#000000" />
   <g transform="translate(10, 10)">
-    <text x="0" y="19" fill="#ffffff" textLength="1629" lengthAdjust="spacingAndGlyphs"> Use Up/Down arrows to scroll. Press &apos;s&apos; to export snapshot. Press &apos;Ctrl+C&apos; to exit.                                                                                                 </text>
+    <text x="0" y="2" fill="#ffffff" textLength="1629" lengthAdjust="spacingAndGlyphs"> Use Up/Down arrows to scroll. Press &apos;s&apos; to export snapshot. Press &apos;Ctrl+C&apos; to exit.                                                                                                 </text>
+    <rect x="9" y="34" width="270" height="17" fill="#0000ee" />
     <rect x="9" y="51" width="261" height="17" fill="#0000ee" />
     <text x="9" y="53" fill="#ffffff" textLength="261" lengthAdjust="spacingAndGlyphs">This is line 1 of arbitrary t</text>
     <text x="270" y="53" fill="#ffffff" textLength="1359" lengthAdjust="spacingAndGlyphs">█                                                                                                                                                      </text>
-    <rect x="9" y="68" width="63" height="17" fill="#0000ee" />
-    <text x="9" y="70" fill="#ffffff" textLength="63" lengthAdjust="spacingAndGlyphs">region.</text>
-    <text x="72" y="70" fill="#ffffff" textLength="1557" lengthAdjust="spacingAndGlyphs">                      █                                                                                                                                                      </text>
+    <rect x="9" y="68" width="261" height="17" fill="#0000ee" />
+    <text x="9" y="70" fill="#ffffff" textLength="261" lengthAdjust="spacingAndGlyphs">region.                      </text>
+    <text x="270" y="70" fill="#ffffff" textLength="1359" lengthAdjust="spacingAndGlyphs">█                                                                                                                                                      </text>
     <rect x="9" y="85" width="261" height="17" fill="#0000ee" />
     <text x="9" y="87" fill="#ffffff" textLength="261" lengthAdjust="spacingAndGlyphs">This is line 2 of arbitrary t</text>
     <text x="270" y="87" fill="#ffffff" textLength="1359" lengthAdjust="spacingAndGlyphs">█                                                                                                                                                      </text>
-    <rect x="9" y="102" width="63" height="17" fill="#0000ee" />
-    <text x="9" y="104" fill="#ffffff" textLength="63" lengthAdjust="spacingAndGlyphs">region.</text>
-    <text x="72" y="104" fill="#ffffff" textLength="1557" lengthAdjust="spacingAndGlyphs">                      █                                                                                                                                                      </text>
+    <rect x="9" y="102" width="261" height="17" fill="#0000ee" />
+    <text x="9" y="104" fill="#ffffff" textLength="261" lengthAdjust="spacingAndGlyphs">region.                      </text>
+    <text x="270" y="104" fill="#ffffff" textLength="1359" lengthAdjust="spacingAndGlyphs">█                                                                                                                                                      </text>
     <rect x="9" y="119" width="270" height="17" fill="#0000ee" />
     <text x="9" y="121" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">This is line 3 of arbitrary t▀</text>
-    <rect x="9" y="136" width="63" height="17" fill="#0000ee" />
-    <text x="9" y="138" fill="#ffffff" textLength="63" lengthAdjust="spacingAndGlyphs">region.</text>
+    <rect x="9" y="136" width="270" height="17" fill="#0000ee" />
+    <text x="9" y="138" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">region.                       </text>
     <rect x="9" y="153" width="270" height="17" fill="#0000ee" />
     <text x="9" y="155" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">This is line 4 of arbitrary te</text>
-    <rect x="9" y="170" width="63" height="17" fill="#0000ee" />
-    <text x="9" y="172" fill="#ffffff" textLength="63" lengthAdjust="spacingAndGlyphs">region.</text>
+    <rect x="9" y="170" width="270" height="17" fill="#0000ee" />
+    <text x="9" y="172" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">region.                       </text>
     <rect x="9" y="187" width="270" height="17" fill="#0000ee" />
     <text x="9" y="189" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">This is line 5 of arbitrary te</text>
-    <rect x="9" y="204" width="63" height="17" fill="#0000ee" />
-    <text x="9" y="206" fill="#ffffff" textLength="63" lengthAdjust="spacingAndGlyphs">region.</text>
+    <rect x="9" y="204" width="270" height="17" fill="#0000ee" />
+    <text x="9" y="206" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">region.                       </text>
     <rect x="9" y="221" width="270" height="17" fill="#0000ee" />
     <text x="9" y="223" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">This is line 6 of arbitrary te</text>
-    <rect x="9" y="238" width="63" height="17" fill="#0000ee" />
-    <text x="9" y="240" fill="#ffffff" textLength="63" lengthAdjust="spacingAndGlyphs">region.</text>
+    <rect x="9" y="238" width="270" height="17" fill="#0000ee" />
+    <text x="9" y="240" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">region.                       </text>
     <rect x="9" y="255" width="270" height="17" fill="#0000ee" />
     <text x="9" y="257" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">This is line 7 of arbitrary te</text>
-    <rect x="9" y="272" width="63" height="17" fill="#0000ee" />
-    <text x="9" y="274" fill="#ffffff" textLength="63" lengthAdjust="spacingAndGlyphs">region.</text>
+    <rect x="9" y="272" width="270" height="17" fill="#0000ee" />
+    <text x="9" y="274" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">region.                       </text>
     <rect x="9" y="289" width="270" height="17" fill="#0000ee" />
     <text x="9" y="291" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">This is line 8 of arbitrary te</text>
-    <rect x="9" y="306" width="63" height="17" fill="#0000ee" />
-    <text x="9" y="308" fill="#ffffff" textLength="63" lengthAdjust="spacingAndGlyphs">region.</text>
+    <rect x="9" y="306" width="270" height="17" fill="#0000ee" />
+    <text x="9" y="308" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">region.                       </text>
     <rect x="9" y="323" width="270" height="17" fill="#0000ee" />
     <text x="9" y="325" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">This is line 9 of arbitrary te</text>
-    <rect x="9" y="340" width="63" height="17" fill="#0000ee" />
-    <text x="9" y="342" fill="#ffffff" textLength="63" lengthAdjust="spacingAndGlyphs">region.</text>
+    <rect x="9" y="340" width="270" height="17" fill="#0000ee" />
+    <text x="9" y="342" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">region.                       </text>
     <rect x="9" y="357" width="270" height="17" fill="#0000ee" />
     <text x="9" y="359" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">This is line 10 of arbitrary t</text>
-    <rect x="9" y="374" width="162" height="17" fill="#0000ee" />
-    <text x="9" y="376" fill="#ffffff" textLength="162" lengthAdjust="spacingAndGlyphs">scrollable region.</text>
+    <rect x="9" y="374" width="270" height="17" fill="#0000ee" />
+    <text x="9" y="376" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">scrollable region.            </text>
     <rect x="9" y="391" width="270" height="17" fill="#0000ee" />
     <text x="9" y="393" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">This is line 11 of arbitrary t</text>
-    <rect x="9" y="408" width="162" height="17" fill="#0000ee" />
-    <text x="9" y="410" fill="#ffffff" textLength="162" lengthAdjust="spacingAndGlyphs">scrollable region.</text>
+    <rect x="9" y="408" width="270" height="17" fill="#0000ee" />
+    <text x="9" y="410" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">scrollable region.            </text>
     <rect x="9" y="425" width="270" height="17" fill="#0000ee" />
     <text x="9" y="427" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">This is line 12 of arbitrary t</text>
-    <rect x="9" y="442" width="162" height="17" fill="#0000ee" />
-    <text x="9" y="444" fill="#ffffff" textLength="162" lengthAdjust="spacingAndGlyphs">scrollable region.</text>
+    <rect x="9" y="442" width="270" height="17" fill="#0000ee" />
+    <text x="9" y="444" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">scrollable region.            </text>
     <rect x="9" y="459" width="270" height="17" fill="#0000ee" />
     <text x="9" y="461" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">This is line 13 of arbitrary t</text>
-    <rect x="9" y="476" width="162" height="17" fill="#0000ee" />
-    <text x="9" y="478" fill="#ffffff" textLength="162" lengthAdjust="spacingAndGlyphs">scrollable region.</text>
+    <rect x="9" y="476" width="270" height="17" fill="#0000ee" />
+    <text x="9" y="478" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">scrollable region.            </text>
     <rect x="9" y="493" width="270" height="17" fill="#0000ee" />
     <text x="9" y="495" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">This is line 14 of arbitrary t</text>
-    <rect x="9" y="510" width="162" height="17" fill="#0000ee" />
-    <text x="9" y="512" fill="#ffffff" textLength="162" lengthAdjust="spacingAndGlyphs">scrollable region.</text>
+    <rect x="9" y="510" width="270" height="17" fill="#0000ee" />
+    <text x="9" y="512" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">scrollable region.            </text>
     <rect x="9" y="527" width="270" height="17" fill="#0000ee" />
     <text x="9" y="529" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">This is line 15 of arbitrary t</text>
-    <rect x="9" y="544" width="162" height="17" fill="#0000ee" />
-    <text x="9" y="546" fill="#ffffff" textLength="162" lengthAdjust="spacingAndGlyphs">scrollable region.</text>
+    <rect x="9" y="544" width="270" height="17" fill="#0000ee" />
+    <text x="9" y="546" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">scrollable region.            </text>
   </g>
 </svg>

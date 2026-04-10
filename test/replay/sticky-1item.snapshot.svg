@@ -13,6 +13,6 @@
     <text x="0" y="104" fill="#ffffff" textLength="1143" lengthAdjust="spacingAndGlyphs">Press &apos;h&apos; to toggle sticky headers in backbuffer (current: off)                                                                </text>
     <text x="0" y="121" fill="#ffffff" textLength="1143" lengthAdjust="spacingAndGlyphs">Press &apos;v&apos; to toggle stable scrollback (on)                                                                                     </text>
     <text x="0" y="138" fill="#ffffff" textLength="1143" lengthAdjust="spacingAndGlyphs">Press &apos;e&apos; to export current frame, &apos;r&apos; to toggle recording (OFF)                                                               </text>
-    <text x="0" y="155" fill="#ffffff" textLength="1143" lengthAdjust="spacingAndGlyphs">ScrollTop: 0, Size: 1, Content: 2, Added Scroll: 0                                                                             </text>
+    <text x="0" y="155" fill="#ffffff" textLength="1143" lengthAdjust="spacingAndGlyphs">ScrollTop: 0, Size: 1, Content: 12, Added Scroll: 0                                                                            </text>
   </g>
 </svg>

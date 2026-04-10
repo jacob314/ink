@@ -12,7 +12,7 @@ import {StyledLine} from './styled-line.js';
 import {Serializer} from './serialization.js';
 import {TerminalBufferWorker} from './worker/render-worker.js';
 import {linesEqual} from './worker/terminal-writer.js';
-import {type DOMElement, type StickyHeader} from './dom.js';
+import {type DOMElement} from './dom.js';
 import {
 	type Region,
 	type RegionUpdate,
@@ -483,11 +483,12 @@ export default class TerminalBuffer {
 
 			// Send all lines
 			const serialized = this.serializer.serialize(current.lines);
+			const offsetY = current.linesOffsetY ?? 0;
 			update.lines = {
 				updates: [
 					{
-						start: 0,
-						end: current.lines.length,
+						start: offsetY,
+						end: offsetY + current.lines.length,
 						data: serialized,
 					},
 				],
@@ -497,6 +498,7 @@ export default class TerminalBuffer {
 			return update;
 		}
 
+		// Check properties
 		for (const key of regionLayoutProperties) {
 			if (current[key] !== last[key]) {
 				copyRegionProperty(update, current, key);
@@ -504,7 +506,14 @@ export default class TerminalBuffer {
 			}
 		}
 
-		if (!this.stickyHeadersEqual(last.stickyHeaders, current.stickyHeaders)) {
+		// Deep compare sticky headers? For now assuming reference change or simple length change is enough,
+		// or we can rely on the fact they are rebuilt every frame.
+		// Let's just resend if length differs or assume they might change.
+		// To be safe and simple: always send sticky headers if they exist or existed.
+		if (
+			current.stickyHeaders.length > 0 ||
+			last.stickyHeaders.length > 0
+		) {
 			update.stickyHeaders = current.stickyHeaders.map(h => ({
 				...h,
 				node: undefined,
@@ -518,19 +527,25 @@ export default class TerminalBuffer {
 		}
 
 		// Diff lines
-		const lineUpdatesResult = this.diffLines(
+		const lineUpdates = this.diffLines(
 			last.lines,
+			last.linesOffsetY ?? 0,
 			current.lines,
+			current.linesOffsetY ?? 0,
 		);
-		const lineUpdates = lineUpdatesResult.updates;
 
-		if (lineUpdates.length > 0 || last.lines.length !== current.lines.length) {
+		if (
+			lineUpdates.length > 0 ||
+			last.lines.length !== current.lines.length ||
+			last.linesOffsetY !== current.linesOffsetY
+		) {
 			hasChanges = true;
+			update.linesOffsetY = current.linesOffsetY;
 			update.lines = {
 				updates: lineUpdates,
 				totalLength: current.lines.length,
-				contentShiftDelta: lineUpdatesResult.contentShiftDelta,
 			};
+
 			if (current.stableScrollback && current.nodeId !== undefined) {
 				const element = nodeIdToElement.get(current.nodeId);
 				if (element) {
@@ -543,10 +558,12 @@ export default class TerminalBuffer {
 					}
 
 					// Also check if lines were removed from the end of the content but still within the scrollback
+					const oldEnd = (last.linesOffsetY ?? 0) + last.lines.length;
+					const newEnd = (current.linesOffsetY ?? 0) + current.lines.length;
 					if (
 						!element.internalIsScrollbackDirty &&
-						current.lines.length < last.lines.length &&
-						current.lines.length < scrollTop
+						newEnd < oldEnd &&
+						newEnd < scrollTop
 					) {
 						element.internalIsScrollbackDirty = true;
 					}
@@ -557,90 +574,19 @@ export default class TerminalBuffer {
 		return hasChanges ? update : undefined;
 	}
 
-	private stickyHeadersEqual(
-		oldHeaders: StickyHeader[],
-		newHeaders: StickyHeader[],
-	): boolean {
-		if (oldHeaders.length !== newHeaders.length) {
-			return false;
-		}
-
-		for (let i = 0; i < oldHeaders.length; i++) {
-			const oldH = oldHeaders[i]!;
-			const newH = newHeaders[i]!;
-
-			if (
-				oldH.x !== newH.x ||
-				oldH.y !== newH.y ||
-				oldH.naturalRow !== newH.naturalRow ||
-				oldH.startRow !== newH.startRow ||
-				oldH.endRow !== newH.endRow ||
-				oldH.scrollContainerId !== newH.scrollContainerId ||
-				oldH.nodeId !== newH.nodeId
-			) {
-				return false;
-			}
-
-			if (oldH.lines.length !== newH.lines.length) return false;
-			for (let j = 0; j < oldH.lines.length; j++) {
-				if (!linesEqual(oldH.lines[j], newH.lines[j])) return false;
-			}
-
-			if (oldH.stuckLines && newH.stuckLines) {
-				if (oldH.stuckLines.length !== newH.stuckLines.length) return false;
-				for (let j = 0; j < oldH.stuckLines.length; j++) {
-					if (!linesEqual(oldH.stuckLines[j], newH.stuckLines[j])) return false;
-				}
-			} else if (oldH.stuckLines !== newH.stuckLines) {
-				return false;
-			}
-
-			if (oldH.styledOutput.length !== newH.styledOutput.length) return false;
-			for (let j = 0; j < oldH.styledOutput.length; j++) {
-				if (!linesEqual(oldH.styledOutput[j], newH.styledOutput[j]))
-					return false;
-			}
-		}
-
-		return true;
-	}
-
 	private diffLines(
 		oldLines: readonly StyledLine[],
+		oldOffsetY: number,
 		newLines: readonly StyledLine[],
-	): {
-		updates: Array<{
-			start: number;
-			end: number;
-			data: Uint8Array;
-			source?: Uint8Array;
-		}>;
-		contentShiftDelta?: number;
-	} {
-		if (oldLines === newLines) {
-			return {updates: []};
-		}
-
-		let contentShiftDelta = 0;
-
-		// Check if content was prepended (or appended and shifted) by looking for 
-		// exactly matching content at the very bottom of both buffers.
-		if (newLines.length > oldLines.length && oldLines.length > 0) {
-			const delta = newLines.length - oldLines.length;
-			let matchingFromBottom = 0;
-			
-			for (let i = 1; i <= oldLines.length; i++) {
-				if (linesEqual(oldLines[oldLines.length - i], newLines[newLines.length - i])) {
-					matchingFromBottom++;
-				} else {
-					break;
-				}
-			}
-
-			// If a significant portion matches from the bottom, we consider it a shift
-			if (matchingFromBottom > 0) {
-				contentShiftDelta = delta;
-			}
+		newOffsetY: number,
+	): Array<{
+		start: number;
+		end: number;
+		data: Uint8Array;
+		source?: Uint8Array;
+	}> {
+		if (oldLines === newLines && oldOffsetY === newOffsetY) {
+			return [];
 		}
 
 		const updates: Array<{
@@ -650,59 +596,75 @@ export default class TerminalBuffer {
 			source?: Uint8Array;
 		}> = [];
 
-		const limit = Math.max(oldLines.length, newLines.length);
+		const minOffset = Math.min(oldOffsetY, newOffsetY);
+		const maxOld = oldOffsetY + oldLines.length;
+		const maxNew = newOffsetY + newLines.length;
+		const maxOffset = Math.max(maxOld, maxNew);
+
 		let chunkStart = -1;
 		let chunkLines: StyledLine[] = [];
 		let chunkSource: StyledLine[] = [];
-		
-		for (let i = 0; i < limit; i++) {
-			const newLine = newLines[i];
-			
-			// Adjust oldIndex by contentShiftDelta to compare correct lines
-			const oldIndex = i - contentShiftDelta;
-			const oldLine = oldIndex >= 0 && oldIndex < oldLines.length ? oldLines[oldIndex] : undefined;
+
+		const flushChunk = () => {
+			if (chunkStart !== -1) {
+				// Trim trailing undefined/empty lines from the chunk before sending to avoid
+				// sending giant blocks of empty lines over IPC
+				let endTrim = chunkLines.length;
+				while (
+					endTrim > 0 &&
+					(!chunkLines[endTrim - 1] || chunkLines[endTrim - 1]!.length === 0)
+				) {
+					endTrim--;
+				}
+
+				if (endTrim > 0) {
+					updates.push({
+						start: chunkStart,
+						end: chunkStart + endTrim,
+						data: this.serializer.serialize(chunkLines.slice(0, endTrim)),
+						source: debugEdits
+							? this.serializer.serialize(chunkSource.slice(0, endTrim))
+							: undefined,
+					});
+				}
+
+				chunkStart = -1;
+				chunkLines = [];
+				chunkSource = [];
+			}
+		};
+
+		for (let y = minOffset; y < maxOffset; y++) {
+			const oldLine =
+				y >= oldOffsetY && y < maxOld ? oldLines[y - oldOffsetY] : undefined;
+			const newLine =
+				y >= newOffsetY && y < maxNew ? newLines[y - newOffsetY] : undefined;
 
 			const areEqual = linesEqual(oldLine, newLine);
 			if (areEqual) {
-				if (chunkStart !== -1) {
-					updates.push({
-						start: chunkStart,
-						end: chunkStart + chunkLines.length,
-						data: this.serializer.serialize(chunkLines),
-						source: debugEdits
-							? this.serializer.serialize(chunkSource)
-							: undefined,
-					});
-					chunkStart = -1;
-					chunkLines = [];
-					chunkSource = [];
-				}
+				flushChunk();
 			} else {
-				if (chunkStart === -1) {
-					chunkStart = i;
+				// Skip leading empty lines for the chunk to save memory/IPC
+				const isNewLineEmpty = !newLine || newLine.length === 0;
+				if (chunkStart === -1 && isNewLineEmpty) {
+					continue;
 				}
 
-				chunkLines.push(newLine ?? StyledLine.empty(this.columns));
+				if (chunkStart === -1) {
+					chunkStart = y;
+				}
+
+				chunkLines.push(newLine ?? new StyledLine());
 
 				if (debugEdits) {
-					chunkSource.push(oldLine ?? StyledLine.empty(this.columns));
+					chunkSource.push(oldLine ?? new StyledLine());
 				}
 			}
 		}
 
-		if (chunkStart !== -1) {
-			updates.push({
-				start: chunkStart,
-				end: chunkStart + chunkLines.length,
-				data: this.serializer.serialize(chunkLines),
-				source: debugEdits ? this.serializer.serialize(chunkSource) : undefined,
-			});
-		}
+		flushChunk();
 
-		return {
-			updates,
-			contentShiftDelta: contentShiftDelta !== 0 ? contentShiftDelta : undefined
-		};
+		return updates;
 	}
 
 	private sendEdits(
