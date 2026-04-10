@@ -36,6 +36,7 @@ export type ReplayRegionUpdate = Omit<
 			source?: string;
 		}>;
 		totalLength: number;
+		contentShiftDelta?: number;
 	};
 	stickyHeaders?: ReplayStickyHeader[];
 };
@@ -60,6 +61,7 @@ export function serializeReplayUpdate(
 	if (lines) {
 		result.lines = {
 			totalLength: lines.totalLength,
+			contentShiftDelta: lines.contentShiftDelta,
 			updates: lines.updates.map(u => ({
 				start: u.start,
 				end: u.end,
@@ -94,6 +96,7 @@ export function deserializeReplayUpdate(
 	if (lines) {
 		result.lines = {
 			totalLength: lines.totalLength,
+			contentShiftDelta: lines.contentShiftDelta,
 			updates: lines.updates.map(u => ({
 				start: u.start,
 				end: u.end,

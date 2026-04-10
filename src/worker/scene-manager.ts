@@ -111,13 +111,32 @@ export class SceneManager {
 
 			// Apply line updates
 			if (update.lines) {
-				const mutableLines = r.lines as StyledLine[];
-				while (mutableLines.length < update.lines.totalLength) {
-					mutableLines.push(new StyledLine());
+				// If lines shifted, move them before applying updates
+				if (update.lines.contentShiftDelta && update.lines.contentShiftDelta > 0) {
+					const delta = update.lines.contentShiftDelta;
+					const newLines: StyledLine[] = [];
+					for (let i = 0; i < update.lines.totalLength; i++) {
+						const oldIndex = i - delta;
+						newLines.push(
+							oldIndex >= 0 && oldIndex < r.lines.length
+								? r.lines[oldIndex]!
+								: StyledLine.empty(r.width),
+						);
+					}
+					
+					const targetLines = r.lines as StyledLine[];
+					targetLines.length = 0;
+					targetLines.push(...newLines);
+				}
+				
+				const targetLines = r.lines as StyledLine[];
+
+				while (targetLines.length < update.lines.totalLength) {
+					targetLines.push(StyledLine.empty(r.width));
 				}
 
-				if (mutableLines.length > update.lines.totalLength) {
-					mutableLines.length = update.lines.totalLength;
+				if (targetLines.length > update.lines.totalLength) {
+					targetLines.length = update.lines.totalLength;
 				}
 
 				for (const chunk of update.lines.updates) {
@@ -125,7 +144,7 @@ export class SceneManager {
 					const chunkLines = deserializer.deserialize();
 
 					for (const [i, line] of chunkLines.entries()) {
-						mutableLines[chunk.start + i] = line!;
+						targetLines[chunk.start + i] = line!;
 					}
 				}
 			}

@@ -204,6 +204,7 @@ export type RegionUpdate = {
 			source?: Uint8Array;
 		}>;
 		totalLength: number;
+		contentShiftDelta?: number;
 	};
 };
 
