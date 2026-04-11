@@ -6,10 +6,13 @@ import {
 } from '../src/output.js';
 import {StyledLine} from '../src/styled-line.js';
 
+import {Serializer} from '../src/serialization.js';
+
 const rows = 20;
 const columns = 80;
 
 const worker = new TerminalBufferWorker(columns, rows);
+const serializer = new Serializer();
 
 // Create 1000 regions
 const regions = new Map<string, Region>();
@@ -38,7 +41,13 @@ for (let i = 0; i < 1000; i++) {
 		width: region.width,
 		height: region.height,
 		lines: {
-			updates: [{start: 0, end: 1, data: new Uint8Array()}],
+			updates: [
+				{
+					start: 0,
+					end: 1,
+					data: serializer.serialize(region.lines) as unknown as Uint8Array,
+				},
+			],
 			totalLength: 1,
 		},
 		stickyHeaders: [],
