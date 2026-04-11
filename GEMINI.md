@@ -36,6 +36,8 @@ Tests are written using AVA. To run tests:
 npm test
 ```
 
+**Note:** For running AVA tests individually locally (e.g., `npx ava test/text.tsx`), you may need to explicitly enable color support by prepending the command with `FORCE_COLOR=1`. For example: `FORCE_COLOR=1 npx ava test/text.tsx`. Without this, some snapshot tests and assertions involving ANSI colors may incorrectly fail because the test environment might default to disabling color formatting.
+
 **Note:** Some tests may fail when run locally depending on the environment. Below is a snapshot of tests that are known to fail in some local environments (specifically macOS) as of Nov 2025. These tests **do not fail** on the continuous integration bots. **Do not attempt to fix these unless you are specifically working on them.**
 
 - `focus › focus the first component to register`
