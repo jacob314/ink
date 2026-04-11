@@ -182,6 +182,182 @@ function splitCompoundSGRSequences(code: string): string[] {
 	return ret.map(part => `\u001B[${part}m`);
 }
 
+export function buildStyledLine(
+	str: string,
+	endChar: number = Number.POSITIVE_INFINITY,
+): StyledLine {
+	const line = new StyledLine();
+	let visible = 0;
+	let i = 0;
+
+	let formatFlags = 0;
+	let fgColor: string | undefined;
+	let bgColor: string | undefined;
+	let link: string | undefined;
+
+	const processAnsiCode = (code: string) => {
+		switch (code) {
+			case ansiStyles.reset.open: {
+				formatFlags = 0;
+				fgColor = undefined;
+				bgColor = undefined;
+				link = undefined;
+				break;
+			}
+
+			case ansiStyles.bold.open: {
+				formatFlags |= BOLD_MASK;
+				break;
+			}
+
+			case ansiStyles.dim.open: {
+				formatFlags |= DIM_MASK;
+				break;
+			}
+
+			case ansiStyles.italic.open: {
+				formatFlags |= ITALIC_MASK;
+				break;
+			}
+
+			case ansiStyles.underline.open: {
+				formatFlags |= UNDERLINE_MASK;
+				break;
+			}
+
+			case ansiStyles.strikethrough.open: {
+				formatFlags |= STRIKETHROUGH_MASK;
+				break;
+			}
+
+			case ansiStyles.inverse.open: {
+				formatFlags |= INVERSE_MASK;
+				break;
+			}
+
+			case ansiStyles.hidden.open: {
+				formatFlags |= HIDDEN_MASK;
+				break;
+			}
+
+			case ansiStyles.bold.close:
+			case ansiStyles.dim.close: {
+				formatFlags &= ~BOLD_MASK;
+				formatFlags &= ~DIM_MASK;
+				break;
+			}
+
+			case ansiStyles.italic.close: {
+				formatFlags &= ~ITALIC_MASK;
+				break;
+			}
+
+			case ansiStyles.underline.close: {
+				formatFlags &= ~UNDERLINE_MASK;
+				break;
+			}
+
+			case ansiStyles.strikethrough.close: {
+				formatFlags &= ~STRIKETHROUGH_MASK;
+				break;
+			}
+
+			case ansiStyles.inverse.close: {
+				formatFlags &= ~INVERSE_MASK;
+				break;
+			}
+
+			case ansiStyles.hidden.close: {
+				formatFlags &= ~HIDDEN_MASK;
+				break;
+			}
+
+			default: {
+				if (
+					code.startsWith('\u001B[38;') ||
+					(code >= '\u001B[30m' && code <= '\u001B[37m') ||
+					(code >= '\u001B[90m' && code <= '\u001B[97m')
+				) {
+					fgColor = code;
+				} else if (
+					code.startsWith('\u001B[48;') ||
+					(code >= '\u001B[40m' && code <= '\u001B[47m') ||
+					(code >= '\u001B[100m' && code <= '\u001B[107m')
+				) {
+					bgColor = code;
+				} else if (code === ansiStyles.color.close) {
+					fgColor = undefined;
+				} else if (code === ansiStyles.bgColor.close) {
+					bgColor = undefined;
+				} else if (code.startsWith(linkCodePrefix)) {
+					link = code;
+				} else if (
+					code === linkEndCode ||
+					code === linkEndCodeST ||
+					code === linkEndCodeC1ST
+				) {
+					link = undefined;
+				}
+			}
+		}
+	};
+
+	while (i < str.length) {
+		const codePoint = str.codePointAt(i)!;
+		const charLength = codePoint > 0xff_ff ? 2 : 1;
+		const charStr = str.slice(i, i + charLength);
+
+		if (ESCAPES.has(codePoint)) {
+			let code: string | undefined;
+
+			const nextCodePoint = str.codePointAt(i + 1);
+			if (nextCodePoint === CC_OSC) {
+				code = parseLinkCode(str, i);
+				if (code) {
+					processAnsiCode(code);
+				} else {
+					code = parseOSCSequence(str, i);
+				}
+			} else if (nextCodePoint === CC_CSI) {
+				code = parseSGRSequence(str, i);
+				if (code) {
+					const codes = splitCompoundSGRSequences(code);
+					for (const individualCode of codes) {
+						processAnsiCode(individualCode);
+					}
+				}
+			}
+
+			if (code) {
+				i += code.length;
+				continue;
+			}
+		}
+
+		const isVariationSelector = charStr.includes('\uFE0F');
+		const isRegionalIndicator =
+			codePoint >= 0x1_f1_e6 && codePoint <= 0x1_f1_ff;
+		const fullWidth =
+			isVariationSelector ||
+			isRegionalIndicator ||
+			isFullwidthCodePoint(codePoint);
+
+		let finalFlags = formatFlags;
+		if (fullWidth) {
+			finalFlags |= FULL_WIDTH_MASK;
+		}
+
+		line.pushChar(charStr, finalFlags, fgColor, bgColor, link);
+
+		visible += fullWidth ? 2 : 1;
+		if (visible >= endChar) break;
+
+		i += charLength;
+	}
+
+	return line;
+}
+
 export function tokenize(
 	str: string,
 	endChar: number = Number.POSITIVE_INFINITY,

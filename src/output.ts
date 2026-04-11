@@ -631,6 +631,9 @@ export default class Output {
 			region.linesOffsetY = 0;
 			(region.lines as StyledLine[]) = [];
 			(region.styledOutput as StyledLine[]) = [];
+		} else if (minY === 0 && maxY === region.lines.length - 1) {
+			region.linesOffsetY = 0;
+			// Lines array is completely unchanged, keep original reference
 		} else {
 			region.linesOffsetY = minY;
 			(region.lines as StyledLine[]) = region.lines.slice(minY, maxY + 1);

@@ -499,32 +499,34 @@ export default class TerminalBuffer {
 			return update;
 		}
 
-		// Fast path for identical regions
+		const currentProto = Object.getPrototypeOf(current) as Region;
+		const lastProto = Object.getPrototypeOf(last) as Region;
+
+		// Optimization: Fast path for cached StaticRender regions.
+		//
+		// When Ink renders a cached static element, it does not deep clone the Region.
+		// Instead, it uses `Object.create(cachedRegion)` to create a new object that
+		// delegates property lookups to the shared cache (prototype), but allows
+		// overriding the layout position (x, y, etc.) on the new instance itself.
+		//
+		// If `currentProto === lastProto`, it is mathematically guaranteed that EVERY
+		// property delegated to the prototype (width, height, content lines, styles)
+		// is 100% identical between the two frames.
+		//
+		// Therefore, if the prototypes match, we only need to verify that the specific
+		// properties assigned directly to the instance (shadowed properties like x and y)
+		// also match. If they do, the region hasn't changed at all, and we can safely
+		// bypass the slow 22-property loop below.
 		if (
-			current.lines === last.lines &&
+			currentProto === lastProto &&
+			currentProto !== Object.prototype &&
 			current.x === last.x &&
 			current.y === last.y &&
-			current.width === last.width &&
-			current.height === last.height &&
-			current.scrollTop === last.scrollTop &&
-			current.scrollLeft === last.scrollLeft &&
-			current.scrollHeight === last.scrollHeight &&
-			current.scrollWidth === last.scrollWidth &&
-			current.isScrollable === last.isScrollable &&
-			current.isVerticallyScrollable === last.isVerticallyScrollable &&
-			current.isHorizontallyScrollable === last.isHorizontallyScrollable &&
-			current.scrollbarVisible === last.scrollbarVisible &&
 			current.overflowToBackbuffer === last.overflowToBackbuffer &&
-			current.marginRight === last.marginRight &&
-			current.marginBottom === last.marginBottom &&
-			current.scrollbarThumbColor === last.scrollbarThumbColor &&
-			current.backgroundColor === last.backgroundColor &&
-			current.opaque === last.opaque &&
-			current.borderTop === last.borderTop &&
-			current.borderBottom === last.borderBottom &&
+			current.lines === last.lines &&
 			current.linesOffsetY === last.linesOffsetY
 		) {
-			// No changes!
+			// Exact same cached region with no layout overrides; skip the 22-property dynamic loop entirely.
 			return undefined;
 		}
 
