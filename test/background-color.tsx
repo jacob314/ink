@@ -2,7 +2,7 @@ import test from 'ava';
 import {type SinonSpy} from 'sinon';
 import xtermHeadless from '@xterm/headless';
 
-import {tokenize, styledLineFromTokens} from '../src/tokenize.js';
+import {buildStyledLine} from '../src/tokenize.js';
 import logUpdate from '../src/log-update.js';
 import createStdout from './helpers/create-stdout.js';
 
@@ -32,14 +32,14 @@ test('incremental rendering in alternate buffer - correctly handles styled space
 	// A line with 5 chars of text and 5 spaces with background color.
 	const line = 'Hello' + redSpace.repeat(5);
 
-	const styledLine = styledLineFromTokens(tokenize(line));
+	const styledLine = buildStyledLine(line);
 
 	render(line, [styledLine]);
 
 	// Update with a slightly different line to trigger incremental update.
 	const newLine = 'Hella' + redSpace.repeat(5);
 
-	const newStyledLine = styledLineFromTokens(tokenize(newLine));
+	const newStyledLine = buildStyledLine(newLine);
 
 	render(newLine, [newStyledLine]);
 

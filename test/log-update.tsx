@@ -2,7 +2,6 @@ import test, {type ExecutionContext} from 'ava';
 import {type SinonSpy} from 'sinon';
 import ansiEscapes from 'ansi-escapes';
 import xtermHeadless from '@xterm/headless';
-import {type} from '../src/tokenize.js';
 import {type StyledLine} from '../src/styled-line.js';
 import logUpdate from '../src/log-update.js';
 import createStdout from './helpers/create-stdout.js';

@@ -100,9 +100,47 @@ export class StyledLine {
 	private charData: number[] | undefined;
 	private spans: StyleSpan[] | undefined;
 	private _cachedTrimmedLength?: number;
+	private _spansDirty = false;
 
 	constructor() {
 		this.length = 0;
+	}
+
+	padTo(targetLength: number) {
+		if (targetLength <= this.length) return;
+		this._cachedTrimmedLength = undefined;
+		this.ensureInitialized();
+		const diff = targetLength - this.length;
+
+		if (this.charData === undefined) {
+			this.text += ' '.repeat(diff);
+		} else {
+			const offset = this.text!.length;
+			this.text += ' '.repeat(diff);
+			for (let i = 0; i < diff; i++) {
+				this.charData.push(offset + i);
+			}
+		}
+
+		if (this.spans !== undefined) {
+			const lastSpan = this.spans.at(-1);
+			if (
+				lastSpan &&
+				lastSpan.formatFlags === 0 &&
+				lastSpan.fgColor === undefined &&
+				lastSpan.bgColor === undefined &&
+				lastSpan.link === undefined
+			) {
+				lastSpan.length += diff;
+			} else {
+				this.spans.push({
+					length: diff,
+					formatFlags: 0,
+				});
+			}
+		}
+
+		this.length = targetLength;
 	}
 
 	getValue(index: number): string {
@@ -188,7 +226,7 @@ export class StyledLine {
 			current += span.length;
 		}
 
-		this.mergeSpans();
+		this._spansDirty = true;
 	}
 
 	setBackgroundColor(index: number, color: string | undefined) {
@@ -209,7 +247,7 @@ export class StyledLine {
 			current += span.length;
 		}
 
-		this.mergeSpans();
+		this._spansDirty = true;
 	}
 
 	setForegroundColor(index: number, color: string | undefined) {
@@ -230,7 +268,7 @@ export class StyledLine {
 			current += span.length;
 		}
 
-		this.mergeSpans();
+		this._spansDirty = true;
 	}
 
 	// eslint-disable-next-line max-params
@@ -313,7 +351,7 @@ export class StyledLine {
 			current += span.length;
 		}
 
-		this.mergeSpans();
+		this._spansDirty = true;
 	}
 
 	// eslint-disable-next-line max-params
@@ -379,6 +417,7 @@ export class StyledLine {
 	}
 
 	clone(): StyledLine {
+		this.ensureSpansMerged();
 		const result = new StyledLine();
 		result.length = this.length;
 		result.text = this.text;
@@ -389,6 +428,7 @@ export class StyledLine {
 	}
 
 	slice(start: number, end?: number): StyledLine {
+		this.ensureSpansMerged();
 		const actualStart = Math.max(0, start);
 		const actualEnd =
 			end === undefined ? this.length : Math.min(this.length, end);
@@ -452,6 +492,11 @@ export class StyledLine {
 	}
 
 	combine(...others: StyledLine[]): StyledLine {
+		this.ensureSpansMerged();
+		for (const other of others) {
+			other.ensureSpansMerged();
+		}
+
 		if (others.length === 0) return this.clone();
 
 		const allLines = [this as StyledLine, ...others].filter(l => l.length > 0);
@@ -509,6 +554,8 @@ export class StyledLine {
 	getTrimmedLength(): number {
 		if (this.length === 0) return 0;
 		if (this.text === undefined) return 0;
+
+		this.ensureSpansMerged();
 
 		let currentIdx = this.length - 1;
 
@@ -574,6 +621,9 @@ export class StyledLine {
 		if (this.length === 0) return true;
 		if (this.getText() !== other.getText()) return false;
 
+		this.ensureSpansMerged();
+		other.ensureSpansMerged();
+
 		const thisSpans = this.internalGetSpans();
 		const otherSpans = other.internalGetSpans();
 
@@ -619,6 +669,7 @@ export class StyledLine {
 	}
 
 	getSpans(): StyleSpan[] {
+		this.ensureSpansMerged();
 		if (this.spans !== undefined) return this.spans;
 		if (this.length > 0) return [{length: this.length, formatFlags: 0}];
 		return [];
@@ -669,6 +720,13 @@ export class StyledLine {
 
 	internalGetSpans(): StyleSpan[] | undefined {
 		return this.spans;
+	}
+
+	private ensureSpansMerged() {
+		if (this._spansDirty) {
+			this.mergeSpans();
+			this._spansDirty = false;
+		}
 	}
 
 	private ensureInitialized() {
@@ -754,7 +812,7 @@ export class StyledLine {
 				...s,
 				formatFlags: s.formatFlags & ~FULL_WIDTH_MASK,
 			}));
-			this.mergeSpans();
+			this._spansDirty = true;
 		} else {
 			this.spans = undefined;
 		}
@@ -762,6 +820,7 @@ export class StyledLine {
 
 	private splitSpansAt(index: number) {
 		if (this.spans === undefined || index <= 0 || index >= this.length) return;
+		this.ensureSpansMerged();
 		let current = 0;
 		for (let i = 0; i < this.spans.length; i++) {
 			const span = this.spans[i]!;
