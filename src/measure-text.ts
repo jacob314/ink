@@ -1,5 +1,5 @@
 import stringWidth from 'string-width';
-import {tokenize, styledLineFromTokens} from './tokenize.js';
+import {buildStyledLine} from './tokenize.js';
 import {StyledLine} from './styled-line.js';
 import {DataLimitedLruMap} from './data-limited-lru-map.js';
 import {type DOMNode} from './dom.js';
@@ -68,8 +68,7 @@ export function toStyledCharacters(text: string): StyledLine {
 		}
 	}
 
-	const tokens = tokenize(text);
-	const characters = styledLineFromTokens(tokens);
+	const characters = buildStyledLine(text);
 	const combinedLine = new StyledLine();
 
 	for (let i = 0; i < characters.length; i++) {

@@ -147,9 +147,13 @@ export class TerminalWriter {
 	}
 
 	appendLinesBackbuffer(lines: RenderLine[]) {
+		const linesToProcess =
+			lines.length > this.maxScrollbackLength
+				? lines.slice(-this.maxScrollbackLength)
+				: lines;
 		this.startSynchronizedOutput();
 		try {
-			for (const line of lines) {
+			for (const line of linesToProcess) {
 				// 1. Replace the top line with the clean version
 				this.syncLine(line, 0);
 
@@ -209,8 +213,17 @@ export class TerminalWriter {
 		}
 
 		const backBufferLength = Math.max(0, lines.length - this.rows);
+		const linesToSkip = Math.max(
+			0,
+			backBufferLength - this.maxScrollbackLength,
+		);
+		const linesToProcess = linesToSkip > 0 ? lines.slice(linesToSkip) : lines;
+		const actualBackBufferLength = Math.max(
+			0,
+			linesToProcess.length - this.rows,
+		);
 
-		for (const [i, line] of lines.entries()) {
+		for (const [i, line] of linesToProcess.entries()) {
 			const clampedLine = this.clampLine(line.styledChars, this.columns);
 			let textToWrite = clampedLine.text;
 
@@ -226,8 +239,8 @@ export class TerminalWriter {
 			this.linesUpdated++;
 
 			if (
-				i >= backBufferLength &&
-				i < backBufferLength + this.rows &&
+				i >= actualBackBufferLength &&
+				i < actualBackBufferLength + this.rows &&
 				this.isFirstRender &&
 				clampedLine.length < this.columns
 			) {
@@ -235,11 +248,11 @@ export class TerminalWriter {
 				this.writeHelper(ansiEscapes.eraseEndLine);
 			}
 
-			if (i + 1 < lines.length) {
+			if (i + 1 < linesToProcess.length) {
 				this.writeHelper('\n');
 			}
 
-			if (i < backBufferLength) {
+			if (i < actualBackBufferLength) {
 				this.backbuffer.push(clampedLine);
 
 				if (this.backbuffer.length > this.maxScrollbackLength) {
@@ -253,7 +266,7 @@ export class TerminalWriter {
 		if (this.isFirstRender) {
 			/// Clean up lines at the bottom of the screen if we
 			// rendered at less than the terminal height.
-			for (let row = lines.length; row < this.rows; row++) {
+			for (let row = linesToProcess.length; row < this.rows; row++) {
 				this.writeHelper('\n' + ansiEscapes.eraseEndLine);
 			}
 		}
