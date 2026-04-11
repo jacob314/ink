@@ -124,7 +124,7 @@ Feel free to play around with the code and fork this Repl at [https://repl.it/@v
 - [Qodo Command](https://github.com/qodo-ai/command) - Build, run, and manage AI agents.
 - [Nanocoder](https://github.com/nano-collective/nanocoder) - A community-built, local-first AI coding agent with multi-provider support.
 
-*(PRs welcome. Append new entries at the end. Repos must have 100+ stars and showcase Ink beyond a basic list picker.)*
+_(PRs welcome. Append new entries at the end. Repos must have 100+ stars and showcase Ink beyond a basic list picker.)_
 
 ## Contents
 
@@ -979,7 +979,7 @@ Alternatively, pass a custom border style like so:
 		bottomLeft: '↗',
 		bottom: '↑',
 		bottomRight: '↖',
-		right: '←'
+		right: '←',
 	}}
 >
 	<Text>Custom</Text>
@@ -1165,11 +1165,23 @@ Accepts the same values as [`color`](#color) in the `<Text>` component.
 		<Text>Red background</Text>
 	</Box>
 
-	<Box backgroundColor="#FF8800" width={20} height={3} marginTop={1} alignSelf="flex-start">
+	<Box
+		backgroundColor="#FF8800"
+		width={20}
+		height={3}
+		marginTop={1}
+		alignSelf="flex-start"
+	>
 		<Text>Orange background</Text>
 	</Box>
 
-	<Box backgroundColor="rgb(0, 255, 0)" width={20} height={3} marginTop={1} alignSelf="flex-start">
+	<Box
+		backgroundColor="rgb(0, 255, 0)"
+		width={20}
+		height={3}
+		marginTop={1}
+		alignSelf="flex-start"
+	>
 		<Text>Green background</Text>
 	</Box>
 </Box>
@@ -1188,7 +1200,12 @@ The background color fills the entire `<Box>` area and is inherited by child `<T
 Background colors work with borders and padding:
 
 ```jsx
-<Box backgroundColor="cyan" borderStyle="round" padding={1} alignSelf="flex-start">
+<Box
+	backgroundColor="cyan"
+	borderStyle="round"
+	padding={1}
+	alignSelf="flex-start"
+>
 	<Text>Background with border and padding</Text>
 </Box>
 ```
@@ -1297,8 +1314,8 @@ const Example = () => {
 					...previousTests,
 					{
 						id: previousTests.length,
-						title: `Test #${previousTests.length + 1}`
-					}
+						title: `Test #${previousTests.length + 1}`,
+					},
 				]);
 
 				timer = setTimeout(run, 100);
@@ -1437,7 +1454,7 @@ const text =
 render(
 	<HangingIndent bold dimColor indent={4}>
 		{text}
-	</HangingIndent>
+	</HangingIndent>,
 );
 ```
 
@@ -2257,6 +2274,7 @@ Type: `string`
 The role of the element.
 
 Supported values:
+
 - `button`
 - `checkbox`
 - `radio`
@@ -2279,6 +2297,7 @@ Type: `object`
 The state of the element.
 
 Supported values:
+
 - `checked` (boolean)
 - `disabled` (boolean)
 - `expanded` (boolean)

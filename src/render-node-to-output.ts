@@ -197,12 +197,14 @@ function renderNodeToOutput(
 		}
 
 		// Left and top positions in Yoga are relative to their parent node
-		const x = Math.round(offsetX + yogaNode.getComputedLeft());
-		const y = Math.round(offsetY + yogaNode.getComputedTop());
+		const computedLeft = yogaNode.getComputedLeft();
+		const computedTop = yogaNode.getComputedTop();
+		const x = Math.round(offsetX + computedLeft);
+		const y = Math.round(offsetY + computedTop);
 
 		// Absolute screen coordinates (for clipping/visibility check)
-		const absX = Math.round(absoluteOffsetX + yogaNode.getComputedLeft());
-		const absY = Math.round(absoluteOffsetY + yogaNode.getComputedTop());
+		const absX = Math.round(absoluteOffsetX + computedLeft);
+		const absY = Math.round(absoluteOffsetY + computedTop);
 
 		const width = Math.round(yogaNode.getComputedWidth());
 		const height = Math.round(yogaNode.getComputedHeight());
