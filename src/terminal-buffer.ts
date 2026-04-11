@@ -21,6 +21,7 @@ import {
 	regionLayoutProperties,
 	copyRegionProperty,
 	treesEqual,
+	RegionReference,
 } from './output.js';
 import {type InkOptions} from './components/AppContext.js';
 
@@ -294,20 +295,34 @@ export default class TerminalBuffer {
 		const nodeIdToElement = new Map<number, DOMElement>();
 		const updates: RegionUpdate[] = [];
 
-		// Traverse tree to collect all current regions and build structure
 		const buildTree = (r: Region): RegionNode => {
 			currentRegionsMap.set(r.id, r);
 
-			// Populate nodeIdToElement map
 			if (r.nodeId !== undefined && r.node !== undefined) {
 				nodeIdToElement.set(r.nodeId, r.node);
 			}
 
-			// Diff this region
 			const update = this.diffRegion(r, nodeIdToElement);
-
 			if (update) {
 				updates.push(update);
+			}
+
+			// Fast path for unchanged cached static render regions and their subtrees
+			if (!update && r.children.length > 0) {
+				const isCurrentRef = r instanceof RegionReference;
+				const lastRegion = this.lastRegions.get(r.id);
+				const isLastRef = lastRegion instanceof RegionReference;
+
+				if (isCurrentRef && isLastRef && r.target === lastRegion.target) {
+					// It's the same cached region. Its children are identical and unchanged.
+					// We can skip deep diffing and just populate currentRegionsMap and reuse the children nodes.
+					return {
+						id: r.id,
+						children: r.children.map(child =>
+							this.buildCachedRegionNode(child, currentRegionsMap),
+						),
+					};
+				}
 			}
 
 			return {
@@ -457,6 +472,19 @@ export default class TerminalBuffer {
 		}
 	}
 
+	private buildCachedRegionNode(
+		region: Region,
+		currentRegionsMap: Map<string | number, Region>,
+	): RegionNode {
+		currentRegionsMap.set(region.id, region);
+		return {
+			id: region.id,
+			children: region.children.map(child =>
+				this.buildCachedRegionNode(child, currentRegionsMap),
+			),
+		};
+	}
+
 	private diffRegion(
 		current: Region,
 		nodeIdToElement: Map<number, DOMElement>,
@@ -499,34 +527,19 @@ export default class TerminalBuffer {
 			return update;
 		}
 
-		const currentProto = Object.getPrototypeOf(current) as Region;
-		const lastProto = Object.getPrototypeOf(last) as Region;
+		const isCurrentRef = current instanceof RegionReference;
+		const isLastRef = last instanceof RegionReference;
 
-		// Optimization: Fast path for cached StaticRender regions.
-		//
-		// When Ink renders a cached static element, it does not deep clone the Region.
-		// Instead, it uses `Object.create(cachedRegion)` to create a new object that
-		// delegates property lookups to the shared cache (prototype), but allows
-		// overriding the layout position (x, y, etc.) on the new instance itself.
-		//
-		// If `currentProto === lastProto`, it is mathematically guaranteed that EVERY
-		// property delegated to the prototype (width, height, content lines, styles)
-		// is 100% identical between the two frames.
-		//
-		// Therefore, if the prototypes match, we only need to verify that the specific
-		// properties assigned directly to the instance (shadowed properties like x and y)
-		// also match. If they do, the region hasn't changed at all, and we can safely
-		// bypass the slow 22-property loop below.
 		if (
-			currentProto === lastProto &&
-			currentProto !== Object.prototype &&
+			isCurrentRef &&
+			isLastRef &&
+			current.target === last.target &&
 			current.x === last.x &&
 			current.y === last.y &&
 			current.overflowToBackbuffer === last.overflowToBackbuffer &&
 			current.lines === last.lines &&
 			current.linesOffsetY === last.linesOffsetY
 		) {
-			// Exact same cached region with no layout overrides; skip the 22-property dynamic loop entirely.
 			return undefined;
 		}
 

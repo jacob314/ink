@@ -17,25 +17,26 @@ The devtools profile shows `diffRegion` (in `src/terminal-buffer.ts`) taking ~26
 
 **The Solution:**
 Cached regions share the same underlying immutable `Region` object as their prototype (via `Object.create(region)` in `addRegionTree`). We can implement an ultra-fast path at the beginning of `diffRegion`:
+
 ```typescript
 const currentProto = Object.getPrototypeOf(current);
 const lastProto = Object.getPrototypeOf(last);
 
 if (
-    currentProto === lastProto &&
-    currentProto !== Object.prototype &&
-    current.x === last.x &&
-    current.y === last.y &&
-    current.scrollTop === last.scrollTop &&
-    current.scrollLeft === last.scrollLeft &&
-    current.width === last.width &&
-    current.height === last.height &&
-    current.overflowToBackbuffer === last.overflowToBackbuffer &&
-    current.lines === last.lines &&
-    current.linesOffsetY === last.linesOffsetY
+	currentProto === lastProto &&
+	currentProto !== Object.prototype &&
+	current.x === last.x &&
+	current.y === last.y &&
+	current.scrollTop === last.scrollTop &&
+	current.scrollLeft === last.scrollLeft &&
+	current.width === last.width &&
+	current.height === last.height &&
+	current.overflowToBackbuffer === last.overflowToBackbuffer &&
+	current.lines === last.lines &&
+	current.linesOffsetY === last.linesOffsetY
 ) {
-    // Exact same cached region with no layout overrides; skip the 22-property dynamic loop entirely.
-    return undefined;
+	// Exact same cached region with no layout overrides; skip the 22-property dynamic loop entirely.
+	return undefined;
 }
 ```
 
