@@ -5,7 +5,7 @@ import React, {
 	type ReactNode,
 	type DependencyList,
 } from 'react';
-import {type DOMElement} from '../dom.js';
+import {markNodeAsDirty, type DOMElement} from '../dom.js';
 import {type Styles} from '../styles.js';
 
 export type Props = {
@@ -69,33 +69,32 @@ const areDepsEqual = (
  */
 export default function StaticRender({children, width, style, deps}: Props) {
 	const ref = useRef<DOMElement>(null);
-	const [isRendered, setIsRendered] = useState(false);
+	const [renderedVersion, setRenderedVersion] = useState(0);
 	const prevChildren = useRef(children);
 	const prevDeps = useRef(deps);
+	const pendingVersion = useRef(1);
 
-	let shouldRender = !isRendered;
-	let changed = false;
+	let nextPendingVersion = pendingVersion.current;
 
 	if (deps !== undefined) {
 		if (!areDepsEqual(prevDeps.current, deps)) {
-			changed = true;
 			prevDeps.current = deps;
+			nextPendingVersion++;
 		}
 	} else if (children !== prevChildren.current) {
-		changed = true;
 		prevChildren.current = children;
+		nextPendingVersion++;
 	}
 
-	if (changed) {
-		shouldRender = true;
-		if (isRendered) {
-			setIsRendered(false);
-		}
-
+	if (nextPendingVersion !== pendingVersion.current) {
+		pendingVersion.current = nextPendingVersion;
 		if (ref.current) {
 			ref.current.cachedRender = undefined;
+			markNodeAsDirty(ref.current);
 		}
 	}
+
+	const shouldRender = renderedVersion !== pendingVersion.current;
 
 	useEffect(() => {
 		const node = ref.current;
@@ -111,7 +110,12 @@ export default function StaticRender({children, width, style, deps}: Props) {
 			ref={ref}
 			style={{...style, width}}
 			internal_onRendered={() => {
-				setIsRendered(true);
+				const nextRenderedVersion = pendingVersion.current;
+				setRenderedVersion(currentVersion =>
+					currentVersion === nextRenderedVersion
+						? currentVersion
+						: nextRenderedVersion,
+				);
 			}}
 		>
 			{shouldRender ? children() : null}

@@ -3,6 +3,8 @@ import {type StyledLine} from './styled-line.js';
 import {
 	type DOMElement,
 	type DOMNode,
+	getCachedRegion,
+	setCachedRegion,
 	setCachedRender,
 	type StickyHeader,
 } from './dom.js';
@@ -21,6 +23,106 @@ import {handleCachedRenderNode} from './render-cached.js';
 import {triggerResizeObservers} from './resize-observer.js';
 
 export type OutputTransformer = (s: string, index: number) => string;
+
+const isRenderedStaticRenderLeaf = (node: DOMNode): node is DOMElement =>
+	node.nodeName === 'ink-static-render' &&
+	Boolean(node.cachedRender) &&
+	node.childNodes.length === 0;
+
+const canUseCachedRegion = (
+	node: DOMElement,
+	options: {
+		skipStaticElements: boolean;
+		isStickyRender: boolean;
+		selectionMap?: Map<DOMNode, {start: number; end: number}>;
+		selectionStyle?: (line: StyledLine, index: number) => void;
+		trackSelection?: boolean;
+	},
+) => {
+	if (node.nodeName !== 'ink-box') {
+		return false;
+	}
+
+	if (
+		!options.skipStaticElements ||
+		node.internal_static ||
+		node.internalSticky ||
+		node.internalStickyAlternate ||
+		options.isStickyRender ||
+		(options.selectionMap && options.selectionMap.size > 0) ||
+		options.selectionStyle ||
+		options.trackSelection
+	) {
+		return false;
+	}
+
+	const overflow = node.style.overflow ?? 'visible';
+	const overflowX = node.style.overflowX ?? overflow;
+	const overflowY = node.style.overflowY ?? overflow;
+
+	if (overflowX === 'scroll' || overflowY === 'scroll') {
+		return false;
+	}
+
+	return node.childNodes.some(childNode =>
+		isRenderedStaticRenderLeaf(childNode),
+	);
+};
+
+const getOrRenderCachedRegion = (
+	node: DOMElement,
+	options: {
+		width: number;
+		height: number;
+		transformers: OutputTransformer[];
+		skipStaticElements: boolean;
+		isStickyRender: boolean;
+		skipStickyHeaders: boolean;
+	},
+) => {
+	const {
+		width,
+		height,
+		transformers,
+		skipStaticElements,
+		isStickyRender,
+		skipStickyHeaders,
+	} = options;
+	const cachedRegion = getCachedRegion(node);
+
+	if (
+		cachedRegion &&
+		cachedRegion.width === width &&
+		cachedRegion.height === height
+	) {
+		return cachedRegion;
+	}
+
+	const cachedOutput = new Output({
+		width,
+		height,
+		node,
+		id: node.internalId,
+	});
+
+	handleContainerNode(node, cachedOutput, {
+		x: 0,
+		y: 0,
+		width,
+		height,
+		newTransformers: transformers,
+		skipStaticElements,
+		isStickyRender,
+		skipStickyHeaders,
+		absoluteOffsetX: 0,
+		absoluteOffsetY: 0,
+	});
+
+	const region = cachedOutput.get();
+	setCachedRegion(node, region);
+
+	return region;
+};
 
 export const renderToStatic = (
 	node: DOMElement,
@@ -197,12 +299,14 @@ function renderNodeToOutput(
 		}
 
 		// Left and top positions in Yoga are relative to their parent node
-		const x = Math.round(offsetX + yogaNode.getComputedLeft());
-		const y = Math.round(offsetY + yogaNode.getComputedTop());
+		const computedLeft = yogaNode.getComputedLeft();
+		const computedTop = yogaNode.getComputedTop();
+		const x = Math.round(offsetX + computedLeft);
+		const y = Math.round(offsetY + computedTop);
 
 		// Absolute screen coordinates (for clipping/visibility check)
-		const absX = Math.round(absoluteOffsetX + yogaNode.getComputedLeft());
-		const absY = Math.round(absoluteOffsetY + yogaNode.getComputedTop());
+		const absX = Math.round(absoluteOffsetX + computedLeft);
+		const absY = Math.round(absoluteOffsetY + computedTop);
 
 		const width = Math.round(yogaNode.getComputedWidth());
 		const height = Math.round(yogaNode.getComputedHeight());
@@ -248,6 +352,30 @@ function renderNodeToOutput(
 				selectionStyle,
 				trackSelection,
 			});
+			return;
+		}
+
+		if (
+			width > 0 &&
+			height > 0 &&
+			canUseCachedRegion(node, {
+				skipStaticElements,
+				isStickyRender,
+				selectionMap,
+				selectionStyle,
+				trackSelection,
+			})
+		) {
+			const cachedRegion = getOrRenderCachedRegion(node, {
+				width,
+				height,
+				transformers: newTransformers,
+				skipStaticElements,
+				isStickyRender,
+				skipStickyHeaders,
+			});
+
+			output.addRegionTree(cachedRegion, x, y);
 			return;
 		}
 
