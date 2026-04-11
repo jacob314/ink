@@ -226,7 +226,7 @@ export default function NestedStaticDemo() {
 		}
 	});
 
-	const [nextItemId, setNextItemId] = useState(1001);
+	const [nextItemId, setNextItemId] = useState(10_001);
 
 	const frameIndexReference = useRef(0);
 	const frameTimesReference = useRef<number[]>([]);
