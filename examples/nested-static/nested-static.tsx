@@ -194,8 +194,8 @@ const OuterGroup = React.memo(
 
 export default function NestedStaticDemo() {
 	const [count, setCount] = useState(0);
-	const [showTimer, setShowTimer] = useState(false);
-	const [wrapFirstGroup, setWrapFirstGroup] = useState(true);
+	const [showTimer, setShowTimer] = useState(true);
+	const [wrapFirstGroup, setWrapFirstGroup] = useState(false);
 	const [autoAdd, setAutoAdd] = useState(false);
 	const [groups, setGroups] = useState<Array<{id: number; items: number[]}>>([
 		{id: 1, items: Array.from({length: 10_000}, (_, i) => i + 1)},
@@ -414,6 +414,9 @@ export default function NestedStaticDemo() {
 							wrapInStatic={group.id === 1 ? wrapFirstGroup : false}
 						/>
 					))}
+					<Box paddingTop={1}>
+						<Text color="cyan">Backbuffer Timer: {count}</Text>
+					</Box>
 				</Box>
 			</Box>
 
