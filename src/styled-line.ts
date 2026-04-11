@@ -35,6 +35,21 @@ function spanHasStyles(span: StyleSpan): boolean {
 	return hasAnyStyles(span.formatFlags, span.fgColor, span.bgColor, span.link);
 }
 
+function spanHasStylesMatch(
+	span: StyleSpan,
+	formatFlags: number,
+	fgColor?: string,
+	bgColor?: string,
+	link?: string,
+): boolean {
+	return (
+		span.formatFlags === formatFlags &&
+		span.fgColor === fgColor &&
+		span.bgColor === bgColor &&
+		span.link === link
+	);
+}
+
 function spansHaveStyles(spans: StyleSpan[] | undefined): boolean {
 	if (!spans) return false;
 	for (const s of spans) {
@@ -329,6 +344,87 @@ export class StyledLine {
 			}
 
 			this.ensureSpans();
+		}
+
+		// Fast path: Find the span containing this index
+		let currentOffset = 0;
+		let spanIndex = -1;
+		let span: StyleSpan | undefined;
+
+		for (let i = 0; i < this.spans!.length; i++) {
+			const s = this.spans![i]!;
+			if (currentOffset <= index && currentOffset + s.length > index) {
+				spanIndex = i;
+				span = s;
+				break;
+			}
+
+			currentOffset += s.length;
+		}
+
+		if (span) {
+			const isMatch = spanHasStylesMatch(
+				span,
+				cleanFormatFlags,
+				fgColor,
+				bgColor,
+				link,
+			);
+
+			if (isMatch) {
+				return; // Style already matches, no need to touch spans
+			}
+
+			// If it's the very first character of the span, check if we can merge with the previous span
+			if (index === currentOffset && spanIndex > 0) {
+				const prevSpan = this.spans![spanIndex - 1]!;
+				const prevMatch = spanHasStylesMatch(
+					prevSpan,
+					cleanFormatFlags,
+					fgColor,
+					bgColor,
+					link,
+				);
+
+				if (prevMatch) {
+					prevSpan.length += 1;
+					if (span.length === 1) {
+						this.spans!.splice(spanIndex, 1);
+					} else {
+						span.length -= 1;
+					}
+
+					this._spansDirty = true;
+					return;
+				}
+			}
+
+			// If it's the very last character of the span, check if we can merge with the next span
+			if (
+				index === currentOffset + span.length - 1 &&
+				spanIndex < this.spans!.length - 1
+			) {
+				const nextSpan = this.spans![spanIndex + 1]!;
+				const nextMatch = spanHasStylesMatch(
+					nextSpan,
+					cleanFormatFlags,
+					fgColor,
+					bgColor,
+					link,
+				);
+
+				if (nextMatch) {
+					nextSpan.length += 1;
+					if (span.length === 1) {
+						this.spans!.splice(spanIndex, 1);
+					} else {
+						span.length -= 1;
+					}
+
+					this._spansDirty = true;
+					return;
+				}
+			}
 		}
 
 		this.splitSpansAt(index);
