@@ -4,6 +4,8 @@ import NestedStaticDemo from './nested-static.js';
 import process from 'node:process';
 
 const start = Date.now();
+let frames = 0;
+
 const {unmount} = render(React.createElement(NestedStaticDemo), {
 	renderProcess: false,
 	terminalBuffer: true,
@@ -13,9 +15,13 @@ const {unmount} = render(React.createElement(NestedStaticDemo), {
 	debugRainbow: false,
 });
 
-setTimeout(() => {
-	console.log(`Ran for ${Date.now() - start}ms`);
-	unmount();
-	// eslint-disable-next-line unicorn/no-process-exit
-	process.exit(0);
-}, 2000);
+const checkFps = setInterval(() => {
+	frames++;
+	if (frames >= 100) {
+		const duration = Date.now() - start;
+		console.log(`\nRendered 100 frames in ${duration}ms (${(duration / 100).toFixed(2)}ms per frame)`);
+		unmount();
+		// eslint-disable-next-line unicorn/no-process-exit
+		process.exit(0);
+	}
+}, 16);
