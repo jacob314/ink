@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1163" height="190" viewBox="0 0 1163 190">
+  <style>
+    text { font-family: Consolas, "Courier New", monospace; font-size: 14px; dominant-baseline: text-before-edge; white-space: pre; }
+  </style>
+  <rect width="1163" height="190" fill="#000000" />
+  <g transform="translate(10, 10)">
+    <text x="0" y="2" fill="#ffffff" textLength="1143" lengthAdjust="spacingAndGlyphs">Line 1                                                                                                                        █</text>
+    <text x="0" y="19" fill="#ffffff" textLength="1143" lengthAdjust="spacingAndGlyphs">This is a demo showing a scrollable box with sticky headers.                                                                   </text>
+    <text x="0" y="36" fill="#ffffff" textLength="1143" lengthAdjust="spacingAndGlyphs">Press up/down arrow or w/s to scroll vertically (w/s for 30 lines, Shift for 10).                                              </text>
+    <text x="0" y="53" fill="#ffffff" textLength="1143" lengthAdjust="spacingAndGlyphs">Press &apos;space&apos; to add a block, &apos;c&apos; to clear list.                                                                               </text>
+    <text x="0" y="70" fill="#ffffff" textLength="1143" lengthAdjust="spacingAndGlyphs">Press &apos;b&apos; to toggle scrollbar (on), &apos;t&apos; to toggle border.                                                                      </text>
+    <text x="0" y="87" fill="#ffffff" textLength="1143" lengthAdjust="spacingAndGlyphs">Press &apos;f&apos; to collapse footer, &apos;a&apos; to toggle alternate buffer + sticky headers (current: off)                                   </text>
+    <text x="0" y="104" fill="#ffffff" textLength="1143" lengthAdjust="spacingAndGlyphs">Press &apos;h&apos; to toggle sticky headers in backbuffer (current: off)                                                                </text>
+    <text x="0" y="121" fill="#ffffff" textLength="1143" lengthAdjust="spacingAndGlyphs">Press &apos;v&apos; to toggle stable scrollback (on)                                                                                     </text>
+    <text x="0" y="138" fill="#ffffff" textLength="1143" lengthAdjust="spacingAndGlyphs">Press &apos;e&apos; to export current frame, &apos;r&apos; to toggle recording (OFF)                                                               </text>
+    <text x="0" y="155" fill="#ffffff" textLength="1143" lengthAdjust="spacingAndGlyphs">ScrollTop: 0, Size: 1, Content: 12, Added Scroll: 0                                                                            </text>
+  </g>
+</svg>

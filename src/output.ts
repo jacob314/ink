@@ -103,11 +103,13 @@ export type Region = {
 	y: number; // Position relative to parent region's content start
 	width: number;
 	height: number;
+	bufferWidth: number;
 
 	// Content buffer for this region.
 	// Coordinates in `lines` are relative to (0,0) of this region.
 	readonly lines: readonly StyledLine[];
 	readonly styledOutput: readonly StyledLine[];
+	linesOffsetY?: number;
 
 	isScrollable: boolean;
 	isVerticallyScrollable?: boolean;
@@ -145,6 +147,7 @@ export type Region = {
 	}>;
 	isTrimmed?: boolean;
 	maxWrittenY?: number;
+	hasCursor?: boolean;
 };
 
 export type RegionNode = {
@@ -175,6 +178,7 @@ export type SerializedStickyHeader = Omit<
 
 export type RegionUpdate = {
 	id: string | number;
+	linesOffsetY?: number;
 	x?: number;
 	y?: number;
 	width?: number;
@@ -228,6 +232,7 @@ export const regionLayoutProperties = [
 	'opaque',
 	'borderTop',
 	'borderBottom',
+	'linesOffsetY',
 ] as const;
 
 export type RegionLayoutProps = {
@@ -251,6 +256,7 @@ export type RegionLayoutProps = {
 	opaque?: boolean;
 	borderTop?: number;
 	borderBottom?: number;
+	linesOffsetY?: number;
 };
 
 export function copyRegionProperty<
@@ -261,6 +267,8 @@ export function copyRegionProperty<
 		target[key] = value;
 	}
 }
+
+const EMPTY_STICKY_HEADERS: StickyHeader[] = [];
 
 export default class Output {
 	width: number;
@@ -276,26 +284,27 @@ export default class Output {
 	constructor(options: Options) {
 		const {width, height, node, id = 'root', trackSelection = false} = options;
 
-		this.width = width;
-		this.height = height;
+		this.width = Math.round(width);
+		this.height = Math.round(height);
 		this.trackSelection = trackSelection;
 
 		this.root = {
 			id,
 			x: 0,
 			y: 0,
-			width,
-			height,
+			width: this.width,
+			height: this.height,
+			bufferWidth: this.width,
 			lines: [],
 			styledOutput: [],
 			isScrollable: false,
-			stickyHeaders: [],
+			stickyHeaders: EMPTY_STICKY_HEADERS,
 			children: [],
 			node,
 			selectableSpans: [],
+			hasCursor: false,
 		};
 
-		this.initLines(this.root, width, height);
 		this.activeRegionStack.push(this.root);
 	}
 
@@ -373,7 +382,6 @@ export default class Output {
 		// The buffer size should match scrollDimensions if scrollable, or bounds if not.
 		// If scrollable, we want to capture the FULL content.
 		const bufferWidth = scrollState?.scrollWidth ?? width;
-		const bufferHeight = scrollState?.scrollHeight ?? height;
 
 		const activeRegion = this.getActiveRegion();
 		const inheritedOverflowToBackbuffer = isScrollable
@@ -382,36 +390,51 @@ export default class Output {
 
 		const region: Region = {
 			id,
-			x,
-			y,
-			width,
-			height,
+			x: Math.round(x),
+			y: Math.round(y),
+			width: Math.round(width),
+			height: Math.round(height),
+			bufferWidth: Math.round(bufferWidth),
 			lines: [],
 			styledOutput: [],
 			isScrollable,
 			isVerticallyScrollable,
 			isHorizontallyScrollable,
-			scrollTop: scrollState?.scrollTop,
-			scrollLeft: scrollState?.scrollLeft,
-			scrollHeight: scrollState?.scrollHeight,
-			scrollWidth: scrollState?.scrollWidth,
+			scrollTop:
+				scrollState?.scrollTop === undefined
+					? undefined
+					: Math.round(scrollState.scrollTop),
+			scrollLeft:
+				scrollState?.scrollLeft === undefined
+					? undefined
+					: Math.round(scrollState.scrollLeft),
+			scrollHeight:
+				scrollState?.scrollHeight === undefined
+					? undefined
+					: Math.round(scrollState.scrollHeight),
+			scrollWidth:
+				scrollState?.scrollWidth === undefined
+					? undefined
+					: Math.round(scrollState.scrollWidth),
 			scrollbarVisible,
 			overflowToBackbuffer: inheritedOverflowToBackbuffer,
-			marginRight,
-			marginBottom,
+			marginRight:
+				marginRight === undefined ? undefined : Math.round(marginRight),
+			marginBottom:
+				marginBottom === undefined ? undefined : Math.round(marginBottom),
 			scrollbarThumbColor,
 			backgroundColor,
 			opaque,
-			borderTop,
-			borderBottom,
-			stickyHeaders: [],
+			borderTop: borderTop === undefined ? undefined : Math.round(borderTop),
+			borderBottom:
+				borderBottom === undefined ? undefined : Math.round(borderBottom),
+			stickyHeaders: EMPTY_STICKY_HEADERS,
 			children: [],
 			nodeId,
 			stableScrollback,
 			selectableSpans: [],
+			hasCursor: false,
 		};
-
-		this.initLines(region, bufferWidth, bufferHeight);
 
 		// Add to current active region's children
 		this.getActiveRegion().children.push(region);
@@ -427,6 +450,10 @@ export default class Output {
 	}
 
 	addStickyHeader(header: StickyHeader) {
+		if (this.getActiveRegion().stickyHeaders === EMPTY_STICKY_HEADERS) {
+			this.getActiveRegion().stickyHeaders = [];
+		}
+
 		this.getActiveRegion().stickyHeaders.push(header);
 	}
 
@@ -485,6 +512,10 @@ export default class Output {
 				row: y + row,
 				col: x + col,
 			};
+
+			for (const r of this.activeRegionStack) {
+				r.hasCursor = true;
+			}
 		}
 
 		if (items.length > 0) {
@@ -502,7 +533,12 @@ export default class Output {
 
 	clip(clip: Clip) {
 		const previousClip = this.clips.at(-1);
-		const nextClip = {...clip};
+		const nextClip = {
+			x1: clip.x1 === undefined ? undefined : Math.round(clip.x1),
+			x2: clip.x2 === undefined ? undefined : Math.round(clip.x2),
+			y1: clip.y1 === undefined ? undefined : Math.round(clip.y1),
+			y2: clip.y2 === undefined ? undefined : Math.round(clip.y2),
+		};
 
 		if (previousClip) {
 			nextClip.x1 =
@@ -554,21 +590,36 @@ export default class Output {
 			: (region.overflowToBackbuffer ?? activeRegion.overflowToBackbuffer);
 
 		const regionRef = Object.create(region) as Region;
-		regionRef.x = region.x + x;
-		regionRef.y = region.y + y;
+		regionRef.x = Math.round(region.x + x);
+		regionRef.y = Math.round(region.y + y);
 		regionRef.overflowToBackbuffer = overflowToBackbuffer;
 
 		activeRegion.children.push(regionRef);
+
+		if (regionRef.hasCursor) {
+			for (const r of this.activeRegionStack) {
+				r.hasCursor = true;
+			}
+		}
 	}
 
 	private trimRegionLines(region: Region) {
 		if (region.isTrimmed) return;
 
+		let minY = -1;
+		let maxY = -1;
+
 		const limit = Math.min(region.lines.length, (region.maxWrittenY ?? -1) + 1);
 
 		for (let y = 0; y < limit; y++) {
-			const line = region.lines[y]!;
+			const line = region.lines[y];
+			if (!line) continue;
 			const trimmedLength = line.getTrimmedLength();
+
+			if (trimmedLength > 0) {
+				if (minY === -1) minY = y;
+				maxY = y;
+			}
 
 			if (region.styledOutput[y]?.length !== trimmedLength) {
 				(region.styledOutput as StyledLine[])[y] =
@@ -576,10 +627,20 @@ export default class Output {
 			}
 		}
 
-		for (let y = limit; y < region.lines.length; y++) {
-			if (region.styledOutput[y]?.length !== 0) {
-				(region.styledOutput as StyledLine[])[y] = StyledLine.empty(0);
-			}
+		if (minY === -1) {
+			region.linesOffsetY = 0;
+			(region.lines as StyledLine[]) = [];
+			(region.styledOutput as StyledLine[]) = [];
+		} else if (minY === 0 && maxY === region.lines.length - 1) {
+			region.linesOffsetY = 0;
+			// Lines array is completely unchanged, keep original reference
+		} else {
+			region.linesOffsetY = minY;
+			(region.lines as StyledLine[]) = region.lines.slice(minY, maxY + 1);
+			(region.styledOutput as StyledLine[]) = region.styledOutput.slice(
+				minY,
+				maxY + 1,
+			);
 		}
 
 		for (const child of region.children) {
@@ -590,27 +651,17 @@ export default class Output {
 	}
 
 	private clampCursorPosition(region: Region) {
+		if (!region.hasCursor) return;
+
 		if (region.cursorPosition) {
 			const {row, col} = region.cursorPosition;
 			const line = region.lines[row];
 
-			if (line) {
-				region.cursorPosition.col = clampCursorColumn(line, col);
-			}
+			region.cursorPosition.col = line ? clampCursorColumn(line, col) : 0;
 		}
 
 		for (const child of region.children) {
 			this.clampCursorPosition(child);
-		}
-	}
-
-	private initLines(region: Region, width: number, height: number) {
-		if (height <= 0) return;
-		const baseRow = StyledLine.empty(width);
-		for (let y = 0; y < height; y++) {
-			const row = y === 0 ? baseRow : baseRow.clone();
-			(region.lines as StyledLine[]).push(row);
-			(region.styledOutput as StyledLine[]).push(row);
 		}
 	}
 
@@ -624,8 +675,7 @@ export default class Output {
 		isSelectable: boolean,
 	) {
 		const region = this.getActiveRegion();
-		const {lines} = region;
-		const bufferWidth = lines[0]?.length ?? 0;
+		const {lines, bufferWidth} = region;
 
 		let chars: StyledLine =
 			typeof items === 'string' ? toStyledCharacters(items) : items;
@@ -655,9 +705,11 @@ export default class Output {
 			y = absoluteY - regionOffset.y;
 		}
 
-		const currentLine = lines[y]!;
+		let currentLine = lines[y]!;
 		if (!currentLine) {
-			return;
+			currentLine = StyledLine.empty(bufferWidth);
+			(lines as StyledLine[])[y] = currentLine;
+			(region.styledOutput as StyledLine[])[y] = currentLine;
 		}
 
 		region.maxWrittenY = Math.max(region.maxWrittenY ?? -1, y);
@@ -920,7 +972,8 @@ function composeRegion(
 		}
 
 		const localY = sy - absY + scrollTop;
-		const sourceLine = lines[localY];
+		const lineIndex = localY - (region.linesOffsetY ?? 0);
+		const sourceLine = lines[lineIndex];
 		if (!sourceLine) {
 			continue;
 		}

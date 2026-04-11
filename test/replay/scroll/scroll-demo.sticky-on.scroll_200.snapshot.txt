@@ -1,44 +1,44 @@
 <backbuffer height: 200>
-│This is the first line of box 0 with yellow text.                                                                                                                                │
-│1 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
-│2 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
+│This is the first line of box 0 with yellow text.                                                                                                                                │ █
+│1 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ █
+│2 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ █
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯ █
+                                                                                                                                                                                    █
+╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮ █
+│This is the first line of box 1                                                                                                                                                  │ █
+│1 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ █
+│2 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ █
+│3 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ █
 ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-
-╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│This is the first line of box 1                                                                                                                                                  │
-│1 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
-│2 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
-│3 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
-╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-
-╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│This is the first line of box 2                                                                                                                                                  │
-│1 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
-│2 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
-│3 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
-│4 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
-╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-
+                                                                                                                                                                                    █
+╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮ █
+│This is the first line of box 2                                                                                                                                                  │ █
+│1 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ █
+│2 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ █
+│3 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ █
+│4 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ █
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯ █
+                                                                                                                                                                                    █
 ╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
 │This is the first line of box 3 with yellow text.                                                                                                                                │
 │1 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
-│2 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
-│3 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
-│4 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
-│5 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
-╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-
-╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│2 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ ▄
+│3 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ █
+│4 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ █
+│5 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ █
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯ █
+                                                                                                                                                                                    █
+╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮ █
 │This is the first line of box 4                                                                                                                                                  │
 │1 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
 │2 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
 │3 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
 │4 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
-│5 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
-│6 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
-╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-
-╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│5 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ ▄
+│6 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │ █
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯ █
+                                                                                                                                                                                    █
+╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮ █
 │This is the first line of box 5                                                                                                                                                  │
 │1 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
 │2 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
@@ -47,8 +47,8 @@
 │5 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
 │6 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
 │7 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │
-╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯ █
+                                                                                                                                                                                    █
 ╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
 │This is the first line of box 6 with yellow text.                                                                                                                                │
 │1 This is line in a line in a box. This is some text that is long enough to require some word wrapping.                                                                          │

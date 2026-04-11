@@ -15,26 +15,30 @@ test('debug static render inside scroll container', t => {
 			>
 				<Box flexDirection="column">
 					<StaticRender width={48}>
-						<Box flexDirection="column">
-							<Box key="s1" opaque sticky="top" height={1}>
-								<Text>HEADER 1</Text>
+						{() => (
+							<Box flexDirection="column">
+								<Box key="s1" opaque sticky="top" height={1}>
+									<Text>HEADER 1</Text>
+								</Box>
+								<Text>Item 1 Line 1</Text>
+								<Text>Item 1 Line 2</Text>
+								<Text>Item 1 Line 3</Text>
 							</Box>
-							<Text>Item 1 Line 1</Text>
-							<Text>Item 1 Line 2</Text>
-							<Text>Item 1 Line 3</Text>
-						</Box>
+						)}
 					</StaticRender>
 					<StaticRender width={48}>
-						<Box flexDirection="column">
-							<Box key="s2" opaque sticky="top" height={1}>
-								<Text>HEADER 2</Text>
+						{() => (
+							<Box flexDirection="column">
+								<Box key="s2" opaque sticky="top" height={1}>
+									<Text>HEADER 2</Text>
+								</Box>
+								<Text>Item 2 Line 1</Text>
+								<Text>Item 2 Line 2</Text>
+								<Text>Item 2 Line 3</Text>
+								<Text>Item 2 Line 4</Text>
+								<Text>Item 2 Line 5</Text>
 							</Box>
-							<Text>Item 2 Line 1</Text>
-							<Text>Item 2 Line 2</Text>
-							<Text>Item 2 Line 3</Text>
-							<Text>Item 2 Line 4</Text>
-							<Text>Item 2 Line 5</Text>
-						</Box>
+						)}
 					</StaticRender>
 				</Box>
 			</Box>,
@@ -50,26 +54,30 @@ test('debug static render inside scroll container', t => {
 			>
 				<Box flexDirection="column">
 					<StaticRender width={48}>
-						<Box flexDirection="column">
-							<Box key="s1" opaque sticky="top" height={1}>
-								<Text>HEADER 1</Text>
+						{() => (
+							<Box flexDirection="column">
+								<Box key="s1" opaque sticky="top" height={1}>
+									<Text>HEADER 1</Text>
+								</Box>
+								<Text>Item 1 Line 1</Text>
+								<Text>Item 1 Line 2</Text>
+								<Text>Item 1 Line 3</Text>
 							</Box>
-							<Text>Item 1 Line 1</Text>
-							<Text>Item 1 Line 2</Text>
-							<Text>Item 1 Line 3</Text>
-						</Box>
+						)}
 					</StaticRender>
 					<StaticRender width={48}>
-						<Box flexDirection="column">
-							<Box key="s2" opaque sticky="top" height={1}>
-								<Text>HEADER 2</Text>
+						{() => (
+							<Box flexDirection="column">
+								<Box key="s2" opaque sticky="top" height={1}>
+									<Text>HEADER 2</Text>
+								</Box>
+								<Text>Item 2 Line 1</Text>
+								<Text>Item 2 Line 2</Text>
+								<Text>Item 2 Line 3</Text>
+								<Text>Item 2 Line 4</Text>
+								<Text>Item 2 Line 5</Text>
 							</Box>
-							<Text>Item 2 Line 1</Text>
-							<Text>Item 2 Line 2</Text>
-							<Text>Item 2 Line 3</Text>
-							<Text>Item 2 Line 4</Text>
-							<Text>Item 2 Line 5</Text>
-						</Box>
+						)}
 					</StaticRender>
 				</Box>
 			</Box>,

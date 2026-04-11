@@ -4,7 +4,8 @@
   </style>
   <rect width="1649" height="581" fill="#000000" />
   <g transform="translate(10, 10)">
-    <text x="0" y="19" fill="#ffffff" textLength="1629" lengthAdjust="spacingAndGlyphs"> Use Up/Down arrows to scroll. Press &apos;s&apos; to export snapshot. Press &apos;Ctrl+C&apos; to exit.                                                                                                 </text>
+    <text x="0" y="2" fill="#ffffff" textLength="1629" lengthAdjust="spacingAndGlyphs"> Use Up/Down arrows to scroll. Press &apos;s&apos; to export snapshot. Press &apos;Ctrl+C&apos; to exit.                                                                                                 </text>
+    <rect x="9" y="34" width="270" height="17" fill="#0000ee" />
     <rect x="9" y="51" width="261" height="17" fill="#0000ee" />
     <text x="9" y="53" fill="#ffffff" textLength="261" lengthAdjust="spacingAndGlyphs">This is line 1 of arbitrary t</text>
     <text x="270" y="53" fill="#ffffff" textLength="1359" lengthAdjust="spacingAndGlyphs">█                                                                                                                                                      </text>

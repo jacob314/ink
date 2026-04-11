@@ -25,6 +25,7 @@ import {
 import {type InkOptions} from './components/AppContext.js';
 
 const debugEdits = false;
+const emptyStyledLine = new StyledLine();
 
 export default class TerminalBuffer {
 	public get lines(): StyledLine[] {
@@ -483,11 +484,12 @@ export default class TerminalBuffer {
 
 			// Send all lines
 			const serialized = this.serializer.serialize(current.lines);
+			const offsetY = current.linesOffsetY ?? 0;
 			update.lines = {
 				updates: [
 					{
-						start: 0,
-						end: current.lines.length,
+						start: offsetY,
+						end: offsetY + current.lines.length,
 						data: serialized,
 					},
 				],
@@ -497,23 +499,148 @@ export default class TerminalBuffer {
 			return update;
 		}
 
+		const currentProto = Object.getPrototypeOf(current) as Region;
+		const lastProto = Object.getPrototypeOf(last) as Region;
+
+		// Optimization: Fast path for cached StaticRender regions.
+		//
+		// When Ink renders a cached static element, it does not deep clone the Region.
+		// Instead, it uses `Object.create(cachedRegion)` to create a new object that
+		// delegates property lookups to the shared cache (prototype), but allows
+		// overriding the layout position (x, y, etc.) on the new instance itself.
+		//
+		// If `currentProto === lastProto`, it is mathematically guaranteed that EVERY
+		// property delegated to the prototype (width, height, content lines, styles)
+		// is 100% identical between the two frames.
+		//
+		// Therefore, if the prototypes match, we only need to verify that the specific
+		// properties assigned directly to the instance (shadowed properties like x and y)
+		// also match. If they do, the region hasn't changed at all, and we can safely
+		// bypass the slow 22-property loop below.
+		if (
+			currentProto === lastProto &&
+			currentProto !== Object.prototype &&
+			current.x === last.x &&
+			current.y === last.y &&
+			current.overflowToBackbuffer === last.overflowToBackbuffer &&
+			current.lines === last.lines &&
+			current.linesOffsetY === last.linesOffsetY
+		) {
+			// Exact same cached region with no layout overrides; skip the 22-property dynamic loop entirely.
+			return undefined;
+		}
+
 		// Check properties
-		for (const key of regionLayoutProperties) {
-			if (current[key] !== last[key]) {
-				copyRegionProperty(update, current, key);
-				hasChanges = true;
-			}
+		if (current.x !== last.x) {
+			update.x = current.x;
+			hasChanges = true;
+		}
+
+		if (current.y !== last.y) {
+			update.y = current.y;
+			hasChanges = true;
+		}
+
+		if (current.width !== last.width) {
+			update.width = current.width;
+			hasChanges = true;
+		}
+
+		if (current.height !== last.height) {
+			update.height = current.height;
+			hasChanges = true;
+		}
+
+		if (current.scrollTop !== last.scrollTop) {
+			update.scrollTop = current.scrollTop;
+			hasChanges = true;
+		}
+
+		if (current.scrollLeft !== last.scrollLeft) {
+			update.scrollLeft = current.scrollLeft;
+			hasChanges = true;
+		}
+
+		if (current.scrollHeight !== last.scrollHeight) {
+			update.scrollHeight = current.scrollHeight;
+			hasChanges = true;
+		}
+
+		if (current.scrollWidth !== last.scrollWidth) {
+			update.scrollWidth = current.scrollWidth;
+			hasChanges = true;
+		}
+
+		if (current.isScrollable !== last.isScrollable) {
+			update.isScrollable = current.isScrollable;
+			hasChanges = true;
+		}
+
+		if (current.isVerticallyScrollable !== last.isVerticallyScrollable) {
+			update.isVerticallyScrollable = current.isVerticallyScrollable;
+			hasChanges = true;
+		}
+
+		if (current.isHorizontallyScrollable !== last.isHorizontallyScrollable) {
+			update.isHorizontallyScrollable = current.isHorizontallyScrollable;
+			hasChanges = true;
+		}
+
+		if (current.scrollbarVisible !== last.scrollbarVisible) {
+			update.scrollbarVisible = current.scrollbarVisible;
+			hasChanges = true;
+		}
+
+		if (current.overflowToBackbuffer !== last.overflowToBackbuffer) {
+			update.overflowToBackbuffer = current.overflowToBackbuffer;
+			hasChanges = true;
+		}
+
+		if (current.marginRight !== last.marginRight) {
+			update.marginRight = current.marginRight;
+			hasChanges = true;
+		}
+
+		if (current.marginBottom !== last.marginBottom) {
+			update.marginBottom = current.marginBottom;
+			hasChanges = true;
+		}
+
+		if (current.scrollbarThumbColor !== last.scrollbarThumbColor) {
+			update.scrollbarThumbColor = current.scrollbarThumbColor;
+			hasChanges = true;
+		}
+
+		if (current.backgroundColor !== last.backgroundColor) {
+			update.backgroundColor = current.backgroundColor;
+			hasChanges = true;
+		}
+
+		if (current.opaque !== last.opaque) {
+			update.opaque = current.opaque;
+			hasChanges = true;
+		}
+
+		if (current.borderTop !== last.borderTop) {
+			update.borderTop = current.borderTop;
+			hasChanges = true;
+		}
+
+		if (current.borderBottom !== last.borderBottom) {
+			update.borderBottom = current.borderBottom;
+			hasChanges = true;
+		}
+
+		if (current.linesOffsetY !== last.linesOffsetY) {
+			update.linesOffsetY = current.linesOffsetY;
+			hasChanges = true;
 		}
 
 		// Deep compare sticky headers? For now assuming reference change or simple length change is enough,
 		// or we can rely on the fact they are rebuilt every frame.
 		// Let's just resend if length differs or assume they might change.
 		// To be safe and simple: always send sticky headers if they exist or existed.
-		if (
-			current.stickyHeaders !== last.stickyHeaders ||
-			current.stickyHeaders.length > 0 ||
-			last.stickyHeaders.length > 0
-		) {
+		if (current.stickyHeaders.length > 0 || last.stickyHeaders.length > 0) {
 			update.stickyHeaders = current.stickyHeaders.map(h => ({
 				...h,
 				node: undefined,
@@ -527,10 +654,20 @@ export default class TerminalBuffer {
 		}
 
 		// Diff lines
-		const lineUpdates = this.diffLines(last.lines, current.lines);
+		const lineUpdates = this.diffLines(
+			last.lines,
+			last.linesOffsetY ?? 0,
+			current.lines,
+			current.linesOffsetY ?? 0,
+		);
 
-		if (lineUpdates.length > 0 || last.lines.length !== current.lines.length) {
+		if (
+			lineUpdates.length > 0 ||
+			last.lines.length !== current.lines.length ||
+			last.linesOffsetY !== current.linesOffsetY
+		) {
 			hasChanges = true;
+			update.linesOffsetY = current.linesOffsetY;
 			update.lines = {
 				updates: lineUpdates,
 				totalLength: current.lines.length,
@@ -548,10 +685,12 @@ export default class TerminalBuffer {
 					}
 
 					// Also check if lines were removed from the end of the content but still within the scrollback
+					const oldEnd = (last.linesOffsetY ?? 0) + last.lines.length;
+					const newEnd = (current.linesOffsetY ?? 0) + current.lines.length;
 					if (
 						!element.internalIsScrollbackDirty &&
-						current.lines.length < last.lines.length &&
-						current.lines.length < scrollTop
+						newEnd < oldEnd &&
+						newEnd < scrollTop
 					) {
 						element.internalIsScrollbackDirty = true;
 					}
@@ -564,14 +703,16 @@ export default class TerminalBuffer {
 
 	private diffLines(
 		oldLines: readonly StyledLine[],
+		oldOffsetY: number,
 		newLines: readonly StyledLine[],
+		newOffsetY: number,
 	): Array<{
 		start: number;
 		end: number;
 		data: Uint8Array;
 		source?: Uint8Array;
 	}> {
-		if (oldLines === newLines) {
+		if (oldLines === newLines && oldOffsetY === newOffsetY) {
 			return [];
 		}
 
@@ -582,50 +723,69 @@ export default class TerminalBuffer {
 			source?: Uint8Array;
 		}> = [];
 
-		const limit = Math.max(oldLines.length, newLines.length);
+		const minOffset = Math.min(oldOffsetY, newOffsetY);
+		const maxOld = oldOffsetY + oldLines.length;
+		const maxNew = newOffsetY + newLines.length;
+		const maxOffset = Math.max(maxOld, maxNew);
+
 		let chunkStart = -1;
 		let chunkLines: StyledLine[] = [];
 		let chunkSource: StyledLine[] = [];
-		for (let i = 0; i < limit; i++) {
-			const newLine = newLines[i];
-			const oldLine = oldLines[i];
+
+		const flushChunk = () => {
+			if (chunkStart !== -1) {
+				updates.push({
+					start: chunkStart,
+					end: chunkStart + chunkLines.length,
+					data: this.serializer.serialize(chunkLines),
+					source: debugEdits
+						? this.serializer.serialize(chunkSource)
+						: undefined,
+				});
+
+				chunkStart = -1;
+				chunkLines = [];
+				chunkSource = [];
+			}
+		};
+
+		for (let y = minOffset; y < maxOffset; y++) {
+			const oldLine =
+				y >= oldOffsetY && y < maxOld ? oldLines[y - oldOffsetY] : undefined;
+			const newLine =
+				y >= newOffsetY && y < maxNew ? newLines[y - newOffsetY] : undefined;
 
 			const areEqual = linesEqual(oldLine, newLine);
 			if (areEqual) {
-				if (chunkStart !== -1) {
-					updates.push({
-						start: chunkStart,
-						end: chunkStart + chunkLines.length,
-						data: this.serializer.serialize(chunkLines),
-						source: debugEdits
-							? this.serializer.serialize(chunkSource)
-							: undefined,
-					});
-					chunkStart = -1;
-					chunkLines = [];
-					chunkSource = [];
-				}
+				flushChunk();
 			} else {
-				if (chunkStart === -1) {
-					chunkStart = i;
+				// Skip leading empty lines for the chunk to save memory/IPC if they don't need to overwrite old content
+				const isNewLineEmpty = !newLine || newLine.length === 0;
+				const isOldLineEmpty = !oldLine || oldLine.length === 0;
+				if (chunkStart === -1 && isNewLineEmpty && isOldLineEmpty) {
+					continue;
 				}
 
-				chunkLines.push(newLine ?? new StyledLine());
+				if (chunkStart === -1) {
+					chunkStart = y;
+				}
+
+				// If newLine is undefined but oldLine is not, we still need to send an empty line to clear it.
+				// However, if newLine is genuinely undefined and we're pushing it into chunkLines,
+				// the serializer handles undefined elements by treating them as empty. Let's cast to
+				// any to bypass TS error or use a shared empty StyledLine.
+				// For now, since chunkLines is StyledLine[], we can push an empty one if we don't have it.
+				// Actually, we can push newLine as it is if we allow undefined in the type, but since
+				// it's defined as StyledLine[], we'll use a shared empty instance to avoid allocating.
+				chunkLines.push(newLine ?? emptyStyledLine);
 
 				if (debugEdits) {
-					chunkSource.push(oldLine ?? new StyledLine());
+					chunkSource.push(oldLine ?? emptyStyledLine);
 				}
 			}
 		}
 
-		if (chunkStart !== -1) {
-			updates.push({
-				start: chunkStart,
-				end: chunkStart + chunkLines.length,
-				data: this.serializer.serialize(chunkLines),
-				source: debugEdits ? this.serializer.serialize(chunkSource) : undefined,
-			});
-		}
+		flushChunk();
 
 		return updates;
 	}
