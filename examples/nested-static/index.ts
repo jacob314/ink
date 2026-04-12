@@ -15,4 +15,5 @@ render(React.createElement(NestedStaticDemo), {
 	standardReactLayoutTiming: true,
 	maxFps: 1000,
 	debugRainbow: true,
+	stickyHeadersInBackbuffer: true,
 });

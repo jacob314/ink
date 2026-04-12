@@ -11,6 +11,7 @@ import React, {
 	useReducer,
 	useRef,
 	useLayoutEffect,
+	useContext,
 } from 'react';
 import {
 	Box,
@@ -20,6 +21,7 @@ import {
 	getInnerHeight,
 	getScrollHeight,
 	type DOMElement,
+	AppContext,
 } from '../../src/index.js';
 
 const renderCounts = new Map<string, number>();
@@ -108,6 +110,9 @@ export function useTerminalSize(): {columns: number; rows: number} {
 }
 
 const InnerStatic = React.memo(({id}: {readonly id: string}) => {
+	const shouldHaveSticky =
+		Number.parseInt(id.split('-')[1] || '0', 10) % 2 === 0;
+
 	return (
 		<StaticRender width={50}>
 			{() => (
@@ -117,9 +122,41 @@ const InnerStatic = React.memo(({id}: {readonly id: string}) => {
 					borderColor="yellow"
 					paddingX={1}
 				>
-					<TrackedText name={`inner-${id}`} color="yellow">
-						Inner Item {id}
-					</TrackedText>
+					{shouldHaveSticky ? (
+						<Box
+							sticky
+							width="100%"
+							stickyChildren={
+								<Box
+									opaque
+									borderBottom
+									flexDirection="column"
+									width="100%"
+									paddingLeft={0}
+									borderStyle="single"
+									borderColor="yellow"
+									paddingX={0}
+									borderTop={false}
+									borderLeft={false}
+									borderRight={false}
+								>
+									<TrackedText name={`inner-sticky-${id}`} color="yellow">
+										Sticky Inner Item {id}
+									</TrackedText>
+								</Box>
+							}
+						>
+							<Box width="100%">
+								<TrackedText name={`inner-${id}`} color="yellow">
+									Inner Item {id}
+								</TrackedText>
+							</Box>
+						</Box>
+					) : (
+						<TrackedText name={`inner-${id}`} color="yellow">
+							Inner Item {id}
+						</TrackedText>
+					)}
 					<Text dimColor>
 						Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
 						eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
@@ -167,8 +204,48 @@ const OuterGroup = React.memo(
 		readonly items: number[];
 		readonly wrapInStatic: boolean;
 	}) => {
+		const shouldHaveSticky = groupId % 2 === 0;
+
 		const content = (
 			<Box width={60} flexDirection="column" marginBottom={1} paddingX={1}>
+				{shouldHaveSticky ? (
+					<Box
+						sticky
+						width="100%"
+						stickyChildren={
+							<Box
+								opaque
+								borderBottom
+								flexDirection="column"
+								width="100%"
+								paddingLeft={0}
+								borderStyle="single"
+								borderColor="cyan"
+								paddingX={0}
+								borderTop={false}
+								borderLeft={false}
+								borderRight={false}
+							>
+								<TrackedText name={`outer-sticky-${groupId}`} color="cyan">
+									Sticky Outer Group {groupId}
+								</TrackedText>
+							</Box>
+						}
+					>
+						<Box width="100%" marginBottom={1}>
+							<TrackedText name={`outer-${groupId}`} color="cyan">
+								Outer Group {groupId}
+							</TrackedText>
+						</Box>
+					</Box>
+				) : (
+					<Box marginBottom={1}>
+						<TrackedText name={`outer-${groupId}`} color="cyan">
+							Outer Group {groupId}
+						</TrackedText>
+					</Box>
+				)}
+
 				<Box flexDirection="column" gap={1} marginBottom={1}>
 					{items.map(itemId => (
 						<InnerStatic
@@ -177,10 +254,6 @@ const OuterGroup = React.memo(
 						/>
 					))}
 				</Box>
-
-				<TrackedText name={`outer-${groupId}`} color="cyan">
-					Outer Group {groupId}
-				</TrackedText>
 			</Box>
 		);
 
@@ -194,9 +267,11 @@ const OuterGroup = React.memo(
 
 export default function NestedStaticDemo() {
 	const [count, setCount] = useState(0);
-	const [showTimer, setShowTimer] = useState(true);
+	const [showTimer, setShowTimer] = useState(false);
 	const [wrapFirstGroup, setWrapFirstGroup] = useState(false);
 	const [autoAdd, setAutoAdd] = useState(false);
+	const [showScrollbar, setShowScrollbar] = useState(true);
+	const {options, setOptions} = useContext(AppContext);
 	const [groups, setGroups] = useState<Array<{id: number; items: number[]}>>([
 		{id: 1, items: Array.from({length: 10_000}, (_, i) => i + 1)},
 	]);
@@ -282,6 +357,18 @@ export default function NestedStaticDemo() {
 
 		if (input === 'c') {
 			setWrapFirstGroup(previous => !previous);
+			return;
+		}
+
+		if (input === 'h') {
+			setOptions({
+				stickyHeadersInBackbuffer: !options?.stickyHeadersInBackbuffer,
+			});
+			return;
+		}
+
+		if (input === 'b') {
+			setShowScrollbar(previous => !previous);
 			return;
 		}
 
@@ -395,7 +482,7 @@ export default function NestedStaticDemo() {
 			<Box
 				ref={reference}
 				overflowToBackbuffer
-				scrollbar
+				scrollbar={showScrollbar}
 				flexDirection="column"
 				flexGrow={1}
 				flexShrink={1}
@@ -414,8 +501,17 @@ export default function NestedStaticDemo() {
 							wrapInStatic={group.id === 1 ? wrapFirstGroup : false}
 						/>
 					))}
-					<Box paddingTop={1}>
-						<Text color="cyan">Backbuffer Timer: {count}</Text>
+					<Box padding={1}>
+						<Text>
+							Timer: {count} | FPS: {currentFps} | Frame:{' '}
+							{frameIndexReference.current} | G1 Static Wrap:{' '}
+							{wrapFirstGroup ? 'ON' : 'OFF'} | Auto Add:{' '}
+							{autoAdd ? 'ON' : 'OFF'}
+						</Text>
+						<Text>
+							Scrollbar (b): {showScrollbar ? 'ON' : 'OFF'} | Sticky Backbuffer
+							(h): {options?.stickyHeadersInBackbuffer ? 'ON' : 'OFF'}
+						</Text>
 					</Box>
 				</Box>
 			</Box>
@@ -433,6 +529,10 @@ export default function NestedStaticDemo() {
 					toggle static wrap for Group 1, [a] to toggle auto-add.
 				</Text>
 				<Text>
+					Press [h] to toggle sticky headers in backbuffer, [b] to toggle
+					scrollbar.
+				</Text>
+				<Text>
 					Arrows to scroll. [u]/[d] scroll up/down by half total height.
 					ScrollTop: {scrollTop}
 				</Text>
@@ -440,6 +540,10 @@ export default function NestedStaticDemo() {
 					Timer: {count} | FPS: {currentFps} | Frame:{' '}
 					{frameIndexReference.current} | G1 Static Wrap:{' '}
 					{wrapFirstGroup ? 'ON' : 'OFF'} | Auto Add: {autoAdd ? 'ON' : 'OFF'}
+				</Text>
+				<Text>
+					Scrollbar (b): {showScrollbar ? 'ON' : 'OFF'} | Sticky Backbuffer (h):{' '}
+					{options?.stickyHeadersInBackbuffer ? 'ON' : 'OFF'}
 				</Text>
 			</Box>
 		</Box>
