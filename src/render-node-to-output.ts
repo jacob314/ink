@@ -3,6 +3,8 @@ import {type StyledLine} from './styled-line.js';
 import {
 	type DOMElement,
 	type DOMNode,
+	getCachedRegion,
+	setCachedRegion,
 	setCachedRender,
 	type StickyHeader,
 } from './dom.js';
@@ -18,6 +20,101 @@ import {getRelativeLeft, getRelativeTop} from './measure-element.js';
 import {triggerResizeObservers} from './resize-observer.js';
 
 export type OutputTransformer = (s: string, index: number) => string;
+
+const canUseCachedRegion = (
+	node: DOMElement,
+	options: {
+		skipStaticElements: boolean;
+		isStickyRender: boolean;
+		selectionMap?: Map<DOMNode, {start: number; end: number}>;
+		selectionStyle?: (line: StyledLine, index: number) => void;
+		trackSelection?: boolean;
+	},
+) => {
+	if (node.nodeName !== 'ink-box') {
+		return false;
+	}
+
+	if (
+		!options.skipStaticElements ||
+		node.internal_static ||
+		node.internalSticky ||
+		node.internalStickyAlternate ||
+		options.isStickyRender ||
+		(options.selectionMap && options.selectionMap.size > 0) ||
+		options.selectionStyle ||
+		options.trackSelection
+	) {
+		return false;
+	}
+
+	const overflow = node.style.overflow ?? 'visible';
+	const overflowX = node.style.overflowX ?? overflow;
+	const overflowY = node.style.overflowY ?? overflow;
+
+	if (overflowX === 'scroll' || overflowY === 'scroll') {
+		return false;
+	}
+
+	return node.childNodes.some(
+		childNode => childNode.nodeName === 'ink-static-render',
+	);
+};
+
+const getOrRenderCachedRegion = (
+	node: DOMElement,
+	options: {
+		width: number;
+		height: number;
+		transformers: OutputTransformer[];
+		skipStaticElements: boolean;
+		isStickyRender: boolean;
+		skipStickyHeaders: boolean;
+	},
+) => {
+	const {
+		width,
+		height,
+		transformers,
+		skipStaticElements,
+		isStickyRender,
+		skipStickyHeaders,
+	} = options;
+	const cachedRegion = getCachedRegion(node, skipStaticElements);
+
+	if (
+		cachedRegion &&
+		cachedRegion.width === width &&
+		cachedRegion.height === height
+	) {
+		return cachedRegion;
+	}
+
+	const cachedOutput = new Output({
+		width,
+		height,
+		node,
+		id: node.internalId,
+	});
+
+	handleContainerNode(node, cachedOutput, {
+		x: 0,
+		y: 0,
+		width,
+		height,
+		newTransformers: transformers,
+		skipStaticElements,
+		isStickyRender,
+		skipStickyHeaders,
+		absoluteOffsetX: 0,
+		absoluteOffsetY: 0,
+	});
+
+	const region = cachedOutput.get();
+	setCachedRegion(node, region, skipStaticElements);
+
+	return region;
+};
 
 export const renderToStatic = (
 	node: DOMElement,
@@ -37,63 +134,106 @@ export const renderToStatic = (
 	// Cache dimensions of the static tree before we render it out and cache/destroy its Yoga children
 	triggerResizeObservers(node, true);
 
-	const width = node.yogaNode?.getComputedWidth() ?? 0;
-	const height = node.yogaNode?.getComputedHeight() ?? 0;
+	const width = Math.round(node.yogaNode?.getComputedWidth() ?? 0);
+	const height = Math.round(node.yogaNode?.getComputedHeight() ?? 0);
 
 	const stickyNodes = getStickyDescendants(node);
 	const cachedStickyHeaders: StickyHeader[] = [];
 
-	for (const {node: stickyNode} of stickyNodes) {
-		const {naturalLines, stuckLines, naturalHeight, maxHeaderHeight} =
-			renderStickyNode(stickyNode, {
+	for (const stickyNodeInfo of stickyNodes) {
+		const {node: stickyNode, type: stickyType, cached, anchor} = stickyNodeInfo;
+
+		let naturalLines;
+		let stuckLines;
+		let naturalHeight;
+		let maxHeaderHeight;
+
+		let relativeX: number;
+		let relativeY: number;
+		let parentRelativeTop: number;
+		let parentHeight: number;
+		let parentBorderTop: number;
+		let parentBorderBottom: number;
+		let nodeId: number;
+
+		const currentBorderTop =
+			node.yogaNode?.getComputedBorder(Yoga.EDGE_TOP) ?? 0;
+		const currentBorderLeft =
+			node.yogaNode?.getComputedBorder(Yoga.EDGE_LEFT) ?? 0;
+
+		if (cached && anchor) {
+			naturalLines = cached.lines;
+			stuckLines = cached.stuckLines;
+			naturalHeight = cached.endRow - cached.startRow;
+			maxHeaderHeight = cached.height!;
+
+			const staticRenderPosTop = getRelativeTop(anchor, node) ?? 0;
+			const staticRenderPosLeft = getRelativeLeft(anchor, node) ?? 0;
+
+			relativeX = staticRenderPosLeft + cached.relativeX!;
+			relativeY = staticRenderPosTop + cached.relativeY!;
+			parentRelativeTop = staticRenderPosTop + cached.parentRelativeTop!;
+			parentHeight = cached.parentHeight!;
+			parentBorderTop = cached.parentBorderTop!;
+			parentBorderBottom = cached.parentBorderBottom!;
+			nodeId = cached.nodeId;
+		} else {
+			if (!stickyNode) continue;
+			const rendered = renderStickyNode(stickyNode, {
 				skipStaticElements: options.skipStaticElements ?? false,
 				selectionMap: options.selectionMap,
 				selectionStyle: options.selectionStyle,
 				trackSelection: options.trackSelection,
 			});
+			naturalLines = rendered.naturalLines;
+			stuckLines = rendered.stuckLines;
+			naturalHeight = rendered.naturalHeight;
+			maxHeaderHeight = rendered.maxHeaderHeight;
 
-		const parent = stickyNode.parentNode;
-		const parentYogaNode = parent?.yogaNode;
-		const currentBorderTop =
-			node.yogaNode?.getComputedBorder(Yoga.EDGE_TOP) ?? 0;
-		const naturalRow = getRelativeTop(stickyNode, node) ?? 0 - currentBorderTop;
-		const stickyType: 'top' | 'bottom' =
-			stickyNode.internalSticky === 'bottom' ? 'bottom' : 'top';
+			relativeX = (getRelativeLeft(stickyNode, node) ?? 0) - currentBorderLeft;
+			relativeY = (getRelativeTop(stickyNode, node) ?? 0) - currentBorderTop;
 
-		const headerObj = {
-			nodeId: stickyNode.internalId,
+			const parent = stickyNode.parentNode;
+			const parentYogaNode = parent?.yogaNode;
+			parentRelativeTop = parent
+				? (getRelativeTop(parent, node) ?? 0) - currentBorderTop
+				: 0;
+			parentHeight = parentYogaNode
+				? Math.round(parentYogaNode.getComputedHeight())
+				: Number.MAX_SAFE_INTEGER;
+			parentBorderTop = parentYogaNode
+				? parentYogaNode.getComputedBorder(Yoga.EDGE_TOP)
+				: 0;
+			parentBorderBottom = parentYogaNode
+				? parentYogaNode.getComputedBorder(Yoga.EDGE_BOTTOM)
+				: 0;
+			nodeId = stickyNode.internalId;
+		}
+
+		const naturalRow = relativeY;
+
+		const headerObj: StickyHeader = {
+			nodeId,
 			lines: naturalLines,
 			stuckLines,
 			styledOutput: stuckLines ?? naturalLines,
-			x:
-				getRelativeLeft(stickyNode, node) ??
-				0 - (node.yogaNode?.getComputedBorder(Yoga.EDGE_LEFT) ?? 0),
-			y: getRelativeTop(stickyNode, node) ?? 0 - currentBorderTop,
+			x: relativeX,
+			y: relativeY,
 			naturalRow,
 			startRow: naturalRow,
 			endRow: naturalRow + naturalHeight,
 			scrollContainerId: -1,
 			isStuckOnly: true,
 
-			relativeX:
-				getRelativeLeft(stickyNode, node) ??
-				0 - (node.yogaNode?.getComputedBorder(Yoga.EDGE_LEFT) ?? 0),
-			relativeY: getRelativeTop(stickyNode, node) ?? 0 - currentBorderTop,
+			relativeX,
+			relativeY,
 			height: maxHeaderHeight,
 			type: stickyType,
-			parentRelativeTop: parent
-				? (getRelativeTop(parent, node) ?? 0 - currentBorderTop)
-				: 0,
-			parentHeight: parentYogaNode
-				? parentYogaNode.getComputedHeight()
-				: Number.MAX_SAFE_INTEGER,
-			parentBorderTop: parentYogaNode
-				? parentYogaNode.getComputedBorder(Yoga.EDGE_TOP)
-				: 0,
-			parentBorderBottom: parentYogaNode
-				? parentYogaNode.getComputedBorder(Yoga.EDGE_BOTTOM)
-				: 0,
-			node: stickyNode,
+			parentRelativeTop,
+			parentHeight,
+			parentBorderTop,
+			parentBorderBottom,
+			node: undefined,
 		};
 
 		cachedStickyHeaders.push(headerObj);
@@ -128,6 +268,9 @@ export const renderToStatic = (
 	}
 
 	setCachedRender(node, rootRegion);
+	if (node.internal_onRendered) {
+		node.internal_onRendered();
+	}
 };
 
 // After nodes are laid out, render each to output object, which later gets rendered to terminal
@@ -178,15 +321,17 @@ function renderNodeToOutput(
 		}
 
 		// Left and top positions in Yoga are relative to their parent node
-		const x = offsetX + yogaNode.getComputedLeft();
-		const y = offsetY + yogaNode.getComputedTop();
+		const computedLeft = yogaNode.getComputedLeft();
+		const computedTop = yogaNode.getComputedTop();
+		const x = Math.round(offsetX + computedLeft);
+		const y = Math.round(offsetY + computedTop);
 
 		// Absolute screen coordinates (for clipping/visibility check)
-		const absX = absoluteOffsetX + yogaNode.getComputedLeft();
-		const absY = absoluteOffsetY + yogaNode.getComputedTop();
+		const absX = Math.round(absoluteOffsetX + computedLeft);
+		const absY = Math.round(absoluteOffsetY + computedTop);
 
-		const width = yogaNode.getComputedWidth();
-		const height = yogaNode.getComputedHeight();
+		const width = Math.round(yogaNode.getComputedWidth());
+		const height = Math.round(yogaNode.getComputedHeight());
 		const clip = output.getCurrentClip();
 
 		if (clip) {
@@ -230,6 +375,36 @@ function renderNodeToOutput(
 				trackSelection,
 			});
 			return;
+		}
+
+		if (
+			width > 0 &&
+			height > 0 &&
+			canUseCachedRegion(node, {
+				skipStaticElements,
+				isStickyRender,
+				selectionMap,
+				selectionStyle,
+				trackSelection,
+			})
+		) {
+			const existingCachedRegion = getCachedRegion(node, skipStaticElements);
+
+			if (!existingCachedRegion && !node.regionCacheInitialized) {
+				node.regionCacheInitialized = true;
+			} else {
+				const cachedRegion = getOrRenderCachedRegion(node, {
+					width,
+					height,
+					transformers: newTransformers,
+					skipStaticElements,
+					isStickyRender,
+					skipStickyHeaders,
+				});
+
+				output.addRegionTree(cachedRegion, x, y);
+				return;
+			}
 		}
 
 		if (node.nodeName === 'ink-text') {

@@ -34,8 +34,8 @@ declare namespace Ink {
 		children?: ReactNode;
 		style?: Styles;
 		ref?: LegacyRef<DOMElement>;
-		internalOnBeforeRender?: (node: DOMElement) => void;
 		cachedRender?: Region;
+		internal_onRendered?: () => void;
 	};
 
 	type Text = {

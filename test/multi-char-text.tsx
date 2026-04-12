@@ -111,7 +111,7 @@ const widthScenarios: Array<{name: string; widthFn: WidthFn}> = [
 
 const snapshotMacroWithAllWidths = (title: string, testFn: TestFn) => {
 	for (const {name, widthFn} of widthScenarios) {
-		test(`${title} - ${name}`, t => {
+		test.serial(`${title} - ${name}`, t => {
 			setStringWidthFunction(widthFn);
 
 			const output = renderToString(testFn(t));
@@ -121,7 +121,7 @@ const snapshotMacroWithAllWidths = (title: string, testFn: TestFn) => {
 };
 
 const snapshotMacroWithDefaultWidth = (title: string, testFn: TestFn) => {
-	test(`${title} - default width`, t => {
+	test.serial(`${title} - default width`, t => {
 		setStringWidthFunction(stringWidth);
 		const output = renderToString(testFn(t));
 		t.snapshot(output);

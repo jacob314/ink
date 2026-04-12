@@ -15,6 +15,7 @@ import {
 	setTextNodeValue,
 	createNode,
 	setAttribute,
+	markNodeAsDirty,
 	type DOMNodeAttribute,
 	type TextNode,
 	type ElementNames,
@@ -23,6 +24,7 @@ import {
 } from './dom.js';
 import applyStyles, {type Styles} from './styles.js';
 import {type OutputTransformer} from './render-node-to-output.js';
+import {type Region} from './output.js';
 
 // We need to conditionally perform devtools connection to avoid
 // accidentally breaking other third-party code.
@@ -103,8 +105,11 @@ const cleanupNodeTree = (node?: DOMNode): void => {
 
 	node.yogaNode?.free();
 
-	if ('cachedRender' in node) {
+	if ('childNodes' in node) {
 		node.cachedRender = undefined;
+		node.cachedRegion = undefined;
+		node.cachedRegionWithStatic = undefined;
+		node.regionCacheInitialized = undefined;
 	}
 
 	if ('childNodes' in node) {
@@ -230,8 +235,8 @@ export default createReconciler<
 				continue;
 			}
 
-			if (key === 'internalOnBeforeRender') {
-				node.internalOnBeforeRender = value as () => void;
+			if (key === 'internal_onRendered') {
+				node.internal_onRendered = value as () => void;
 				continue;
 			}
 
@@ -243,6 +248,11 @@ export default createReconciler<
 				// Save reference to <Static> node to skip traversal of entire
 				// node tree to find it
 				rootNode.staticNode = node;
+				continue;
+			}
+
+			if (key === 'cachedRender') {
+				node.cachedRender = value as Region;
 				continue;
 			}
 
@@ -280,9 +290,11 @@ export default createReconciler<
 	getPublicInstance: instance => instance,
 	hideInstance(node) {
 		node.yogaNode?.setDisplay(Yoga.DISPLAY_NONE);
+		markNodeAsDirty(node);
 	},
 	unhideInstance(node) {
 		node.yogaNode?.setDisplay(Yoga.DISPLAY_FLEX);
+		markNodeAsDirty(node);
 	},
 	appendInitialChild: appendChildNode,
 	appendChild: appendChildNode,
@@ -325,8 +337,14 @@ export default createReconciler<
 			return;
 		}
 
+		let shouldMarkDirty = Boolean(style);
+
 		if (props) {
 			for (const [key, value] of Object.entries(props)) {
+				if (key === 'children') {
+					continue;
+				}
+
 				if (key === 'style') {
 					setStyle(node, value as Styles);
 					continue;
@@ -334,55 +352,74 @@ export default createReconciler<
 
 				if (key === 'internal_transform') {
 					node.internal_transform = value as OutputTransformer;
+					shouldMarkDirty = true;
 					continue;
 				}
 
 				if (key === 'sticky') {
 					node.internalSticky = value as boolean | 'top' | 'bottom';
+					shouldMarkDirty = true;
 					continue;
 				}
 
 				if (key === 'internalStickyAlternate') {
 					node.internalStickyAlternate = Boolean(value);
+					shouldMarkDirty = true;
 					continue;
 				}
 
 				if (key === 'internal_terminalCursorFocus') {
 					node.internal_terminalCursorFocus = value as boolean;
+					shouldMarkDirty = true;
 					continue;
 				}
 
 				if (key === 'internal_terminalCursorPosition') {
 					node.internal_terminalCursorPosition = value as number;
+					shouldMarkDirty = true;
 					continue;
 				}
 
-				if (key === 'internalOnBeforeRender') {
-					node.internalOnBeforeRender = value as (node: DOMElement) => void;
+				if (key === 'internal_onRendered') {
+					node.internal_onRendered = value as () => void;
 					continue;
 				}
 
 				if (key === 'internal_static') {
 					node.internal_static = true;
+					shouldMarkDirty = true;
+					continue;
+				}
+
+				if (key === 'cachedRender') {
+					node.cachedRender = value as Region;
+					shouldMarkDirty = true;
 					continue;
 				}
 
 				if (key === 'opaque') {
 					node.internalOpaque = Boolean(value);
+					shouldMarkDirty = true;
 					continue;
 				}
 
 				if (key === 'scrollbar') {
 					node.internalScrollbar = value as boolean;
+					shouldMarkDirty = true;
 					continue;
 				}
 
 				setAttribute(node, key, value as DOMNodeAttribute);
+				shouldMarkDirty = true;
 			}
 		}
 
 		if (style && node.yogaNode) {
 			applyStyles(node.yogaNode, style);
+		}
+
+		if (shouldMarkDirty) {
+			markNodeAsDirty(node);
 		}
 	},
 	commitTextUpdate(node, _oldText, newText) {

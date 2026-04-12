@@ -1,0 +1,296 @@
+{
+  "type": "single",
+  "columns": 127,
+  "rows": 10,
+  "frames": [
+    {
+      "tree": {
+        "id": "root",
+        "children": [
+          {
+            "id": 114,
+            "children": [
+              {
+                "id": 111,
+                "children": [
+                  {
+                    "id": 110,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "updates": [
+        {
+          "id": "root",
+          "stickyHeaders": [],
+          "x": 0,
+          "y": 0,
+          "width": 127,
+          "height": 10,
+          "isScrollable": false,
+          "linesOffsetY": 1,
+          "lines": {
+            "totalLength": 9,
+            "updates": [
+              {
+                "start": 1,
+                "end": 10,
+                "text": [
+                  "This is a demo showing a scrollable box with sticky headers.",
+                  "Press up/down arrow or w/s to scroll vertically (w/s for 30 lines, Shift for 10).",
+                  "Press 'space' to add a block, 'c' to clear list.",
+                  "Press 'b' to toggle scrollbar (on), 't' to toggle border.",
+                  "Press 'f' to collapse footer, 'a' to toggle alternate buffer + sticky headers (current: off)",
+                  "Press 'h' to toggle sticky headers in backbuffer (current: off)",
+                  "Press 'v' to toggle stable scrollback (on)",
+                  "Press 'e' to export current frame, 'r' to toggle recording (OFF)",
+                  "ScrollTop: 0, Size: 1, Content: 12, Added Scroll: 0"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 114,
+          "stickyHeaders": [],
+          "x": 0,
+          "y": 0,
+          "width": 127,
+          "height": 1,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 12,
+          "scrollWidth": 127,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "overflowToBackbuffer": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "borderTop": 0,
+          "borderBottom": 0,
+          "linesOffsetY": 0,
+          "lines": {
+            "totalLength": 12,
+            "updates": [
+              {
+                "start": 0,
+                "end": 12,
+                "text": [
+                  "Line 1",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "This is the last line."
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 111,
+          "stickyHeaders": [],
+          "x": 0,
+          "y": 1,
+          "width": 127,
+          "height": 10,
+          "isScrollable": false,
+          "overflowToBackbuffer": true,
+          "linesOffsetY": 0,
+          "lines": {
+            "totalLength": 10,
+            "updates": [
+              {
+                "start": 0,
+                "end": 10,
+                "text": [
+                  "┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐",
+                  "│                                                                                                                             │",
+                  "│                                                                                                                             │",
+                  "│                                                                                                                             │",
+                  "│                                                                                                                             │",
+                  "│                                                                                                                             │",
+                  "│                                                                                                                             │",
+                  "│                                                                                                                             │",
+                  "│                                                                                                                             │",
+                  "└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 110,
+          "stickyHeaders": [
+            {
+              "nodeId": 8,
+              "lines": [
+                "Sticky Inner Header 0"
+              ],
+              "stuckLines": [
+                "┌──────────────────────────────────┐",
+                "│Sticky Inner Header 0 (sticky top)│",
+                "└──────────────────────────────────┘"
+              ],
+              "styledOutput": [
+                "┌──────────────────────────────────┐",
+                "│Sticky Inner Header 0 (sticky top)│",
+                "└──────────────────────────────────┘"
+              ],
+              "x": 0,
+              "y": 0,
+              "naturalRow": 0,
+              "startRow": 0,
+              "endRow": 1,
+              "scrollContainerId": 110,
+              "isStuckOnly": false,
+              "type": "top",
+              "maxStuckY": 58
+            }
+          ],
+          "x": 1,
+          "y": 1,
+          "width": 126,
+          "height": 8,
+          "scrollTop": 40,
+          "scrollLeft": 0,
+          "scrollHeight": 101,
+          "scrollWidth": 125,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 1,
+          "marginBottom": 0,
+          "borderTop": 1,
+          "borderBottom": 1,
+          "linesOffsetY": 0,
+          "lines": {
+            "totalLength": 101,
+            "updates": [
+              {
+                "start": 0,
+                "end": 101,
+                "text": [
+                  "Sticky Inner Header 0",
+                  "[body line for header 0] 1",
+                  "[body line for header 0] 2",
+                  "[body line for header 0] 3",
+                  "[body line for header 0] 4",
+                  "[body line for header 0] 5",
+                  "[body line for header 0] 6",
+                  "[body line for header 0] 7",
+                  "[body line for header 0] 8",
+                  "[body line for header 0] 9",
+                  "[body line for header 0] 10",
+                  "[body line for header 0] 11",
+                  "[body line for header 0] 12",
+                  "[body line for header 0] 13",
+                  "[body line for header 0] 14",
+                  "[body line for header 0] 15",
+                  "[body line for header 0] 16",
+                  "[body line for header 0] 17",
+                  "[body line for header 0] 18",
+                  "[body line for header 0] 19",
+                  "[body line for header 0] 20",
+                  "[body line for header 0] 21",
+                  "[body line for header 0] 22",
+                  "[body line for header 0] 23",
+                  "[body line for header 0] 24",
+                  "[body line for header 0] 25",
+                  "[body line for header 0] 26",
+                  "[body line for header 0] 27",
+                  "[body line for header 0] 28",
+                  "[body line for header 0] 29",
+                  "[body line for header 0] 30",
+                  "[body line for header 0] 31",
+                  "[body line for header 0] 32",
+                  "[body line for header 0] 33",
+                  "[body line for header 0] 34",
+                  "[body line for header 0] 35",
+                  "[body line for header 0] 36",
+                  "[body line for header 0] 37",
+                  "[body line for header 0] 38",
+                  "[body line for header 0] 39",
+                  "[body line for header 0] 40",
+                  "[body line for header 0] 41",
+                  "[body line for header 0] 42",
+                  "[body line for header 0] 43",
+                  "[body line for header 0] 44",
+                  "[body line for header 0] 45",
+                  "[body line for header 0] 46",
+                  "[body line for header 0] 47",
+                  "[body line for header 0] 48",
+                  "[body line for header 0] 49",
+                  "[body line for header 0] 50",
+                  "[body line for header 0] 51",
+                  "[body line for header 0] 52",
+                  "[body line for header 0] 53",
+                  "[body line for header 0] 54",
+                  "[body line for header 0] 55",
+                  "[body line for header 0] 56",
+                  "[body line for header 0] 57",
+                  "[body line for header 0] 58",
+                  "[body line for header 0] 59",
+                  "[body line for header 0] 60",
+                  "[body line for header 0] 61",
+                  "[body line for header 0] 62",
+                  "[body line for header 0] 63",
+                  "[body line for header 0] 64",
+                  "[body line for header 0] 65",
+                  "[body line for header 0] 66",
+                  "[body line for header 0] 67",
+                  "[body line for header 0] 68",
+                  "[body line for header 0] 69",
+                  "[body line for header 0] 70",
+                  "[body line for header 0] 71",
+                  "[body line for header 0] 72",
+                  "[body line for header 0] 73",
+                  "[body line for header 0] 74",
+                  "[body line for header 0] 75",
+                  "[body line for header 0] 76",
+                  "[body line for header 0] 77",
+                  "[body line for header 0] 78",
+                  "[body line for header 0] 79",
+                  "[body line for header 0] 80",
+                  "[body line for header 0] 81",
+                  "[body line for header 0] 82",
+                  "[body line for header 0] 83",
+                  "[body line for header 0] 84",
+                  "[body line for header 0] 85",
+                  "[body line for header 0] 86",
+                  "[body line for header 0] 87",
+                  "[body line for header 0] 88",
+                  "[body line for header 0] 89",
+                  "[body line for header 0] 90",
+                  "[body line for header 0] 91",
+                  "[body line for header 0] 92",
+                  "[body line for header 0] 93",
+                  "[body line for header 0] 94",
+                  "[body line for header 0] 95",
+                  "[body line for header 0] 96",
+                  "[body line for header 0] 97",
+                  "[body line for header 0] 98",
+                  "[body line for header 0] 99",
+                  "[body line for header 0] 100"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

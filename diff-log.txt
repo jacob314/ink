@@ -1,0 +1,1 @@
+[DEBUG] currentProto === Object.prototype: true, lastProto === Object.prototype: true

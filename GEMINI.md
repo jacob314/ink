@@ -36,6 +36,26 @@ Tests are written using AVA. To run tests:
 npm test
 ```
 
+### Performance Profiling
+
+If you need to analyze the performance of the rendering loop (especially for features rendering thousands of regions, like `NestedStaticRender`), you can run the CPU profiling benchmark tools. These tools intercept output directly from the React Reconciler and write standard Chrome V8 `.cpuprofile` JSON files.
+
+1. **Run the Benchmark (which records a profile):**
+   ```bash
+   npm run build
+   npx tsx examples/nested-static/benchmark-worker.ts
+   ```
+   This command starts the `NestedStatic` example with thousands of regions simulating an active framerate. It suppresses standard stdout to keep I/O from skewing the results, and writes `benchmark-worker.cpuprofile`.
+
+2. **Analyze the Profile:**
+   You can view a fast console summary of where time is being spent via our analysis utility:
+   ```bash
+   npx tsx benchmark/utils/analyze-profile.ts benchmark-worker.cpuprofile
+   ```
+   This will output the top functions by **Inclusive Time (Top Down)** and **Exclusive Time (Bottom Up)**.
+
+**Note:** For running AVA tests individually locally (e.g., `npx ava test/text.tsx`), you may need to explicitly enable color support by prepending the command with `FORCE_COLOR=1`. For example: `FORCE_COLOR=1 npx ava test/text.tsx`. Without this, some snapshot tests and assertions involving ANSI colors may incorrectly fail because the test environment might default to disabling color formatting.
+
 **Note:** Some tests may fail when run locally depending on the environment. Below is a snapshot of tests that are known to fail in some local environments (specifically macOS) as of Nov 2025. These tests **do not fail** on the continuous integration bots. **Do not attempt to fix these unless you are specifically working on them.**
 
 - `focus › focus the first component to register`
@@ -144,3 +164,4 @@ This module managed the actual output to the terminal `stdout` in the legacy ren
 
 - **`<Static>`**: This component is considered a legacy feature. It is intended for permanently outputting text above the active Ink app (like a log). However, it is **not fully supported in alternate buffer mode** and will NEVER be supported by the new worker-based renderer. The architectural challenge is that `<Static>` relies on side-effects that can conflict with the strict timing requirements of `useLayoutEffect` used in the main rendering loop, potentially leading to out-of-order output or visual glitches in full-screen apps.
 - **`<StaticRender>`**: This is the more modern and efficient replacement for `<Static>`, designed to work better with the new rendering pipeline and avoid the pitfalls of the legacy implementation. This is the only static-style component supported by the new renderer. Use this instead of `<Static>` for new developments.
+- **Performance vs Linting:** Avoid "fixing" `max-params` (or similar) warnings by refactoring function arguments into objects with named properties (e.g. `({a, b, c})`) on hot-path rendering code, as this adds unnecessary object allocation overhead per call. Ignore the linter warning using a disable comment (e.g. `// eslint-disable-next-line max-params`) instead.
