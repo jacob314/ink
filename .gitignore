@@ -1,1 +1,3 @@
-node_modules/\n*.cpuprofile
+node_modules/
+*.cpuprofile
+build/
