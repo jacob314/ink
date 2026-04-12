@@ -3,6 +3,8 @@ import {type StyledLine} from './styled-line.js';
 import {
 	type DOMElement,
 	type DOMNode,
+	getCachedRegion,
+	setCachedRegion,
 	setCachedRender,
 	type StickyHeader,
 } from './dom.js';
@@ -21,6 +23,95 @@ import {handleCachedRenderNode} from './render-cached.js';
 import {triggerResizeObservers} from './resize-observer.js';
 
 export type OutputTransformer = (s: string, index: number) => string;
+
+const canUseCachedRegion = (
+	node: DOMElement,
+	options: {
+		skipStaticElements: boolean;
+		isStickyRender: boolean;
+		selectionMap?: Map<DOMNode, {start: number; end: number}>;
+		selectionStyle?: (line: StyledLine, index: number) => void;
+		trackSelection?: boolean;
+	},
+) => {
+	if (node.nodeName !== 'ink-box') {
+		return false;
+	}
+
+	if (
+		!options.skipStaticElements ||
+		node.internal_static ||
+		node.internalSticky ||
+		node.internalStickyAlternate ||
+		options.isStickyRender ||
+		(options.selectionMap && options.selectionMap.size > 0) ||
+		options.selectionStyle ||
+		options.trackSelection
+	) {
+		return false;
+	}
+
+	const overflow = node.style.overflow ?? 'visible';
+	const overflowX = node.style.overflowX ?? overflow;
+	const overflowY = node.style.overflowY ?? overflow;
+
+	if (overflowX === 'scroll' || overflowY === 'scroll') {
+		return false;
+	}
+
+	return node.childNodes.some(childNode => childNode.nodeName === 'ink-static-render');
+};
+
+const getOrRenderCachedRegion = (
+	node: DOMElement,
+	options: {
+		width: number;
+		height: number;
+		transformers: OutputTransformer[];
+		skipStaticElements: boolean;
+		isStickyRender: boolean;
+		skipStickyHeaders: boolean;
+	},
+) => {
+	const {
+		width,
+		height,
+		transformers,
+		skipStaticElements,
+		isStickyRender,
+		skipStickyHeaders,
+	} = options;
+	const cachedRegion = getCachedRegion(node, skipStaticElements);
+
+	if (cachedRegion && cachedRegion.width === width && cachedRegion.height === height) {
+		return cachedRegion;
+	}
+
+	const cachedOutput = new Output({
+		width,
+		height,
+		node,
+		id: node.internalId,
+	});
+
+	handleContainerNode(node, cachedOutput, {
+		x: 0,
+		y: 0,
+		width,
+		height,
+		newTransformers: transformers,
+		skipStaticElements,
+		isStickyRender,
+		skipStickyHeaders,
+		absoluteOffsetX: 0,
+		absoluteOffsetY: 0,
+	});
+
+	const region = cachedOutput.get();
+	setCachedRegion(node, region, skipStaticElements);
+
+	return region;
+};
 
 export const renderToStatic = (
 	node: DOMElement,
@@ -251,6 +342,36 @@ function renderNodeToOutput(
 				trackSelection,
 			});
 			return;
+		}
+
+		if (
+			width > 0 &&
+			height > 0 &&
+			canUseCachedRegion(node, {
+				skipStaticElements,
+				isStickyRender,
+				selectionMap,
+				selectionStyle,
+				trackSelection,
+			})
+		) {
+			const existingCachedRegion = getCachedRegion(node, skipStaticElements);
+
+			if (!existingCachedRegion && !node.regionCacheInitialized) {
+				node.regionCacheInitialized = true;
+			} else {
+				const cachedRegion = getOrRenderCachedRegion(node, {
+					width,
+					height,
+					transformers: newTransformers,
+					skipStaticElements,
+					isStickyRender,
+					skipStickyHeaders,
+				});
+
+				output.addRegionTree(cachedRegion, x, y);
+				return;
+			}
 		}
 
 		if (node.nodeName === 'ink-text') {
