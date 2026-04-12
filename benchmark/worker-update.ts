@@ -5,6 +5,7 @@ import {
 	type RegionUpdate,
 } from '../src/output.js';
 import {StyledLine} from '../src/styled-line.js';
+import {Serializer} from '../src/serialization.js';
 
 const rows = 20;
 const columns = 80;
@@ -14,8 +15,11 @@ const worker = new TerminalBufferWorker(columns, rows);
 // Create 1000 regions
 const regions = new Map<string, Region>();
 const updates: RegionUpdate[] = [];
+const serializer = new Serializer();
 
 for (let i = 0; i < 1000; i++) {
+	const lines = [new StyledLine()];
+	const data = serializer.serialize(lines);
 	const region: Region = {
 		id: `region-${i}`,
 		x: 0,
@@ -23,7 +27,7 @@ for (let i = 0; i < 1000; i++) {
 		width: 50,
 		height: 1,
 		bufferWidth: 50,
-		lines: [new StyledLine()],
+		lines,
 		styledOutput: [],
 		isScrollable: false,
 		selectableSpans: [],
@@ -38,7 +42,7 @@ for (let i = 0; i < 1000; i++) {
 		width: region.width,
 		height: region.height,
 		lines: {
-			updates: [{start: 0, end: 1, data: new Uint8Array()}],
+			updates: [{start: 0, end: 1, data}],
 			totalLength: 1,
 		},
 		stickyHeaders: [],

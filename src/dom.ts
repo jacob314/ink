@@ -107,6 +107,9 @@ export type DOMElement = {
 	onRender?: () => void;
 	onImmediateRender?: () => void;
 	internal_scrollState?: ScrollState;
+	internal_isYogaTreeCoalesced?: boolean;
+	internal_coalescedNode?: any;
+	internal_coalescedYOffset?: number;
 	internalSticky?: boolean | 'top' | 'bottom';
 	internalStickyAlternate?: boolean;
 	internalOpaque?: boolean;

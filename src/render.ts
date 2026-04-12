@@ -244,6 +244,8 @@ const render = (
 	};
 };
 
+render.lastInstance = undefined as Ink | undefined;
+
 export default render;
 
 const getOptions = (

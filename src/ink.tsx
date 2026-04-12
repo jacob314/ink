@@ -9,6 +9,7 @@ import signalExit from 'signal-exit';
 import patchConsole from 'patch-console';
 import {LegacyRoot} from 'react-reconciler/constants.js';
 import {type FiberRoot} from 'react-reconciler';
+import type {Node as YogaNode} from 'yoga-layout';
 import Yoga from 'yoga-layout';
 import wrapAnsi from 'wrap-ansi';
 import applyStyles from './styles.js';
@@ -367,6 +368,13 @@ export default class Ink {
 
 		for (const child of node.childNodes) {
 			if (child.nodeName !== '#text') {
+				if (
+					child.nodeName === 'ink-static-render' &&
+					child.cachedRender &&
+					child.isYogaTreeDetached
+				) {
+					continue;
+				}
 				this.calculateLayoutAndTriggerObservers(
 					child,
 					observerEntries,
@@ -880,8 +888,109 @@ export default class Ink {
 			this.markAllTextNodesDirty(node);
 		}
 
+		if (node.yogaNode) {
+			const isColumn = !node.style.flexDirection || node.style.flexDirection === 'column';
+			let hasCoalescable = false;
+			for (let i = 0; i < node.childNodes.length - 1; i++) {
+				const c1 = node.childNodes[i] as dom.DOMElement;
+				const c2 = node.childNodes[i + 1] as dom.DOMElement;
+				if (
+					c1?.nodeName === 'ink-static-render' &&
+					c1.cachedRender &&
+					c2?.nodeName === 'ink-static-render' &&
+					c2.cachedRender
+				) {
+					hasCoalescable = true;
+					break;
+				}
+			}
+
+			if (isColumn && hasCoalescable) {
+				if (!node.internal_isYogaTreeCoalesced) {
+					while (node.yogaNode.getChildCount() > 0) {
+						node.yogaNode.removeChild(node.yogaNode.getChild(0));
+					}
+				}
+
+				let currentCoalescedNode: YogaNode | undefined;
+				let currentCoalescedWidth = 0;
+				let currentCoalescedHeight = 0;
+				let expectedChildCount = 0;
+
+				for (let i = 0; i < node.childNodes.length; i++) {
+					const child = node.childNodes[i] as dom.DOMNode;
+					if (child.nodeName === '#text') continue;
+                    const domChild = child as dom.DOMElement;
+
+					if (domChild.nodeName === 'ink-static-render' && domChild.cachedRender) {
+						currentCoalescedWidth = Math.max(currentCoalescedWidth, domChild.cachedRender.width);
+						currentCoalescedHeight += domChild.cachedRender.height;
+
+						if (!currentCoalescedNode) {
+							currentCoalescedNode = Yoga.Node.create();
+							currentCoalescedNode.setWidth(currentCoalescedWidth);
+							currentCoalescedNode.setHeight(currentCoalescedHeight);
+							
+							if (!node.internal_isYogaTreeCoalesced) {
+								node.yogaNode.insertChild(currentCoalescedNode, expectedChildCount);
+							}
+						} else {
+							currentCoalescedNode.setWidth(currentCoalescedWidth);
+							currentCoalescedNode.setHeight(currentCoalescedHeight);
+						}
+
+						domChild.internal_coalescedNode = currentCoalescedNode;
+						domChild.internal_coalescedYOffset = currentCoalescedHeight - domChild.cachedRender.height;
+					} else {
+						if (currentCoalescedNode) {
+							expectedChildCount++;
+							currentCoalescedNode = undefined;
+							currentCoalescedWidth = 0;
+							currentCoalescedHeight = 0;
+						}
+						
+						domChild.internal_coalescedNode = undefined;
+						domChild.internal_coalescedYOffset = undefined;
+
+						if (!node.internal_isYogaTreeCoalesced && domChild.yogaNode) {
+							node.yogaNode.insertChild(domChild.yogaNode, expectedChildCount);
+							expectedChildCount++;
+						} else if (domChild.yogaNode) {
+							expectedChildCount++;
+						}
+					}
+				}
+				node.internal_isYogaTreeCoalesced = true;
+			} else if (node.internal_isYogaTreeCoalesced) {
+				// Rebuild non-coalesced
+				while (node.yogaNode.getChildCount() > 0) {
+					node.yogaNode.removeChild(node.yogaNode.getChild(0));
+				}
+				let yogaIndex = 0;
+				for (const child of node.childNodes) {
+					if (child.nodeName !== '#text') {
+						const domChild = child as dom.DOMElement;
+						domChild.internal_coalescedNode = undefined;
+						domChild.internal_coalescedYOffset = undefined;
+						if (domChild.yogaNode) {
+							node.yogaNode.insertChild(domChild.yogaNode, yogaIndex);
+							yogaIndex++;
+						}
+					}
+				}
+				node.internal_isYogaTreeCoalesced = false;
+			}
+		}
+
 		for (const child of node.childNodes) {
 			if (child.nodeName !== '#text') {
+				if (
+					child.nodeName === 'ink-static-render' &&
+					child.cachedRender &&
+					child.isYogaTreeDetached
+				) {
+					continue;
+				}
 				this.prepareYogaTree(child);
 			}
 		}

@@ -12,7 +12,6 @@ import {StyledLine} from './styled-line.js';
 import {Serializer} from './serialization.js';
 import {TerminalBufferWorker} from './worker/render-worker.js';
 import {linesEqual} from './worker/terminal-writer.js';
-import {type DOMElement} from './dom.js';
 import {
 	type Region,
 	type RegionUpdate,
@@ -291,32 +290,65 @@ export default class TerminalBuffer {
 		this.lastRootRegion = root;
 		this._cachedLines = undefined;
 		const currentRegionsMap = new Map<string | number, Region>();
-		const nodeIdToElement = new Map<number, DOMElement>();
 		const updates: RegionUpdate[] = [];
 
+		const buildTreeFast = (r: Region): RegionNode => {
+			currentRegionsMap.set(r.id, r);
+			const childrenNodes: RegionNode[] = new Array(r.children.length);
+			for (let i = 0; i < r.children.length; i++) {
+				childrenNodes[i] = buildTreeFast(r.children[i]!);
+			}
+			return {id: r.id, children: childrenNodes};
+		};
+
 		// Traverse tree to collect all current regions and build structure
-		const buildTree = (r: Region): RegionNode => {
+		const buildTree = (
+			r: Region,
+			absoluteX: number,
+			absoluteY: number,
+		): RegionNode => {
 			currentRegionsMap.set(r.id, r);
 
-			// Populate nodeIdToElement map
-			if (r.nodeId !== undefined && r.node !== undefined) {
-				nodeIdToElement.set(r.nodeId, r.node);
+			const isNew = !this.lastRegions.has(r.id);
+			const intersectsDirty =
+				_start <= absoluteY + r.height && _end >= absoluteY;
+
+			if (!isNew && !intersectsDirty) {
+				const childrenNodes: RegionNode[] = new Array(r.children.length);
+				for (let i = 0; i < r.children.length; i++) {
+					childrenNodes[i] = buildTreeFast(r.children[i]!);
+				}
+
+				return {
+					id: r.id,
+					children: childrenNodes,
+				};
 			}
 
 			// Diff this region
-			const update = this.diffRegion(r, nodeIdToElement);
+			const update = this.diffRegion(r);
 
 			if (update) {
 				updates.push(update);
 			}
 
+			const childrenNodes: RegionNode[] = new Array(r.children.length);
+			for (let i = 0; i < r.children.length; i++) {
+				const child = r.children[i]!;
+				childrenNodes[i] = buildTree(
+					child,
+					absoluteX + child.x - (r.scrollLeft ?? 0),
+					absoluteY + child.y - (r.scrollTop ?? 0),
+				);
+			}
+
 			return {
 				id: r.id,
-				children: r.children.map(child => buildTree(child)),
+				children: childrenNodes,
 			};
 		};
 
-		const tree = buildTree(root);
+		const tree = buildTree(root, 0, 0);
 
 		const treeChanged = !this.lastTree || !treesEqual(this.lastTree, tree);
 		this.lastTree = tree;
@@ -457,10 +489,7 @@ export default class TerminalBuffer {
 		}
 	}
 
-	private diffRegion(
-		current: Region,
-		nodeIdToElement: Map<number, DOMElement>,
-	): RegionUpdate | undefined {
+	private diffRegion(current: Region): RegionUpdate | undefined {
 		const last = this.lastRegions.get(current.id);
 		const update: RegionUpdate = {id: current.id};
 		let hasChanges = false;
@@ -673,8 +702,8 @@ export default class TerminalBuffer {
 				totalLength: current.lines.length,
 			};
 
-			if (current.stableScrollback && current.nodeId !== undefined) {
-				const element = nodeIdToElement.get(current.nodeId);
+			if (current.stableScrollback && current.node !== undefined) {
+				const element = current.node;
 				if (element) {
 					const scrollTop = current.scrollTop ?? 0;
 					for (const chunk of lineUpdates) {
