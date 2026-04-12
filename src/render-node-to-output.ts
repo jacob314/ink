@@ -219,13 +219,59 @@ function renderNodeToOutput(
 	const {yogaNode} = node;
 
 	if (yogaNode) {
-		if (yogaNode.getDisplay() === Yoga.DISPLAY_NONE) {
+		let display: number;
+		let computedLeft: number;
+		let computedTop: number;
+		let width: number;
+		let height: number;
+
+		const hasNewLayout = yogaNode.hasNewLayout();
+
+		if (!hasNewLayout && node.cachedLayout) {
+			display = node.cachedLayout.display;
+			computedLeft = node.cachedLayout.computedLeft;
+			computedTop = node.cachedLayout.computedTop;
+			width = node.cachedLayout.width;
+			height = node.cachedLayout.height;
+		} else {
+			display = yogaNode.getDisplay();
+			computedLeft = yogaNode.getComputedLeft();
+			computedTop = yogaNode.getComputedTop();
+			width = Math.round(yogaNode.getComputedWidth());
+			height = Math.round(yogaNode.getComputedHeight());
+		}
+
+		const layoutUnchanged =
+			node.cachedLayout &&
+			node.cachedLayout.display === display &&
+			node.cachedLayout.computedLeft === computedLeft &&
+			node.cachedLayout.computedTop === computedTop &&
+			node.cachedLayout.width === width &&
+			node.cachedLayout.height === height;
+
+		if (hasNewLayout) {
+			node.cachedLayout = {
+				display,
+				computedLeft,
+				computedTop,
+				width,
+				height,
+			};
+		}
+
+		const canSkip =
+			!isStickyRender &&
+			!node.isDirty &&
+			(!hasNewLayout || layoutUnchanged);
+
+		if (display === Yoga.DISPLAY_NONE) {
+			if (hasNewLayout) {
+				yogaNode.markLayoutSeen();
+			}
 			return;
 		}
 
 		// Left and top positions in Yoga are relative to their parent node
-		const computedLeft = yogaNode.getComputedLeft();
-		const computedTop = yogaNode.getComputedTop();
 		const x = Math.round(offsetX + computedLeft);
 		const y = Math.round(offsetY + computedTop);
 
@@ -233,8 +279,6 @@ function renderNodeToOutput(
 		const absX = Math.round(absoluteOffsetX + computedLeft);
 		const absY = Math.round(absoluteOffsetY + computedTop);
 
-		const width = Math.round(yogaNode.getComputedWidth());
-		const height = Math.round(yogaNode.getComputedHeight());
 		const clip = output.getCurrentClip();
 
 		if (clip) {
@@ -254,9 +298,38 @@ function renderNodeToOutput(
 			);
 
 			if (!isVisible) {
+				if (hasNewLayout) {
+					yogaNode.markLayoutSeen();
+				}
 				return;
 			}
 		}
+
+		if (canSkip && node.cachedOutputCapture) {
+			output.replayCapture(node.cachedOutputCapture, absX, absY);
+			return;
+		}
+
+		let isCapturing = false;
+		if (!isStickyRender && !node.isDirty && (!hasNewLayout || layoutUnchanged)) {
+			output.startCapture(absX, absY);
+			isCapturing = true;
+		}
+
+		const finalizeNode = () => {
+			if (isCapturing) {
+				const capture = output.endCapture();
+				if (capture) {
+					node.cachedOutputCapture = capture;
+				} else {
+					node.cachedOutputCapture = undefined;
+				}
+			}
+			if (hasNewLayout) {
+				yogaNode.markLayoutSeen();
+			}
+			node.isDirty = false;
+		};
 
 		// Transformers are functions that transform final text output of each component
 		// See Output class for logic that applies transformers
@@ -266,6 +339,7 @@ function renderNodeToOutput(
 		}
 
 		if (node.nodeName === 'ink-static-render' && !node.cachedRender) {
+			finalizeNode();
 			return;
 		}
 
@@ -277,6 +351,7 @@ function renderNodeToOutput(
 				selectionStyle,
 				trackSelection,
 			});
+			finalizeNode();
 			return;
 		}
 
@@ -289,6 +364,7 @@ function renderNodeToOutput(
 				selectionStyle,
 				trackSelection,
 			});
+			finalizeNode();
 			return;
 		}
 
@@ -307,6 +383,8 @@ function renderNodeToOutput(
 			absoluteOffsetY: absY,
 			trackSelection,
 		});
+		
+		finalizeNode();
 	}
 }
 

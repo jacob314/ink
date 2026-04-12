@@ -848,6 +848,12 @@ export default class Ink {
 	}
 
 	private prepareYogaTree(node: dom.DOMElement) {
+		if (!node.isDirty && node.nodeName !== 'ink-root') {
+			// Fast path: if the node and all its descendants are clean,
+			// its yoga tree is already prepared and hasn't changed.
+			return;
+		}
+
 		const flushLayoutObservers = (node: dom.DOMElement, isResized: boolean) => {
 			const observerEntries = new Map<ResizeObserver, ResizeObserverEntry[]>();
 			this.calculateLayoutAndTriggerObservers(node, observerEntries, isResized);

@@ -119,7 +119,7 @@ export class SceneManager {
 
 			if (update.lines) {
 				const sparseLines: StyledLine[] = [];
-				for (let i = 0; i < r.lines.length; i++) {
+				for (let i = 0; i < r.lines.length && r.lines[i]; i++) {
 					sparseLines[oldOffsetY + i] = r.lines[i]!;
 				}
 

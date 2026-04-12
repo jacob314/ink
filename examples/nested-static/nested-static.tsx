@@ -208,7 +208,7 @@ export default function NestedStaticDemo() {
 
 	const reference = useRef<DOMElement>(null);
 	const sizeReference = useRef({innerHeight: 0, scrollHeight: 0});
-	const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
+	const [shouldScrollToBottom, setShouldScrollToBottom] = useState(false);
 	const isAtBottomReference = useRef(true);
 
 	useLayoutEffect(() => {

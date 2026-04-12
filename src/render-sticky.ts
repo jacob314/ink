@@ -21,6 +21,10 @@ export type StickyNodeInfo = {
 	anchor?: DOMElement;
 };
 export function getStickyDescendants(node: DOMElement): StickyNodeInfo[] {
+	if (!node.isDirty && node.cachedStickyDescendants) {
+		return node.cachedStickyDescendants;
+	}
+
 	const stickyDescendants: StickyNodeInfo[] = [];
 
 	for (const child of node.childNodes) {
@@ -60,6 +64,10 @@ export function getStickyDescendants(node: DOMElement): StickyNodeInfo[] {
 				stickyDescendants.push(...getStickyDescendants(domChild));
 			}
 		}
+	}
+
+	if (!node.isDirty) {
+		node.cachedStickyDescendants = stickyDescendants;
 	}
 
 	return stickyDescendants;

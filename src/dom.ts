@@ -10,7 +10,8 @@ import {wrapOrTruncateStyledChars} from './text-wrap.js';
 import squashTextNodes from './squash-text-nodes.js';
 import {type OutputTransformer} from './render-node-to-output.js';
 import type ResizeObserver from './resize-observer.js';
-import {type Region} from './output.js';
+import {type Region, type OutputCapture} from './output.js';
+import {type StickyNodeInfo} from './render-sticky.js';
 
 type InkNode = {
 	parentNode: DOMElement | undefined;
@@ -65,6 +66,16 @@ export type DOMElement = {
 	internal_terminalCursorPosition?: number;
 	internal_onRendered?: () => void;
 	cachedRender?: Region;
+	cachedOutputCapture?: OutputCapture;
+	cachedStickyDescendants?: StickyNodeInfo[];
+	cachedLayout?: {
+		computedLeft: number;
+		computedTop: number;
+		width: number;
+		height: number;
+		display: number;
+	};
+	isDirty?: boolean;
 
 	internal_accessibility?: {
 		role?:
@@ -144,6 +155,19 @@ export type DOMNodeAttribute = boolean | string | number;
 
 let idCounter = 0;
 
+export const markDirty = (node: DOMNode) => {
+	let current: DOMNode | undefined = node;
+	while (current && current.nodeName !== '#text') {
+		const el = current as DOMElement;
+		if (el.isDirty) {
+			break;
+		}
+
+		el.isDirty = true;
+		current = current.parentNode;
+	}
+};
+
 export const createNode = (nodeName: ElementNames): DOMElement => {
 	const node: DOMElement = {
 		nodeName,
@@ -152,6 +176,7 @@ export const createNode = (nodeName: ElementNames): DOMElement => {
 		childNodes: [],
 		parentNode: undefined,
 		yogaNode: nodeName === 'ink-virtual-text' ? undefined : Yoga.Node.create(),
+		isDirty: true,
 
 		internal_accessibility: {},
 		internalSticky: false,
@@ -174,6 +199,7 @@ export const appendChildNode = (
 	node: DOMElement,
 	childNode: DOMElement,
 ): void => {
+	markDirty(node);
 	if (childNode.parentNode) {
 		removeChildNode(childNode.parentNode, childNode);
 	}
@@ -198,6 +224,7 @@ export const insertBeforeNode = (
 	newChildNode: DOMNode,
 	beforeChildNode: DOMNode,
 ): void => {
+	markDirty(node);
 	if (newChildNode.parentNode) {
 		removeChildNode(newChildNode.parentNode, newChildNode);
 	}
@@ -232,6 +259,7 @@ export const removeChildNode = (
 	node: DOMElement,
 	removeNode: DOMNode,
 ): void => {
+	markDirty(node);
 	if (removeNode.yogaNode) {
 		const parentYogaNode = removeNode.yogaNode.getParent();
 
@@ -257,6 +285,7 @@ export const setAttribute = (
 	key: string,
 	value: DOMNodeAttribute,
 ): void => {
+	markDirty(node);
 	if (key === 'internal_accessibility') {
 		node.internal_accessibility = value as DOMElement['internal_accessibility'];
 		return;
@@ -266,6 +295,7 @@ export const setAttribute = (
 };
 
 export const setStyle = (node: DOMNode, style: Styles): void => {
+	markDirty(node);
 	node.style = style;
 };
 
@@ -358,6 +388,9 @@ export const setTextNodeValue = (node: TextNode, text: string): void => {
 	}
 
 	node.nodeValue = text;
+	if (node.parentNode) {
+		markDirty(node.parentNode);
+	}
 	markNodeAsDirty(node);
 };
 

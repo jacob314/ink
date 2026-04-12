@@ -103,7 +103,7 @@ export default function Text({
 		return null;
 	}
 
-	const transform = (children: string): string => {
+	const transform = React.useCallback((children: string): string => {
 		if (dimColor) {
 			children = chalk.dim(children);
 		}
@@ -140,7 +140,7 @@ export default function Text({
 		}
 
 		return children;
-	};
+	}, [dimColor, bold, italic, underline, strikethrough, inverse, color, backgroundColor, inheritedBackgroundColor]);
 
 	if (isScreenReaderEnabled && ariaHidden) {
 		return null;

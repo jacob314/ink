@@ -538,7 +538,8 @@ export default class TerminalBuffer {
 			current.y === last.y &&
 			current.overflowToBackbuffer === last.overflowToBackbuffer &&
 			current.lines === last.lines &&
-			current.linesOffsetY === last.linesOffsetY
+			current.linesOffsetY === last.linesOffsetY &&
+			current.scrollTop === last.scrollTop
 		) {
 			return undefined;
 		}

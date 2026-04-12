@@ -148,6 +148,7 @@ export type Region = {
 	}>;
 	isTrimmed?: boolean;
 	maxWrittenY?: number;
+	writtenLines?: number[];
 	hasCursor?: boolean;
 };
 
@@ -278,6 +279,13 @@ export class RegionReference implements Region {
 		this.target.maxWrittenY = value;
 	}
 
+	get writtenLines() {
+		return this.target.writtenLines;
+	}
+	set writtenLines(value: number[] | undefined) {
+		this.target.writtenLines = value;
+	}
+
 	get hasCursor() {
 		return this.target.hasCursor;
 	}
@@ -317,6 +325,34 @@ export type SerializedStickyHeader = Omit<
 	lines: Uint8Array;
 	stuckLines?: Uint8Array;
 	styledOutput: Uint8Array;
+};
+
+export type CaptureAction =
+	| {
+			type: 'write';
+			x: number;
+			y: number;
+			items: string | StyledLine;
+			options: {
+				transformers: OutputTransformer[];
+				lineIndex?: number;
+				preserveBackgroundColor?: boolean;
+				isTerminalCursorFocused?: boolean;
+				terminalCursorPosition?: number;
+				isSelectable?: boolean;
+			};
+	  }
+	| {type: 'addRegionTree'; region: Region; x: number; y: number}
+	| {type: 'addStickyHeader'; header: StickyHeader}
+	| {type: 'clip'; clip: Clip}
+	| {type: 'unclip'}
+	| {type: 'startChildRegion'; options: any}
+	| {type: 'endChildRegion'};
+
+export type OutputCapture = {
+	baseAbsX: number;
+	baseAbsY: number;
+	actions: CaptureAction[];
 };
 
 export type RegionUpdate = {
@@ -424,6 +460,7 @@ export default class Output {
 	private readonly activeRegionStack: Region[] = [];
 	private readonly clips: Clip[] = [];
 	private readonly createdRegions: Region[] = [];
+	private readonly captures: OutputCapture[] = [];
 
 	constructor(options: Options) {
 		const {width, height, node, id = 'root', trackSelection = false} = options;
@@ -447,6 +484,7 @@ export default class Output {
 			node,
 			selectableSpans: [],
 			hasCursor: false,
+			writtenLines: [],
 		};
 
 		this.activeRegionStack.push(this.root);
@@ -471,6 +509,66 @@ export default class Output {
 		}
 
 		return {x, y};
+	}
+
+	isCapturing(): boolean {
+		return this.captures.length > 0;
+	}
+
+	startCapture(baseAbsX: number, baseAbsY: number) {
+		this.captures.push({baseAbsX, baseAbsY, actions: []});
+	}
+
+	endCapture(): OutputCapture | undefined {
+		return this.captures.pop();
+	}
+
+	replayCapture(capture: OutputCapture, currentAbsX: number, currentAbsY: number) {
+		const dx = currentAbsX - capture.baseAbsX;
+		const dy = currentAbsY - capture.baseAbsY;
+
+		for (const action of capture.actions) {
+			switch (action.type) {
+				case 'write': {
+					this.write(action.x + dx, action.y + dy, action.items, action.options);
+					break;
+				}
+				case 'addRegionTree': {
+					this.addRegionTree(action.region, action.x, action.y);
+					break;
+				}
+				case 'addStickyHeader': {
+					this.addStickyHeader({
+						...action.header,
+						x: action.header.x + dx,
+						y: action.header.y + dy,
+					});
+					break;
+				}
+				case 'clip': {
+					this.clip({
+						x1: action.clip.x1 !== undefined ? action.clip.x1 + dx : undefined,
+						x2: action.clip.x2 !== undefined ? action.clip.x2 + dx : undefined,
+						y1: action.clip.y1 !== undefined ? action.clip.y1 + dy : undefined,
+						y2: action.clip.y2 !== undefined ? action.clip.y2 + dy : undefined,
+					});
+					break;
+				}
+				case 'unclip': {
+					this.unclip();
+					break;
+				}
+				case 'startChildRegion': {
+					const opts = {...action.options};
+					this.startChildRegion(opts);
+					break;
+				}
+				case 'endChildRegion': {
+					this.endChildRegion();
+					break;
+				}
+			}
+		}
 	}
 
 	startChildRegion(options: {
@@ -500,6 +598,10 @@ export default class Output {
 		borderTop?: number;
 		borderBottom?: number;
 	}) {
+		for (const capture of this.captures) {
+			capture.actions.push({type: 'startChildRegion', options});
+		}
+
 		const {
 			id,
 			x,
@@ -579,6 +681,7 @@ export default class Output {
 			stableScrollback,
 			selectableSpans: [],
 			hasCursor: false,
+			writtenLines: [],
 		};
 
 		// Add to current active region's children
@@ -590,12 +693,20 @@ export default class Output {
 	}
 
 	endChildRegion() {
+		for (const capture of this.captures) {
+			capture.actions.push({type: 'endChildRegion'});
+		}
+
 		if (this.activeRegionStack.length > 1) {
 			this.activeRegionStack.pop();
 		}
 	}
 
 	addStickyHeader(header: StickyHeader) {
+		for (const capture of this.captures) {
+			capture.actions.push({type: 'addStickyHeader', header});
+		}
+
 		if (this.getActiveRegion().stickyHeaders === EMPTY_STICKY_HEADERS) {
 			this.getActiveRegion().stickyHeaders = [];
 		}
@@ -624,6 +735,23 @@ export default class Output {
 			terminalCursorPosition,
 			isSelectable = false,
 		} = options;
+
+		for (const capture of this.captures) {
+			capture.actions.push({
+				type: 'write',
+				x,
+				y,
+				items,
+				options: {
+					transformers,
+					lineIndex,
+					preserveBackgroundColor,
+					isTerminalCursorFocused,
+					terminalCursorPosition,
+					isSelectable,
+				},
+			});
+		}
 
 		if (items.length === 0 && !isTerminalCursorFocused) {
 			return;
@@ -678,6 +806,10 @@ export default class Output {
 	}
 
 	clip(clip: Clip) {
+		for (const capture of this.captures) {
+			capture.actions.push({type: 'clip', clip});
+		}
+
 		const previousClip = this.clips.at(-1);
 		const nextClip = {
 			x1: clip.x1 === undefined ? undefined : Math.round(clip.x1),
@@ -720,6 +852,10 @@ export default class Output {
 	}
 
 	unclip() {
+		for (const capture of this.captures) {
+			capture.actions.push({type: 'unclip'});
+		}
+
 		this.clips.pop();
 	}
 
@@ -733,6 +869,10 @@ export default class Output {
 	}
 
 	addRegionTree(region: Region, x: number, y: number) {
+		for (const capture of this.captures) {
+			capture.actions.push({type: 'addRegionTree', region, x, y});
+		}
+
 		const activeRegion = this.getActiveRegion();
 		const overflowToBackbuffer = region.isScrollable
 			? region.overflowToBackbuffer
@@ -760,21 +900,43 @@ export default class Output {
 		let minY = -1;
 		let maxY = -1;
 
-		const limit = Math.min(region.lines.length, (region.maxWrittenY ?? -1) + 1);
+		if (region.writtenLines && region.writtenLines.length > 0) {
+			const sortedLines = [...region.writtenLines].sort((a, b) => a - b);
+			const uniqueLines = new Set<number>();
+			for (const y of sortedLines) {
+				if (uniqueLines.has(y)) continue;
+				uniqueLines.add(y);
+				const line = region.lines[y];
+				if (!line) continue;
+				const trimmedLength = line.getTrimmedLength();
 
-		for (let y = 0; y < limit; y++) {
-			const line = region.lines[y];
-			if (!line) continue;
-			const trimmedLength = line.getTrimmedLength();
+				if (trimmedLength > 0) {
+					if (minY === -1) minY = y;
+					maxY = y;
+				}
 
-			if (trimmedLength > 0) {
-				if (minY === -1) minY = y;
-				maxY = y;
+				if (region.styledOutput[y]?.length !== trimmedLength) {
+					(region.styledOutput as StyledLine[])[y] =
+						trimmedLength === line.length ? line : line.slice(0, trimmedLength);
+				}
 			}
+		} else if (!region.writtenLines) {
+			const limit = Math.min(region.lines.length, (region.maxWrittenY ?? -1) + 1);
 
-			if (region.styledOutput[y]?.length !== trimmedLength) {
-				(region.styledOutput as StyledLine[])[y] =
-					trimmedLength === line.length ? line : line.slice(0, trimmedLength);
+			for (let y = 0; y < limit; y++) {
+				const line = region.lines[y];
+				if (!line) continue;
+				const trimmedLength = line.getTrimmedLength();
+
+				if (trimmedLength > 0) {
+					if (minY === -1) minY = y;
+					maxY = y;
+				}
+
+				if (region.styledOutput[y]?.length !== trimmedLength) {
+					(region.styledOutput as StyledLine[])[y] =
+						trimmedLength === line.length ? line : line.slice(0, trimmedLength);
+				}
 			}
 		}
 
@@ -853,6 +1015,9 @@ export default class Output {
 			currentLine = StyledLine.empty(bufferWidth);
 			(lines as StyledLine[])[y] = currentLine;
 			(region.styledOutput as StyledLine[])[y] = currentLine;
+			if (region.writtenLines) {
+				region.writtenLines.push(y);
+			}
 		}
 
 		region.maxWrittenY = Math.max(region.maxWrittenY ?? -1, y);

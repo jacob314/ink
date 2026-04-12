@@ -29,7 +29,7 @@ const checkFps = setInterval(async () => {
 	frames++;
 	if (frames >= 100) {
 		const duration = Date.now() - start;
-		console.log(
+		console.error(
 			`\nRendered 100 frames in ${duration}ms (${(duration / 100).toFixed(2)}ms per frame)`,
 		);
 		unmount();
