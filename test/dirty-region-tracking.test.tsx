@@ -1,11 +1,6 @@
 import test from 'ava';
 import React, {act, useRef, useState} from 'react';
-import {
-	Box,
-	StaticRender,
-	Text,
-	type DOMElement,
-} from '../src/index.js';
+import {Box, StaticRender, Text, type DOMElement} from '../src/index.js';
 import {render} from './helpers/render.js';
 import {waitFor} from './helpers/wait-for.js';
 
@@ -22,11 +17,11 @@ test.serial(
 	'reuses cached regions for clean non-static box subtrees',
 	async t => {
 		const trackedRef = React.createRef<DOMElement>();
-		let setCounter!: React.Dispatch<React.SetStateAction<number>>;
+		let updateCounterGlobal!: React.Dispatch<React.SetStateAction<number>>;
 
 		function Example() {
-			const [counter, updateCounter] = useState(0);
-			setCounter = updateCounter;
+			const [counter, setCounter] = useState(0);
+			updateCounterGlobal = setCounter;
 
 			return (
 				<Box flexDirection="column" width={40}>
@@ -49,7 +44,7 @@ test.serial(
 		await instance.waitUntilReady();
 
 		await act(async () => {
-			setCounter(1);
+			updateCounterGlobal(1);
 		});
 
 		await instance.waitUntilReady();
@@ -60,7 +55,7 @@ test.serial(
 		t.truthy(initialCache);
 
 		await act(async () => {
-			setCounter(2);
+			updateCounterGlobal(2);
 		});
 
 		await instance.waitUntilReady();
@@ -74,14 +69,14 @@ test.serial(
 
 test.serial('invalidates cached regions when the subtree changes', async t => {
 	const trackedRef = React.createRef<DOMElement>();
-	let setCounter!: React.Dispatch<React.SetStateAction<number>>;
-	let setShowExtra!: React.Dispatch<React.SetStateAction<boolean>>;
+	let updateCounterGlobal!: React.Dispatch<React.SetStateAction<number>>;
+	let updateShowExtraGlobal!: React.Dispatch<React.SetStateAction<boolean>>;
 
 	function Example() {
-		const [counter, updateCounter] = useState(0);
-		const [showExtra, updateShowExtra] = useState(false);
-		setCounter = updateCounter;
-		setShowExtra = updateShowExtra;
+		const [counter, setCounter] = useState(0);
+		const [showExtra, setShowExtra] = useState(false);
+		updateCounterGlobal = setCounter;
+		updateShowExtraGlobal = setShowExtra;
 		const renderCountRef = useRef(0);
 		renderCountRef.current++;
 
@@ -108,7 +103,7 @@ test.serial('invalidates cached regions when the subtree changes', async t => {
 	await instance.waitUntilReady();
 
 	await act(async () => {
-		setCounter(1);
+		updateCounterGlobal(1);
 	});
 
 	await instance.waitUntilReady();
@@ -118,7 +113,7 @@ test.serial('invalidates cached regions when the subtree changes', async t => {
 	t.truthy(initialCache);
 
 	await act(async () => {
-		setShowExtra(true);
+		updateShowExtraGlobal(true);
 	});
 
 	await instance.waitUntilReady();
