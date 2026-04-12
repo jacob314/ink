@@ -731,6 +731,7 @@ export class TerminalBufferWorker {
 							return getLines(false);
 						} finally {
 							region.scrollTop = originalScrollTop;
+							this.sceneManager.regionWasAtEnd.set(region.id, (originalScrollTop ?? 0) >= (region.scrollHeight ?? 0) - (region.height ?? 0));
 						}
 					},
 					(r, s, a) => compositor.calculateActualStuckTopHeight(r, s, a),
