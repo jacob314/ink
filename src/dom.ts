@@ -65,6 +65,9 @@ export type DOMElement = {
 	internal_terminalCursorPosition?: number;
 	internal_onRendered?: () => void;
 	cachedRender?: Region;
+	cachedRegion?: Region;
+	cachedRegionWithStatic?: Region;
+	regionCacheInitialized?: boolean;
 
 	internal_accessibility?: {
 		role?:
@@ -188,9 +191,11 @@ export const appendChildNode = (
 		);
 	}
 
-	if (node.nodeName === 'ink-text' || node.nodeName === 'ink-virtual-text') {
-		markNodeAsDirty(node);
-	}
+	markNodeAsDirty(
+		node.nodeName === 'ink-static-render' && node.cachedRender
+			? node.parentNode
+			: node,
+	);
 };
 
 export const insertBeforeNode = (
@@ -223,9 +228,11 @@ export const insertBeforeNode = (
 		);
 	}
 
-	if (node.nodeName === 'ink-text' || node.nodeName === 'ink-virtual-text') {
-		markNodeAsDirty(node);
-	}
+	markNodeAsDirty(
+		node.nodeName === 'ink-static-render' && node.cachedRender
+			? node.parentNode
+			: node,
+	);
 };
 
 export const removeChildNode = (
@@ -242,14 +249,16 @@ export const removeChildNode = (
 
 	removeNode.parentNode = undefined;
 
-	if (node.nodeName === 'ink-text' || node.nodeName === 'ink-virtual-text') {
-		markNodeAsDirty(node);
-	}
-
 	const index = node.childNodes.indexOf(removeNode);
 	if (index >= 0) {
 		node.childNodes.splice(index, 1);
 	}
+
+	markNodeAsDirty(
+		node.nodeName === 'ink-static-render' && node.cachedRender
+			? node.parentNode
+			: node,
+	);
 };
 
 export const setAttribute = (
@@ -337,19 +346,57 @@ export const setCachedRender = (node: DOMElement, cachedRender: Region) => {
 	}
 };
 
-export const markNodeAsDirty = (node?: DOMNode): void => {
-	// Mark closest Yoga node as dirty to measure text dimensions again
-	const yogaNode = findClosestYogaNode(node);
-	yogaNode?.markDirty();
+export const getCachedRegion = (
+	node: DOMElement,
+	skipStaticElements: boolean,
+): Region | undefined =>
+	skipStaticElements ? node.cachedRegion : node.cachedRegionWithStatic;
 
+export const setCachedRegion = (
+	node: DOMElement,
+	cachedRegion: Region,
+	skipStaticElements: boolean,
+) => {
+	if (skipStaticElements) {
+		node.cachedRegion = cachedRegion;
+		return;
+	}
+
+	node.cachedRegionWithStatic = cachedRegion;
+};
+
+const invalidateNodeCaches = (node?: DOMNode) => {
 	let current = node;
 	while (current) {
-		if ('cachedRender' in current) {
-			current.cachedRender = undefined;
+		if ('childNodes' in current) {
+			const shouldPreserveStaticCache =
+				current !== node &&
+				current.nodeName === 'ink-static-render' &&
+				Boolean(current.cachedRender);
+
+			if (!shouldPreserveStaticCache) {
+				current.cachedRender = undefined;
+				current.cachedRegion = undefined;
+				current.cachedRegionWithStatic = undefined;
+			}
 		}
 
 		current = current.parentNode;
 	}
+};
+
+export const markNodeAsDirty = (node?: DOMNode): void => {
+	// Mark closest Yoga node as dirty to measure text dimensions again
+	if (
+		node?.nodeName === '#text' ||
+		node?.nodeName === 'ink-text' ||
+		node?.nodeName === 'ink-virtual-text'
+	) {
+		const yogaNode = findClosestYogaNode(node);
+		yogaNode?.markDirty();
+	}
+
+	invalidateNodeCaches(node);
 };
 
 export const setTextNodeValue = (node: TextNode, text: string): void => {
