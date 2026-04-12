@@ -1,11 +1,11 @@
 import React, {
-	useRef,
-	useEffect,
-	useState,
-	type ReactNode,
-	type DependencyList,
+        useRef,
+        useEffect,
+        useState,
+        type ReactNode,
+        type DependencyList,
 } from 'react';
-import {type DOMElement} from '../dom.js';
+import {markNodeAsDirty, type DOMElement} from '../dom.js';
 import {type Styles} from '../styles.js';
 
 export type Props = {
@@ -94,6 +94,7 @@ export default function StaticRender({children, width, style, deps}: Props) {
 
 		if (ref.current) {
 			ref.current.cachedRender = undefined;
+			markNodeAsDirty(ref.current);
 		}
 	}
 

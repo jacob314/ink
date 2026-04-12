@@ -105,8 +105,11 @@ const cleanupNodeTree = (node?: DOMNode): void => {
 
 	node.yogaNode?.free();
 
-	if ('cachedRender' in node) {
+	if ('childNodes' in node) {
 		node.cachedRender = undefined;
+		node.cachedRegion = undefined;
+		node.cachedRegionWithStatic = undefined;
+		node.regionCacheInitialized = undefined;
 	}
 
 	if ('childNodes' in node) {
@@ -287,9 +290,11 @@ export default createReconciler<
 	getPublicInstance: instance => instance,
 	hideInstance(node) {
 		node.yogaNode?.setDisplay(Yoga.DISPLAY_NONE);
+		markNodeAsDirty(node);
 	},
 	unhideInstance(node) {
 		node.yogaNode?.setDisplay(Yoga.DISPLAY_FLEX);
+		markNodeAsDirty(node);
 	},
 	appendInitialChild: appendChildNode,
 	appendChild: appendChildNode,
@@ -332,8 +337,14 @@ export default createReconciler<
 			return;
 		}
 
+		let shouldMarkDirty = Boolean(style);
+
 		if (props) {
 			for (const [key, value] of Object.entries(props)) {
+				if (key === 'children') {
+					continue;
+				}
+
 				if (key === 'style') {
 					setStyle(node, value as Styles);
 					continue;
@@ -341,27 +352,31 @@ export default createReconciler<
 
 				if (key === 'internal_transform') {
 					node.internal_transform = value as OutputTransformer;
-					markNodeAsDirty(node);
+					shouldMarkDirty = true;
 					continue;
 				}
 
 				if (key === 'sticky') {
 					node.internalSticky = value as boolean | 'top' | 'bottom';
+					shouldMarkDirty = true;
 					continue;
 				}
 
 				if (key === 'internalStickyAlternate') {
 					node.internalStickyAlternate = Boolean(value);
+					shouldMarkDirty = true;
 					continue;
 				}
 
 				if (key === 'internal_terminalCursorFocus') {
 					node.internal_terminalCursorFocus = value as boolean;
+					shouldMarkDirty = true;
 					continue;
 				}
 
 				if (key === 'internal_terminalCursorPosition') {
 					node.internal_terminalCursorPosition = value as number;
+					shouldMarkDirty = true;
 					continue;
 				}
 
@@ -372,30 +387,39 @@ export default createReconciler<
 
 				if (key === 'internal_static') {
 					node.internal_static = true;
+					shouldMarkDirty = true;
 					continue;
 				}
 
 				if (key === 'cachedRender') {
 					node.cachedRender = value as Region;
+					shouldMarkDirty = true;
 					continue;
 				}
 
 				if (key === 'opaque') {
 					node.internalOpaque = Boolean(value);
+					shouldMarkDirty = true;
 					continue;
 				}
 
 				if (key === 'scrollbar') {
 					node.internalScrollbar = value as boolean;
+					shouldMarkDirty = true;
 					continue;
 				}
 
 				setAttribute(node, key, value as DOMNodeAttribute);
+				shouldMarkDirty = true;
 			}
 		}
 
 		if (style && node.yogaNode) {
 			applyStyles(node.yogaNode, style);
+		}
+
+		if (shouldMarkDirty) {
+			markNodeAsDirty(node);
 		}
 	},
 	commitTextUpdate(node, _oldText, newText) {

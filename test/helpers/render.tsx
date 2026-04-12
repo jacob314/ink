@@ -1,6 +1,5 @@
 import {EventEmitter} from 'node:events';
 import {act} from 'react';
-import stripAnsi from 'strip-ansi';
 import xtermHeadless, {type Terminal} from '@xterm/headless';
 import {
 	render as inkRenderDirect,
@@ -124,16 +123,28 @@ export class XtermStdout extends EventEmitter {
 
 		let attempts = 0;
 		const maxAttempts = 50;
+		let lastObservedRenderCount = this.renderCount;
+		let stableRenderChecks = 0;
 
 		while (attempts < maxAttempts) {
 			// Ensure all pending writes to the terminal are processed.
 			// eslint-disable-next-line no-await-in-loop
 			await this.queue.promise;
 
-			const currentFrame = stripAnsi(this.lastFrame({allowEmpty: true})).trim();
+			if (this.pendingWrites === 0 && this.renderCount > 0) {
+				if (this.renderCount === lastObservedRenderCount) {
+					stableRenderChecks++;
+				} else {
+					lastObservedRenderCount = this.renderCount;
+					stableRenderChecks = 0;
+				}
 
-			if (this.pendingWrites === 0 && currentFrame !== '') {
-				return;
+				if (stableRenderChecks >= 2) {
+					return;
+				}
+			} else {
+				lastObservedRenderCount = this.renderCount;
+				stableRenderChecks = 0;
 			}
 
 			attempts++;
