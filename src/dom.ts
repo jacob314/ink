@@ -376,6 +376,7 @@ export const markNodeAsDirty = (node?: DOMNode): void => {
 	while (current) {
 		if ('cachedRender' in current) {
 			current.cachedRender = undefined;
+			current.cachedOutputCapture = undefined;
 		}
 
 		current = current.parentNode;

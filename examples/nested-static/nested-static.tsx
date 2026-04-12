@@ -414,7 +414,7 @@ export default function NestedStaticDemo() {
 							wrapInStatic={group.id === 1 ? wrapFirstGroup : false}
 						/>
 					))}
-					<Box paddingTop={1}>
+					<Box key="timer" paddingTop={1}>
 						<Text color="cyan">Backbuffer Timer: {count}</Text>
 					</Box>
 				</Box>
