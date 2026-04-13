@@ -6,6 +6,7 @@ import xtermHeadless, {type Terminal} from '@xterm/headless';
 import instances from '../src/instances.js';
 import {render} from '../src/index.js';
 import ScrollableContent from '../examples/sticky/sticky.js';
+import {waitFor} from './helpers/wait-for.js';
 
 const {Terminal: XtermTerminal} = xtermHeadless;
 
@@ -15,6 +16,14 @@ const writeToTerm = async (term: Terminal, data: string): Promise<void> =>
 			resolve();
 		});
 	});
+
+type InkWithTerminalBuffer = {
+	terminalBuffer: {
+		workerInstance: {
+			waitForIdle: () => Promise<void>;
+		};
+	};
+};
 
 test('sticky example border toggle avoids full-width newline corruption and preserves footer', async t => {
 	const rows = 37;
@@ -74,19 +83,12 @@ test('sticky example border toggle avoids full-width newline corruption and pres
 		},
 	);
 
-	const inkInstance = instances.get(stdout as unknown as NodeJS.WriteStream);
+	const inkInstance = instances.get(
+		stdout as unknown as NodeJS.WriteStream,
+	) as unknown as InkWithTerminalBuffer;
 	t.truthy(inkInstance);
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-	const worker = (inkInstance as any).terminalBuffer.workerInstance;
+	const worker = inkInstance.terminalBuffer.workerInstance;
 	t.truthy(worker);
-
-	const waitForFrame = async () => {
-		await new Promise(resolve => {
-			setTimeout(resolve, 50);
-		});
-		await worker.waitForIdle();
-		await writeToTerm(term, output);
-	};
 
 	const getViewport = () => {
 		const base = term.buffer.active.baseY;
@@ -100,41 +102,85 @@ test('sticky example border toggle avoids full-width newline corruption and pres
 		return lines;
 	};
 
-	await waitForFrame();
-	output = '';
+	let recentOutput = '';
+	const pumpToTerminal = async () => {
+		if (output) {
+			recentOutput += output;
+			const chunk = output;
+			output = '';
+			await writeToTerm(term, chunk);
+		}
+	};
 
+	// Wait for initial render
+	await waitFor(async () => {
+		await worker.waitForIdle();
+		await pumpToTerminal();
+		const viewport = getViewport();
+		return viewport.some(line =>
+			line.includes(
+				'This is a demo showing a scrollable box with sticky headers.',
+			),
+		);
+	});
+
+	recentOutput = '';
 	stdin.push('t');
-	await waitForFrame();
 
+	// Wait for the border to render
 	const topBorder = `╭${'─'.repeat(columns - 2)}╮`;
 	const bottomBorder = `╰${'─'.repeat(columns - 2)}╯`;
+
+	await waitFor(async () => {
+		await worker.waitForIdle();
+		await pumpToTerminal();
+		const viewport = getViewport();
+		return viewport.some(line => line.includes(topBorder));
+	});
+
 	t.false(
-		output.includes(`${topBorder}\n`) || output.includes(`${bottomBorder}\n`),
+		recentOutput.includes(`${topBorder}\n`) ||
+			recentOutput.includes(`${bottomBorder}\n`),
 		'border updates should not rely on newline after a full-width border line',
 	);
 
 	const borderedViewport = getViewport();
 	t.true(
-		borderedViewport.includes(
-			'This is a demo showing a scrollable box with sticky headers.',
+		borderedViewport.some(line =>
+			line.includes(
+				'This is a demo showing a scrollable box with sticky headers.',
+			),
 		) &&
-			borderedViewport.includes(
-				"Press 'e' to export current frame, 'r' to toggle recording (OFF)",
+			borderedViewport.some(line =>
+				line.includes(
+					"Press 'e' to export current frame, 'r' to toggle recording (OFF)",
+				),
 			),
 		`footer should remain visible after enabling border.\n${borderedViewport.join('\n')}`,
 	);
 
-	output = '';
+	recentOutput = '';
 	stdin.push('t');
-	await waitForFrame();
+
+	// Wait for the border to disappear
+	await waitFor(async () => {
+		await worker.waitForIdle();
+		await pumpToTerminal();
+		const viewport = getViewport();
+		return !viewport.some(line => line.includes(topBorder));
+	});
 
 	const unborderedViewport = getViewport();
 	t.true(
-		unborderedViewport.includes(
-			'This is a demo showing a scrollable box with sticky headers.',
+		unborderedViewport.some(line =>
+			line.includes(
+				'This is a demo showing a scrollable box with sticky headers.',
+			),
 		) &&
-			unborderedViewport.includes(
-				"Press 'e' to export current frame, 'r' to toggle recording (OFF)",
+			unborderedViewport.some(line =>
+				line.includes(
+					"Press 'e' to export current frame, 'r' to toggle recording (OFF)",
+				),
 			),
 		`footer should remain visible after disabling border.\n${unborderedViewport.join('\n')}`,
 	);
