@@ -554,10 +554,35 @@ export default class TerminalBuffer {
 		return hasChanges ? update : undefined;
 	}
 
+	private styledLinesEqual(
+		oldLines: readonly StyledLine[],
+		newLines: readonly StyledLine[],
+	): boolean {
+		if (oldLines === newLines) {
+			return true;
+		}
+
+		if (oldLines.length !== newLines.length) {
+			return false;
+		}
+
+		for (let i = 0; i < oldLines.length; i++) {
+			if (!linesEqual(oldLines[i], newLines[i])) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	private stickyHeadersEqual(
 		oldHeaders: StickyHeader[],
 		newHeaders: StickyHeader[],
 	): boolean {
+		if (oldHeaders === newHeaders) {
+			return true;
+		}
+
 		if (oldHeaders.length !== newHeaders.length) {
 			return false;
 		}
@@ -578,24 +603,20 @@ export default class TerminalBuffer {
 				return false;
 			}
 
-			if (oldH.lines.length !== newH.lines.length) return false;
-			for (let j = 0; j < oldH.lines.length; j++) {
-				if (!linesEqual(oldH.lines[j], newH.lines[j])) return false;
+			if (!this.styledLinesEqual(oldH.lines, newH.lines)) {
+				return false;
 			}
 
 			if (oldH.stuckLines && newH.stuckLines) {
-				if (oldH.stuckLines.length !== newH.stuckLines.length) return false;
-				for (let j = 0; j < oldH.stuckLines.length; j++) {
-					if (!linesEqual(oldH.stuckLines[j], newH.stuckLines[j])) return false;
+				if (!this.styledLinesEqual(oldH.stuckLines, newH.stuckLines)) {
+					return false;
 				}
 			} else if (oldH.stuckLines !== newH.stuckLines) {
 				return false;
 			}
 
-			if (oldH.styledOutput.length !== newH.styledOutput.length) return false;
-			for (let j = 0; j < oldH.styledOutput.length; j++) {
-				if (!linesEqual(oldH.styledOutput[j], newH.styledOutput[j]))
-					return false;
+			if (!this.styledLinesEqual(oldH.styledOutput, newH.styledOutput)) {
+				return false;
 			}
 		}
 
