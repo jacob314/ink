@@ -506,12 +506,11 @@ export default class Output {
 	clip(clip: Clip) {
 		const previousClip = this.clips.at(-1);
 		const nextClip = {
-			x1: clip.x1 === undefined ? undefined : Math.round(clip.x1),
-			x2: clip.x2 === undefined ? undefined : Math.round(clip.x2),
-			y1: clip.y1 === undefined ? undefined : Math.round(clip.y1),
-			y2: clip.y2 === undefined ? undefined : Math.round(clip.y2),
+			x1: roundIfDefined(clip.x1),
+			x2: roundIfDefined(clip.x2),
+			y1: roundIfDefined(clip.y1),
+			y2: roundIfDefined(clip.y2),
 		};
-
 		if (previousClip) {
 			nextClip.x1 =
 				previousClip.x1 === undefined
