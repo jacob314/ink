@@ -12,7 +12,7 @@ import {StyledLine} from './styled-line.js';
 import {Serializer} from './serialization.js';
 import {TerminalBufferWorker} from './worker/render-worker.js';
 import {linesEqual} from './worker/terminal-writer.js';
-import {type DOMElement} from './dom.js';
+import {type DOMElement, type StickyHeader} from './dom.js';
 import {
 	type Region,
 	type RegionUpdate,
@@ -505,15 +505,7 @@ export default class TerminalBuffer {
 			}
 		}
 
-		// Deep compare sticky headers? For now assuming reference change or simple length change is enough,
-		// or we can rely on the fact they are rebuilt every frame.
-		// Let's just resend if length differs or assume they might change.
-		// To be safe and simple: always send sticky headers if they exist or existed.
-		if (
-			current.stickyHeaders !== last.stickyHeaders ||
-			current.stickyHeaders.length > 0 ||
-			last.stickyHeaders.length > 0
-		) {
+		if (!this.stickyHeadersEqual(last.stickyHeaders, current.stickyHeaders)) {
 			update.stickyHeaders = current.stickyHeaders.map(h => ({
 				...h,
 				node: undefined,
@@ -560,6 +552,86 @@ export default class TerminalBuffer {
 		}
 
 		return hasChanges ? update : undefined;
+	}
+
+	private styledLinesEqual(
+		oldLines: readonly StyledLine[],
+		newLines: readonly StyledLine[],
+	): boolean {
+		if (oldLines === newLines) {
+			return true;
+		}
+
+		if (oldLines.length !== newLines.length) {
+			return false;
+		}
+
+		for (let i = 0; i < oldLines.length; i++) {
+			if (!linesEqual(oldLines[i], newLines[i])) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private stickyHeadersEqual(
+		oldHeaders: StickyHeader[],
+		newHeaders: StickyHeader[],
+	): boolean {
+		if (oldHeaders === newHeaders) {
+			return true;
+		}
+
+		if (oldHeaders.length !== newHeaders.length) {
+			return false;
+		}
+
+		for (let i = 0; i < oldHeaders.length; i++) {
+			const oldH = oldHeaders[i]!;
+			const newH = newHeaders[i]!;
+
+			if (
+				oldH.x !== newH.x ||
+				oldH.y !== newH.y ||
+				oldH.naturalRow !== newH.naturalRow ||
+				oldH.startRow !== newH.startRow ||
+				oldH.endRow !== newH.endRow ||
+				oldH.scrollContainerId !== newH.scrollContainerId ||
+				oldH.nodeId !== newH.nodeId ||
+				oldH.type !== newH.type ||
+				oldH.maxStuckY !== newH.maxStuckY ||
+				oldH.minStuckY !== newH.minStuckY ||
+				oldH.isStuckOnly !== newH.isStuckOnly ||
+				oldH.relativeX !== newH.relativeX ||
+				oldH.relativeY !== newH.relativeY ||
+				oldH.height !== newH.height ||
+				oldH.parentRelativeTop !== newH.parentRelativeTop ||
+				oldH.parentHeight !== newH.parentHeight ||
+				oldH.parentBorderTop !== newH.parentBorderTop ||
+				oldH.parentBorderBottom !== newH.parentBorderBottom
+			) {
+				return false;
+			}
+
+			if (!this.styledLinesEqual(oldH.lines, newH.lines)) {
+				return false;
+			}
+
+			if (oldH.stuckLines && newH.stuckLines) {
+				if (!this.styledLinesEqual(oldH.stuckLines, newH.stuckLines)) {
+					return false;
+				}
+			} else if (oldH.stuckLines !== newH.stuckLines) {
+				return false;
+			}
+
+			if (!this.styledLinesEqual(oldH.styledOutput, newH.styledOutput)) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	private diffLines(

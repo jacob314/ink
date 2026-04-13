@@ -265,6 +265,8 @@ export function copyRegionProperty<
 const roundIfDefined = (value: number | undefined): number | undefined =>
 	value === undefined ? undefined : Math.round(value);
 
+const EMPTY_STICKY_HEADERS: StickyHeader[] = [];
+
 export default class Output {
 	width: number;
 	height: number;
@@ -292,7 +294,7 @@ export default class Output {
 			lines: [],
 			styledOutput: [],
 			isScrollable: false,
-			stickyHeaders: [],
+			stickyHeaders: EMPTY_STICKY_HEADERS,
 			children: [],
 			node,
 			selectableSpans: [],
@@ -407,7 +409,7 @@ export default class Output {
 			opaque,
 			borderTop: roundIfDefined(borderTop),
 			borderBottom: roundIfDefined(borderBottom),
-			stickyHeaders: [],
+			stickyHeaders: EMPTY_STICKY_HEADERS,
 			children: [],
 			nodeId,
 			stableScrollback,
@@ -430,6 +432,10 @@ export default class Output {
 	}
 
 	addStickyHeader(header: StickyHeader) {
+		if (this.getActiveRegion().stickyHeaders === EMPTY_STICKY_HEADERS) {
+			this.getActiveRegion().stickyHeaders = [];
+		}
+
 		this.getActiveRegion().stickyHeaders.push(header);
 	}
 
