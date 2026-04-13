@@ -1,4 +1,5 @@
 import test from 'ava';
+import ansiEscapes from 'ansi-escapes';
 import {StyledLine} from '../src/styled-line.js';
 import xtermHeadless, {type Terminal} from '@xterm/headless';
 import {TerminalWriter} from '../src/worker/terminal-writer.js';
@@ -92,6 +93,36 @@ test('TerminalWriter output matches xterm expectations for syncLine (update)', a
 
 	const bufferLine1 = term.buffer.active.getLine(0);
 	t.is(bufferLine1?.translateToString(true), 'Updated');
+});
+
+test('syncLine does not emit a bare newline after a full-width line update', t => {
+	const columns = 10;
+	const rows = 5;
+	let output = '';
+	const stdout = {
+		write(chunk: string) {
+			output += chunk;
+			return true;
+		},
+	} as unknown as NodeJS.WriteStream;
+
+	const writer = new TerminalWriter(columns, rows, stdout);
+
+	writer.writeLines([createLine('short'), createLine('footer')]);
+	writer.flush();
+	output = '';
+
+	writer.syncLine(createLine('1234567890'), 0);
+	writer.flush();
+
+	t.false(
+		output.includes('1234567890\n'),
+		'full-width updates should not rely on newline advancement',
+	);
+	t.true(
+		output.includes(`1234567890${ansiEscapes.cursorTo(0, 1)}`),
+		'full-width updates should move to the next row explicitly',
+	);
 });
 
 test('TerminalWriter output matches xterm expectations for scrollLines (up)', async t => {
