@@ -11,10 +11,13 @@ import Output, {
 	extractSelectableText,
 } from './output.js';
 import {handleTextNode} from './render-text-node.js';
-import {renderStickyNode, getStickyDescendants} from './render-sticky.js';
+import {
+	renderStickyNode,
+	getStickyDescendants,
+	resolveStickyHeaderInfo,
+} from './render-sticky.js';
 import {handleContainerNode} from './render-container.js';
 import {handleCachedRenderNode} from './render-cached.js';
-import {getRelativeLeft, getRelativeTop} from './measure-element.js';
 import {triggerResizeObservers} from './resize-observer.js';
 
 export type OutputTransformer = (s: string, index: number) => string;
@@ -51,35 +54,21 @@ export const renderToStatic = (
 		let naturalHeight;
 		let maxHeaderHeight;
 
-		let relativeX: number;
-		let relativeY: number;
-		let parentRelativeTop: number;
-		let parentHeight: number;
-		let parentBorderTop: number;
-		let parentBorderBottom: number;
-		let nodeId: number;
-
-		const currentBorderTop =
-			node.yogaNode?.getComputedBorder(Yoga.EDGE_TOP) ?? 0;
-		const currentBorderLeft =
-			node.yogaNode?.getComputedBorder(Yoga.EDGE_LEFT) ?? 0;
+		const {
+			relativeX,
+			relativeY,
+			parentRelativeTop,
+			parentHeight,
+			parentBorderTop,
+			parentBorderBottom,
+			nodeId,
+		} = resolveStickyHeaderInfo(stickyNodeInfo, node);
 
 		if (cached && anchor) {
 			naturalLines = cached.lines;
 			stuckLines = cached.stuckLines;
 			naturalHeight = cached.endRow - cached.startRow;
 			maxHeaderHeight = cached.height!;
-
-			const staticRenderPosTop = getRelativeTop(anchor, node) ?? 0;
-			const staticRenderPosLeft = getRelativeLeft(anchor, node) ?? 0;
-
-			relativeX = staticRenderPosLeft + cached.relativeX!;
-			relativeY = staticRenderPosTop + cached.relativeY!;
-			parentRelativeTop = staticRenderPosTop + cached.parentRelativeTop!;
-			parentHeight = cached.parentHeight!;
-			parentBorderTop = cached.parentBorderTop!;
-			parentBorderBottom = cached.parentBorderBottom!;
-			nodeId = cached.nodeId;
 		} else {
 			if (!stickyNode) {
 				continue;
@@ -95,25 +84,6 @@ export const renderToStatic = (
 			stuckLines = rendered.stuckLines;
 			naturalHeight = rendered.naturalHeight;
 			maxHeaderHeight = rendered.maxHeaderHeight;
-
-			relativeX = (getRelativeLeft(stickyNode, node) ?? 0) - currentBorderLeft;
-			relativeY = (getRelativeTop(stickyNode, node) ?? 0) - currentBorderTop;
-
-			const parent = stickyNode.parentNode;
-			const parentYogaNode = parent?.yogaNode;
-			parentRelativeTop = parent
-				? (getRelativeTop(parent, node) ?? 0) - currentBorderTop
-				: 0;
-			parentHeight = parentYogaNode
-				? Math.round(parentYogaNode.getComputedHeight())
-				: Number.MAX_SAFE_INTEGER;
-			parentBorderTop = parentYogaNode
-				? parentYogaNode.getComputedBorder(Yoga.EDGE_TOP)
-				: 0;
-			parentBorderBottom = parentYogaNode
-				? parentYogaNode.getComputedBorder(Yoga.EDGE_BOTTOM)
-				: 0;
-			nodeId = stickyNode.internalId;
 		}
 
 		const naturalRow = relativeY;

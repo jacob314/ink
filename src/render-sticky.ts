@@ -21,6 +21,111 @@ export type StickyNodeInfo = {
 	anchor?: DOMElement;
 };
 
+export type ResolvedStickyHeaderInfo = {
+	stickyNodeTop: number;
+	stickyNodeHeight: number;
+	naturalStickyNodeHeight: number;
+	parentRelativeTop: number;
+	parentHeight: number;
+	parentBorderTop: number;
+	parentBorderBottom: number;
+	relativeX: number;
+	relativeY: number;
+	nodeId: number;
+};
+
+export function resolveStickyHeaderInfo(
+	stickyNodeInfo: StickyNodeInfo,
+	node: DOMElement,
+): ResolvedStickyHeaderInfo {
+	const {node: stickyNode, cached, anchor} = stickyNodeInfo;
+
+	let stickyNodeTop: number;
+	let stickyNodeHeight: number;
+	let naturalStickyNodeHeight: number;
+	let parentRelativeTop: number;
+	let parentHeight: number;
+	let parentBorderTop: number;
+	let parentBorderBottom: number;
+	let relativeX: number;
+	let relativeY: number;
+	let nodeId: number;
+
+	const currentBorderTop = node.yogaNode?.getComputedBorder(Yoga.EDGE_TOP) ?? 0;
+	const currentBorderLeft =
+		node.yogaNode?.getComputedBorder(Yoga.EDGE_LEFT) ?? 0;
+
+	if (cached && anchor) {
+		const staticRenderPosTop = getRelativeTop(anchor, node) ?? 0;
+		const staticRenderPosLeft = getRelativeLeft(anchor, node) ?? 0;
+
+		const anchorBorderTop =
+			anchor.yogaNode?.getComputedBorder(Yoga.EDGE_TOP) ?? 0;
+		const anchorBorderLeft =
+			anchor.yogaNode?.getComputedBorder(Yoga.EDGE_LEFT) ?? 0;
+
+		stickyNodeTop =
+			staticRenderPosTop + anchorBorderTop + (cached.relativeY ?? 0);
+		stickyNodeHeight = cached.height!;
+		naturalStickyNodeHeight = cached.endRow - cached.startRow;
+		parentRelativeTop =
+			staticRenderPosTop + anchorBorderTop + (cached.parentRelativeTop ?? 0);
+		parentHeight = cached.parentHeight!;
+		parentBorderTop = cached.parentBorderTop ?? 0;
+		parentBorderBottom = cached.parentBorderBottom ?? 0;
+		relativeX =
+			staticRenderPosLeft +
+			anchorBorderLeft +
+			(cached.relativeX ?? 0) -
+			currentBorderLeft;
+		relativeY = stickyNodeTop - currentBorderTop;
+		nodeId = cached.nodeId;
+	} else {
+		stickyNodeTop = getRelativeTop(stickyNode, node) ?? 0;
+		naturalStickyNodeHeight = Math.round(
+			stickyNode.yogaNode?.getComputedHeight() ?? 0,
+		);
+		const alternateStickyNode = stickyNode.childNodes.find(
+			childNode => (childNode as DOMElement).internalStickyAlternate,
+		) as DOMElement | undefined;
+		const stuckHeight = Math.round(
+			alternateStickyNode?.yogaNode?.getComputedHeight() ?? 0,
+		);
+		stickyNodeHeight = Math.max(naturalStickyNodeHeight, stuckHeight);
+
+		const parent = stickyNode.parentNode;
+		const parentYogaNode = parent?.yogaNode;
+		if (parentYogaNode) {
+			parentRelativeTop = getRelativeTop(parent, node) ?? 0;
+			parentHeight = Math.round(parentYogaNode.getComputedHeight());
+			parentBorderTop = parentYogaNode.getComputedBorder(Yoga.EDGE_TOP);
+			parentBorderBottom = parentYogaNode.getComputedBorder(Yoga.EDGE_BOTTOM);
+		} else {
+			parentRelativeTop = 0;
+			parentHeight = Number.MAX_SAFE_INTEGER;
+			parentBorderTop = 0;
+			parentBorderBottom = 0;
+		}
+
+		relativeX = (getRelativeLeft(stickyNode, node) ?? 0) - currentBorderLeft;
+		relativeY = stickyNodeTop - currentBorderTop;
+		nodeId = stickyNode.internalId;
+	}
+
+	return {
+		stickyNodeTop,
+		stickyNodeHeight,
+		naturalStickyNodeHeight,
+		parentRelativeTop,
+		parentHeight,
+		parentBorderTop,
+		parentBorderBottom,
+		relativeX,
+		relativeY,
+		nodeId,
+	};
+}
+
 export function getStickyDescendants(node: DOMElement): StickyNodeInfo[] {
 	const stickyDescendants: StickyNodeInfo[] = [];
 
@@ -133,40 +238,21 @@ export function identifyActiveStickyNodes(
 	let activeBottomStickyNode: StickyNodeInfo | undefined;
 
 	for (const [index, stickyNodeInfo] of stickyNodes.entries()) {
-		const {node: stickyNode, type: stickyType, cached, anchor} = stickyNodeInfo;
+		const {type: stickyType} = stickyNodeInfo;
 
-		let stickyNodeTop: number;
-		let stickyNodeHeight: number;
-		let parentTop: number;
-		let parentHeight: number;
+		const {
+			stickyNodeTop,
+			naturalStickyNodeHeight,
+			parentRelativeTop,
+			parentHeight,
+		} = resolveStickyHeaderInfo(stickyNodeInfo, node);
 
-		if (cached && anchor) {
-			const staticRenderPos = getRelativeTop(anchor, node) ?? 0;
-			stickyNodeTop = staticRenderPos + cached.relativeY!;
-			stickyNodeHeight = cached.height!;
-			parentTop = staticRenderPos + cached.parentRelativeTop!;
-			parentHeight = cached.parentHeight!;
-		} else {
-			if (!stickyNode.yogaNode) continue;
-			stickyNodeTop = getRelativeTop(stickyNode, node) ?? 0;
-			stickyNodeHeight = Math.round(stickyNode.yogaNode.getComputedHeight());
-
-			const parent = stickyNode.parentNode!;
-			if (parent?.yogaNode) {
-				parentTop = getRelativeTop(parent, node) ?? 0;
-				parentHeight = Math.round(parent.yogaNode.getComputedHeight());
-			} else {
-				parentTop = 0;
-				parentHeight = Number.MAX_SAFE_INTEGER;
-			}
-		}
-
-		const stickyNodeBottom = stickyNodeTop + stickyNodeHeight;
+		const stickyNodeBottom = stickyNodeTop + naturalStickyNodeHeight;
 
 		if (
 			stickyType === 'top' &&
 			stickyNodeTop < scrollTop &&
-			parentTop + parentHeight > scrollTop
+			parentRelativeTop + parentHeight > scrollTop
 		) {
 			activeTopStickyNode = stickyNodeInfo;
 			activeTopStickyNodeIndex = index;
@@ -175,7 +261,7 @@ export function identifyActiveStickyNodes(
 		if (
 			stickyType === 'bottom' &&
 			Math.floor(stickyNodeBottom) > Math.floor(viewportBottom) &&
-			parentTop < viewportBottom
+			parentRelativeTop < viewportBottom
 		) {
 			activeBottomStickyNode = stickyNodeInfo;
 			activeBottomStickyNodeIndex = index;
@@ -260,7 +346,7 @@ export function renderActiveStickyNodes(
 	},
 ) {
 	const {
-		x,
+		x: _x,
 		y,
 		newTransformers,
 		skipStaticElements,
@@ -278,61 +364,31 @@ export function renderActiveStickyNodes(
 		cached,
 		anchor,
 	} of activeStickyNodes) {
-		let stickyNodeHeight: number;
-		let stickyNodeTop: number;
-		let parentTop: number;
-		let parentHeight: number;
-		let stickyOffsetX: number;
-		let stickyNodeId: number;
-
 		const currentBorderTop = yogaNode.getComputedBorder(Yoga.EDGE_TOP);
-		const currentBorderLeft = yogaNode.getComputedBorder(Yoga.EDGE_LEFT);
 
-		if (cached && anchor) {
-			const staticRenderPosTop = getRelativeTop(anchor, node) ?? 0;
-			const staticRenderPosLeft = getRelativeLeft(anchor, node) ?? 0;
-			stickyNodeTop = staticRenderPosTop + cached.relativeY!;
-			stickyNodeHeight = cached.height!;
-			parentTop = staticRenderPosTop + cached.parentRelativeTop!;
-			parentHeight = cached.parentHeight!;
-			stickyOffsetX = x + staticRenderPosLeft + cached.relativeX!;
-			stickyNodeId = cached.nodeId;
-		} else {
-			stickyNodeTop = getRelativeTop(stickyNode, node) ?? 0;
-			const naturalHeight = Math.round(
-				stickyNode.yogaNode!.getComputedHeight(),
-			);
-			const alternateStickyNode = stickyNode.childNodes.find(
-				childNode => (childNode as DOMElement).internalStickyAlternate,
-			) as DOMElement | undefined;
-			const stuckHeight = Math.round(
-				alternateStickyNode?.yogaNode?.getComputedHeight() ?? 0,
-			);
-			stickyNodeHeight = Math.max(naturalHeight, stuckHeight);
+		const stickyNodeInfo: StickyNodeInfo = {
+			node: stickyNode,
+			type,
+			cached,
+			anchor,
+		};
 
-			const parent = stickyNode.parentNode!;
-
-			if (parent?.yogaNode) {
-				parentTop = getRelativeTop(parent, node) ?? 0;
-				parentHeight = Math.round(parent.yogaNode.getComputedHeight());
-			} else {
-				parentTop = 0;
-				parentHeight = Number.MAX_SAFE_INTEGER;
-			}
-
-			stickyOffsetX = x + (getRelativeLeft(stickyNode, node) ?? 0);
-			stickyNodeId = stickyNode.internalId;
-		}
+		const {
+			stickyNodeTop,
+			stickyNodeHeight,
+			parentRelativeTop,
+			parentHeight,
+			parentBorderTop,
+			parentBorderBottom,
+			relativeX,
+			relativeY: _relativeY,
+			nodeId: stickyNodeId,
+		} = resolveStickyHeaderInfo(stickyNodeInfo, node);
 
 		const currentScrollTop = getScrollTop(node);
 		const currentClientHeight = node.internal_scrollState?.clientHeight ?? 0;
 
-		const parentBorderBottom = cached
-			? (cached.parentBorderBottom ?? 0)
-			: (stickyNode.parentNode?.yogaNode?.getComputedBorder(Yoga.EDGE_BOTTOM) ??
-				0);
-
-		const parentBottom = parentTop + parentHeight - parentBorderBottom;
+		const parentBottom = parentRelativeTop + parentHeight - parentBorderBottom;
 
 		let finalStickyY = 0;
 		let maxStuckY: number | undefined;
@@ -372,12 +428,8 @@ export function renderActiveStickyNodes(
 
 			maxStuckY = maxStickyTop - (y + currentBorderTop);
 		} else {
-			const parentBorderTop = cached
-				? (cached.parentBorderTop ?? 0)
-				: (stickyNode.parentNode?.yogaNode?.getComputedBorder(Yoga.EDGE_TOP) ??
-					0);
-
-			let minStickyTop = y - currentScrollTop + parentTop + parentBorderTop;
+			let minStickyTop =
+				y - currentScrollTop + parentRelativeTop + parentBorderTop;
 			const naturalStickyY = y - currentScrollTop + stickyNodeTop;
 			const stuckStickyY =
 				y + currentBorderTop + currentClientHeight - stickyNodeHeight;
@@ -444,7 +496,7 @@ export function renderActiveStickyNodes(
 			lines: naturalLines,
 			stuckLines,
 			styledOutput: stuckLines ?? naturalLines,
-			x: stickyOffsetX - (x + currentBorderLeft),
+			x: relativeX,
 			y: finalStickyY - (y + yogaNode.getComputedBorder(Yoga.EDGE_TOP)),
 			naturalRow,
 			startRow: naturalRow,

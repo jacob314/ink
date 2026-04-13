@@ -262,6 +262,9 @@ export function copyRegionProperty<
 	}
 }
 
+const roundIfDefined = (value: number | undefined): number | undefined =>
+	value === undefined ? undefined : Math.round(value);
+
 export default class Output {
 	width: number;
 	height: number;
@@ -391,34 +394,19 @@ export default class Output {
 			isScrollable,
 			isVerticallyScrollable,
 			isHorizontallyScrollable,
-			scrollTop:
-				scrollState?.scrollTop === undefined
-					? undefined
-					: Math.round(scrollState.scrollTop),
-			scrollLeft:
-				scrollState?.scrollLeft === undefined
-					? undefined
-					: Math.round(scrollState.scrollLeft),
-			scrollHeight:
-				scrollState?.scrollHeight === undefined
-					? undefined
-					: Math.round(scrollState.scrollHeight),
-			scrollWidth:
-				scrollState?.scrollWidth === undefined
-					? undefined
-					: Math.round(scrollState.scrollWidth),
+			scrollTop: roundIfDefined(scrollState?.scrollTop),
+			scrollLeft: roundIfDefined(scrollState?.scrollLeft),
+			scrollHeight: roundIfDefined(scrollState?.scrollHeight),
+			scrollWidth: roundIfDefined(scrollState?.scrollWidth),
 			scrollbarVisible,
 			overflowToBackbuffer: inheritedOverflowToBackbuffer,
-			marginRight:
-				marginRight === undefined ? undefined : Math.round(marginRight),
-			marginBottom:
-				marginBottom === undefined ? undefined : Math.round(marginBottom),
+			marginRight: roundIfDefined(marginRight),
+			marginBottom: roundIfDefined(marginBottom),
 			scrollbarThumbColor,
 			backgroundColor,
 			opaque,
-			borderTop: borderTop === undefined ? undefined : Math.round(borderTop),
-			borderBottom:
-				borderBottom === undefined ? undefined : Math.round(borderBottom),
+			borderTop: roundIfDefined(borderTop),
+			borderBottom: roundIfDefined(borderBottom),
 			stickyHeaders: [],
 			children: [],
 			nodeId,
