@@ -158,8 +158,16 @@ const InnerStatic = React.memo(({id}: {readonly id: string}) => {
 });
 
 const OuterGroup = React.memo(
-	({groupId, items}: {readonly groupId: number; readonly items: number[]}) => {
-		return (
+	({
+		groupId,
+		items,
+		wrapInStatic,
+	}: {
+		readonly groupId: number;
+		readonly items: number[];
+		readonly wrapInStatic: boolean;
+	}) => {
+		const content = (
 			<Box width={60} flexDirection="column" marginBottom={1} paddingX={1}>
 				<Box flexDirection="column" gap={1} marginBottom={1}>
 					{items.map(itemId => (
@@ -175,12 +183,19 @@ const OuterGroup = React.memo(
 				</TrackedText>
 			</Box>
 		);
+
+		if (wrapInStatic) {
+			return <StaticRender width={60}>{() => content}</StaticRender>;
+		}
+
+		return content;
 	},
 );
 
 export default function NestedStaticDemo() {
 	const [count, setCount] = useState(0);
 	const [showTimer, setShowTimer] = useState(false);
+	const [wrapFirstGroup, setWrapFirstGroup] = useState(true);
 	const [groups, setGroups] = useState<Array<{id: number; items: number[]}>>([
 		{id: 1, items: Array.from({length: 1000}, (_, i) => i + 1)},
 	]);
@@ -264,6 +279,11 @@ export default function NestedStaticDemo() {
 			return;
 		}
 
+		if (input === 'c') {
+			setWrapFirstGroup(previous => !previous);
+			return;
+		}
+
 		if (key.upArrow || input === 'w') {
 			dispatch({
 				type: 'up',
@@ -277,7 +297,7 @@ export default function NestedStaticDemo() {
 			return;
 		}
 
-		if (key.downArrow || input === 's') {
+		if (key.downArrow) {
 			dispatch({
 				type: 'down',
 				delta: key.shift ? 10 : 1,
@@ -381,6 +401,7 @@ export default function NestedStaticDemo() {
 							key={`group-outer-${group.id}`}
 							groupId={group.id}
 							items={group.items}
+							wrapInStatic={group.id === 1 ? wrapFirstGroup : false}
 						/>
 					))}
 				</Box>
@@ -394,14 +415,18 @@ export default function NestedStaticDemo() {
 				overflow="hidden"
 			>
 				<Text color="green">Nested StaticRender Demo</Text>
-				<Text>Press [Space] to add item to Group 1, [n] to add new Group.</Text>
+				<Text>
+					Press [Space] to add item to Group 1, [n] to add new Group, [c] to
+					toggle static wrap for Group 1.
+				</Text>
 				<Text>
 					Arrows to scroll. [u]/[d] scroll up/down by half total height.
 					ScrollTop: {scrollTop}
 				</Text>
 				<Text>
 					Timer: {count} | FPS: {currentFps} | Frame:{' '}
-					{frameIndexReference.current}
+					{frameIndexReference.current} | G1 Static Wrap:{' '}
+					{wrapFirstGroup ? 'ON' : 'OFF'}
 				</Text>
 			</Box>
 		</Box>
