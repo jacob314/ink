@@ -20,7 +20,6 @@ export type StickyNodeInfo = {
 	cached?: StickyHeader;
 	anchor?: DOMElement;
 };
-<<<<<<< HEAD
 
 export type ResolvedStickyHeaderInfo = {
 	stickyNodeTop: number;
@@ -82,11 +81,12 @@ export function resolveStickyHeaderInfo(
 		relativeY = stickyNodeTop - currentBorderTop;
 		nodeId = cached.nodeId;
 	} else {
-		stickyNodeTop = getRelativeTop(stickyNode, node) ?? 0;
+		const nonCachedStickyNode = stickyNode!;
+		stickyNodeTop = getRelativeTop(nonCachedStickyNode, node) ?? 0;
 		naturalStickyNodeHeight = Math.round(
-			stickyNode.yogaNode?.getComputedHeight() ?? 0,
+			nonCachedStickyNode.yogaNode?.getComputedHeight() ?? 0,
 		);
-		const alternateStickyNode = stickyNode.childNodes.find(
+		const alternateStickyNode = nonCachedStickyNode.childNodes.find(
 			childNode => (childNode as DOMElement).internalStickyAlternate,
 		) as DOMElement | undefined;
 		const stuckHeight = Math.round(
@@ -94,7 +94,7 @@ export function resolveStickyHeaderInfo(
 		);
 		stickyNodeHeight = Math.max(naturalStickyNodeHeight, stuckHeight);
 
-		const parent = stickyNode.parentNode;
+		const parent = nonCachedStickyNode.parentNode;
 		const parentYogaNode = parent?.yogaNode;
 		if (parentYogaNode) {
 			parentRelativeTop = getRelativeTop(parent, node) ?? 0;
@@ -108,9 +108,10 @@ export function resolveStickyHeaderInfo(
 			parentBorderBottom = 0;
 		}
 
-		relativeX = (getRelativeLeft(stickyNode, node) ?? 0) - currentBorderLeft;
+		relativeX =
+			(getRelativeLeft(nonCachedStickyNode, node) ?? 0) - currentBorderLeft;
 		relativeY = stickyNodeTop - currentBorderTop;
-		nodeId = stickyNode.internalId;
+		nodeId = nonCachedStickyNode.internalId;
 	}
 
 	return {
@@ -125,9 +126,9 @@ export function resolveStickyHeaderInfo(
 		relativeY,
 		nodeId,
 	};
-	}
+}
 
-	export function getStickyDescendants(node: DOMElement): StickyNodeInfo[] {
+export function getStickyDescendants(node: DOMElement): StickyNodeInfo[] {
 	const stickyDescendants: StickyNodeInfo[] = [];
 	for (const child of node.childNodes) {
 		if (child.nodeName === '#text') {

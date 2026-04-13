@@ -59,7 +59,9 @@ const canUseCachedRegion = (
 		return false;
 	}
 
-	return node.childNodes.some(childNode => childNode.nodeName === 'ink-static-render');
+	return node.childNodes.some(
+		childNode => childNode.nodeName === 'ink-static-render',
+	);
 };
 
 const getOrRenderCachedRegion = (
@@ -83,7 +85,11 @@ const getOrRenderCachedRegion = (
 	} = options;
 	const cachedRegion = getCachedRegion(node, skipStaticElements);
 
-	if (cachedRegion && cachedRegion.width === width && cachedRegion.height === height) {
+	if (
+		cachedRegion &&
+		cachedRegion.width === width &&
+		cachedRegion.height === height
+	) {
 		return cachedRegion;
 	}
 
