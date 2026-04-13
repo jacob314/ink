@@ -1,6 +1,6 @@
 {
 	"name": "@jrichman/ink",
-	"version": "6.6.9",
+	"version": "7.0.0-beta.1",
 	"description": "React for CLI",
 	"license": "MIT",
 	"repository": "jacob314/ink",
