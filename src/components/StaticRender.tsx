@@ -1,9 +1,9 @@
 import React, {
-        useRef,
-        useEffect,
-        useState,
-        type ReactNode,
-        type DependencyList,
+	useRef,
+	useEffect,
+	useState,
+	type ReactNode,
+	type DependencyList,
 } from 'react';
 import {markNodeAsDirty, type DOMElement} from '../dom.js';
 import {type Styles} from '../styles.js';
