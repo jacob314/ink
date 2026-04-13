@@ -86,6 +86,8 @@ export class SceneManager {
 				this.regionWasAtEnd.set(update.id, true);
 			}
 
+			const oldOffsetY = region.linesOffsetY ?? 0;
+
 			// Apply properties
 			const r = region;
 			for (const key of regionLayoutProperties) {
@@ -112,7 +114,6 @@ export class SceneManager {
 			}
 
 			// Apply line updates
-			const oldOffsetY = r.linesOffsetY ?? 0;
 			if (update.linesOffsetY !== undefined) {
 				r.linesOffsetY = update.linesOffsetY;
 			}

@@ -480,9 +480,17 @@ export class TerminalWriter {
 		}
 
 		if (y !== this.rows - 1 && y !== this.scrollRegionBottom - 1) {
-			this.writeHelper('\n');
-			this.cursorY = y + 1;
-			this.cursorX = -1;
+			// Avoid a bare newline after a full-width line. Some terminals keep
+			// wrap-pending state at the last column, which can disturb rows below.
+			if (clampedLine.length >= this.columns) {
+				this.writeHelper(ansiEscapes.cursorTo(0, y + 1));
+				this.cursorY = y + 1;
+				this.cursorX = 0;
+			} else {
+				this.writeHelper('\n');
+				this.cursorY = y + 1;
+				this.cursorX = -1;
+			}
 		} else {
 			this.cursorY = y;
 			this.cursorX = clampedLine.length;
