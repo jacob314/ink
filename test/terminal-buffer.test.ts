@@ -6,10 +6,14 @@ import TerminalBuffer from '../src/terminal-buffer.js';
 import {type Region} from '../src/output.js';
 
 import {toStyledCharacters} from '../src/measure-text.js';
+import {type StickyHeader} from '../src/dom.js';
 
 const createLine = (text: string): StyledLine => toStyledCharacters(text);
 
-const createRegion = (lines: StyledLine[]): Region => ({
+const createRegion = (
+	lines: StyledLine[],
+	stickyHeaders: StickyHeader[] = [],
+): Region => ({
 	id: 'root',
 	x: 0,
 	y: 0,
@@ -17,10 +21,68 @@ const createRegion = (lines: StyledLine[]): Region => ({
 	height: 100,
 	lines,
 	isScrollable: false,
-	stickyHeaders: [],
+	stickyHeaders,
 	children: [],
 });
 
+test('update - stickyHeadersEqual checks extended properties', t => {
+	const buffer = new TerminalBuffer(100, 100);
+	const {worker} = buffer as any;
+	const sendStub = stub(worker, 'send');
+
+	const baseHeader: StickyHeader = {
+		nodeId: 1,
+		lines: [createLine('A')],
+		styledOutput: [createLine('A')],
+		x: 0,
+		y: 0,
+		naturalRow: 0,
+		startRow: 0,
+		endRow: 1,
+		scrollContainerId: 1,
+		isStuckOnly: false,
+		type: 'top',
+		maxStuckY: undefined,
+		minStuckY: undefined,
+		relativeX: 0,
+		relativeY: 0,
+		height: 1,
+		parentRelativeTop: 0,
+		parentHeight: 10,
+		parentBorderTop: 0,
+		parentBorderBottom: 0,
+	};
+
+	const lines = [createLine('A')];
+
+	// 1. Initial State
+	buffer.update(0, 0, createRegion(lines, [baseHeader]));
+	t.true(sendStub.calledOnce);
+	sendStub.resetHistory();
+
+	// 2. Same state -> no update
+	t.false(buffer.update(0, 0, createRegion(lines, [baseHeader])));
+	t.false(sendStub.called);
+	sendStub.resetHistory();
+
+	// 3. Mutate maxStuckY -> should trigger update
+	const mutatedHeader1 = {...baseHeader, maxStuckY: 5};
+	t.true(buffer.update(0, 0, createRegion(lines, [mutatedHeader1])));
+	t.true(sendStub.calledOnce);
+	sendStub.resetHistory();
+
+	// 4. Mutate type -> should trigger update
+	const mutatedHeader2 = {...baseHeader, type: 'bottom' as const};
+	t.true(buffer.update(0, 0, createRegion(lines, [mutatedHeader2])));
+	t.true(sendStub.calledOnce);
+	sendStub.resetHistory();
+
+	// 5. Mutate parentHeight -> should trigger update
+	const mutatedHeader3 = {...baseHeader, parentHeight: 20};
+	t.true(buffer.update(0, 0, createRegion(lines, [mutatedHeader3])));
+	t.true(sendStub.calledOnce);
+	sendStub.resetHistory();
+});
 test('update - correctly diffs sequential updates', t => {
 	const buffer = new TerminalBuffer(100, 100);
 	const {worker} = buffer as any;

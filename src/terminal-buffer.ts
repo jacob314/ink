@@ -598,7 +598,18 @@ export default class TerminalBuffer {
 				oldH.startRow !== newH.startRow ||
 				oldH.endRow !== newH.endRow ||
 				oldH.scrollContainerId !== newH.scrollContainerId ||
-				oldH.nodeId !== newH.nodeId
+				oldH.nodeId !== newH.nodeId ||
+				oldH.type !== newH.type ||
+				oldH.maxStuckY !== newH.maxStuckY ||
+				oldH.minStuckY !== newH.minStuckY ||
+				oldH.isStuckOnly !== newH.isStuckOnly ||
+				oldH.relativeX !== newH.relativeX ||
+				oldH.relativeY !== newH.relativeY ||
+				oldH.height !== newH.height ||
+				oldH.parentRelativeTop !== newH.parentRelativeTop ||
+				oldH.parentHeight !== newH.parentHeight ||
+				oldH.parentBorderTop !== newH.parentBorderTop ||
+				oldH.parentBorderBottom !== newH.parentBorderBottom
 			) {
 				return false;
 			}
