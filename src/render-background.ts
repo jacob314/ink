@@ -13,8 +13,8 @@ const renderBackground = (
 		return;
 	}
 
-	const width = node.yogaNode!.getComputedWidth();
-	const height = node.yogaNode!.getComputedHeight();
+	const width = Math.round(node.yogaNode!.getComputedWidth());
+	const height = Math.round(node.yogaNode!.getComputedHeight());
 
 	// Calculate the actual content area considering borders
 	const leftBorderWidth =

@@ -262,6 +262,9 @@ export function copyRegionProperty<
 	}
 }
 
+const roundIfDefined = (value: number | undefined): number | undefined =>
+	value === undefined ? undefined : Math.round(value);
+
 export default class Output {
 	width: number;
 	height: number;
@@ -276,16 +279,16 @@ export default class Output {
 	constructor(options: Options) {
 		const {width, height, node, id = 'root', trackSelection = false} = options;
 
-		this.width = width;
-		this.height = height;
+		this.width = Math.round(width);
+		this.height = Math.round(height);
 		this.trackSelection = trackSelection;
 
 		this.root = {
 			id,
 			x: 0,
 			y: 0,
-			width,
-			height,
+			width: this.width,
+			height: this.height,
 			lines: [],
 			styledOutput: [],
 			isScrollable: false,
@@ -382,28 +385,28 @@ export default class Output {
 
 		const region: Region = {
 			id,
-			x,
-			y,
-			width,
-			height,
+			x: Math.round(x),
+			y: Math.round(y),
+			width: Math.round(width),
+			height: Math.round(height),
 			lines: [],
 			styledOutput: [],
 			isScrollable,
 			isVerticallyScrollable,
 			isHorizontallyScrollable,
-			scrollTop: scrollState?.scrollTop,
-			scrollLeft: scrollState?.scrollLeft,
-			scrollHeight: scrollState?.scrollHeight,
-			scrollWidth: scrollState?.scrollWidth,
+			scrollTop: roundIfDefined(scrollState?.scrollTop),
+			scrollLeft: roundIfDefined(scrollState?.scrollLeft),
+			scrollHeight: roundIfDefined(scrollState?.scrollHeight),
+			scrollWidth: roundIfDefined(scrollState?.scrollWidth),
 			scrollbarVisible,
 			overflowToBackbuffer: inheritedOverflowToBackbuffer,
-			marginRight,
-			marginBottom,
+			marginRight: roundIfDefined(marginRight),
+			marginBottom: roundIfDefined(marginBottom),
 			scrollbarThumbColor,
 			backgroundColor,
 			opaque,
-			borderTop,
-			borderBottom,
+			borderTop: roundIfDefined(borderTop),
+			borderBottom: roundIfDefined(borderBottom),
 			stickyHeaders: [],
 			children: [],
 			nodeId,
@@ -411,7 +414,7 @@ export default class Output {
 			selectableSpans: [],
 		};
 
-		this.initLines(region, bufferWidth, bufferHeight);
+		this.initLines(region, Math.round(bufferWidth), Math.round(bufferHeight));
 
 		// Add to current active region's children
 		this.getActiveRegion().children.push(region);
@@ -502,8 +505,12 @@ export default class Output {
 
 	clip(clip: Clip) {
 		const previousClip = this.clips.at(-1);
-		const nextClip = {...clip};
-
+		const nextClip = {
+			x1: roundIfDefined(clip.x1),
+			x2: roundIfDefined(clip.x2),
+			y1: roundIfDefined(clip.y1),
+			y2: roundIfDefined(clip.y2),
+		};
 		if (previousClip) {
 			nextClip.x1 =
 				previousClip.x1 === undefined
@@ -554,8 +561,8 @@ export default class Output {
 			: (region.overflowToBackbuffer ?? activeRegion.overflowToBackbuffer);
 
 		const regionRef = Object.create(region) as Region;
-		regionRef.x = region.x + x;
-		regionRef.y = region.y + y;
+		regionRef.x = Math.round(region.x + x);
+		regionRef.y = Math.round(region.y + y);
 		regionRef.overflowToBackbuffer = overflowToBackbuffer;
 
 		activeRegion.children.push(regionRef);
