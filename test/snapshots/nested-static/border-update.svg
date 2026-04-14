@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="740" height="173" viewBox="0 0 740 173">
+  <style>
+    text { font-family: Consolas, "Courier New", monospace; font-size: 14px; dominant-baseline: text-before-edge; white-space: pre; }
+  </style>
+  <rect width="740" height="173" fill="#000000" />
+  <g transform="translate(10, 10)">
+    <text x="0" y="87" fill="#ffffff" textLength="720" lengthAdjust="spacingAndGlyphs">║ ┌──────────────────────────────────────┐                 ║                    </text>
+    <text x="0" y="104" fill="#ffffff" textLength="720" lengthAdjust="spacingAndGlyphs">║ │Inner 2                               │                 ║                    </text>
+    <text x="0" y="121" fill="#ffffff" textLength="720" lengthAdjust="spacingAndGlyphs">║ └──────────────────────────────────────┘                 ║                    </text>
+    <text x="0" y="138" fill="#ffffff" textLength="720" lengthAdjust="spacingAndGlyphs">╚══════════════════════════════════════════════════════════╝                    </text>
+  </g>
+</svg>

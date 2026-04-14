@@ -264,8 +264,9 @@ function ScrollableContent({
 						<StaticRender
 							key={`static-inner-scroll-${headerId}`}
 							width={contentWidth}
+							deps={[innerBox]}
 						>
-							{innerBox}
+							{() => innerBox}
 						</StaticRender>
 					) : (
 						innerBox
@@ -347,8 +348,12 @@ function ScrollableContent({
 
 			elements.push(
 				useStatic ? (
-					<StaticRender key={`static-group-${headerId}`} width={contentWidth}>
-						{groupInnerBox}
+					<StaticRender
+						key={`static-group-${headerId}`}
+						width={contentWidth}
+						deps={[groupInnerBox]}
+					>
+						{() => groupInnerBox}
 					</StaticRender>
 				) : (
 					groupInnerBox
@@ -363,8 +368,12 @@ function ScrollableContent({
 					);
 
 					return useStatic ? (
-						<StaticRender key={`static-item-${item.id}`} width={contentWidth}>
-							{itemInnerBox}
+						<StaticRender
+							key={`static-item-${item.id}`}
+							width={contentWidth}
+							deps={[itemInnerBox]}
+						>
+							{() => itemInnerBox}
 						</StaticRender>
 					) : (
 						itemInnerBox

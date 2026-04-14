@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="290" height="122" viewBox="0 0 290 122">
+  <style>
+    text { font-family: Consolas, "Courier New", monospace; font-size: 14px; dominant-baseline: text-before-edge; white-space: pre; }
+  </style>
+  <rect width="290" height="122" fill="#000000" />
+  <g transform="translate(10, 10)">
+    <text x="0" y="2" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">NATURAL HEADER                </text>
+    <text x="0" y="19" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">Item 1                        </text>
+    <text x="0" y="36" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">Item 2                        </text>
+    <text x="0" y="53" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">Item 3                        </text>
+    <text x="0" y="87" fill="#ffffff" textLength="270" lengthAdjust="spacingAndGlyphs">End of list                   </text>
+  </g>
+</svg>

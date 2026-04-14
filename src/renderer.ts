@@ -256,20 +256,6 @@ const renderer = (
 		trackSelection,
 	} = options;
 
-	const callBeforeRender = (n: DOMElement) => {
-		if (typeof n.internalOnBeforeRender === 'function') {
-			n.internalOnBeforeRender(n, {trackSelection});
-		}
-
-		for (const child of n.childNodes) {
-			if (child.nodeName !== '#text') {
-				callBeforeRender(child);
-			}
-		}
-	};
-
-	callBeforeRender(node);
-
 	if (node.yogaNode) {
 		if (isScreenReaderEnabled) {
 			const output = renderNodeToScreenReaderOutput(node, {

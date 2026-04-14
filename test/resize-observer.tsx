@@ -229,7 +229,7 @@ test('ResizeObserver attached to child of a StaticRender element still gets succ
 	const stdout = createStdout();
 	const {unmount} = render(
 		<StaticRender width={100} style={{flexDirection: 'column'}}>
-			<ObservedBox width={20} height={10} onResize={onResize} />
+			{() => <ObservedBox width={20} height={10} onResize={onResize} />}
 		</StaticRender>,
 		{stdout},
 	);
@@ -251,7 +251,7 @@ test('ResizeObserver inside StaticRender does not yield NaN', async t => {
 	const stdout = createStdout();
 	const {unmount} = render(
 		<StaticRender width={100}>
-			<ObservedBox width="100%" height="100%" onResize={onResize} />
+			{() => <ObservedBox width="100%" height="100%" onResize={onResize} />}
 		</StaticRender>,
 		{stdout},
 	);
@@ -280,9 +280,11 @@ test('ResizeObserver attached to parent of a StaticRender element does not get s
 		>
 			<Text>Parent</Text>
 			<StaticRender width={50}>
-				<Box width={30} height={5}>
-					<Text>Static Content</Text>
-				</Box>
+				{() => (
+					<Box width={30} height={5}>
+						<Text>Static Content</Text>
+					</Box>
+				)}
 			</StaticRender>
 		</ObservedBox>,
 		{stdout},

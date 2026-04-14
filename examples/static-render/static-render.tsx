@@ -42,8 +42,8 @@ export default function Example() {
 
 	return (
 		<Box flexDirection="column">
-			<StaticRender width={process.stdout.columns || 80}>
-				{heavyContent}
+			<StaticRender width={process.stdout.columns || 80} deps={[]}>
+				{() => heavyContent}
 			</StaticRender>
 			<Text color="green">Counter: {counter}</Text>
 		</Box>
