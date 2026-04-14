@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import * as path from 'node:path';
+import {fileURLToPath} from 'node:url';
 import test from 'ava';
 import React from 'react';
 import {StaticRender, Text, Box} from '../src/index.js';

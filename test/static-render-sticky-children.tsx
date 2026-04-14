@@ -1,9 +1,14 @@
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 import React from 'react';
 import test from 'ava';
 import {Box, Text, StaticRender} from '../src/index.js';
-import {renderToString} from './helpers/render-to-string.js';
+import {render} from './helpers/render.js';
+import {verifySvgSnapshot} from './helpers/svg.js';
 
-test('StaticRender with stickyChildren (different height)', t => {
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+test('StaticRender with stickyChildren (different height)', async t => {
 	const scenarios = [
 		{
 			name: 'initial',
@@ -17,8 +22,8 @@ test('StaticRender with stickyChildren (different height)', t => {
 		},
 	];
 
-	for (const {name, scrollTop, description} of scenarios) {
-		const output = renderToString(
+	for (const {name, scrollTop} of scenarios) {
+		const {unmount, waitUntilReady, generateSvg} = await render(
 			<Box
 				height={10}
 				width={30}
@@ -51,8 +56,24 @@ test('StaticRender with stickyChildren (different height)', t => {
 					)}
 				</StaticRender>
 			</Box>,
+			30,
+			{
+				terminalHeight: 10,
+				terminalBuffer: true,
+				renderProcess: false,
+			},
 		);
 
-		t.snapshot(output, `${name} (scrollTop: ${scrollTop}) - ${description}`);
+		await waitUntilReady();
+		const svg = generateSvg();
+		const snapshotPath = path.join(
+			__dirname,
+			'snapshots',
+			'static-render-sticky-children',
+			`${name}.svg`,
+		);
+
+		verifySvgSnapshot(t, svg, snapshotPath);
+		await unmount();
 	}
 });

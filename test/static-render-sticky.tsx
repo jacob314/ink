@@ -1,9 +1,14 @@
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 import React from 'react';
 import test from 'ava';
 import {Box, Text, StaticRender} from '../src/index.js';
-import {renderToString} from './helpers/render-to-string.js';
+import {render} from './helpers/render.js';
+import {verifySvgSnapshot} from './helpers/svg.js';
 
-test('StaticRender with sticky header', t => {
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+test('StaticRender with sticky header', async t => {
 	const scenarios = [
 		{
 			name: 'initial',
@@ -22,8 +27,8 @@ test('StaticRender with sticky header', t => {
 		},
 	];
 
-	for (const {name, scrollTop, description} of scenarios) {
-		const output = renderToString(
+	for (const {name, scrollTop} of scenarios) {
+		const {unmount, waitUntilReady, generateSvg} = await render(
 			<Box
 				height={5}
 				width={20}
@@ -47,30 +52,46 @@ test('StaticRender with sticky header', t => {
 					)}
 				</StaticRender>
 			</Box>,
+			20,
+			{
+				terminalHeight: 5,
+				terminalBuffer: true,
+				renderProcess: false,
+			},
 		);
 
-		t.snapshot(output, `${name} (scrollTop: ${scrollTop}) - ${description}`);
+		await waitUntilReady();
+		const svg = generateSvg();
+		const snapshotPath = path.join(
+			__dirname,
+			'snapshots',
+			'static-render-sticky',
+			`${name}.svg`,
+		);
+
+		verifySvgSnapshot(t, svg, snapshotPath);
+		await unmount();
 	}
 });
 
-test('StaticRender containing multiple sticky headers', t => {
+test('StaticRender containing multiple sticky headers', async t => {
 	const scenarios = [
 		{
-			name: 'H1 stuck',
+			name: 'H1_stuck',
 			scrollTop: 1,
 		},
 		{
-			name: 'H1 pushed by H2',
+			name: 'H1_pushed_by_H2',
 			scrollTop: 3,
 		},
 		{
-			name: 'H2 stuck',
+			name: 'H2_stuck',
 			scrollTop: 5,
 		},
 	];
 
 	for (const {name, scrollTop} of scenarios) {
-		const output = renderToString(
+		const {unmount, waitUntilReady, generateSvg} = await render(
 			<Box
 				height={3}
 				width={20}
@@ -102,14 +123,30 @@ test('StaticRender containing multiple sticky headers', t => {
 					)}
 				</StaticRender>
 			</Box>,
+			20,
+			{
+				terminalHeight: 3,
+				terminalBuffer: true,
+				renderProcess: false,
+			},
 		);
 
-		t.snapshot(output, `${name} (scrollTop: ${scrollTop})`);
+		await waitUntilReady();
+		const svg = generateSvg();
+		const snapshotPath = path.join(
+			__dirname,
+			'snapshots',
+			'static-render-sticky-multiple',
+			`${name}.svg`,
+		);
+
+		verifySvgSnapshot(t, svg, snapshotPath);
+		await unmount();
 	}
 });
 
-test('StaticRender with multi-line sticky header', t => {
-	const output = renderToString(
+test('StaticRender with multi-line sticky header', async t => {
+	const {unmount, waitUntilReady, generateSvg} = await render(
 		<Box
 			height={10}
 			width={20}
@@ -141,7 +178,23 @@ test('StaticRender with multi-line sticky header', t => {
 				)}
 			</StaticRender>
 		</Box>,
+		20,
+		{
+			terminalHeight: 10,
+			terminalBuffer: true,
+			renderProcess: false,
+		},
 	);
 
-	t.snapshot(output);
+	await waitUntilReady();
+	const svg = generateSvg();
+	const snapshotPath = path.join(
+		__dirname,
+		'snapshots',
+		'static-render-sticky-multiline',
+		'output.svg',
+	);
+
+	verifySvgSnapshot(t, svg, snapshotPath);
+	await unmount();
 });
