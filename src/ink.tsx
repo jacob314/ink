@@ -401,6 +401,7 @@ export default class Ink {
 			selection: this.selection,
 			selectionStyle: this.options.selectionStyle,
 			skipScrollbars: Boolean(this.terminalBuffer),
+			terminalBuffer: Boolean(this.terminalBuffer),
 		});
 
 		if (this.terminalBuffer && root) {
