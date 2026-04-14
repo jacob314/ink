@@ -27,51 +27,53 @@ test('StaticRender with sticky header', async t => {
 		},
 	];
 
-	for (const {name, scrollTop} of scenarios) {
-		const {unmount, waitUntilReady, generateSvg} = await render(
-			<Box
-				height={5}
-				width={20}
-				overflowY="scroll"
-				flexDirection="column"
-				scrollTop={scrollTop}
-			>
-				<StaticRender width={20}>
-					{() => (
-						<Box flexDirection="column">
-							<Box height={4} flexDirection="column">
-								<Box sticky opaque>
-									<Text>Header</Text>
+	await Promise.all(
+		scenarios.map(async ({name, scrollTop}) => {
+			const {unmount, waitUntilReady, generateSvg} = await render(
+				<Box
+					height={5}
+					width={20}
+					overflowY="scroll"
+					flexDirection="column"
+					scrollTop={scrollTop}
+				>
+					<StaticRender width={20}>
+						{() => (
+							<Box flexDirection="column">
+								<Box height={4} flexDirection="column">
+									<Box sticky opaque>
+										<Text>Header</Text>
+									</Box>
+									<Text>Item 1</Text>
+									<Text>Item 2</Text>
+									<Text>Item 3</Text>
 								</Box>
-								<Text>Item 1</Text>
-								<Text>Item 2</Text>
-								<Text>Item 3</Text>
+								<Text>End of list</Text>
 							</Box>
-							<Text>End of list</Text>
-						</Box>
-					)}
-				</StaticRender>
-			</Box>,
-			20,
-			{
-				terminalHeight: 5,
-				terminalBuffer: true,
-				renderProcess: false,
-			},
-		);
+						)}
+					</StaticRender>
+				</Box>,
+				20,
+				{
+					terminalHeight: 5,
+					terminalBuffer: true,
+					renderProcess: false,
+				},
+			);
 
-		await waitUntilReady();
-		const svg = generateSvg();
-		const snapshotPath = path.join(
-			__dirname,
-			'snapshots',
-			'static-render-sticky',
-			`${name}.svg`,
-		);
+			await waitUntilReady();
+			const svg = generateSvg();
+			const snapshotPath = path.join(
+				__dirname,
+				'snapshots',
+				'static-render-sticky',
+				`${name}.svg`,
+			);
 
-		verifySvgSnapshot(t, svg, snapshotPath);
-		await unmount();
-	}
+			verifySvgSnapshot(t, svg, snapshotPath);
+			await unmount();
+		}),
+	);
 });
 
 test('StaticRender containing multiple sticky headers', async t => {
@@ -90,59 +92,61 @@ test('StaticRender containing multiple sticky headers', async t => {
 		},
 	];
 
-	for (const {name, scrollTop} of scenarios) {
-		const {unmount, waitUntilReady, generateSvg} = await render(
-			<Box
-				height={3}
-				width={20}
-				overflowY="scroll"
-				flexDirection="column"
-				scrollTop={scrollTop}
-			>
-				<StaticRender width={20}>
-					{() => (
-						<Box flexDirection="column">
-							<Box height={4} flexDirection="column">
-								<Box sticky opaque>
-									<Text>Header 1</Text>
+	await Promise.all(
+		scenarios.map(async ({name, scrollTop}) => {
+			const {unmount, waitUntilReady, generateSvg} = await render(
+				<Box
+					height={3}
+					width={20}
+					overflowY="scroll"
+					flexDirection="column"
+					scrollTop={scrollTop}
+				>
+					<StaticRender width={20}>
+						{() => (
+							<Box flexDirection="column">
+								<Box height={4} flexDirection="column">
+									<Box sticky opaque>
+										<Text>Header 1</Text>
+									</Box>
+									<Text>Item 1-1</Text>
+									<Text>Item 1-2</Text>
+									<Text>Item 1-3</Text>
 								</Box>
-								<Text>Item 1-1</Text>
-								<Text>Item 1-2</Text>
-								<Text>Item 1-3</Text>
-							</Box>
-							<Box height={4} flexDirection="column">
-								<Box sticky opaque>
-									<Text>Header 2</Text>
+								<Box height={4} flexDirection="column">
+									<Box sticky opaque>
+										<Text>Header 2</Text>
+									</Box>
+									<Text>Item 2-1</Text>
+									<Text>Item 2-2</Text>
+									<Text>Item 2-3</Text>
 								</Box>
-								<Text>Item 2-1</Text>
-								<Text>Item 2-2</Text>
-								<Text>Item 2-3</Text>
+								<Text>End of list</Text>
 							</Box>
-							<Text>End of list</Text>
-						</Box>
-					)}
-				</StaticRender>
-			</Box>,
-			20,
-			{
-				terminalHeight: 3,
-				terminalBuffer: true,
-				renderProcess: false,
-			},
-		);
+						)}
+					</StaticRender>
+				</Box>,
+				20,
+				{
+					terminalHeight: 3,
+					terminalBuffer: true,
+					renderProcess: false,
+				},
+			);
 
-		await waitUntilReady();
-		const svg = generateSvg();
-		const snapshotPath = path.join(
-			__dirname,
-			'snapshots',
-			'static-render-sticky-multiple',
-			`${name}.svg`,
-		);
+			await waitUntilReady();
+			const svg = generateSvg();
+			const snapshotPath = path.join(
+				__dirname,
+				'snapshots',
+				'static-render-sticky-multiple',
+				`${name}.svg`,
+			);
 
-		verifySvgSnapshot(t, svg, snapshotPath);
-		await unmount();
-	}
+			verifySvgSnapshot(t, svg, snapshotPath);
+			await unmount();
+		}),
+	);
 });
 
 test('StaticRender with multi-line sticky header', async t => {
