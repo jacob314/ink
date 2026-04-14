@@ -30,8 +30,6 @@ export const squashTextNodesWithMap = (
 	offsetRef: {current: number},
 ): string => {
 	let text = '';
-	const localMap: CharOffsetMap = new Map();
-	const localOffsetRef = {current: 0};
 
 	for (let index = 0; index < node.childNodes.length; index++) {
 		const childNode = node.childNodes[index];
@@ -41,24 +39,24 @@ export const squashTextNodesWithMap = (
 		}
 
 		let nodeText = '';
-		const startOffset = localOffsetRef.current;
+		const startOffset = offsetRef.current;
 
 		if (childNode.nodeName === '#text') {
 			nodeText = childNode.nodeValue;
-			localMap.set(childNode, {
+			map.set(childNode, {
 				start: startOffset,
 				end: startOffset + nodeText.length,
 			});
-			localOffsetRef.current += nodeText.length;
+			offsetRef.current += nodeText.length;
 		} else {
 			if (
 				childNode.nodeName === 'ink-text' ||
 				childNode.nodeName === 'ink-virtual-text'
 			) {
-				nodeText = squashTextNodesWithMap(childNode, localMap, localOffsetRef);
-				localMap.set(childNode, {
+				nodeText = squashTextNodesWithMap(childNode, map, offsetRef);
+				map.set(childNode, {
 					start: startOffset,
-					end: localOffsetRef.current,
+					end: offsetRef.current,
 				});
 			}
 
@@ -74,15 +72,6 @@ export const squashTextNodesWithMap = (
 
 		text += nodeText;
 	}
-
-	for (const [k, v] of localMap.entries()) {
-		map.set(k, {
-			start: v.start + offsetRef.current,
-			end: v.end + offsetRef.current,
-		});
-	}
-
-	offsetRef.current += text.length;
 
 	return text;
 };
