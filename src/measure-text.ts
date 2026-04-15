@@ -193,6 +193,13 @@ export function styledCharsWidth(line: StyledLine): number {
 }
 
 export function inkCharacterWidth(text: string): number {
+	if (text.length === 1) {
+		const code = text.charCodeAt(0);
+		if (code >= 32 && code < 127) {
+			return 1;
+		}
+	}
+
 	const width = widthCache.get(text);
 	if (width !== undefined) {
 		return width;
