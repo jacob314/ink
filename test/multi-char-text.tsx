@@ -315,3 +315,27 @@ test('multiline string starting with 2-char emoji wrapped in box with varying wi
 		t.snapshot(output, `width ${width}, padding ${padding}`);
 	}
 });
+
+snapshotMacroWithDefaultWidth('text starting with zero-width character', () => (
+	<Box borderStyle="round" width={10}>
+		<Text>{'\u200B'}hello</Text>
+	</Box>
+));
+
+snapshotMacroWithDefaultWidth('multiple zero-width characters', () => (
+	<Box borderStyle="round" width={10}>
+		<Text>
+			{'\u200B'}
+			{'\u200B'}hello
+		</Text>
+	</Box>
+));
+
+snapshotMacroWithDefaultWidth(
+	'text with zero-width character in middle',
+	() => (
+		<Box borderStyle="round" width={10}>
+			<Text>he{'\u200B'}llo</Text>
+		</Box>
+	),
+);

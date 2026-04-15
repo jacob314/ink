@@ -717,6 +717,7 @@ export default class Output {
 
 		const slicedChars = new StyledLine();
 		let sliceWidth = 0;
+		let pendingZeroWidthChars = '';
 
 		for (let i = 0; i < chars.length; i++) {
 			const val = chars.getValue(i);
@@ -731,26 +732,31 @@ export default class Output {
 					break;
 				}
 
-				if (characterWidth === 0 && sliceWidth > 0) {
-					// Append to previous character to avoid taking a new column
-					const prevIndex = slicedChars.length - 1;
-					const prevVal = slicedChars.getValue(prevIndex);
-					slicedChars.setChar(
-						prevIndex,
-						prevVal + val,
-						chars.getFormatFlags(i),
-						chars.getFgColor(i),
-						chars.getBgColor(i),
-						chars.getLink(i),
-					);
+				if (characterWidth === 0) {
+					if (sliceWidth > 0) {
+						// Append to previous character to avoid taking a new column
+						const prevIndex = slicedChars.length - 1;
+						const prevVal = slicedChars.getValue(prevIndex);
+						slicedChars.setChar(
+							prevIndex,
+							prevVal + val,
+							chars.getFormatFlags(i),
+							chars.getFgColor(i),
+							chars.getBgColor(i),
+							chars.getLink(i),
+						);
+					} else {
+						pendingZeroWidthChars += val;
+					}
 				} else {
 					slicedChars.pushChar(
-						val,
+						pendingZeroWidthChars + val,
 						chars.getFormatFlags(i),
 						chars.getFgColor(i),
 						chars.getBgColor(i),
 						chars.getLink(i),
 					);
+					pendingZeroWidthChars = '';
 					sliceWidth++;
 				}
 
@@ -793,6 +799,32 @@ export default class Output {
 			relativeX += characterWidth;
 		}
 
+		if (pendingZeroWidthChars.length > 0 && sliceWidth === 0) {
+			if (offsetX < bufferWidth) {
+				const prevVal = currentLine.getValue(offsetX) || ' ';
+				const combinedChar = new StyledLine();
+				combinedChar.pushChar(
+					pendingZeroWidthChars + prevVal,
+					currentLine.getFormatFlags(offsetX),
+					currentLine.getFgColor(offsetX),
+					currentLine.getBgColor(offsetX),
+					currentLine.getLink(offsetX),
+				);
+				currentLine.replaceAt(offsetX, combinedChar);
+			} else if (offsetX > 0) {
+				const prevVal = currentLine.getValue(offsetX - 1) || ' ';
+				const combinedChar = new StyledLine();
+				combinedChar.pushChar(
+					prevVal + pendingZeroWidthChars,
+					currentLine.getFormatFlags(offsetX - 1),
+					currentLine.getFgColor(offsetX - 1),
+					currentLine.getBgColor(offsetX - 1),
+					currentLine.getLink(offsetX - 1),
+				);
+				currentLine.replaceAt(offsetX - 1, combinedChar);
+			}
+		}
+
 		if (sliceWidth > 0) {
 			currentLine.replaceAt(offsetX, slicedChars);
 			offsetX += sliceWidth;
@@ -831,9 +863,14 @@ export default class Output {
 		const len = end - start;
 		if (len <= 0) return;
 
-		const clearLine = new StyledLine();
-		for (let i = 0; i < len; i++) {
-			clearLine.pushChar(value, 0, undefined, bgColor, undefined);
+		let clearLine: StyledLine;
+		if (value === ' ' && bgColor === undefined) {
+			clearLine = StyledLine.empty(len);
+		} else {
+			clearLine = new StyledLine();
+			for (let i = 0; i < len; i++) {
+				clearLine.pushChar(value, 0, undefined, bgColor, undefined);
+			}
 		}
 
 		currentLine.replaceAt(start, clearLine);
