@@ -65,6 +65,7 @@ export type DOMElement = {
 	internal_terminalCursorPosition?: number;
 	internal_onRendered?: () => void;
 	cachedRender?: Region;
+	cachedRegion?: Region;
 
 	internal_accessibility?: {
 		role?:
@@ -162,12 +163,19 @@ export const createNode = (nodeName: ElementNames): DOMElement => {
 		internalIsScrollbackDirty: false,
 		internalId: idCounter++,
 	};
-
 	if (nodeName === 'ink-text') {
 		node.yogaNode?.setMeasureFunc(measureTextNode.bind(null, node));
 	}
 
 	return node;
+};
+
+const markNodeAndParentIfStaticAsDirty = (node: DOMElement) => {
+	markNodeAsDirty(
+		node.nodeName === 'ink-static-render' && node.cachedRender
+			? node.parentNode
+			: node,
+	);
 };
 
 export const appendChildNode = (
@@ -188,9 +196,7 @@ export const appendChildNode = (
 		);
 	}
 
-	if (node.nodeName === 'ink-text' || node.nodeName === 'ink-virtual-text') {
-		markNodeAsDirty(node);
-	}
+	markNodeAndParentIfStaticAsDirty(node);
 };
 
 export const insertBeforeNode = (
@@ -210,22 +216,18 @@ export const insertBeforeNode = (
 		if (newChildNode.yogaNode) {
 			node.yogaNode?.insertChild(newChildNode.yogaNode, index);
 		}
+	} else {
+		node.childNodes.push(newChildNode);
 
-		return;
+		if (newChildNode.yogaNode) {
+			node.yogaNode?.insertChild(
+				newChildNode.yogaNode,
+				node.yogaNode.getChildCount(),
+			);
+		}
 	}
 
-	node.childNodes.push(newChildNode);
-
-	if (newChildNode.yogaNode) {
-		node.yogaNode?.insertChild(
-			newChildNode.yogaNode,
-			node.yogaNode.getChildCount(),
-		);
-	}
-
-	if (node.nodeName === 'ink-text' || node.nodeName === 'ink-virtual-text') {
-		markNodeAsDirty(node);
-	}
+	markNodeAndParentIfStaticAsDirty(node);
 };
 
 export const removeChildNode = (
@@ -242,14 +244,12 @@ export const removeChildNode = (
 
 	removeNode.parentNode = undefined;
 
-	if (node.nodeName === 'ink-text' || node.nodeName === 'ink-virtual-text') {
-		markNodeAsDirty(node);
-	}
-
 	const index = node.childNodes.indexOf(removeNode);
 	if (index >= 0) {
 		node.childNodes.splice(index, 1);
 	}
+
+	markNodeAndParentIfStaticAsDirty(node);
 };
 
 export const setAttribute = (
@@ -337,19 +337,46 @@ export const setCachedRender = (node: DOMElement, cachedRender: Region) => {
 	}
 };
 
-export const markNodeAsDirty = (node?: DOMNode): void => {
-	// Mark closest Yoga node as dirty to measure text dimensions again
-	const yogaNode = findClosestYogaNode(node);
-	yogaNode?.markDirty();
+export const getCachedRegion = (node: DOMElement): Region | undefined =>
+	node.cachedRegion;
 
+export const setCachedRegion = (node: DOMElement, cachedRegion: Region) => {
+	node.cachedRegion = cachedRegion;
+};
+
+const invalidateNodeCaches = (node?: DOMNode) => {
 	let current = node;
 	while (current) {
-		if ('cachedRender' in current) {
+		if ('childNodes' in current) {
+			const shouldPreserveStaticCache =
+				current !== node &&
+				current.nodeName === 'ink-static-render' &&
+				Boolean(current.cachedRender);
+
+			if (shouldPreserveStaticCache) {
+				break;
+			}
+
 			current.cachedRender = undefined;
+			current.cachedRegion = undefined;
 		}
 
 		current = current.parentNode;
 	}
+};
+
+export const markNodeAsDirty = (node?: DOMNode): void => {
+	// Mark closest Yoga node as dirty to measure text dimensions again
+	if (
+		node?.nodeName === '#text' ||
+		node?.nodeName === 'ink-text' ||
+		node?.nodeName === 'ink-virtual-text'
+	) {
+		const yogaNode = findClosestYogaNode(node);
+		yogaNode?.markDirty();
+	}
+
+	invalidateNodeCaches(node);
 };
 
 export const setTextNodeValue = (node: TextNode, text: string): void => {

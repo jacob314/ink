@@ -6,31 +6,31 @@
 
 import test from 'ava';
 import React from 'react';
-import stripAnsi from 'strip-ansi';
-import type {SinonStub} from 'sinon';
-import {StaticRender, Text, Box, render} from '../src/index.js';
+import {StaticRender, Text, Box, type DOMElement} from '../src/index.js';
 import {waitFor} from './helpers/wait-for.js';
-import createStdout from './helpers/create-stdout.js';
+import {render as renderTerminal} from './helpers/render.js';
 
-test('StaticRender renders children', async t => {
-	const stdout = createStdout();
-	const {unmount} = render(
+const defaultTestConfig = {
+	terminalHeight: 10,
+	terminalBuffer: true,
+	renderProcess: false,
+	maxFps: 1000,
+};
+
+test.serial('StaticRender renders children', async t => {
+	const instance = await renderTerminal(
 		<StaticRender width={100}>{() => <Text>Hello Static</Text>}</StaticRender>,
-		{stdout},
+		100,
+		defaultTestConfig,
 	);
 
-	const write = stdout.write as unknown as SinonStub;
-	await waitFor(() => write.callCount > 0);
-
-	t.log('Call count:', write.callCount);
-	const output = stripAnsi((write.lastCall?.args[0] as string) || '');
-	t.is(output.trim(), 'Hello Static');
-	unmount();
+	await instance.waitUntilReady();
+	t.is(instance.lastFrame().trim(), 'Hello Static');
+	await instance.unmount();
 });
 
-test('StaticRender with Box and multiple children', async t => {
-	const stdout = createStdout();
-	const {unmount} = render(
+test.serial('StaticRender with Box and multiple children', async t => {
+	const instance = await renderTerminal(
 		<StaticRender width={100}>
 			{() => (
 				<Box flexDirection="column">
@@ -39,22 +39,21 @@ test('StaticRender with Box and multiple children', async t => {
 				</Box>
 			)}
 		</StaticRender>,
-		{stdout},
+		100,
+		defaultTestConfig,
 	);
 
-	const write = stdout.write as unknown as SinonStub;
-	await waitFor(() => write.callCount > 0);
-
-	const output = stripAnsi(write.lastCall.args[0] as string);
+	await instance.waitUntilReady();
+	const output = instance.lastFrame();
 	t.is(
 		output.trim(),
 		`Line 1
 Line 2`,
 	);
-	unmount();
+	await instance.unmount();
 });
 
-test('StaticRender respects style prop', async t => {
+test.serial('StaticRender respects style prop', async t => {
 	// This test verifies that we can style the container of StaticRender (e.g. padding)
 	// The <ink-static-render> element should accept styles.
 	// In my implementation, I passed `style` to `<ink-static-render>`.
@@ -63,18 +62,54 @@ test('StaticRender respects style prop', async t => {
 	// But `ink-static-render` node has a yoga node?
 	// Yes, `createNode` creates a yoga node for all elements except `ink-virtual-text`.
 
-	const stdout = createStdout();
-	const {unmount} = render(
+	const instance = await renderTerminal(
 		<StaticRender width={100} style={{paddingLeft: 2}}>
 			{() => <Text>Indented</Text>}
 		</StaticRender>,
-		{stdout},
+		100,
+		defaultTestConfig,
 	);
 
-	const write = stdout.write as unknown as SinonStub;
-	await waitFor(() => write.callCount > 0);
-
-	const output = stripAnsi(write.lastCall.args[0] as string).trimEnd();
+	await instance.waitUntilReady();
+	const output = instance.lastFrame().trimEnd();
 	t.is(output, '  Indented');
-	unmount();
+	await instance.unmount();
 });
+
+test.serial(
+	'StaticRender removes rendered children from the document',
+	async t => {
+		const trackedRef = React.createRef<DOMElement>();
+
+		function Example() {
+			return (
+				<Box ref={trackedRef}>
+					<StaticRender width={40}>
+						{() => <Text>Static body</Text>}
+					</StaticRender>
+				</Box>
+			);
+		}
+
+		const instance = await renderTerminal(<Example />, 40, defaultTestConfig);
+
+		await instance.waitUntilReady();
+		await waitFor(() => {
+			const staticNode = trackedRef.current?.childNodes[0] as
+				| DOMElement
+				| undefined;
+			return (
+				Boolean(staticNode?.cachedRender) && staticNode.childNodes.length === 0
+			);
+		});
+
+		const staticNode = trackedRef.current?.childNodes[0] as
+			| DOMElement
+			| undefined;
+		t.is(staticNode?.nodeName, 'ink-static-render');
+		t.truthy(staticNode?.cachedRender);
+		t.is(staticNode?.childNodes.length, 0);
+
+		await instance.unmount();
+	},
+);

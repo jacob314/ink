@@ -20,6 +20,7 @@ export type StickyNodeInfo = {
 	cached?: StickyHeader;
 	anchor?: DOMElement;
 };
+
 export type ResolvedStickyHeaderInfo = {
 	stickyNodeTop: number;
 	stickyNodeHeight: number;
