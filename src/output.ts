@@ -858,6 +858,10 @@ export default class Output {
 		let spanStartX = -1;
 		let spanText = '';
 
+		const slicedChars = new StyledLine();
+		let sliceWidth = 0;
+		let pendingZeroWidthChars = '';
+
 		for (let i = 0; i < chars.length; i++) {
 			const val = chars.getValue(i);
 			const characterWidth = inkCharacterWidth(val);
@@ -867,35 +871,55 @@ export default class Output {
 			}
 
 			if (fromX === undefined || relativeX >= fromX) {
-				if (offsetX >= bufferWidth) {
+				if (offsetX + sliceWidth >= bufferWidth) {
 					break;
 				}
 
-				currentLine.setChar(
-					offsetX,
-					val,
-					chars.getFormatFlags(i),
-					chars.getFgColor(i),
-					chars.getBgColor(i),
-					chars.getLink(i),
-				);
+				if (characterWidth === 0) {
+					if (sliceWidth > 0) {
+						// Append to previous character to avoid taking a new column
+						const prevIndex = slicedChars.length - 1;
+						const prevVal = slicedChars.getValue(prevIndex);
+						slicedChars.setChar(
+							prevIndex,
+							prevVal + val,
+							chars.getFormatFlags(i),
+							chars.getFgColor(i),
+							chars.getBgColor(i),
+							chars.getLink(i),
+						);
+					} else {
+						pendingZeroWidthChars += val;
+					}
+				} else {
+					slicedChars.pushChar(
+						pendingZeroWidthChars + val,
+						chars.getFormatFlags(i),
+						chars.getFgColor(i),
+						chars.getBgColor(i),
+						chars.getLink(i),
+					);
+					pendingZeroWidthChars = '';
+					sliceWidth++;
+				}
 
 				if (isSelectable) {
-					if (spanStartX === -1) spanStartX = offsetX;
+					if (spanStartX === -1) spanStartX = offsetX + sliceWidth - 1;
 					spanText += val;
 				}
 
 				if (characterWidth > 1) {
-					this.clearRange(
-						currentLine,
-						{start: offsetX + 1, end: offsetX + characterWidth},
-						'',
-						bufferWidth,
-						chars.getBgColor(i),
-					);
+					for (let w = 1; w < characterWidth; w++) {
+						slicedChars.pushChar(
+							'',
+							0,
+							undefined,
+							chars.getBgColor(i),
+							undefined,
+						);
+						sliceWidth++;
+					}
 				}
-
-				offsetX += characterWidth;
 			} else if (
 				characterWidth > 1 &&
 				fromX !== undefined &&
@@ -903,17 +927,50 @@ export default class Output {
 				relativeX + characterWidth > fromX
 			) {
 				const clearLength = relativeX + characterWidth - fromX;
-				this.clearRange(
-					currentLine,
-					{start: offsetX, end: offsetX + clearLength},
-					' ',
-					bufferWidth,
-				);
-
-				offsetX += clearLength;
+				for (let j = 0; j < clearLength; j++) {
+					slicedChars.pushChar(
+						' ',
+						0,
+						undefined,
+						chars.getBgColor(i),
+						undefined,
+					);
+					sliceWidth++;
+				}
 			}
 
 			relativeX += characterWidth;
+		}
+
+		if (pendingZeroWidthChars.length > 0 && sliceWidth === 0) {
+			if (offsetX < bufferWidth) {
+				const prevVal = currentLine.getValue(offsetX) || ' ';
+				const combinedChar = new StyledLine();
+				combinedChar.pushChar(
+					pendingZeroWidthChars + prevVal,
+					currentLine.getFormatFlags(offsetX),
+					currentLine.getFgColor(offsetX),
+					currentLine.getBgColor(offsetX),
+					currentLine.getLink(offsetX),
+				);
+				currentLine.replaceAt(offsetX, combinedChar);
+			} else if (offsetX > 0) {
+				const prevVal = currentLine.getValue(offsetX - 1) || ' ';
+				const combinedChar = new StyledLine();
+				combinedChar.pushChar(
+					prevVal + pendingZeroWidthChars,
+					currentLine.getFormatFlags(offsetX - 1),
+					currentLine.getFgColor(offsetX - 1),
+					currentLine.getBgColor(offsetX - 1),
+					currentLine.getLink(offsetX - 1),
+				);
+				currentLine.replaceAt(offsetX - 1, combinedChar);
+			}
+		}
+
+		if (sliceWidth > 0) {
+			currentLine.replaceAt(offsetX, slicedChars);
+			offsetX += sliceWidth;
 		}
 
 		if (this.trackSelection && isSelectable && spanStartX !== -1) {
@@ -944,11 +1001,22 @@ export default class Output {
 		maxWidth: number,
 		bgColor?: string,
 	) {
-		for (let offset = range.start; offset < range.end; offset++) {
-			if (offset >= 0 && offset < maxWidth) {
-				currentLine.setChar(offset, value, 0, undefined, bgColor);
+		const start = Math.max(0, range.start);
+		const end = Math.min(maxWidth, range.end);
+		const len = end - start;
+		if (len <= 0) return;
+
+		let clearLine: StyledLine;
+		if (value === ' ' && bgColor === undefined) {
+			clearLine = StyledLine.empty(len);
+		} else {
+			clearLine = new StyledLine();
+			for (let i = 0; i < len; i++) {
+				clearLine.pushChar(value, 0, undefined, bgColor, undefined);
 			}
 		}
+
+		currentLine.replaceAt(start, clearLine);
 	}
 
 	private clipChars(
