@@ -402,6 +402,7 @@ export default class Ink {
 			selectionStyle: this.options.selectionStyle,
 			skipScrollbars: Boolean(this.terminalBuffer),
 			terminalBuffer: Boolean(this.terminalBuffer),
+			stickyHeadersInBackbuffer: this.optionsState.stickyHeadersInBackbuffer,
 		});
 
 		if (this.terminalBuffer && root) {

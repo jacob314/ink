@@ -38,6 +38,7 @@ export function handleContainerNode(
 		skipStaticElements: boolean;
 		isStickyRender: boolean;
 		skipStickyHeaders: boolean;
+		stickyHeadersInBackbuffer?: boolean;
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
 		selectionStyle?: (line: StyledLine, index: number) => void;
 		absoluteOffsetX: number;
@@ -54,6 +55,7 @@ export function handleContainerNode(
 		skipStaticElements,
 		isStickyRender,
 		skipStickyHeaders,
+		stickyHeadersInBackbuffer,
 		selectionMap,
 		selectionStyle,
 		absoluteOffsetX,
@@ -106,6 +108,7 @@ export function handleContainerNode(
 						node,
 						scrollTop,
 						viewportBottom,
+						stickyHeadersInBackbuffer,
 					),
 				);
 			}
@@ -203,6 +206,7 @@ export function handleContainerNode(
 						skipStaticElements,
 						isStickyRender,
 						skipStickyHeaders: false,
+						stickyHeadersInBackbuffer,
 						selectionMap,
 						selectionStyle,
 						trackSelection,
@@ -217,6 +221,7 @@ export function handleContainerNode(
 					selectionMap,
 					selectionStyle,
 					trackSelection,
+					stickyHeadersInBackbuffer,
 				});
 
 				output.endChildRegion();
@@ -247,6 +252,7 @@ export function handleContainerNode(
 					skipStaticElements,
 					isStickyRender,
 					skipStickyHeaders,
+					stickyHeadersInBackbuffer,
 					selectionMap,
 					selectionStyle,
 					trackSelection,

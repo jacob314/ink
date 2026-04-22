@@ -247,6 +247,7 @@ const renderer = (
 		skipScrollbars?: boolean;
 		trackSelection?: boolean;
 		terminalBuffer?: boolean;
+		stickyHeadersInBackbuffer?: boolean;
 	},
 ): Result => {
 	const {
@@ -256,6 +257,7 @@ const renderer = (
 		skipScrollbars,
 		trackSelection,
 		terminalBuffer,
+		stickyHeadersInBackbuffer,
 	} = options;
 
 	if (node.yogaNode) {
@@ -299,6 +301,7 @@ const renderer = (
 			selectionStyle,
 			selectionMap,
 			trackSelection,
+			stickyHeadersInBackbuffer,
 		});
 
 		let staticOutput;
@@ -319,6 +322,7 @@ const renderer = (
 					? calculateSelectionMap(node.staticNode, selection)
 					: undefined,
 				trackSelection,
+				stickyHeadersInBackbuffer,
 			});
 		}
 

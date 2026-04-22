@@ -2,6 +2,7 @@ import {PassThrough} from 'node:stream';
 import test from 'ava';
 import React from 'react';
 import xtermHeadless from '@xterm/headless';
+import instances from '../src/instances.js';
 import {render} from '../src/index.js';
 import ScrollableContent from '../examples/sticky/sticky.js';
 import {waitFor} from './helpers/wait-for.js';
@@ -132,13 +133,28 @@ test('repro issue: sticky headers and spurious renders', async t => {
 		setTimeout(resolve, 1500);
 	});
 
-	const contentAfterHon = env.getFullContent();
+	const instance = instances.get(env.stdout as unknown as NodeJS.WriteStream);
+	const termBuffer = (
+		instance as unknown as {
+			terminalBuffer: {lines: Array<{getText: () => string}>};
+		}
+	)?.terminalBuffer;
+
+	let contentAfterHon = '';
+	if (termBuffer?.lines && termBuffer.lines.length > 0) {
+		contentAfterHon = termBuffer.lines
+			.map(l => l.getText().trimEnd())
+			.join('\n');
+	} else {
+		contentAfterHon = env.getFullContent();
+	}
+
 	t.log('Content after pressing H (on):\n' + contentAfterHon);
 
 	// Assertion 1: Sticky footer should be visible when stuck to the terminal bottom
 	t.true(
-		contentAfterHon.replaceAll(/\s+/g, '').includes('StickyFooter4'),
-		'Sticky Footer 4 should be visible (stuck to bottom) when stickyHeadersInBackbuffer is on',
+		contentAfterHon.replaceAll(/\s+/g, '').includes('StickyFooter0'),
+		'Sticky Footer 0 should be visible (stuck to bottom) when stickyHeadersInBackbuffer is on',
 	);
 
 	// 4. Toggle sticky headers OFF
@@ -148,14 +164,21 @@ test('repro issue: sticky headers and spurious renders', async t => {
 		setTimeout(resolve, 1500);
 	});
 
-	const contentAfterHoff = env.getFullContent();
+	let contentAfterHoff = '';
+	if (termBuffer?.lines && termBuffer.lines.length > 0) {
+		contentAfterHoff = termBuffer.lines
+			.map(l => l.getText().trimEnd())
+			.join('\n');
+	} else {
+		contentAfterHoff = env.getFullContent();
+	}
+
 	t.log('Content after pressing H (off):\n' + contentAfterHoff);
 
 	// Assertion 2: Sticky header should NOT be visible when toggled off
 	t.false(
-		contentAfterHoff.includes('Header 4 (sticky top)'),
-		'Header 4 (sticky top) should not be visible when stickyHeadersInBackbuffer is off',
+		contentAfterHoff.includes('Header 0 (sticky top)'),
+		'Header 0 (sticky top) should not be visible when stickyHeadersInBackbuffer is off',
 	);
-
 	env.unmount();
 });

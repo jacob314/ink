@@ -33,7 +33,7 @@ export class ScrollOptimizer {
 		region: Region,
 		rows: number,
 		columns: number,
-		cameraY: number,
+		absY: number,
 		getLinesForScroll: (
 			scrollStart: number,
 			count: number,
@@ -75,7 +75,6 @@ export class ScrollOptimizer {
 			return [];
 		}
 
-		const absY = Math.round(region.y - cameraY);
 		const start = Math.max(0, absY);
 		const regionHeight = Math.round(region.height);
 		const end = Math.min(rows, absY + regionHeight);

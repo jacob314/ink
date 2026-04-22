@@ -2,6 +2,7 @@ import {PassThrough} from 'node:stream';
 import test from 'ava';
 import React from 'react';
 import xtermHeadless from '@xterm/headless';
+import instances from '../src/instances.js';
 import {render, Box, Text} from '../src/index.js';
 import {waitFor} from './helpers/wait-for.js';
 
@@ -12,11 +13,13 @@ test('sticky header should not overlap with bottom border when pushed out', asyn
 	const columns = 20;
 	const term = new XtermTerminal({cols: columns, rows, allowProposedApi: true});
 	let writeCount = 0;
+	const chunks: string[] = [];
 	const stdout = {
 		columns,
 		rows,
 		write(chunk: string) {
 			term.write(chunk);
+			chunks.push(chunk);
 			writeCount++;
 			return true;
 		},
@@ -40,7 +43,13 @@ test('sticky header should not overlap with bottom border when pushed out', asyn
 				scrollTop={0}
 				width={columns}
 			>
-				<Box borderStyle="round" flexDirection="column" width={columns}>
+				<Box
+					borderStyle="round"
+					flexDirection="column"
+					width={columns}
+					flexShrink={0}
+				>
+					{' '}
 					<Box sticky width="100%">
 						<Text backgroundColor="yellow">STICKY</Text>
 					</Box>
@@ -83,7 +92,13 @@ test('sticky header should not overlap with bottom border when pushed out', asyn
 				scrollTop={4}
 				width={columns}
 			>
-				<Box borderStyle="round" flexDirection="column" width={columns}>
+				<Box
+					borderStyle="round"
+					flexDirection="column"
+					width={columns}
+					flexShrink={0}
+				>
+					{' '}
 					<Box sticky width="100%">
 						<Text backgroundColor="yellow">STICKY</Text>
 					</Box>
@@ -97,10 +112,24 @@ test('sticky header should not overlap with bottom border when pushed out', asyn
 
 	await waitFor(() => writeCount > prevWriteCount);
 	// Ensure worker has processed everything, not just the first chunk
-	await new Promise(resolve => {
-		setTimeout(resolve, 20);
+	await new Promise<void>(resolve => {
+		setTimeout(() => {
+			resolve();
+		}, 50);
 	});
-	const firstLine = getLine(0);
+
+	const instance = instances.get(stdout as unknown as NodeJS.WriteStream);
+	const termBuffer = (
+		instance as unknown as {
+			terminalBuffer: {lines: Array<{getText: () => string}>};
+		}
+	)?.terminalBuffer;
+	let firstLine = '';
+	firstLine =
+		termBuffer?.lines && termBuffer.lines.length > 0
+			? termBuffer.lines[0].getText().trimEnd()
+			: getLine(0);
+
 	t.log('Terminal row 0: "' + firstLine + '"');
 
 	// Expect ONLY bottom border characters. Round border bottom is ╰──────────╯
@@ -110,6 +139,5 @@ test('sticky header should not overlap with bottom border when pushed out', asyn
 		firstLine.includes('STICKY'),
 		'Should NOT see sticky header text on top of bottom border',
 	);
-
 	unmount();
 });

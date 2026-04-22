@@ -690,12 +690,22 @@ export class TerminalBufferWorker {
 				skipScrollbars: false,
 			});
 
-			for (const region of this.sceneManager.regions.values()) {
+			const processRegionForScroll = (
+				node: RegionNode,
+				offsetX: number,
+				offsetY: number,
+			) => {
+				const region = this.sceneManager.getRegion(node.id);
+				if (!region) return;
+
+				const absX = Math.round(region.x + offsetX);
+				const absY = Math.round(region.y + offsetY);
+
 				const operations = this.scrollOptimizer.calculateScrollOperations(
 					region,
 					this.rows,
 					this.columns,
-					cameraY,
+					absY,
 					(scrollStart, count, start, end, scrollToBackbuffer) => {
 						const originalScrollTop = region.scrollTop;
 						region.scrollTop = scrollStart;
@@ -757,7 +767,17 @@ export class TerminalBufferWorker {
 						this.scrollOptimizer.updateMaxPushed(op.regionId, op.newMaxPushed);
 					}
 				}
-			}
+
+				for (const child of node.children) {
+					processRegionForScroll(
+						child,
+						absX - (region.scrollLeft ?? 0),
+						absY - (region.scrollTop ?? 0),
+					);
+				}
+			};
+
+			processRegionForScroll(this.sceneManager.root!, 0, -cameraY);
 		}
 
 		// 2. Compose Frame
@@ -966,7 +986,7 @@ export class TerminalBufferWorker {
 				? (region.scrollHeight ?? 0)
 				: (region.height ?? 0));
 
-		if (absY >= canvas.height) return;
+		if (absY >= canvas.height && !this.stickyHeadersInBackbuffer) return;
 		if (absY + height < 0 && !this.stickyHeadersInBackbuffer) return;
 
 		let myClip = {

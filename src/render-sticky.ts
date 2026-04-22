@@ -231,11 +231,20 @@ export function identifyActiveStickyNodes(
 	node: DOMElement,
 	scrollTop: number,
 	viewportBottom: number,
+	stickyHeadersInBackbuffer?: boolean,
 ) {
-	let activeTopStickyNodeIndex = -1;
-	let activeTopStickyNode: StickyNodeInfo | undefined;
-	let activeBottomStickyNodeIndex = -1;
-	let activeBottomStickyNode: StickyNodeInfo | undefined;
+	const activeStickyNodes: Array<{
+		stickyNode?: DOMElement;
+		type: 'top' | 'bottom';
+		nextStickyNode?: DOMElement;
+		nextStickyNodeInfo?: StickyNodeInfo;
+		cached?: StickyHeader;
+		anchor?: DOMElement;
+		originalIndex: number;
+	}> = [];
+
+	let lastActiveTopIndex = -1;
+	let lastActiveBottomIndex = -1;
 
 	for (const [index, stickyNodeInfo] of stickyNodes.entries()) {
 		const {type: stickyType} = stickyNodeInfo;
@@ -251,74 +260,107 @@ export function identifyActiveStickyNodes(
 
 		if (
 			stickyType === 'top' &&
-			stickyNodeTop < scrollTop &&
-			parentRelativeTop + parentHeight > scrollTop
+			(stickyHeadersInBackbuffer ||
+				(stickyNodeTop < scrollTop &&
+					parentRelativeTop + parentHeight > scrollTop))
 		) {
-			activeTopStickyNode = stickyNodeInfo;
-			activeTopStickyNodeIndex = index;
+			lastActiveTopIndex = index;
+			if (stickyHeadersInBackbuffer) {
+				// In backbuffer mode, we want to track ALL of them
+				activeStickyNodes.push({
+					stickyNode: stickyNodeInfo.node,
+					type: 'top',
+					cached: stickyNodeInfo.cached,
+					anchor: stickyNodeInfo.anchor,
+					originalIndex: index,
+				});
+			}
 		}
 
 		if (
 			stickyType === 'bottom' &&
-			Math.floor(stickyNodeBottom) > Math.floor(viewportBottom) &&
-			parentRelativeTop < viewportBottom
+			(stickyHeadersInBackbuffer ||
+				(Math.floor(stickyNodeBottom) > Math.floor(viewportBottom) &&
+					parentRelativeTop < viewportBottom))
 		) {
-			activeBottomStickyNode = stickyNodeInfo;
-			activeBottomStickyNodeIndex = index;
+			lastActiveBottomIndex = index;
+			if (stickyHeadersInBackbuffer) {
+				activeStickyNodes.push({
+					stickyNode: stickyNodeInfo.node,
+					type: 'bottom',
+					cached: stickyNodeInfo.cached,
+					anchor: stickyNodeInfo.anchor,
+					originalIndex: index,
+				});
+			}
 		}
 	}
 
-	const activeStickyNodes: Array<{
-		stickyNode?: DOMElement;
-		type: 'top' | 'bottom';
-		nextStickyNode?: DOMElement;
-		nextStickyNodeInfo?: StickyNodeInfo;
-		cached?: StickyHeader;
-		anchor?: DOMElement;
-	}> = [];
+	const findNextStickyNode = (
+		startIndex: number,
+		direction: 'forward' | 'backward',
+	) => {
+		const step = direction === 'forward' ? 1 : -1;
+		const endCondition =
+			direction === 'forward'
+				? (i: number) => i < stickyNodes.length
+				: (i: number) => i >= 0;
+		const targetType = direction === 'forward' ? 'top' : 'bottom';
 
-	if (activeTopStickyNode) {
-		let nextStickyNode: DOMElement | undefined;
-		let nextStickyNodeInfo: StickyNodeInfo | undefined;
-		for (let i = activeTopStickyNodeIndex + 1; i < stickyNodes.length; i++) {
+		for (let i = startIndex + step; endCondition(i); i += step) {
 			const info = stickyNodes[i]!;
-			if (info.type !== 'bottom') {
-				nextStickyNode = info.node;
-				nextStickyNodeInfo = info;
-				break;
+			// Top sticky headers block other top sticky headers.
+			// Bottom sticky headers block other bottom sticky headers.
+			if (info.type === targetType) {
+				return info;
 			}
 		}
 
-		activeStickyNodes.push({
-			stickyNode: activeTopStickyNode.node,
-			type: 'top',
-			nextStickyNode,
-			nextStickyNodeInfo,
-			cached: activeTopStickyNode.cached,
-			anchor: activeTopStickyNode.anchor,
-		});
-	}
+		return undefined;
+	};
 
-	if (activeBottomStickyNode) {
-		let nextStickyNode: DOMElement | undefined;
-		let nextStickyNodeInfo: StickyNodeInfo | undefined;
-		for (let i = activeBottomStickyNodeIndex - 1; i >= 0; i--) {
-			const info = stickyNodes[i]!;
-			if (info.type === 'bottom') {
-				nextStickyNode = info.node;
-				nextStickyNodeInfo = info;
-				break;
+	if (stickyHeadersInBackbuffer) {
+		// When stickyHeadersInBackbuffer is ON, we need to populate nextStickyNodeInfo for ALL of them
+		for (const active of activeStickyNodes) {
+			const info = findNextStickyNode(
+				active.originalIndex,
+				active.type === 'top' ? 'forward' : 'backward',
+			);
+			if (info) {
+				active.nextStickyNode = info.node;
+				active.nextStickyNodeInfo = info;
 			}
 		}
+	} else {
+		if (lastActiveTopIndex !== -1) {
+			const activeTopStickyNode = stickyNodes[lastActiveTopIndex]!;
+			const info = findNextStickyNode(lastActiveTopIndex, 'forward');
 
-		activeStickyNodes.push({
-			stickyNode: activeBottomStickyNode.node,
-			type: 'bottom',
-			nextStickyNode,
-			nextStickyNodeInfo,
-			cached: activeBottomStickyNode.cached,
-			anchor: activeBottomStickyNode.anchor,
-		});
+			activeStickyNodes.push({
+				stickyNode: activeTopStickyNode.node,
+				type: 'top',
+				nextStickyNode: info?.node,
+				nextStickyNodeInfo: info,
+				cached: activeTopStickyNode.cached,
+				anchor: activeTopStickyNode.anchor,
+				originalIndex: lastActiveTopIndex,
+			});
+		}
+
+		if (lastActiveBottomIndex !== -1) {
+			const activeBottomStickyNode = stickyNodes[lastActiveBottomIndex]!;
+			const info = findNextStickyNode(lastActiveBottomIndex, 'backward');
+
+			activeStickyNodes.push({
+				stickyNode: activeBottomStickyNode.node,
+				type: 'bottom',
+				nextStickyNode: info?.node,
+				nextStickyNodeInfo: info,
+				cached: activeBottomStickyNode.cached,
+				anchor: activeBottomStickyNode.anchor,
+				originalIndex: lastActiveBottomIndex,
+			});
+		}
 	}
 
 	return activeStickyNodes;
@@ -343,16 +385,17 @@ export function renderActiveStickyNodes(
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
 		selectionStyle?: (line: StyledLine, index: number) => void;
 		trackSelection?: boolean;
+		stickyHeadersInBackbuffer?: boolean;
 	},
 ) {
 	const {
-		x: _x,
 		y,
 		newTransformers,
 		skipStaticElements,
 		selectionMap,
 		selectionStyle,
 		trackSelection,
+		stickyHeadersInBackbuffer,
 	} = options;
 	const {yogaNode} = node;
 	if (!yogaNode) return;
@@ -399,7 +442,7 @@ export function renderActiveStickyNodes(
 			const naturalStickyY = y - currentScrollTop + stickyNodeTop;
 			const stuckStickyY = y + currentBorderTop;
 
-			if (nextStickyNodeInfo) {
+			if (nextStickyNodeInfo && !stickyHeadersInBackbuffer) {
 				let nextNodeTop: number | undefined;
 
 				if (nextStickyNodeInfo.cached && nextStickyNodeInfo.anchor) {
@@ -421,20 +464,24 @@ export function renderActiveStickyNodes(
 				}
 			}
 
-			finalStickyY = Math.min(
-				Math.max(stuckStickyY, naturalStickyY),
-				maxStickyTop,
-			);
+			finalStickyY = stickyHeadersInBackbuffer
+				? Math.min(stuckStickyY, maxStickyTop)
+				: Math.min(Math.max(stuckStickyY, naturalStickyY), maxStickyTop);
 
 			maxStuckY = maxStickyTop - (y + currentBorderTop);
 		} else {
 			let minStickyTop =
 				y - currentScrollTop + parentRelativeTop + parentBorderTop;
+
+			if (stickyHeadersInBackbuffer) {
+				minStickyTop = Number.MIN_SAFE_INTEGER;
+			}
+
 			const naturalStickyY = y - currentScrollTop + stickyNodeTop;
 			const stuckStickyY =
 				y + currentBorderTop + currentClientHeight - stickyNodeHeight;
 
-			if (nextStickyNodeInfo) {
+			if (nextStickyNodeInfo && !stickyHeadersInBackbuffer) {
 				let nextNodeHeight: number | undefined;
 				let nextNodeTop: number | undefined;
 
@@ -460,11 +507,9 @@ export function renderActiveStickyNodes(
 				}
 			}
 
-			finalStickyY = Math.max(
-				Math.min(stuckStickyY, naturalStickyY),
-				minStickyTop,
-			);
-
+			finalStickyY = stickyHeadersInBackbuffer
+				? Math.max(stuckStickyY, minStickyTop)
+				: Math.max(Math.min(stuckStickyY, naturalStickyY), minStickyTop);
 			minStuckY = minStickyTop - (y + currentBorderTop);
 		}
 
@@ -507,6 +552,7 @@ export function renderActiveStickyNodes(
 			maxStuckY,
 			minStuckY,
 		};
+
 		output.addStickyHeader(headerObj);
 	}
 }

@@ -197,6 +197,10 @@ function ScrollableContent({
 		}
 	}, [recordFilename, startRecording]);
 
+	const [innerStates, setInnerStates] = useState<
+		Record<number, {scrollTop: number; isStatic: boolean}>
+	>({});
+
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 	const boxWidth = columns;
 	const contentWidth = showBorder
@@ -205,17 +209,22 @@ function ScrollableContent({
 
 	const staticContent = useMemo(() => {
 		const elements = [];
-		for (let i = 0; i < listItems.length; i += 20) {
+		for (let i = 0; i < listItems.length; i += 4) {
 			const headerIndex = i;
-			const headerId = headerIndex / 20;
+			const headerId = headerIndex / 4;
 			const headerText = `Sticky Header ${headerId}`;
 			const stickyHeaderText = `Sticky Header ${headerId} (sticky top)`;
 			const stickyFooterText = `Sticky Footer ${headerId} (sticky bottom)`;
 
-			const itemsInGroup = listItems.slice(headerIndex, headerIndex + 10);
-			const nextItems = listItems.slice(headerIndex + 10, headerIndex + 20);
-
+			const itemsInGroup = listItems.slice(headerIndex, headerIndex + 2);
+			const nextItems = listItems.slice(headerIndex + 2, headerIndex + 4);
 			if (headerId % 3 === 0) {
+				const innerScrollTop =
+					innerStates[headerId]?.scrollTop ??
+					(headerId === 0 || headerId === 3 ? 0 : 40);
+				const useStaticForInner =
+					useStatic && (innerStates[headerId]?.isStatic ?? true);
+
 				const innerBox = (
 					<Box
 						key={`inner-scroll-${headerId}`}
@@ -224,7 +233,7 @@ function ScrollableContent({
 						overflowY="scroll"
 						borderStyle="single"
 						borderColor="cyan"
-						scrollTop={40}
+						scrollTop={innerScrollTop}
 					>
 						<Box flexShrink={0} flexDirection="column" overflow="hidden">
 							<Box
@@ -260,11 +269,11 @@ function ScrollableContent({
 				);
 
 				elements.push(
-					useStatic ? (
+					useStaticForInner ? (
 						<StaticRender
 							key={`static-inner-scroll-${headerId}`}
 							width={contentWidth}
-							deps={[innerBox]}
+							deps={[innerBox, innerScrollTop]}
 						>
 							{() => innerBox}
 						</StaticRender>
@@ -395,12 +404,45 @@ function ScrollableContent({
 		);
 
 		return content;
-	}, [contentWidth, useStatic, listItems]);
+	}, [contentWidth, useStatic, listItems, innerStates]);
 
 	useInput((input, key) => {
+		const handleInnerScroll = (id: number, delta: number) => {
+			setInnerStates(previous => {
+				const current = previous[id] || {scrollTop: 0, isStatic: true};
+				return {
+					...previous,
+					[id]: {
+						isStatic: false,
+						scrollTop: Math.max(0, current.scrollTop + delta),
+					},
+				};
+			});
+		};
+
+		if (input === '1') {
+			handleInnerScroll(0, -1);
+			return;
+		}
+
+		if (input === '2') {
+			handleInnerScroll(0, 1);
+			return;
+		}
+
+		if (input === '3') {
+			handleInnerScroll(3, -1);
+			return;
+		}
+
+		if (input === '4') {
+			handleInnerScroll(3, 1);
+			return;
+		}
+
 		if (input === ' ') {
 			setListItems(previous => {
-				const newItems = Array.from({length: 20}).map((_, i) => ({
+				const newItems = Array.from({length: 4}).map((_, i) => ({
 					id: Date.now() + previous.length + i,
 					text: `Line ${previous.length + i} - ${'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat(
 						((previous.length + i) * 5) % 6,
@@ -530,6 +572,7 @@ function ScrollableContent({
 								Press up/down arrow or w/s to scroll vertically (w/s for 30
 								lines, Shift for 10).
 							</Text>
+							<Text>Press 1/2 to scroll first inner view, 3/4 for second.</Text>
 							<Text>Press 'space' to add a block, 'c' to clear list.</Text>
 							<Text>
 								Press 'b' to toggle scrollbar ({showScrollbar ? 'on' : 'off'}),
