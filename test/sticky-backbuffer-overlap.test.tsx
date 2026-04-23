@@ -2,7 +2,7 @@ import {PassThrough} from 'node:stream';
 import test from 'ava';
 import React from 'react';
 import xtermHeadless from '@xterm/headless';
-import instances from '../src/instances.js';
+import {getTerminalBufferContent} from './helpers/terminal-buffer.js';
 import {render, Box, Text} from '../src/index.js';
 import {waitFor} from './helpers/wait-for.js';
 
@@ -109,24 +109,18 @@ test('sticky header should not overlap with bottom border when pushed out', asyn
 	);
 
 	await waitFor(() => writeCount > prevWriteCount);
-	// Ensure worker has processed everything, not just the first chunk
-	await new Promise<void>(resolve => {
-		setTimeout(() => {
-			resolve();
-		}, 50);
-	});
+	try {
+		await waitFor(() => {
+			const content = getTerminalBufferContent(stdout as unknown as NodeJS.WriteStream);
+			const firstLine = content ? content.split('\n')[0] : getLine(0);
+			return (firstLine?.includes('╰') && !firstLine?.includes('STICKY')) ?? false;
+		});
+	} catch {
+		// Ignore timeout so the assertions below can provide descriptive failure messages
+	}
 
-	const instance = instances.get(stdout as unknown as NodeJS.WriteStream);
-	const termBuffer = (
-		instance as unknown as {
-			terminalBuffer: {lines: Array<{getText: () => string}>};
-		}
-	)?.terminalBuffer;
-	let firstLine = '';
-	firstLine =
-		termBuffer?.lines && termBuffer.lines.length > 0
-			? termBuffer.lines[0].getText().trimEnd()
-			: getLine(0);
+	const content = getTerminalBufferContent(stdout as unknown as NodeJS.WriteStream);
+	const firstLine = content ? content.split('\n')[0]! : getLine(0);
 
 	t.log('Terminal row 0: "' + firstLine + '"');
 

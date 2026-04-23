@@ -2,7 +2,7 @@ import {PassThrough} from 'node:stream';
 import test from 'ava';
 import React from 'react';
 import xtermHeadless from '@xterm/headless';
-import instances from '../src/instances.js';
+import {getTerminalBufferContent} from './helpers/terminal-buffer.js';
 import {render} from '../src/index.js';
 import ScrollableContent from '../examples/sticky/sticky.js';
 import {waitFor} from './helpers/wait-for.js';
@@ -138,32 +138,18 @@ test('repro issue: sticky headers and spurious renders', async t => {
 	// 3. Toggle sticky headers ON
 	await env.press('h');
 
-	// Wait for the backbuffer delay to expire (1000ms by default in terminal-writer)
-	await new Promise(resolve => {
-		setTimeout(resolve, 1500);
-	});
-
-	const instance = instances.get(env.stdout as unknown as NodeJS.WriteStream);
-	const termBuffer = (instance as any)?.terminalBuffer as
-		| {
-				workerInstance?: {
-					screen: Array<{styledChars: {getText: () => string}}>;
-				};
-				lines?: Array<{getText: () => string}>;
-		  }
-		| undefined;
-	let contentAfterHon = '';
-	if (termBuffer?.workerInstance) {
-		contentAfterHon = termBuffer.workerInstance.screen
-			.map(l => l.styledChars.getText().trimEnd())
-			.join('\n');
-	} else if (termBuffer?.lines && termBuffer.lines.length > 0) {
-		contentAfterHon = termBuffer.lines
-			.map(l => l.getText().trimEnd())
-			.join('\n');
-	} else {
-		contentAfterHon = env.getFullContent();
+	// Wait for the render update to propagate
+	try {
+		await waitFor(() => {
+			const content = getTerminalBufferContent(env.stdout as unknown as NodeJS.WriteStream) || env.getFullContent();
+			const cleanContent = content.replaceAll(/\s+/g, '');
+			return cleanContent.includes('StickyFooter11') && content.includes('Sticky Header 11 (sticky top)');
+		});
+	} catch {
+		// Ignore timeout so the assertions below can provide descriptive failure messages
 	}
+
+	const contentAfterHon = getTerminalBufferContent(env.stdout as unknown as NodeJS.WriteStream) || env.getFullContent();
 
 	t.log('Content after pressing H (on):\n' + contentAfterHon);
 
@@ -181,22 +167,17 @@ test('repro issue: sticky headers and spurious renders', async t => {
 	// 4. Toggle sticky headers OFF
 	await env.press('h');
 
-	await new Promise(resolve => {
-		setTimeout(resolve, 1500);
-	});
-
-	let contentAfterHoff = '';
-	if (termBuffer?.workerInstance) {
-		contentAfterHoff = termBuffer.workerInstance.screen
-			.map(l => l.styledChars.getText().trimEnd())
-			.join('\n');
-	} else if (termBuffer?.lines && termBuffer.lines.length > 0) {
-		contentAfterHoff = termBuffer.lines
-			.map(l => l.getText().trimEnd())
-			.join('\n');
-	} else {
-		contentAfterHoff = env.getFullContent();
+	// Wait for the render update to propagate
+	try {
+		await waitFor(() => {
+			const content = getTerminalBufferContent(env.stdout as unknown as NodeJS.WriteStream) || env.getFullContent();
+			return !content.includes('Sticky Header 11 (sticky top)');
+		});
+	} catch {
+		// Ignore timeout so the assertions below can provide descriptive failure messages
 	}
+
+	const contentAfterHoff = getTerminalBufferContent(env.stdout as unknown as NodeJS.WriteStream) || env.getFullContent();
 
 	t.log('Content after pressing H (off):\n' + contentAfterHoff);
 
