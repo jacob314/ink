@@ -49,7 +49,6 @@ test('sticky header should not overlap with bottom border when pushed out', asyn
 					width={columns}
 					flexShrink={0}
 				>
-					{' '}
 					<Box sticky width="100%">
 						<Text backgroundColor="yellow">STICKY</Text>
 					</Box>
@@ -98,7 +97,6 @@ test('sticky header should not overlap with bottom border when pushed out', asyn
 					width={columns}
 					flexShrink={0}
 				>
-					{' '}
 					<Box sticky width="100%">
 						<Text backgroundColor="yellow">STICKY</Text>
 					</Box>

@@ -24,6 +24,7 @@ import {
 	identifyActiveStickyNodes,
 	renderActiveStickyNodes,
 	type StickyNodeInfo,
+	type ResolvedStickyHeaderInfo,
 } from './render-sticky.js';
 
 export function handleContainerNode(
@@ -75,6 +76,7 @@ export function handleContainerNode(
 		nextStickyNodeInfo?: StickyNodeInfo;
 		cached?: StickyHeader;
 		anchor?: DOMElement;
+		resolvedInfo: ResolvedStickyHeaderInfo;
 	}> = [];
 
 	let verticallyScrollable = false;

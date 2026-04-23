@@ -46,15 +46,20 @@ const createTestEnv = (
 	(stdin as any).ref = () => stdin;
 	(stdin as any).unref = () => stdin;
 
-	const {unmount} = render(<ScrollableContent />, {
-		stdout,
-		stdin,
-		patchConsole: false,
-		terminalBuffer: true,
-		renderProcess: false, // Run in-process for easier debugging
-		debugRainbow: true,
-		...options,
-	});
+	const {unmount} = render(
+		<ScrollableContent
+			initialItems={options.initialItems as number | undefined}
+		/>,
+		{
+			stdout,
+			stdin,
+			patchConsole: false,
+			terminalBuffer: true,
+			renderProcess: false, // Run in-process for easier debugging
+			debugRainbow: true,
+			...options,
+		},
+	);
 
 	const press = async (key: string) => {
 		const currentCount = writeCount;
@@ -102,6 +107,7 @@ const createTestEnv = (
 	return {
 		term,
 		stdin,
+		stdout,
 		unmount,
 		press,
 		getLine,
@@ -110,7 +116,11 @@ const createTestEnv = (
 };
 
 test('repro issue: sticky headers and spurious renders', async t => {
-	const env = createTestEnv(20, 80);
+	// Use a small viewport (height 5) so that a group (height ~8) can span the entire viewport.
+	const env = createTestEnv(5, 80, {initialItems: 2});
+
+	// Collapse footer so the scrollable area has space
+	await env.press('f');
 
 	// 1. Press space 5 times to add messages
 	for (let i = 0; i < 5; i++) {
@@ -119,8 +129,8 @@ test('repro issue: sticky headers and spurious renders', async t => {
 	}
 
 	// 2. Scroll up to a position where Header 4 (starts at ~160 in actual lines) is stuck.
-	// We'll scroll up 50 lines from the bottom (193 - 50 = 143).
-	for (let i = 0; i < 50; i++) {
+	// We'll scroll up 48 lines from the bottom.
+	for (let i = 0; i < 48; i++) {
 		// eslint-disable-next-line no-await-in-loop
 		await env.press('up');
 	}
@@ -134,14 +144,20 @@ test('repro issue: sticky headers and spurious renders', async t => {
 	});
 
 	const instance = instances.get(env.stdout as unknown as NodeJS.WriteStream);
-	const termBuffer = (
-		instance as unknown as {
-			terminalBuffer: {lines: Array<{getText: () => string}>};
-		}
-	)?.terminalBuffer;
-
+	const termBuffer = (instance as any)?.terminalBuffer as
+		| {
+				workerInstance?: {
+					screen: Array<{styledChars: {getText: () => string}}>;
+				};
+				lines?: Array<{getText: () => string}>;
+		  }
+		| undefined;
 	let contentAfterHon = '';
-	if (termBuffer?.lines && termBuffer.lines.length > 0) {
+	if (termBuffer?.workerInstance) {
+		contentAfterHon = termBuffer.workerInstance.screen
+			.map(l => l.styledChars.getText().trimEnd())
+			.join('\n');
+	} else if (termBuffer?.lines && termBuffer.lines.length > 0) {
 		contentAfterHon = termBuffer.lines
 			.map(l => l.getText().trimEnd())
 			.join('\n');
@@ -153,8 +169,13 @@ test('repro issue: sticky headers and spurious renders', async t => {
 
 	// Assertion 1: Sticky footer should be visible when stuck to the terminal bottom
 	t.true(
-		contentAfterHon.replaceAll(/\s+/g, '').includes('StickyFooter0'),
-		'Sticky Footer 0 should be visible (stuck to bottom) when stickyHeadersInBackbuffer is on',
+		contentAfterHon.replaceAll(/\s+/g, '').includes('StickyFooter11'),
+		'Sticky Footer 11 should be visible (stuck to bottom)',
+	);
+
+	t.true(
+		contentAfterHon.includes('Sticky Header 11 (sticky top)'),
+		'Sticky Header 11 should be visible (stuck to top) when stickyHeadersInBackbuffer is on',
 	);
 
 	// 4. Toggle sticky headers OFF
@@ -165,7 +186,11 @@ test('repro issue: sticky headers and spurious renders', async t => {
 	});
 
 	let contentAfterHoff = '';
-	if (termBuffer?.lines && termBuffer.lines.length > 0) {
+	if (termBuffer?.workerInstance) {
+		contentAfterHoff = termBuffer.workerInstance.screen
+			.map(l => l.styledChars.getText().trimEnd())
+			.join('\n');
+	} else if (termBuffer?.lines && termBuffer.lines.length > 0) {
 		contentAfterHoff = termBuffer.lines
 			.map(l => l.getText().trimEnd())
 			.join('\n');
@@ -177,8 +202,8 @@ test('repro issue: sticky headers and spurious renders', async t => {
 
 	// Assertion 2: Sticky header should NOT be visible when toggled off
 	t.false(
-		contentAfterHoff.includes('Header 0 (sticky top)'),
-		'Header 0 (sticky top) should not be visible when stickyHeadersInBackbuffer is off',
+		contentAfterHoff.includes('Sticky Header 11 (sticky top)'),
+		'Sticky Header 11 should not be visible when stickyHeadersInBackbuffer is off',
 	);
 	env.unmount();
 });
