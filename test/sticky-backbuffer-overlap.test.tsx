@@ -111,15 +111,21 @@ test('sticky header should not overlap with bottom border when pushed out', asyn
 	await waitFor(() => writeCount > prevWriteCount);
 	try {
 		await waitFor(() => {
-			const content = getTerminalBufferContent(stdout as unknown as NodeJS.WriteStream);
+			const content = getTerminalBufferContent(
+				stdout as unknown as NodeJS.WriteStream,
+			);
 			const firstLine = content ? content.split('\n')[0] : getLine(0);
-			return (firstLine?.includes('╰') && !firstLine?.includes('STICKY')) ?? false;
+			return (
+				(firstLine?.includes('╰') && !firstLine?.includes('STICKY')) ?? false
+			);
 		});
 	} catch {
 		// Ignore timeout so the assertions below can provide descriptive failure messages
 	}
 
-	const content = getTerminalBufferContent(stdout as unknown as NodeJS.WriteStream);
+	const content = getTerminalBufferContent(
+		stdout as unknown as NodeJS.WriteStream,
+	);
 	const firstLine = content ? content.split('\n')[0]! : getLine(0);
 
 	t.log('Terminal row 0: "' + firstLine + '"');

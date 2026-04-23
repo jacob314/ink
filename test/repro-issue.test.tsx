@@ -141,15 +141,22 @@ test('repro issue: sticky headers and spurious renders', async t => {
 	// Wait for the render update to propagate
 	try {
 		await waitFor(() => {
-			const content = getTerminalBufferContent(env.stdout as unknown as NodeJS.WriteStream) || env.getFullContent();
+			const content =
+				getTerminalBufferContent(env.stdout as unknown as NodeJS.WriteStream) ||
+				env.getFullContent();
 			const cleanContent = content.replaceAll(/\s+/g, '');
-			return cleanContent.includes('StickyFooter11') && content.includes('Sticky Header 11 (sticky top)');
+			return (
+				cleanContent.includes('StickyFooter11') &&
+				content.includes('Sticky Header 11 (sticky top)')
+			);
 		});
 	} catch {
 		// Ignore timeout so the assertions below can provide descriptive failure messages
 	}
 
-	const contentAfterHon = getTerminalBufferContent(env.stdout as unknown as NodeJS.WriteStream) || env.getFullContent();
+	const contentAfterHon =
+		getTerminalBufferContent(env.stdout as unknown as NodeJS.WriteStream) ||
+		env.getFullContent();
 
 	t.log('Content after pressing H (on):\n' + contentAfterHon);
 
@@ -170,14 +177,18 @@ test('repro issue: sticky headers and spurious renders', async t => {
 	// Wait for the render update to propagate
 	try {
 		await waitFor(() => {
-			const content = getTerminalBufferContent(env.stdout as unknown as NodeJS.WriteStream) || env.getFullContent();
+			const content =
+				getTerminalBufferContent(env.stdout as unknown as NodeJS.WriteStream) ||
+				env.getFullContent();
 			return !content.includes('Sticky Header 11 (sticky top)');
 		});
 	} catch {
 		// Ignore timeout so the assertions below can provide descriptive failure messages
 	}
 
-	const contentAfterHoff = getTerminalBufferContent(env.stdout as unknown as NodeJS.WriteStream) || env.getFullContent();
+	const contentAfterHoff =
+		getTerminalBufferContent(env.stdout as unknown as NodeJS.WriteStream) ||
+		env.getFullContent();
 
 	t.log('Content after pressing H (off):\n' + contentAfterHoff);
 
