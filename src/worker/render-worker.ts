@@ -690,94 +690,14 @@ export class TerminalBufferWorker {
 				skipScrollbars: false,
 			});
 
-			const processRegionForScroll = (
-				node: RegionNode,
-				offsetX: number,
-				offsetY: number,
-			) => {
-				const region = this.sceneManager.getRegion(node.id);
-				if (!region) return;
-
-				const absX = Math.round(region.x + offsetX);
-				const absY = Math.round(region.y + offsetY);
-
-				const operations = this.scrollOptimizer.calculateScrollOperations(
-					region,
-					this.rows,
-					this.columns,
-					absY,
-					(scrollStart, count, start, end, scrollToBackbuffer) => {
-						const originalScrollTop = region.scrollTop;
-						region.scrollTop = scrollStart;
-						try {
-							const getLines = (skipScrollbars: boolean) => {
-								const canvas = Canvas.create(this.columns, this.rows + count);
-								this.composeNode(
-									this.sceneManager.root!,
-									canvas,
-									{
-										clip: undefined,
-										offsetY: -cameraY,
-									},
-									{skipStickyHeaders: true, skipScrollbars},
-								);
-
-								const lines = canvas.getLines();
-								return start === 0 && end + count === lines.length
-									? lines
-									: lines.slice(start, end + count);
-							};
-
-							if (scrollToBackbuffer && count > 0 && start === 0) {
-								const dirtyLines = getLines(false);
-								const cleanLines = getLines(true);
-								// First 'count' lines are clean (for backbuffer), the rest are dirty (for viewport)
-								return [
-									...cleanLines.slice(0, count),
-									...dirtyLines.slice(count),
-								];
-							}
-
-							return getLines(false);
-						} finally {
-							region.scrollTop = originalScrollTop;
-						}
-					},
-					(r, s, a) => compositor.calculateActualStuckTopHeight(r, s, a),
-					(r, s, a) => compositor.calculateActualStuckBottomHeight(r, s, a),
-					this.stickyHeadersInBackbuffer,
-				);
-
-				for (const op of operations) {
-					if (op.scrollToBackbuffer) {
-						if (debugWorker) {
-							debugLog(
-								`[RENDER-WORKER] Region ${op.regionId} scrolling ${op.linesToScroll} lines to backbuffer`,
-							);
-						}
-
-						scrolledToBackbuffer.set(
-							op.regionId,
-							(scrolledToBackbuffer.get(op.regionId) ?? 0) + op.linesToScroll,
-						);
-					}
-
-					this.terminalWriter.scrollLines(op);
-					if (op.newMaxPushed !== undefined) {
-						this.scrollOptimizer.updateMaxPushed(op.regionId, op.newMaxPushed);
-					}
-				}
-
-				for (const child of node.children) {
-					processRegionForScroll(
-						child,
-						absX - (region.scrollLeft ?? 0),
-						absY - (region.scrollTop ?? 0),
-					);
-				}
-			};
-
-			processRegionForScroll(this.sceneManager.root!, 0, -cameraY);
+			this.processRegionForScroll(
+				this.sceneManager.root!,
+				0,
+				-cameraY,
+				cameraY,
+				scrolledToBackbuffer,
+				compositor,
+			);
 		}
 
 		// 2. Compose Frame
@@ -875,44 +795,8 @@ export class TerminalBufferWorker {
 		this.backbuffer = [];
 
 		if (!this.isAlternateBufferEnabled && computeBackbuffer) {
-			const composeToBackbuffer = (
-				node: RegionNode,
-				region: Region,
-				height: number,
-				offset: number,
-			) => {
-				const canvas = Canvas.create(this.columns, height);
-				const originalScrollTop = region.scrollTop;
-				region.scrollTop = offset;
-				try {
-					this.composeNode(
-						node,
-						canvas,
-						{
-							clip: undefined,
-							offsetY: -region.y,
-							offsetX: 0,
-							overrideHeight: height,
-							isExpanded: true,
-						},
-						{
-							skipStickyHeaders: true,
-							skipScrollbars: true,
-						},
-					);
-				} finally {
-					region.scrollTop = originalScrollTop;
-				}
-
-				for (const line of canvas.getLines()) {
-					this.backbuffer.push(
-						this.terminalWriter.clampLine(line.styledChars, this.columns),
-					);
-				}
-			};
-
 			const rootBackbufferHeight = cameraY;
-			composeToBackbuffer(
+			this.composeToBackbuffer(
 				this.sceneManager.root!,
 				rootRegion,
 				rootBackbufferHeight,
@@ -925,7 +809,7 @@ export class TerminalBufferWorker {
 					const regionBackbufferHeight = scrollTop;
 					const node = this.findNodeForRegion(region.id);
 					if (node) {
-						composeToBackbuffer(node, region, regionBackbufferHeight, 0);
+						this.composeToBackbuffer(node, region, regionBackbufferHeight, 0);
 					}
 				}
 			}
@@ -938,6 +822,42 @@ export class TerminalBufferWorker {
 		});
 		this.screen = canvas.getLines();
 		this.resized = false;
+	}
+
+	private composeToBackbuffer(
+		node: RegionNode,
+		region: Region,
+		height: number,
+		offset: number,
+	) {
+		const canvas = Canvas.create(this.columns, height);
+		const originalScrollTop = region.scrollTop;
+		region.scrollTop = offset;
+		try {
+			this.composeNode(
+				node,
+				canvas,
+				{
+					clip: undefined,
+					offsetY: -region.y,
+					offsetX: 0,
+					overrideHeight: height,
+					isExpanded: true,
+				},
+				{
+					skipStickyHeaders: true,
+					skipScrollbars: true,
+				},
+			);
+		} finally {
+			region.scrollTop = originalScrollTop;
+		}
+
+		for (const line of canvas.getLines()) {
+			this.backbuffer.push(
+				this.terminalWriter.clampLine(line.styledChars, this.columns),
+			);
+		}
 	}
 
 	/**
@@ -1166,6 +1086,97 @@ export class TerminalBufferWorker {
 		};
 
 		return visit(this.sceneManager.root);
+	}
+
+	private processRegionForScroll(
+		node: RegionNode,
+		offsetX: number,
+		offsetY: number,
+		cameraY: number,
+		scrolledToBackbuffer: Map<string | number, number>,
+		compositor: Compositor,
+	) {
+		const region = this.sceneManager.getRegion(node.id);
+		if (!region) return;
+
+		const exactAbsX = region.x + offsetX;
+		const exactAbsY = region.y + offsetY;
+		const absY = Math.round(exactAbsY);
+
+		const operations = this.scrollOptimizer.calculateScrollOperations(
+			region,
+			this.rows,
+			this.columns,
+			absY,
+			(scrollStart, count, start, end, scrollToBackbuffer) => {
+				const originalScrollTop = region.scrollTop;
+				region.scrollTop = scrollStart;
+				try {
+					const getLines = (skipScrollbars: boolean) => {
+						const canvas = Canvas.create(this.columns, this.rows + count);
+						this.composeNode(
+							this.sceneManager.root!,
+							canvas,
+							{
+								clip: undefined,
+								offsetY: -cameraY,
+							},
+							{skipStickyHeaders: true, skipScrollbars},
+						);
+
+						const lines = canvas.getLines();
+						return start === 0 && end + count === lines.length
+							? lines
+							: lines.slice(start, end + count);
+					};
+
+					if (scrollToBackbuffer && count > 0 && start === 0) {
+						const dirtyLines = getLines(false);
+						const cleanLines = getLines(true);
+						// First 'count' lines are clean (for backbuffer), the rest are dirty (for viewport)
+						return [...cleanLines.slice(0, count), ...dirtyLines.slice(count)];
+					}
+
+					return getLines(false);
+				} finally {
+					region.scrollTop = originalScrollTop;
+				}
+			},
+			(r, s, a) => compositor.calculateActualStuckTopHeight(r, s, a),
+			(r, s, a) => compositor.calculateActualStuckBottomHeight(r, s, a),
+			this.stickyHeadersInBackbuffer,
+		);
+
+		for (const op of operations) {
+			if (op.scrollToBackbuffer) {
+				if (debugWorker) {
+					debugLog(
+						`[RENDER-WORKER] Region ${op.regionId} scrolling ${op.linesToScroll} lines to backbuffer`,
+					);
+				}
+
+				scrolledToBackbuffer.set(
+					op.regionId,
+					(scrolledToBackbuffer.get(op.regionId) ?? 0) + op.linesToScroll,
+				);
+			}
+
+			this.terminalWriter.scrollLines(op);
+			if (op.newMaxPushed !== undefined) {
+				this.scrollOptimizer.updateMaxPushed(op.regionId, op.newMaxPushed);
+			}
+		}
+
+		for (const child of node.children) {
+			this.processRegionForScroll(
+				child,
+				exactAbsX - (region.scrollLeft ?? 0),
+				exactAbsY - (region.scrollTop ?? 0),
+				cameraY,
+				scrolledToBackbuffer,
+				compositor,
+			);
+		}
 	}
 
 	private logScene(scrolledToBackbuffer?: Map<string | number, number>) {
