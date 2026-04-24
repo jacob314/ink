@@ -78,6 +78,7 @@ const getOrRenderCachedRegion = (
 		skipStaticElements: boolean;
 		isStickyRender: boolean;
 		skipStickyHeaders: boolean;
+		stickyHeadersInBackbuffer?: boolean;
 	},
 ) => {
 	const {
@@ -87,6 +88,7 @@ const getOrRenderCachedRegion = (
 		skipStaticElements,
 		isStickyRender,
 		skipStickyHeaders,
+		stickyHeadersInBackbuffer,
 	} = options;
 	const cachedRegion = getCachedRegion(node);
 
@@ -114,6 +116,7 @@ const getOrRenderCachedRegion = (
 		skipStaticElements,
 		isStickyRender,
 		skipStickyHeaders,
+		stickyHeadersInBackbuffer,
 		absoluteOffsetX: 0,
 		absoluteOffsetY: 0,
 	});
@@ -264,6 +267,7 @@ function renderNodeToOutput(
 		skipStaticElements: boolean;
 		isStickyRender?: boolean;
 		skipStickyHeaders?: boolean;
+		stickyHeadersInBackbuffer?: boolean;
 		selectionMap?: Map<DOMNode, {start: number; end: number}>;
 		selectionStyle?: (line: StyledLine, index: number) => void;
 		trackSelection?: boolean;
@@ -373,6 +377,7 @@ function renderNodeToOutput(
 				skipStaticElements,
 				isStickyRender,
 				skipStickyHeaders,
+				stickyHeadersInBackbuffer: options.stickyHeadersInBackbuffer,
 			});
 
 			output.addRegionTree(cachedRegion, x, y);
@@ -400,6 +405,7 @@ function renderNodeToOutput(
 			skipStaticElements,
 			isStickyRender,
 			skipStickyHeaders,
+			stickyHeadersInBackbuffer: options.stickyHeadersInBackbuffer,
 			selectionMap,
 			selectionStyle,
 			absoluteOffsetX: absX,

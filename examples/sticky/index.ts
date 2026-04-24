@@ -85,6 +85,7 @@ export const instance = render(
 		rows,
 	}),
 	{
+		debugRainbow: true,
 		renderProcess: true,
 		terminalBuffer: true,
 		alternateBuffer: false,
