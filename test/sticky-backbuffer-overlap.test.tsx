@@ -37,6 +37,7 @@ test('sticky header should not overlap with bottom border when pushed out', asyn
 		<Box flexDirection="column" height={rows} width={columns}>
 			<Box
 				overflowToBackbuffer
+				flexDirection="column"
 				height={1} // Viewport is 1 line high
 				overflowY="scroll"
 				scrollbar={false}
@@ -85,6 +86,7 @@ test('sticky header should not overlap with bottom border when pushed out', asyn
 		<Box flexDirection="column" height={rows} width={columns}>
 			<Box
 				overflowToBackbuffer
+				flexDirection="column"
 				height={1}
 				overflowY="scroll"
 				scrollbar={false}
