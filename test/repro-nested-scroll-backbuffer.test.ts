@@ -79,6 +79,7 @@ test('TerminalBufferWorker should correctly render nested scrollables in root ba
 	await worker.render();
 	output = '';
 
+	worker.backbufferDirty = true;
 	await worker.fullRender();
 	await writeToTerm(term, output);
 
@@ -163,6 +164,7 @@ test('TerminalBufferWorker should correctly render inner overflow of nested scro
 	await worker.render();
 	output = '';
 
+	worker.backbufferDirty = true;
 	await worker.fullRender();
 	await writeToTerm(term, output);
 

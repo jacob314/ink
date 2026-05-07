@@ -199,7 +199,6 @@ function ScrollableContent({
 		if (exportFilename) {
 			const timeout = setTimeout(() => {
 				dumpCurrentFrame(exportFilename);
-				console.log('Dumping frame to:', exportFilename);
 				setTimeout(() => {
 					// eslint-disable-next-line unicorn/no-process-exit
 					process.exit(0);

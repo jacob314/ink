@@ -167,7 +167,7 @@ export function createHumanReadableDump(data: LoadedReplayData): string {
 			tree: frame.tree,
 			cursorPosition: frame.cursorPosition,
 			updates: frame.updates.map(update => {
-				const dumpUpdate: Record<string, any> = {...update};
+				const dumpUpdate: Record<string, unknown> = {...update};
 
 				// Explicitly copy properties that could be undefined if omitted in object spread occasionally
 				dumpUpdate['overflowToBackbuffer'] = update.overflowToBackbuffer;

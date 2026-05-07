@@ -525,6 +525,8 @@ export default class TerminalBuffer {
 			last.linesOffsetY ?? 0,
 			current.lines,
 			current.linesOffsetY ?? 0,
+			current.overflowToBackbuffer ?? false,
+			current.scrollTop ?? 0,
 		);
 
 		if (
@@ -572,6 +574,8 @@ export default class TerminalBuffer {
 		oldOffsetY: number,
 		newLines: readonly StyledLine[],
 		newOffsetY: number,
+		overflowToBackbuffer: boolean,
+		scrollTop: number,
 	): Array<{
 		start: number;
 		end: number;
@@ -616,6 +620,11 @@ export default class TerminalBuffer {
 		};
 
 		for (let y = minOffset; y < maxOffset; y++) {
+			if (overflowToBackbuffer && y < newOffsetY && y < scrollTop) {
+				flushChunk();
+				continue;
+			}
+
 			const oldLine =
 				y >= oldOffsetY && y < maxOld ? oldLines[y - oldOffsetY] : undefined;
 			const newLine =
