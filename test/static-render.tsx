@@ -113,3 +113,37 @@ test.serial(
 		await instance.unmount();
 	},
 );
+
+test.serial(
+	'StaticRender calls onRender with the rendered DOMElement',
+	async t => {
+		let onRenderNode: DOMElement | undefined;
+		const onRender = (node: DOMElement) => {
+			onRenderNode = node;
+		};
+
+		const instance = await renderTerminal(
+			<StaticRender width={100} onRender={onRender}>
+				{() => <Text>Test onRender</Text>}
+			</StaticRender>,
+			100,
+			defaultTestConfig,
+		);
+
+		await instance.waitUntilReady();
+		// wait for onRenderNode to be defined
+		const start = Date.now();
+		while (!onRenderNode && Date.now() - start < 1000) {
+			await new Promise(resolve => {
+				setTimeout(resolve, 10);
+			});
+		}
+
+		t.truthy(onRenderNode);
+		t.is(onRenderNode?.nodeName, 'ink-static-render');
+		t.truthy(onRenderNode?.cachedRender);
+		t.is(onRenderNode?.cachedRender?.width, 100);
+
+		await instance.unmount();
+	},
+);

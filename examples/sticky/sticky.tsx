@@ -13,6 +13,7 @@ import React, {
 	useLayoutEffect,
 	useMemo,
 	useContext,
+	useCallback,
 } from 'react';
 import {
 	Box,
@@ -125,6 +126,7 @@ function ScrollableContent({
 	const [isFooterExpanded, setIsFooterExpanded] = useState(true);
 	const [shouldScrollToBottom, setShouldScrollToBottom] = useState(false);
 	const [isRecording, setIsRecording] = useState(false);
+	const [resizeLogs, setResizeLogs] = useState<string[]>([]);
 	const [scrollState, dispatch] = useReducer(scrollReducer, {
 		scrollTop: initialScroll,
 	});
@@ -138,6 +140,17 @@ function ScrollableContent({
 	const reference = useRef<DOMElement>(null);
 	const {options, setOptions, dumpCurrentFrame, startRecording, stopRecording} =
 		useContext(AppContext);
+
+	const handleStaticRender = useCallback((key: string, node: DOMElement) => {
+		const width = Math.round(node.cachedRender?.width ?? 0);
+		const height = Math.round(node.cachedRender?.height ?? 0);
+		const logMsg = `${key}: w=${width} h=${height}`;
+
+		setResizeLogs(prev => {
+			const combined = [...prev, logMsg];
+			return combined.slice(-5);
+		});
+	}, []);
 
 	const [size, setSize] = useState({
 		innerHeight: 0,
@@ -274,6 +287,9 @@ function ScrollableContent({
 							key={`static-inner-scroll-${headerId}`}
 							width={contentWidth}
 							deps={[innerBox, innerScrollTop]}
+							onRender={node =>
+								handleStaticRender(`inner-scroll-${headerId}`, node)
+							}
 						>
 							{() => innerBox}
 						</StaticRender>
@@ -361,6 +377,7 @@ function ScrollableContent({
 						key={`static-group-${headerId}`}
 						width={contentWidth}
 						deps={[groupInnerBox]}
+						onRender={node => handleStaticRender(`group-${headerId}`, node)}
 					>
 						{() => groupInnerBox}
 					</StaticRender>
@@ -381,6 +398,7 @@ function ScrollableContent({
 							key={`static-item-${item.id}`}
 							width={contentWidth}
 							deps={[itemInnerBox]}
+							onRender={node => handleStaticRender(`item-${item.id}`, node)}
 						>
 							{() => itemInnerBox}
 						</StaticRender>
@@ -606,6 +624,12 @@ function ScrollableContent({
 						ScrollTop: {scrollTop}, Size: {size.innerHeight}, Content:{' '}
 						{size.scrollHeight}, Added Scroll: {size.addedScrollHeight}
 					</Text>
+				</Box>
+				<Box height={6} flexDirection="column" flexShrink={0}>
+					<Text color="yellow">Measured size Logs (Last 5):</Text>
+					{resizeLogs.map((log, i) => (
+						<Text key={i}>{log}</Text>
+					))}
 				</Box>
 			</Box>
 		</Box>

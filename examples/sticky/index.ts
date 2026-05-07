@@ -9,6 +9,16 @@ import React from 'react';
 import {render} from '../../src/index.js';
 import ScrollableContent from './sticky.js';
 
+process.on('uncaughtException', (error) => {
+	console.error('Uncaught Exception:', error);
+	process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+	console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+	process.exit(1);
+});
+
 const arguments_ = process.argv.slice(2);
 const useStatic = !arguments_.includes('--no-static');
 

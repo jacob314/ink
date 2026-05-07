@@ -18,6 +18,11 @@ export type Props = {
 	 * If omitted, the content will re-render whenever the `children` function reference changes.
 	 */
 	readonly deps?: DependencyList;
+	/**
+	 * Callback fired after the static content has been rendered and cached.
+	 * Useful for measuring the element's size after rendering.
+	 */
+	readonly onRender?: (node: DOMElement) => void;
 };
 
 const areDepsEqual = (
@@ -67,7 +72,13 @@ const areDepsEqual = (
  * @param props.width Required. The width of the static block. Ink needs this to pre-calculate
  * the layout having it be dependent on the rest of the app's layout.
  */
-export default function StaticRender({children, width, style, deps}: Props) {
+export default function StaticRender({
+	children,
+	width,
+	style,
+	deps,
+	onRender,
+}: Props) {
 	const ref = useRef<DOMElement>(null);
 	const [renderedVersion, setRenderedVersion] = useState(0);
 	const prevChildren = useRef(children);
@@ -116,6 +127,9 @@ export default function StaticRender({children, width, style, deps}: Props) {
 						? currentVersion
 						: nextRenderedVersion,
 				);
+				if (onRender && ref.current) {
+					onRender(ref.current);
+				}
 			}}
 		>
 			{shouldRender ? children() : null}
