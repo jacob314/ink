@@ -48,21 +48,21 @@ if (recordIndex !== -1) {
 	}
 }
 
-let initialItems = 0;
+let initialItems = 5;
 const itemsToAddIndex = arguments_.indexOf('--items');
 if (itemsToAddIndex !== -1 && arguments_.length > itemsToAddIndex + 1) {
 	initialItems = Number.parseInt(arguments_[itemsToAddIndex + 1]!, 10);
 	if (Number.isNaN(initialItems)) {
-		initialItems = 0;
+		initialItems = 5;
 	}
 }
 
-let initialScroll = 0;
+let initialScroll: number | undefined;
 const scrollDownIndex = arguments_.indexOf('--scroll-down');
 if (scrollDownIndex !== -1 && arguments_.length > scrollDownIndex + 1) {
 	initialScroll = Number.parseInt(arguments_[scrollDownIndex + 1]!, 10);
 	if (Number.isNaN(initialScroll)) {
-		initialScroll = 0;
+		initialScroll = undefined;
 	}
 }
 
@@ -102,7 +102,8 @@ export const instance = render(
 		standardReactLayoutTiming: true,
 		incrementalRendering: true,
 		animatedScroll: true,
-		backbufferUpdateDelay: 100,
+		backbufferUpdateDelay: 1000,
 		maxFps: 10_000,
+		maxScrollbackLength:10
 	},
 );

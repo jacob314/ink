@@ -33,6 +33,7 @@ export class SceneManager {
 		updates: RegionUpdate[],
 		options: {
 			animatedScroll: boolean;
+			maxScrollbackLength?: number;
 			onScrollUpdate: (
 				regionId: string | number,
 				scrollTop: number,
@@ -138,12 +139,26 @@ export class SceneManager {
 				}
 
 				const newOffsetY = r.linesOffsetY ?? 0;
-				const newLines: StyledLine[] = [];
 				const newLength = update.lines.totalLength ?? 0;
-				for (let i = 0; i < newLength; i++) {
-					newLines.push(sparseLines[newOffsetY + i] || new StyledLine());
+				let retainedStart = newOffsetY;
+
+				if (
+					r.overflowToBackbuffer &&
+					options.maxScrollbackLength !== undefined
+				) {
+					retainedStart = Math.max(
+						0,
+						newOffsetY + newLength - options.maxScrollbackLength,
+					);
+					retainedStart = Math.min(retainedStart, newOffsetY);
 				}
 
+				const newLines: StyledLine[] = [];
+				for (let i = retainedStart; i < newOffsetY + newLength; i++) {
+					newLines.push(sparseLines[i] || new StyledLine());
+				}
+
+				r.linesOffsetY = retainedStart;
 				(r.lines as StyledLine[]) = newLines;
 			}
 		}

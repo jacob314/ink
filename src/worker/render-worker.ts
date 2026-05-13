@@ -392,6 +392,7 @@ export class TerminalBufferWorker {
 
 		this.sceneManager.update(tree, updates, {
 			animatedScroll: this.animatedScroll,
+			maxScrollbackLength: this.maxScrollbackLength,
 			onScrollUpdate: (id, scrollTop, isNew) => {
 				if (this.animatedScroll && !isNew) {
 					this.animationController.setTargetScrollTop(id, scrollTop);
@@ -733,7 +734,10 @@ export class TerminalBufferWorker {
 		if (!this.isAlternateBufferEnabled) {
 			const maxPushedRoot =
 				this.scrollOptimizer.maxRegionScrollTops.get(rootRegion.id) ?? 0;
-			if (cameraY < maxPushedRoot) {
+			if (
+				cameraY < maxPushedRoot &&
+				maxPushedRoot - cameraY <= this.maxScrollbackLength
+			) {
 				this.terminalWriter.backbufferDirtyCurrentFrame = true;
 			}
 
@@ -741,7 +745,10 @@ export class TerminalBufferWorker {
 				if (region.overflowToBackbuffer) {
 					const maxPushed =
 						this.scrollOptimizer.maxRegionScrollTops.get(region.id) ?? 0;
-					if ((region.scrollTop ?? 0) < maxPushed) {
+					if (
+						(region.scrollTop ?? 0) < maxPushed &&
+						maxPushed - (region.scrollTop ?? 0) <= this.maxScrollbackLength
+					) {
 						this.terminalWriter.backbufferDirtyCurrentFrame = true;
 					}
 				}

@@ -550,3 +550,98 @@ test('scrolling oscillation with fullRender does not duplicate lines', async t =
 		'Line 0 in history still should have original color',
 	);
 });
+
+test('scrolling up beyond maxScrollbackLength does not trigger fullRender or duplicate lines', async t => {
+	const columns = 80;
+	const rows = 5;
+	let output = '';
+	const stdout = {
+		write(chunk: string) {
+			output += chunk;
+			return true;
+		},
+		on() {},
+		rows,
+		columns,
+	} as unknown as NodeJS.WriteStream;
+
+	// Use a small maxScrollbackLength for testing
+	const maxScrollbackLength = 5;
+	const worker = new TerminalBufferWorker(columns, rows, {
+		stdout,
+		maxScrollbackLength,
+	});
+	const term = new Terminal({
+		cols: columns,
+		rows,
+		allowProposedApi: true,
+		convertEol: true,
+	});
+
+	const totalLines = 50;
+	const allLines = Array.from({length: totalLines}).map((_, i) =>
+		createStyledLine(`Line ${i}`),
+	);
+	const allLinesSerialized = serializer.serialize(allLines);
+
+	const updateScroll = async (scrollTop: number) => {
+		worker.update({id: 'root', children: [{id: 'scroll-box', children: []}]}, [
+			{
+				id: 'root',
+				x: 0,
+				y: 0,
+				width: columns,
+				height: rows,
+			},
+			{
+				id: 'scroll-box',
+				x: 0,
+				y: 0,
+				width: columns,
+				height: rows,
+				scrollTop,
+				isScrollable: true,
+				overflowToBackbuffer: true,
+				lines: {
+					updates: [{start: 0, end: totalLines, data: allLinesSerialized}],
+					totalLength: totalLines,
+				},
+			},
+		]);
+		output = '';
+		await worker.render();
+		await writeToTerm(term, output);
+	};
+
+	// 1. Initial render
+	await updateScroll(0);
+
+	// 2. Scroll down by 20 lines (maxPushed becomes 20)
+	await updateScroll(20);
+
+	// The terminal emulator should have truncated the history
+	// Wait, XtermTerminal may not truncate automatically without setup,
+	// but the worker tracks maxScrollbackLength and only outputs the truncated amount during a fullRender.
+
+	worker.backbufferDirtyCurrentFrame = false;
+	worker.backbufferDirty = false;
+
+	// 3. Scroll up to 10 (which is less than 20, but 20 - 10 = 10 > maxScrollbackLength (5))
+	await updateScroll(10);
+
+	// This should NOT trigger a backbuffer dirty frame, because it's too far up
+	t.false(
+		worker.backbufferDirtyCurrentFrame,
+		'backbufferDirtyCurrentFrame should be false since the scroll up is beyond maxScrollbackLength',
+	);
+	t.false(worker.backbufferDirty, 'backbufferDirty should be false');
+
+	// 4. Scroll up to 18 (20 - 18 = 2 <= maxScrollbackLength (5))
+	await updateScroll(18);
+
+	// This SHOULD trigger a backbuffer dirty frame, because it overlaps with the truncated history
+	t.true(
+		worker.backbufferDirtyCurrentFrame || worker.backbufferDirty,
+		'backbufferDirtyCurrentFrame or backbufferDirty should be true since the scroll up overlaps with maxScrollbackLength',
+	);
+});

@@ -88,8 +88,8 @@ function scrollReducer(state: ScrollState, action: ScrollAction): ScrollState {
 
 function ScrollableContent({
 	useStatic = false,
-	initialItems = 0,
-	initialScroll = 0,
+	initialItems = 5,
+	initialScroll,
 	exportFilename = '',
 	recordFilename = '',
 	columns: customColumns,
@@ -124,14 +124,16 @@ function ScrollableContent({
 	const [showScrollbar, setShowScrollbar] = useState(true);
 	const [stableScrollback, setStableScrollback] = useState(true);
 	const [isFooterExpanded, setIsFooterExpanded] = useState(true);
-	const [shouldScrollToBottom, setShouldScrollToBottom] = useState(false);
+	const [shouldScrollToBottom, setShouldScrollToBottom] = useState(
+		initialScroll === undefined,
+	);
 	const [isRecording, setIsRecording] = useState(false);
 	const [resizeLogs, setResizeLogs] = useState<string[]>([]);
 	const [scrollState, dispatch] = useReducer(scrollReducer, {
-		scrollTop: initialScroll,
+		scrollTop: initialScroll ?? 0,
 	});
 	const {scrollTop} = scrollState;
-	const {columns: terminalColumns, rows: terminalRows} = useTerminalSize();
+	const {columns: terminalexolumns, rows: terminalRows} = useTerminalSize();
 	const {stdout} = useStdout();
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 	const columns = customColumns ?? (stdout as any)?.columns ?? terminalColumns;
