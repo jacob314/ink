@@ -123,6 +123,7 @@ export default class Ink {
 	private readonly isScreenReaderEnabled: boolean;
 	private readonly selection: Selection;
 	private readonly terminalBuffer?: TerminalBuffer;
+	private readonly pendingStaticRenderCallbacks = new Set<dom.DOMElement>();
 	private optionsState: InkOptions;
 
 	// Ignore last render after unmounting a tree to prevent empty output before exit
@@ -335,8 +336,24 @@ export default class Ink {
 		);
 
 		flushLayoutObservers(this.rootNode, this.isTerminalResized);
+		this.flushStaticRenderCallbacks();
 		this.isTerminalResized = false;
 	};
+
+	private flushStaticRenderCallbacks() {
+		if (this.pendingStaticRenderCallbacks.size === 0) {
+			return;
+		}
+
+		const nodes = [...this.pendingStaticRenderCallbacks];
+		this.pendingStaticRenderCallbacks.clear();
+
+		for (const node of nodes) {
+			if (node.cachedRender && node.internal_onRendered) {
+				node.internal_onRendered(node);
+			}
+		}
+	}
 
 	calculateLayoutAndTriggerObservers(
 		node: dom.DOMElement,
@@ -903,6 +920,9 @@ export default class Ink {
 			renderToStatic(node, {
 				skipStaticElements: false,
 				trackSelection: this.options.trackSelection,
+				onRendered: node => {
+					this.pendingStaticRenderCallbacks.add(node);
+				},
 			});
 		}
 	}

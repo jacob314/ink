@@ -6,6 +6,10 @@ import {
 	Text,
 	StaticRender,
 	ResizeObserver,
+	measureElement,
+	getBoundingBox,
+	getInnerWidth,
+	getInnerHeight,
 	type DOMElement,
 } from '../src/index.js';
 import {waitFor} from './helpers/wait-for.js';
@@ -238,6 +242,126 @@ test('ResizeObserver attached to child of a StaticRender element still gets succ
 
 	t.is(resizeCalls.length, 1);
 	t.deepEqual(resizeCalls[0], {width: 20, height: 10});
+
+	unmount();
+});
+
+test('StaticRender can be accurately measured from onRender and ResizeObserver', async t => {
+	type StaticRenderMeasurement = {
+		resize?: {width: number; height: number};
+		measured: {width: number; height: number};
+		boundingBox: {x: number; y: number; width: number; height: number};
+		innerWidth: number;
+		innerHeight: number;
+	};
+
+	const onRenderMeasurements: StaticRenderMeasurement[] = [];
+	const resizeMeasurements: StaticRenderMeasurement[] = [];
+
+	function MeasuredStaticRender({
+		lines,
+	}: {
+		readonly lines: string[];
+	}) {
+		const observerRef = useRef<ResizeObserver>();
+
+		useEffect(() => {
+			return () => {
+				observerRef.current?.disconnect();
+			};
+		}, []);
+
+		return (
+			<Box paddingTop={1} paddingLeft={2}>
+				<Box marginTop={1} marginLeft={3}>
+					<StaticRender
+						width={20}
+						style={{flexDirection: 'column'}}
+						deps={[lines.length]}
+						onRender={node => {
+							onRenderMeasurements.push({
+								measured: measureElement(node),
+								boundingBox: getBoundingBox(node),
+								innerWidth: getInnerWidth(node),
+								innerHeight: getInnerHeight(node),
+							});
+
+							observerRef.current?.disconnect();
+							observerRef.current = new ResizeObserver(entries => {
+								const entry = entries[0];
+								if (!entry) {
+									return;
+								}
+
+								resizeMeasurements.push({
+									resize: entry.contentRect,
+									measured: measureElement(entry.target),
+									boundingBox: getBoundingBox(entry.target),
+									innerWidth: getInnerWidth(entry.target),
+									innerHeight: getInnerHeight(entry.target),
+								});
+							});
+							observerRef.current.observe(node);
+						}}
+					>
+						{() => (
+							<Box flexDirection="column">
+								{lines.map(line => (
+									<Text key={line}>{line}</Text>
+								))}
+							</Box>
+						)}
+					</StaticRender>
+				</Box>
+			</Box>
+		);
+	}
+
+	const stdout = createStdout();
+	const {rerender, unmount} = render(
+		<MeasuredStaticRender lines={['Alpha', 'Beta', 'Gamma']} />,
+		{stdout},
+	);
+
+	await waitFor(
+		() => onRenderMeasurements.length === 1 && resizeMeasurements.length === 1,
+	);
+	t.deepEqual(onRenderMeasurements[0], {
+		measured: {width: 20, height: 3},
+		boundingBox: {x: 5, y: 2, width: 20, height: 3},
+		innerWidth: 20,
+		innerHeight: 3,
+	});
+	t.deepEqual(resizeMeasurements[0], {
+		resize: {width: 20, height: 3},
+		measured: {width: 20, height: 3},
+		boundingBox: {x: 5, y: 2, width: 20, height: 3},
+		innerWidth: 20,
+		innerHeight: 3,
+	});
+
+	rerender(
+		<MeasuredStaticRender
+			lines={['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon']}
+		/>,
+	);
+
+	await waitFor(
+		() => onRenderMeasurements.length >= 2 && resizeMeasurements.length >= 2,
+	);
+	t.deepEqual(onRenderMeasurements.at(-1), {
+		measured: {width: 20, height: 5},
+		boundingBox: {x: 5, y: 2, width: 20, height: 5},
+		innerWidth: 20,
+		innerHeight: 5,
+	});
+	t.deepEqual(resizeMeasurements.at(-1), {
+		resize: {width: 20, height: 5},
+		measured: {width: 20, height: 5},
+		boundingBox: {x: 5, y: 2, width: 20, height: 5},
+		innerWidth: 20,
+		innerHeight: 5,
+	});
 
 	unmount();
 });

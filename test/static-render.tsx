@@ -131,18 +131,7 @@ test.serial(
 		);
 
 		await instance.waitUntilReady();
-		// Wait for onRenderNode to be defined
-		const start = Date.now();
-		let waited = 0;
-		// eslint-disable-next-line no-unmodified-loop-condition
-		while (!onRenderNode && waited < 100) {
-			// eslint-disable-next-line no-await-in-loop
-			await new Promise(resolve => {
-				setTimeout(resolve, 10);
-			});
-
-			waited++;
-		}
+		await waitFor(() => onRenderNode !== undefined);
 
 		t.truthy(onRenderNode);
 		t.is(onRenderNode?.nodeName, 'ink-static-render');
@@ -152,3 +141,34 @@ test.serial(
 		await instance.unmount();
 	},
 );
+
+test.serial('StaticRender calls onRender when deps trigger a cached rerender', async t => {
+	const renderedText: string[] = [];
+	const onRender = (node: DOMElement) => {
+		renderedText.push(node.cachedRender?.lines[0]?.getText().trimEnd() ?? '');
+	};
+
+	const renderStatic = (value: string) => (
+		<StaticRender width={100} deps={[value]} onRender={onRender}>
+			{() => <Text>{value}</Text>}
+		</StaticRender>
+	);
+
+	const instance = await renderTerminal(
+		renderStatic('First'),
+		100,
+		defaultTestConfig,
+	);
+
+	await instance.waitUntilReady();
+	await waitFor(() => renderedText.length === 1);
+	t.deepEqual(renderedText, ['First']);
+
+	await instance.rerender(renderStatic('Second'));
+	await waitFor(() => renderedText.length === 2);
+	await instance.waitUntilReady();
+	t.deepEqual(renderedText, ['First', 'Second']);
+	t.is(instance.lastFrame().trim(), 'Second');
+
+	await instance.unmount();
+});

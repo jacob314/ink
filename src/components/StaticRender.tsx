@@ -120,15 +120,15 @@ export default function StaticRender({
 		<ink-static-render
 			ref={ref}
 			style={{...style, width}}
-			internal_onRendered={() => {
+			internal_onRendered={node => {
 				const nextRenderedVersion = pendingVersion.current;
 				setRenderedVersion(currentVersion =>
 					currentVersion === nextRenderedVersion
 						? currentVersion
 						: nextRenderedVersion,
 				);
-				if (onRender && ref.current) {
-					onRender(ref.current);
+				if (onRender) {
+					onRender(node);
 				}
 			}}
 		>

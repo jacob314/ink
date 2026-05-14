@@ -234,7 +234,7 @@ export default createReconciler<
 			}
 
 			if (key === 'internal_onRendered') {
-				node.internal_onRendered = value as () => void;
+				node.internal_onRendered = value as (node: DOMElement) => void;
 				continue;
 			}
 
@@ -379,7 +379,7 @@ export default createReconciler<
 				}
 
 				if (key === 'internal_onRendered') {
-					node.internal_onRendered = value as () => void;
+					node.internal_onRendered = value as (node: DOMElement) => void;
 					continue;
 				}
 

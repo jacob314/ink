@@ -1,8 +1,9 @@
 import test from 'ava';
-import {StyledLine} from '../src/styled-line.js';
+import {type StyledLine} from '../src/styled-line.js';
 import xtermHeadless, {type Terminal as XtermTerminal} from '@xterm/headless';
 import {TerminalBufferWorker} from '../src/worker/render-worker.js';
 import {Serializer} from '../src/serialization.js';
+import {type RegionNode, type RegionUpdate} from '../src/output.js';
 import {createStyledLine} from './helpers/replay-lib.js';
 
 const {Terminal} = xtermHeadless;
@@ -14,6 +15,19 @@ const writeToTerm = async (term: XtermTerminal, data: string): Promise<void> =>
 			resolve();
 		});
 	});
+
+const createSilentStdout = (columns: number, rows: number) =>
+	({
+		write() {
+			return true;
+		},
+		on() {},
+		rows,
+		columns,
+	}) as unknown as NodeJS.WriteStream;
+
+const getRenderedText = (line: {styledChars: StyledLine} | undefined) =>
+	line?.styledChars.getText().trimEnd() ?? '';
 
 test('scrolling down, up, and down again does not duplicate lines in backbuffer', async t => {
 	const columns = 80;
@@ -565,7 +579,6 @@ test('scrolling up beyond maxScrollbackLength does not trigger fullRender or dup
 		columns,
 	} as unknown as NodeJS.WriteStream;
 
-	// Use a small maxScrollbackLength for testing
 	const maxScrollbackLength = 5;
 	const worker = new TerminalBufferWorker(columns, rows, {
 		stdout,
@@ -613,33 +626,20 @@ test('scrolling up beyond maxScrollbackLength does not trigger fullRender or dup
 		await writeToTerm(term, output);
 	};
 
-	// 1. Initial render
 	await updateScroll(0);
-
-	// 2. Scroll down by 20 lines (maxPushed becomes 20)
 	await updateScroll(20);
-
-	// The terminal emulator should have truncated the history
-	// Wait, XtermTerminal may not truncate automatically without setup,
-	// but the worker tracks maxScrollbackLength and only outputs the truncated amount during a fullRender.
 
 	worker.backbufferDirtyCurrentFrame = false;
 	worker.backbufferDirty = false;
 
-	// 3. Scroll up to 10 (which is less than 20, but 20 - 10 = 10 > maxScrollbackLength (5))
 	await updateScroll(10);
-
-	// This should NOT trigger a backbuffer dirty frame, because it's too far up
 	t.false(
 		worker.backbufferDirtyCurrentFrame,
 		'backbufferDirtyCurrentFrame should be false since the scroll up is beyond maxScrollbackLength',
 	);
 	t.false(worker.backbufferDirty, 'backbufferDirty should be false');
 
-	// 4. Scroll up to 18 (20 - 18 = 2 <= maxScrollbackLength (5))
 	await updateScroll(18);
-
-	// This SHOULD trigger a backbuffer dirty frame, because it overlaps with the truncated history
 	t.true(
 		worker.backbufferDirtyCurrentFrame || worker.backbufferDirty,
 		'backbufferDirtyCurrentFrame or backbufferDirty should be true since the scroll up overlaps with maxScrollbackLength',
@@ -647,19 +647,16 @@ test('scrolling up beyond maxScrollbackLength does not trigger fullRender or dup
 });
 
 test('initial huge offset does not create blank history lines', async t => {
-	const worker = new TerminalBufferWorker(80, 24, {
+	const columns = 80;
+	const rows = 24;
+	const worker = new TerminalBufferWorker(columns, rows, {
+		stdout: createSilentStdout(columns, rows),
 		maxScrollbackLength: 1000,
 	});
 
-	// Serialize some lines
-	const lines = [];
-	for (let i = 0; i < 50; i++) {
-		const line = new StyledLine();
-		line.pushChar(`Line ${5000 + i}`, 0);
-		lines.push(line);
-	}
-
-	const serializer = new Serializer();
+	const lines = Array.from({length: 50}).map((_, i) =>
+		createStyledLine(`Line ${5000 + i}`),
+	);
 	const serializedData = serializer.serialize(lines);
 
 	const rootNode: RegionNode = {
@@ -677,16 +674,16 @@ test('initial huge offset does not create blank history lines', async t => {
 			id: 'root',
 			x: 0,
 			y: 0,
-			width: 80,
-			height: 24,
+			width: columns,
+			height: rows,
 			isScrollable: false,
 		},
 		{
 			id: 'list',
 			x: 0,
 			y: 0,
-			width: 80,
-			height: 24,
+			width: columns,
+			height: rows,
 			isScrollable: true,
 			overflowToBackbuffer: true,
 			linesOffsetY: 5000,
@@ -700,22 +697,89 @@ test('initial huge offset does not create blank history lines', async t => {
 						data: serializedData,
 					},
 				],
-				totalLength: 5050,
+				totalLength: 50,
 			},
 		},
 	];
 
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-	worker.update(rootNode as any, updates as any);
+	worker.update(rootNode, updates);
+	await worker.fullRender();
+
+	const region = worker.sceneManager.getRegion('list');
+	t.is(region?.linesOffsetY, 5000);
+	t.is(region?.lines.length, 50);
+	t.is(region?.lines[0]?.getText(), 'Line 5000');
+	t.is(region?.lines.at(-1)?.getText(), 'Line 5049');
+
+	const state = worker.getExpectedState();
+	t.is(state.backbuffer.length, 0);
+	t.is(getRenderedText(state.screen[0]), 'Line 5000');
+	t.is(getRenderedText(state.screen.at(-1)), 'Line 5023');
+});
+
+test('fullRender composes retained non-zero offset history without blank lines', async t => {
+	const columns = 80;
+	const rows = 5;
+	const worker = new TerminalBufferWorker(columns, rows, {
+		stdout: createSilentStdout(columns, rows),
+		maxScrollbackLength: 10,
+	});
+	const lines = Array.from({length: 50}).map((_, i) =>
+		createStyledLine(`Line ${5000 + i}`),
+	);
+	const serializedData = serializer.serialize(lines);
+	const rootNode: RegionNode = {
+		id: 'root',
+		children: [
+			{
+				id: 'list',
+				children: [],
+			},
+		],
+	};
+	const updates: RegionUpdate[] = [
+		{
+			id: 'root',
+			x: 0,
+			y: 0,
+			width: columns,
+			height: rows,
+		},
+		{
+			id: 'list',
+			x: 0,
+			y: 0,
+			width: columns,
+			height: rows,
+			isScrollable: true,
+			overflowToBackbuffer: true,
+			linesOffsetY: 5000,
+			scrollTop: 5020,
+			scrollHeight: 5050,
+			lines: {
+				updates: [
+					{
+						start: 5000,
+						end: 5050,
+						data: serializedData,
+					},
+				],
+				totalLength: 50,
+			},
+		},
+	];
+
+	worker.update(rootNode, updates);
 	await worker.fullRender();
 
 	const state = worker.getExpectedState();
-
-	// There should be a backbuffer because cameraY was pushed,
-	// but it shouldn't be full of thousands of blank lines.
-	const blankLines = state.backbuffer.filter(line => line.text.trim() === '');
-	t.true(
-		blankLines.length < 500,
-		`Backbuffer has ${blankLines.length} blank lines, indicating history retention over-reached into uninitialized space`,
+	t.is(state.backbuffer.length, 10);
+	t.deepEqual(
+		state.backbuffer.map(line => getRenderedText(line)),
+		Array.from({length: 10}).map((_, i) => `Line ${5010 + i}`),
+	);
+	t.deepEqual(
+		state.screen.map(line => getRenderedText(line)),
+		Array.from({length: rows}).map((_, i) => `Line ${5020 + i}`),
 	);
 });

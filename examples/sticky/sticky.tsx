@@ -13,7 +13,6 @@ import React, {
 	useLayoutEffect,
 	useMemo,
 	useContext,
-	useCallback,
 } from 'react';
 import {
 	Box,
@@ -88,8 +87,8 @@ function scrollReducer(state: ScrollState, action: ScrollAction): ScrollState {
 
 function ScrollableContent({
 	useStatic = false,
-	initialItems = 5,
-	initialScroll,
+	initialItems = 0,
+	initialScroll = 0,
 	exportFilename = '',
 	recordFilename = '',
 	columns: customColumns,
@@ -124,16 +123,13 @@ function ScrollableContent({
 	const [showScrollbar, setShowScrollbar] = useState(true);
 	const [stableScrollback, setStableScrollback] = useState(true);
 	const [isFooterExpanded, setIsFooterExpanded] = useState(true);
-	const [shouldScrollToBottom, setShouldScrollToBottom] = useState(
-		initialScroll === undefined,
-	);
+	const [shouldScrollToBottom, setShouldScrollToBottom] = useState(false);
 	const [isRecording, setIsRecording] = useState(false);
-	const [resizeLogs, setResizeLogs] = useState<string[]>([]);
 	const [scrollState, dispatch] = useReducer(scrollReducer, {
-		scrollTop: initialScroll ?? 0,
+		scrollTop: initialScroll,
 	});
 	const {scrollTop} = scrollState;
-	const {columns: terminalexolumns, rows: terminalRows} = useTerminalSize();
+	const {columns: terminalColumns, rows: terminalRows} = useTerminalSize();
 	const {stdout} = useStdout();
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 	const columns = customColumns ?? (stdout as any)?.columns ?? terminalColumns;
@@ -142,17 +138,6 @@ function ScrollableContent({
 	const reference = useRef<DOMElement>(null);
 	const {options, setOptions, dumpCurrentFrame, startRecording, stopRecording} =
 		useContext(AppContext);
-
-	const handleStaticRender = useCallback((key: string, node: DOMElement) => {
-		const width = Math.round(node.cachedRender?.width ?? 0);
-		const height = Math.round(node.cachedRender?.height ?? 0);
-		const logMessage = `${key}: w=${width} h=${height}`;
-
-		setResizeLogs(previous => {
-			const combined = [...previous, logMessage];
-			return combined.slice(-5);
-		});
-	}, []);
 
 	const [size, setSize] = useState({
 		innerHeight: 0,
@@ -289,9 +274,6 @@ function ScrollableContent({
 							key={`static-inner-scroll-${headerId}`}
 							width={contentWidth}
 							deps={[innerBox, innerScrollTop]}
-							onRender={node => {
-								handleStaticRender(`inner-scroll-${headerId}`, node);
-							}}
 						>
 							{() => innerBox}
 						</StaticRender>
@@ -379,9 +361,6 @@ function ScrollableContent({
 						key={`static-group-${headerId}`}
 						width={contentWidth}
 						deps={[groupInnerBox]}
-						onRender={node => {
-							handleStaticRender(`group-${headerId}`, node);
-						}}
 					>
 						{() => groupInnerBox}
 					</StaticRender>
@@ -402,9 +381,6 @@ function ScrollableContent({
 							key={`static-item-${item.id}`}
 							width={contentWidth}
 							deps={[itemInnerBox]}
-							onRender={node => {
-								handleStaticRender(`item-${item.id}`, node);
-							}}
 						>
 							{() => itemInnerBox}
 						</StaticRender>
@@ -630,12 +606,6 @@ function ScrollableContent({
 						ScrollTop: {scrollTop}, Size: {size.innerHeight}, Content:{' '}
 						{size.scrollHeight}, Added Scroll: {size.addedScrollHeight}
 					</Text>
-				</Box>
-				<Box height={6} flexDirection="column" flexShrink={0}>
-					<Text color="yellow">Measured size Logs (Last 5):</Text>
-					{resizeLogs.map(log => (
-						<Text key={log}>{log}</Text>
-					))}
 				</Box>
 			</Box>
 		</Box>
