@@ -146,10 +146,10 @@ function ScrollableContent({
 	const handleStaticRender = useCallback((key: string, node: DOMElement) => {
 		const width = Math.round(node.cachedRender?.width ?? 0);
 		const height = Math.round(node.cachedRender?.height ?? 0);
-		const logMsg = `${key}: w=${width} h=${height}`;
+		const logMessage = `${key}: w=${width} h=${height}`;
 
-		setResizeLogs(prev => {
-			const combined = [...prev, logMsg];
+		setResizeLogs(previous => {
+			const combined = [...previous, logMessage];
 			return combined.slice(-5);
 		});
 	}, []);
@@ -289,9 +289,9 @@ function ScrollableContent({
 							key={`static-inner-scroll-${headerId}`}
 							width={contentWidth}
 							deps={[innerBox, innerScrollTop]}
-							onRender={node =>
-								handleStaticRender(`inner-scroll-${headerId}`, node)
-							}
+							onRender={node => {
+								handleStaticRender(`inner-scroll-${headerId}`, node);
+							}}
 						>
 							{() => innerBox}
 						</StaticRender>
@@ -379,7 +379,9 @@ function ScrollableContent({
 						key={`static-group-${headerId}`}
 						width={contentWidth}
 						deps={[groupInnerBox]}
-						onRender={node => handleStaticRender(`group-${headerId}`, node)}
+						onRender={node => {
+							handleStaticRender(`group-${headerId}`, node);
+						}}
 					>
 						{() => groupInnerBox}
 					</StaticRender>
@@ -400,7 +402,9 @@ function ScrollableContent({
 							key={`static-item-${item.id}`}
 							width={contentWidth}
 							deps={[itemInnerBox]}
-							onRender={node => handleStaticRender(`item-${item.id}`, node)}
+							onRender={node => {
+								handleStaticRender(`item-${item.id}`, node);
+							}}
 						>
 							{() => itemInnerBox}
 						</StaticRender>
@@ -629,8 +633,8 @@ function ScrollableContent({
 				</Box>
 				<Box height={6} flexDirection="column" flexShrink={0}>
 					<Text color="yellow">Measured size Logs (Last 5):</Text>
-					{resizeLogs.map((log, i) => (
-						<Text key={i}>{log}</Text>
+					{resizeLogs.map(log => (
+						<Text key={log}>{log}</Text>
 					))}
 				</Box>
 			</Box>

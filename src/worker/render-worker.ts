@@ -438,14 +438,25 @@ export class TerminalBufferWorker {
 
 				if (region && update.lines) {
 					const scrollTop = region.scrollTop ?? 0;
+					const maxPushed =
+						this.scrollOptimizer.maxRegionScrollTops.get(region.id) ?? 0;
 					for (const chunk of update.lines.updates) {
-						if (region.overflowToBackbuffer && chunk.start < scrollTop) {
+						if (
+							region.overflowToBackbuffer &&
+							chunk.start < scrollTop &&
+							maxPushed - chunk.start <= this.maxScrollbackLength
+						) {
 							this.terminalWriter.backbufferDirty = true;
 							this.terminalWriter.backbufferDirtyCurrentFrame = true;
 						}
 
 						const absStart = region.y + chunk.start;
-						if (absStart < cameraY) {
+						const rootMaxPushed =
+							this.scrollOptimizer.maxRegionScrollTops.get(rootRegion.id) ?? 0;
+						if (
+							absStart < cameraY &&
+							rootMaxPushed - absStart <= this.maxScrollbackLength
+						) {
 							this.terminalWriter.backbufferDirty = true;
 							this.terminalWriter.backbufferDirtyCurrentFrame = true;
 						}
@@ -802,21 +813,40 @@ export class TerminalBufferWorker {
 		this.backbuffer = [];
 
 		if (!this.isAlternateBufferEnabled && computeBackbuffer) {
-			const rootBackbufferHeight = cameraY;
+			const rootBackbufferHeight = Math.min(cameraY, this.maxScrollbackLength);
+			const rootBackbufferOffset = Math.max(
+				0,
+				cameraY - this.maxScrollbackLength,
+			);
+
 			this.composeToBackbuffer(
 				this.sceneManager.root!,
 				rootRegion,
 				rootBackbufferHeight,
-				0,
+				rootBackbufferOffset,
 			);
 
 			for (const region of this.sceneManager.regions.values()) {
 				if (region.overflowToBackbuffer && region.isScrollable) {
 					const scrollTop = region.scrollTop ?? 0;
-					const regionBackbufferHeight = scrollTop;
+					const linesOffsetY = region.linesOffsetY ?? 0;
+					const maxRequestedHistory = scrollTop - linesOffsetY;
+					const actualHistoryToRender = Math.max(
+						0,
+						Math.min(maxRequestedHistory, this.maxScrollbackLength),
+					);
+
+					const regionBackbufferHeight = actualHistoryToRender;
+					const regionBackbufferOffset = scrollTop - actualHistoryToRender;
+
 					const node = this.findNodeForRegion(region.id);
-					if (node) {
-						this.composeToBackbuffer(node, region, regionBackbufferHeight, 0);
+					if (node && regionBackbufferHeight > 0) {
+						this.composeToBackbuffer(
+							node,
+							region,
+							regionBackbufferHeight,
+							regionBackbufferOffset,
+						);
 					}
 				}
 			}
@@ -1166,6 +1196,8 @@ export class TerminalBufferWorker {
 					op.regionId,
 					(scrolledToBackbuffer.get(op.regionId) ?? 0) + op.linesToScroll,
 				);
+			} else if (op.direction === 'up' && region.overflowToBackbuffer) {
+				this.terminalWriter.backbufferDirtyCurrentFrame = true;
 			}
 
 			this.terminalWriter.scrollLines(op);

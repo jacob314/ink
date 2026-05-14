@@ -151,6 +151,19 @@ export class SceneManager {
 						newOffsetY + newLength - options.maxScrollbackLength,
 					);
 					retainedStart = Math.min(retainedStart, newOffsetY);
+
+					let minPopulated =
+						r.lines.length > 0 ? oldOffsetY : Number.POSITIVE_INFINITY;
+					for (const chunk of update.lines.updates) {
+						minPopulated = Math.min(minPopulated, chunk.start);
+					}
+
+					if (minPopulated !== Number.POSITIVE_INFINITY) {
+						retainedStart = Math.max(retainedStart, minPopulated);
+					} else if (r.lines.length === 0 && newOffsetY > 0) {
+						// If we have no chunks and no old lines, don't generate history out of nowhere
+						retainedStart = newOffsetY;
+					}
 				}
 
 				const newLines: StyledLine[] = [];

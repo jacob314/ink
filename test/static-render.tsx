@@ -131,12 +131,17 @@ test.serial(
 		);
 
 		await instance.waitUntilReady();
-		// wait for onRenderNode to be defined
+		// Wait for onRenderNode to be defined
 		const start = Date.now();
-		while (!onRenderNode && Date.now() - start < 1000) {
+		let waited = 0;
+		// eslint-disable-next-line no-unmodified-loop-condition
+		while (!onRenderNode && waited < 100) {
+			// eslint-disable-next-line no-await-in-loop
 			await new Promise(resolve => {
 				setTimeout(resolve, 10);
 			});
+
+			waited++;
 		}
 
 		t.truthy(onRenderNode);

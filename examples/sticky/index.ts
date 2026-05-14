@@ -9,7 +9,7 @@ import React from 'react';
 import {render} from '../../src/index.js';
 import ScrollableContent from './sticky.js';
 
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', error => {
 	console.error('Uncaught Exception:', error);
 	process.exit(1);
 });
@@ -104,6 +104,6 @@ export const instance = render(
 		animatedScroll: true,
 		backbufferUpdateDelay: 1000,
 		maxFps: 10_000,
-		maxScrollbackLength:10
+		maxScrollbackLength: 10,
 	},
 );

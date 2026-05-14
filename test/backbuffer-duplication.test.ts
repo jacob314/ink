@@ -645,3 +645,77 @@ test('scrolling up beyond maxScrollbackLength does not trigger fullRender or dup
 		'backbufferDirtyCurrentFrame or backbufferDirty should be true since the scroll up overlaps with maxScrollbackLength',
 	);
 });
+
+test('initial huge offset does not create blank history lines', async t => {
+	const worker = new TerminalBufferWorker(80, 24, {
+		maxScrollbackLength: 1000,
+	});
+
+	// Serialize some lines
+	const lines = [];
+	for (let i = 0; i < 50; i++) {
+		const line = new StyledLine();
+		line.pushChar(`Line ${5000 + i}`, 0);
+		lines.push(line);
+	}
+
+	const serializer = new Serializer();
+	const serializedData = serializer.serialize(lines);
+
+	const rootNode: RegionNode = {
+		id: 'root',
+		children: [
+			{
+				id: 'list',
+				children: [],
+			},
+		],
+	};
+
+	const updates: RegionUpdate[] = [
+		{
+			id: 'root',
+			x: 0,
+			y: 0,
+			width: 80,
+			height: 24,
+			isScrollable: false,
+		},
+		{
+			id: 'list',
+			x: 0,
+			y: 0,
+			width: 80,
+			height: 24,
+			isScrollable: true,
+			overflowToBackbuffer: true,
+			linesOffsetY: 5000,
+			scrollTop: 5000,
+			scrollHeight: 5050,
+			lines: {
+				updates: [
+					{
+						start: 5000,
+						end: 5050,
+						data: serializedData,
+					},
+				],
+				totalLength: 5050,
+			},
+		},
+	];
+
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+	worker.update(rootNode as any, updates as any);
+	await worker.fullRender();
+
+	const state = worker.getExpectedState();
+
+	// There should be a backbuffer because cameraY was pushed,
+	// but it shouldn't be full of thousands of blank lines.
+	const blankLines = state.backbuffer.filter(line => line.text.trim() === '');
+	t.true(
+		blankLines.length < 500,
+		`Backbuffer has ${blankLines.length} blank lines, indicating history retention over-reached into uninitialized space`,
+	);
+});
