@@ -7,9 +7,10 @@ import React, {
 } from 'react';
 import {markNodeAsDirty, type DOMElement} from '../dom.js';
 import {type Styles} from '../styles.js';
+import {type Region} from '../output.js';
 
 export type Props = {
-	readonly children: () => ReactNode;
+	readonly children?: () => ReactNode;
 	readonly width: number;
 	readonly style?: Styles;
 	/**
@@ -23,6 +24,11 @@ export type Props = {
 	 * Useful for measuring the element's size after rendering.
 	 */
 	readonly onRender?: (node: DOMElement) => void;
+	/**
+	 * Pre-computed region to render. If provided, the `children` function is ignored.
+	 * This is useful for offline caching and measurement using `renderToRegion`.
+	 */
+	readonly cachedRender?: Region;
 };
 
 const areDepsEqual = (
@@ -78,16 +84,21 @@ export default function StaticRender({
 	style,
 	deps,
 	onRender,
+	cachedRender,
 }: Props) {
 	const ref = useRef<DOMElement>(null);
 	const [renderedVersion, setRenderedVersion] = useState(0);
 	const prevChildren = useRef(children);
 	const prevDeps = useRef(deps);
+	const prevCachedRender = useRef(cachedRender);
 	const pendingVersion = useRef(1);
 
 	let nextPendingVersion = pendingVersion.current;
 
-	if (deps !== undefined) {
+	if (cachedRender !== prevCachedRender.current) {
+		prevCachedRender.current = cachedRender;
+		nextPendingVersion++;
+	} else if (deps !== undefined) {
 		if (!areDepsEqual(prevDeps.current, deps)) {
 			prevDeps.current = deps;
 			nextPendingVersion++;
@@ -99,27 +110,29 @@ export default function StaticRender({
 
 	if (nextPendingVersion !== pendingVersion.current) {
 		pendingVersion.current = nextPendingVersion;
-		if (ref.current) {
+		if (ref.current && !cachedRender) {
 			ref.current.cachedRender = undefined;
 			markNodeAsDirty(ref.current);
 		}
 	}
 
-	const shouldRender = renderedVersion !== pendingVersion.current;
+	const shouldRenderChildren =
+		!cachedRender && renderedVersion !== pendingVersion.current && children;
 
 	useEffect(() => {
 		const node = ref.current;
 		return () => {
-			if (node) {
+			if (node && !cachedRender) {
 				node.cachedRender = undefined;
 			}
 		};
-	}, []);
+	}, [cachedRender]);
 
 	return (
 		<ink-static-render
 			ref={ref}
 			style={{...style, width}}
+			cachedRender={cachedRender}
 			internal_onRendered={node => {
 				const nextRenderedVersion = pendingVersion.current;
 				setRenderedVersion(currentVersion =>
@@ -132,7 +145,7 @@ export default function StaticRender({
 				}
 			}}
 		>
-			{shouldRender ? children() : null}
+			{shouldRenderChildren ? children() : null}
 		</ink-static-render>
 	);
 }

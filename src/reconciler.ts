@@ -16,6 +16,7 @@ import {
 	createNode,
 	setAttribute,
 	markNodeAsDirty,
+	setCachedRender,
 	type DOMNodeAttribute,
 	type TextNode,
 	type ElementNames,
@@ -250,7 +251,11 @@ export default createReconciler<
 			}
 
 			if (key === 'cachedRender') {
-				node.cachedRender = value as Region;
+				if (value) {
+					setCachedRender(node, value as Region);
+				} else {
+					node.cachedRender = undefined;
+				}
 				continue;
 			}
 
@@ -390,7 +395,11 @@ export default createReconciler<
 				}
 
 				if (key === 'cachedRender') {
-					node.cachedRender = value as Region;
+					if (value) {
+						setCachedRender(node, value as Region);
+					} else {
+						node.cachedRender = undefined;
+					}
 					shouldMarkDirty = true;
 					continue;
 				}
