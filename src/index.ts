@@ -14,6 +14,7 @@ export type {Props as StaticProps} from './components/Static.js';
 export {default as Static} from './components/Static.js';
 export type {Props as StaticRenderProps} from './components/StaticRender.js';
 export {default as StaticRender} from './components/StaticRender.js';
+export {renderToRegion} from './render-to-region.js';
 export type {Props as TransformProps} from './components/Transform.js';
 export {default as Transform} from './components/Transform.js';
 export type {Props as NewlineProps} from './components/Newline.js';

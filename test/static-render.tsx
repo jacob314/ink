@@ -113,3 +113,62 @@ test.serial(
 		await instance.unmount();
 	},
 );
+
+test.serial(
+	'StaticRender calls onRender with the rendered DOMElement',
+	async t => {
+		let onRenderNode: DOMElement | undefined;
+		const onRender = (node: DOMElement) => {
+			onRenderNode = node;
+		};
+
+		const instance = await renderTerminal(
+			<StaticRender width={100} onRender={onRender}>
+				{() => <Text>Test onRender</Text>}
+			</StaticRender>,
+			100,
+			defaultTestConfig,
+		);
+
+		await instance.waitUntilReady();
+		await waitFor(() => onRenderNode !== undefined);
+
+		t.truthy(onRenderNode);
+		t.is(onRenderNode?.nodeName, 'ink-static-render');
+		t.truthy(onRenderNode?.cachedRender);
+		t.is(onRenderNode?.cachedRender?.width, 100);
+
+		await instance.unmount();
+	},
+);
+
+test.serial('StaticRender calls onRender when deps trigger a cached rerender', async t => {
+	const renderedText: string[] = [];
+	const onRender = (node: DOMElement) => {
+		renderedText.push(node.cachedRender?.lines[0]?.getText().trimEnd() ?? '');
+	};
+
+	const renderStatic = (value: string) => (
+		<StaticRender width={100} deps={[value]} onRender={onRender}>
+			{() => <Text>{value}</Text>}
+		</StaticRender>
+	);
+
+	const instance = await renderTerminal(
+		renderStatic('First'),
+		100,
+		defaultTestConfig,
+	);
+
+	await instance.waitUntilReady();
+	await waitFor(() => renderedText.length === 1);
+	t.deepEqual(renderedText, ['First']);
+
+	await instance.rerender(renderStatic('Second'));
+	await waitFor(() => renderedText.length === 2);
+	await instance.waitUntilReady();
+	t.deepEqual(renderedText, ['First', 'Second']);
+	t.is(instance.lastFrame().trim(), 'Second');
+
+	await instance.unmount();
+});

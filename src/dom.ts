@@ -63,7 +63,7 @@ export type DOMElement = {
 	internal_transform?: OutputTransformer;
 	internal_terminalCursorFocus?: boolean;
 	internal_terminalCursorPosition?: number;
-	internal_onRendered?: () => void;
+	internal_onRendered?: (node: DOMElement) => void;
 	cachedRender?: Region;
 	cachedRegion?: Region;
 
