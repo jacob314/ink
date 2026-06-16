@@ -51,7 +51,7 @@ export function createListUpdates(
 					{
 						start: linesOffsetY,
 						end: linesOffsetY + totalLength,
-						data: serializer.serialize(lines) as unknown as Uint8Array,
+						data: serializer.serialize(lines),
 					},
 				],
 				totalLength,

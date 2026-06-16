@@ -9,8 +9,7 @@ import {markNodeAsDirty, type DOMElement} from '../dom.js';
 import {type Styles} from '../styles.js';
 import {type Region} from '../output.js';
 
-export type Props = {
-	readonly children?: () => ReactNode;
+export type CommonProps = {
 	readonly width: number;
 	readonly style?: Styles;
 	/**
@@ -24,12 +23,19 @@ export type Props = {
 	 * Useful for measuring the element's size after rendering.
 	 */
 	readonly onRender?: (node: DOMElement) => void;
-	/**
-	 * Pre-computed region to render. If provided, the `children` function is ignored.
-	 * This is useful for offline caching and measurement using `renderToRegion`.
-	 */
-	readonly cachedRender?: Region;
 };
+
+export type Props = CommonProps &
+	(
+		| {
+				readonly cachedRender: Region;
+				readonly children?: never;
+		  }
+		| {
+				readonly children: () => ReactNode;
+				readonly cachedRender?: never;
+		  }
+	);
 
 const areDepsEqual = (
 	prevDeps?: DependencyList,

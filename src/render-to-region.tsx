@@ -35,6 +35,8 @@ const renderPendingStaticRenderNodes = (
 	});
 };
 
+let nextRegionId = 0;
+
 export const renderToRegion = (
 	node: ReactNode,
 	options: {width: number},
@@ -49,7 +51,7 @@ export const renderToRegion = (
 		null,
 		false,
 		null,
-		`id-${Math.random()}`,
+		`id-${nextRegionId++}`,
 		noop,
 		noop,
 		noop,
@@ -91,7 +93,10 @@ export const renderToRegion = (
 	// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
 	reconciler.flushSyncWork();
 
-	const region = rootNode.cachedRender!;
+	const region = rootNode.cachedRender;
+	if (!region) {
+		throw new Error('renderToRegion failed to produce a cached region');
+	}
 
 	// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
 	reconciler.updateContainerSync(null, container, null, noop);

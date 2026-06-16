@@ -167,14 +167,19 @@ export function createHumanReadableDump(data: LoadedReplayData): string {
 			tree: frame.tree,
 			cursorPosition: frame.cursorPosition,
 			updates: frame.updates.map(update => {
-				const dumpUpdate: Record<string, unknown> = {...update};
+				const dumpUpdate: Omit<RegionUpdate, 'lines' | 'stickyHeaders'> & {
+					overflowToBackbuffer?: boolean;
+					isScrollable?: boolean;
+					lines?: Record<string, unknown>;
+					stickyHeaders?: Array<Record<string, unknown>>;
+				} = {...update};
 
 				// Explicitly copy properties that could be undefined if omitted in object spread occasionally
-				dumpUpdate['overflowToBackbuffer'] = update.overflowToBackbuffer;
-				dumpUpdate['isScrollable'] = update.isScrollable;
+				dumpUpdate.overflowToBackbuffer = update.overflowToBackbuffer;
+				dumpUpdate.isScrollable = update.isScrollable;
 
 				if (update.lines) {
-					dumpUpdate['lines'] = {
+					dumpUpdate.lines = {
 						totalLength: update.lines.totalLength,
 						updates: update.lines.updates.map(u => {
 							const deserializer = new Deserializer(Buffer.from(u.data));
@@ -189,7 +194,7 @@ export function createHumanReadableDump(data: LoadedReplayData): string {
 				}
 
 				if (update.stickyHeaders) {
-					dumpUpdate['stickyHeaders'] = update.stickyHeaders.map(h => ({
+					dumpUpdate.stickyHeaders = update.stickyHeaders.map(h => ({
 						...h,
 						lines: new Deserializer(Buffer.from(h.lines))
 							.deserialize()

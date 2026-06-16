@@ -5,7 +5,7 @@ import {render as renderTerminal} from './helpers/render.js';
 import {waitFor} from './helpers/wait-for.js';
 
 test('overlapping transparent static render over scrolled content', async t => {
-	let updateApp: any;
+	let updateApp: React.Dispatch<React.SetStateAction<boolean>>;
 
 	function App() {
 		const [scrolled, setScrolled] = useState(false);

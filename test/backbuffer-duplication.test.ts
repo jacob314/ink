@@ -24,7 +24,7 @@ test('scrolling down, up, and down again does not duplicate lines in backbuffer'
 	const columns = 80;
 	const rows = 5;
 	let output = '';
-	const stdout = {
+	const stdout: Partial<NodeJS.WriteStream> = {
 		write(chunk: string) {
 			output += chunk;
 			return true;
@@ -32,9 +32,11 @@ test('scrolling down, up, and down again does not duplicate lines in backbuffer'
 		on() {},
 		rows,
 		columns,
-	} as unknown as NodeJS.WriteStream;
+	};
 
-	const worker = new TerminalBufferWorker(columns, rows, {stdout});
+	const worker = new TerminalBufferWorker(columns, rows, {
+		stdout: stdout as NodeJS.WriteStream,
+	});
 	const term = new Terminal({
 		cols: columns,
 		rows,
@@ -138,7 +140,7 @@ test('scrolling down 4, up 2, down 1', async t => {
 	const columns = 80;
 	const rows = 5;
 	let output = '';
-	const stdout = {
+	const stdout: Partial<NodeJS.WriteStream> = {
 		write(chunk: string) {
 			output += chunk;
 			return true;
@@ -146,9 +148,11 @@ test('scrolling down 4, up 2, down 1', async t => {
 		on() {},
 		rows,
 		columns,
-	} as unknown as NodeJS.WriteStream;
+	};
 
-	const worker = new TerminalBufferWorker(columns, rows, {stdout});
+	const worker = new TerminalBufferWorker(columns, rows, {
+		stdout: stdout as NodeJS.WriteStream,
+	});
 	const term = new Terminal({
 		cols: columns,
 		rows,
@@ -226,7 +230,7 @@ test('fullRender does not duplicate lines in backbuffer', async t => {
 	const columns = 80;
 	const rows = 10;
 	let output = '';
-	const stdout = {
+	const stdout: Partial<NodeJS.WriteStream> = {
 		write(chunk: string) {
 			output += chunk;
 			return true;
@@ -234,9 +238,11 @@ test('fullRender does not duplicate lines in backbuffer', async t => {
 		on() {},
 		rows,
 		columns,
-	} as unknown as NodeJS.WriteStream;
+	};
 
-	const worker = new TerminalBufferWorker(columns, rows, {stdout});
+	const worker = new TerminalBufferWorker(columns, rows, {
+		stdout: stdout as NodeJS.WriteStream,
+	});
 	const term = new Terminal({
 		cols: columns,
 		rows,
@@ -313,7 +319,7 @@ test('fullRender does not duplicate sub-region backbuffer lines', async t => {
 	const columns = 80;
 	const rows = 10;
 	let output = '';
-	const stdout = {
+	const stdout: Partial<NodeJS.WriteStream> = {
 		write(chunk: string) {
 			output += chunk;
 			return true;
@@ -321,9 +327,11 @@ test('fullRender does not duplicate sub-region backbuffer lines', async t => {
 		on() {},
 		rows,
 		columns,
-	} as unknown as NodeJS.WriteStream;
+	};
 
-	const worker = new TerminalBufferWorker(columns, rows, {stdout});
+	const worker = new TerminalBufferWorker(columns, rows, {
+		stdout: stdout as NodeJS.WriteStream,
+	});
 	const term = new Terminal({
 		cols: columns,
 		rows,
@@ -414,7 +422,7 @@ test('scrolling oscillation with fullRender does not duplicate lines', async t =
 	const columns = 80;
 	const rows = 10;
 	let output = '';
-	const stdout = {
+	const stdout: Partial<NodeJS.WriteStream> = {
 		write(chunk: string) {
 			output += chunk;
 			return true;
@@ -422,10 +430,10 @@ test('scrolling oscillation with fullRender does not duplicate lines', async t =
 		on() {},
 		rows,
 		columns,
-	} as unknown as NodeJS.WriteStream;
+	};
 
 	const worker = new TerminalBufferWorker(columns, rows, {
-		stdout,
+		stdout: stdout as NodeJS.WriteStream,
 		debugRainbowEnabled: true,
 		backbufferUpdateDelay: 0,
 	});
@@ -560,7 +568,7 @@ test('scrolling up beyond maxScrollbackLength does not trigger fullRender or dup
 	const columns = 80;
 	const rows = 5;
 	let output = '';
-	const stdout = {
+	const stdout: Partial<NodeJS.WriteStream> = {
 		write(chunk: string) {
 			output += chunk;
 			return true;
@@ -568,11 +576,11 @@ test('scrolling up beyond maxScrollbackLength does not trigger fullRender or dup
 		on() {},
 		rows,
 		columns,
-	} as unknown as NodeJS.WriteStream;
+	};
 
 	const maxScrollbackLength = 5;
 	const worker = new TerminalBufferWorker(columns, rows, {
-		stdout,
+		stdout: stdout as NodeJS.WriteStream,
 		maxScrollbackLength,
 	});
 	const term = new Terminal({

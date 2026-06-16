@@ -455,21 +455,16 @@ export class TerminalBufferWorker {
 				}
 			}
 
-			if (
-				isActuallyDirty &&
-				!this.terminalWriter.backbufferDirtyCurrentFrame &&
-				!this.terminalWriter.backbufferDirty &&
-				!this.isAlternateBufferEnabled
-			) {
-				if (this.checkBackbufferMatchesExpected(cameraY)) {
+			if (isActuallyDirty && !this.isAlternateBufferEnabled) {
+				const isAlreadyDirty =
+					this.terminalWriter.backbufferDirtyCurrentFrame ||
+					this.terminalWriter.backbufferDirty;
+				if (!isAlreadyDirty && this.checkBackbufferMatchesExpected(cameraY)) {
 					// False positive, do nothing.
 				} else {
 					this.terminalWriter.backbufferDirty = true;
 					this.terminalWriter.backbufferDirtyCurrentFrame = true;
 				}
-			} else if (isActuallyDirty && !this.isAlternateBufferEnabled) {
-				this.terminalWriter.backbufferDirty = true;
-				this.terminalWriter.backbufferDirtyCurrentFrame = true;
 			}
 		}
 
@@ -769,13 +764,11 @@ export class TerminalBufferWorker {
 				}
 			}
 
-			if (
-				isActuallyDirty &&
-				!this.terminalWriter.backbufferDirtyCurrentFrame &&
-				!this.terminalWriter.backbufferDirty
-			) {
-				const matches = this.checkBackbufferMatchesExpected(cameraY);
-				if (matches) {
+			if (isActuallyDirty) {
+				const isAlreadyDirty =
+					this.terminalWriter.backbufferDirtyCurrentFrame ||
+					this.terminalWriter.backbufferDirty;
+				if (!isAlreadyDirty && this.checkBackbufferMatchesExpected(cameraY)) {
 					this.scrollOptimizer.setMaxPushed(rootRegion.id, cameraY);
 					for (const region of this.sceneManager.regions.values()) {
 						if (region.overflowToBackbuffer) {
@@ -788,8 +781,6 @@ export class TerminalBufferWorker {
 				} else {
 					this.terminalWriter.backbufferDirtyCurrentFrame = true;
 				}
-			} else if (isActuallyDirty) {
-				this.terminalWriter.backbufferDirtyCurrentFrame = true;
 			}
 		}
 
