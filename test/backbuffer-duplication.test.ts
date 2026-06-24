@@ -632,16 +632,20 @@ test('scrolling up beyond maxScrollbackLength does not trigger fullRender or dup
 	worker.backbufferDirty = false;
 
 	await updateScroll(10);
-	t.true(
+	t.false(
 		worker.backbufferDirtyCurrentFrame || worker.backbufferDirty,
-		'backbufferDirtyCurrentFrame or backbufferDirty should be true since the new logic flags this due to string verification mismatches in checkBackbufferMatchesExpected',
+		'backbuffer verification should be deferred when the cheap length check matches',
 	);
+	t.truthy(worker.terminalWriter.fullRenderTimeout);
+	await worker.flushPendingRender();
 
 	await updateScroll(18);
-	t.true(
+	t.false(
 		worker.backbufferDirtyCurrentFrame || worker.backbufferDirty,
-		'backbufferDirtyCurrentFrame or backbufferDirty should be true since the scroll up overlaps with maxScrollbackLength',
+		'backbuffer verification should stay deferred when the retained history length matches',
 	);
+	t.truthy(worker.terminalWriter.fullRenderTimeout);
+	await worker.flushPendingRender();
 });
 
 test('initial huge offset does not create blank history lines', async t => {

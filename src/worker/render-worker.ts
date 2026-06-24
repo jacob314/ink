@@ -82,6 +82,9 @@ export class TerminalBufferWorker {
 	private readonly animationController: AnimationController;
 	private readonly primaryTerminalWriter: TerminalWriter;
 	private readonly alternateTerminalWriter: TerminalWriter;
+	private readonly regionNodeCache = new Map<string | number, RegionNode>();
+	private regionNodeCacheRoot?: RegionNode;
+	private shouldVerifyBackbufferBeforeFullRender = false;
 
 	/**
 	 * Visible for testing.
@@ -412,6 +415,7 @@ export class TerminalBufferWorker {
 				this.scrollOptimizer.resetTracking(id);
 			},
 		});
+		this.invalidateRegionNodeCache();
 
 		// Track regionWasAtEnd for scrollbars
 		for (const update of updates) {
@@ -456,15 +460,10 @@ export class TerminalBufferWorker {
 			}
 
 			if (isActuallyDirty && !this.isAlternateBufferEnabled) {
-				const isAlreadyDirty =
-					this.terminalWriter.backbufferDirtyCurrentFrame ||
-					this.terminalWriter.backbufferDirty;
-				if (!isAlreadyDirty && this.checkBackbufferMatchesExpected(cameraY)) {
-					// False positive, do nothing.
-				} else {
+				this.handlePotentialBackbufferDirty(cameraY, () => {
 					this.terminalWriter.backbufferDirty = true;
 					this.terminalWriter.backbufferDirtyCurrentFrame = true;
-				}
+				});
 			}
 		}
 
@@ -504,7 +503,7 @@ export class TerminalBufferWorker {
 		void this.render();
 	}
 
-	async fullRender() {
+	async fullRender(verifyOnly = false) {
 		if (clearDebugLogPerFrame) {
 			clearDebugLog();
 		}
@@ -514,7 +513,41 @@ export class TerminalBufferWorker {
 			this.terminalWriter.fullRenderTimeout = undefined;
 		}
 
+		if (verifyOnly && !this.terminalWriter.backbufferDirty) {
+			if (this.shouldVerifyBackbufferBeforeFullRender) {
+				this.shouldVerifyBackbufferBeforeFullRender = false;
+				const rootRegion = this.sceneManager.getRootRegion();
+				const cameraY = rootRegion ? this.getCameraY(rootRegion) : 0;
+				if (this.checkBackbufferMatchesExpected(cameraY)) {
+					this.updateTrackingMaps(rootRegion, cameraY, true);
+					return;
+				}
+
+				this.terminalWriter.backbufferDirty = true;
+			} else {
+				return;
+			}
+		} else if (!verifyOnly) {
+			this.shouldVerifyBackbufferBeforeFullRender = false;
+		}
+
+		if (verifyOnly && this.shouldVerifyBackbufferBeforeFullRender) {
+			this.shouldVerifyBackbufferBeforeFullRender = false;
+			const rootRegion = this.sceneManager.getRootRegion();
+			const cameraY = rootRegion ? this.getCameraY(rootRegion) : 0;
+			if (this.checkBackbufferMatchesExpected(cameraY)) {
+				this.terminalWriter.backbufferDirty = false;
+				this.terminalWriter.backbufferDirtyCurrentFrame = false;
+				this.updateTrackingMaps(rootRegion, cameraY, true);
+				return;
+			}
+		}
+
 		if (!this.terminalWriter.backbufferDirty) {
+			if (verifyOnly) {
+				return;
+			}
+
 			await this.render();
 			return;
 		}
@@ -562,7 +595,7 @@ export class TerminalBufferWorker {
 		if (this.terminalWriter.fullRenderTimeout) {
 			clearTimeout(this.terminalWriter.fullRenderTimeout);
 			this.terminalWriter.fullRenderTimeout = undefined;
-			await this.fullRender();
+			await this.fullRender(true);
 		}
 	}
 
@@ -597,6 +630,7 @@ export class TerminalBufferWorker {
 
 		this.scrollOptimizer.maxRegionScrollTops.clear();
 		this.scrollOptimizer.lastRegionScrollTops.clear();
+		this.invalidateRegionNodeCache();
 
 		this.screen = [];
 		this.backbuffer = [];
@@ -765,22 +799,23 @@ export class TerminalBufferWorker {
 			}
 
 			if (isActuallyDirty) {
-				const isAlreadyDirty =
-					this.terminalWriter.backbufferDirtyCurrentFrame ||
-					this.terminalWriter.backbufferDirty;
-				if (!isAlreadyDirty && this.checkBackbufferMatchesExpected(cameraY)) {
-					this.scrollOptimizer.setMaxPushed(rootRegion.id, cameraY);
-					for (const region of this.sceneManager.regions.values()) {
-						if (region.overflowToBackbuffer) {
-							this.scrollOptimizer.setMaxPushed(
-								region.id,
-								region.scrollTop ?? 0,
-							);
+				this.handlePotentialBackbufferDirty(
+					cameraY,
+					() => {
+						this.terminalWriter.backbufferDirtyCurrentFrame = true;
+					},
+					() => {
+						this.scrollOptimizer.setMaxPushed(rootRegion.id, cameraY);
+						for (const region of this.sceneManager.regions.values()) {
+							if (region.overflowToBackbuffer) {
+								this.scrollOptimizer.setMaxPushed(
+									region.id,
+									region.scrollTop ?? 0,
+								);
+							}
 						}
-					}
-				} else {
-					this.terminalWriter.backbufferDirtyCurrentFrame = true;
-				}
+					},
+				);
 			}
 		}
 
@@ -819,6 +854,77 @@ export class TerminalBufferWorker {
 
 			this.animationController.stop();
 		}
+	}
+
+	private handlePotentialBackbufferDirty(
+		cameraY: number,
+		markDirty: () => void,
+		markVerifiedClean?: () => void,
+	) {
+		const isAlreadyDirty =
+			this.terminalWriter.backbufferDirtyCurrentFrame ||
+			this.terminalWriter.backbufferDirty;
+
+		if (isAlreadyDirty || !this.backbufferLengthMatchesExpected(cameraY)) {
+			markDirty();
+			return;
+		}
+
+		markVerifiedClean?.();
+		this.scheduleBackbufferVerification();
+	}
+
+	private scheduleBackbufferVerification() {
+		this.shouldVerifyBackbufferBeforeFullRender = true;
+
+		if (this.terminalWriter.fullRenderTimeout) {
+			return;
+		}
+
+		this.terminalWriter.fullRenderTimeout = setTimeout(() => {
+			void this.fullRender(true);
+		}, this.backbufferUpdateDelay);
+	}
+
+	private computeExpectedBackbufferLength(cameraY: number): number {
+		const rootRegion = this.sceneManager.getRootRegion();
+		if (!rootRegion) {
+			return 0;
+		}
+
+		let expectedLength = Math.min(cameraY, this.maxScrollbackLength);
+
+		for (const region of this.sceneManager.regions.values()) {
+			if (region.overflowToBackbuffer && region.isScrollable) {
+				const node = this.findNodeForRegion(region.id);
+				const range = node
+					? this.getScrollableBackbufferRange(node, region)
+					: undefined;
+				if (range && range.height > 0) {
+					expectedLength += range.height;
+				}
+			}
+		}
+
+		return expectedLength;
+	}
+
+	private backbufferLengthMatchesExpected(cameraY: number): boolean {
+		const expectedLength = this.computeExpectedBackbufferLength(cameraY);
+		const actualLength = this.terminalWriter.getBackbufferLength();
+
+		if (expectedLength > actualLength) {
+			return false;
+		}
+
+		if (
+			actualLength > expectedLength &&
+			expectedLength < this.maxScrollbackLength
+		) {
+			return false;
+		}
+
+		return true;
 	}
 
 	private computeExpectedBackbuffer(cameraY: number): RenderLine[] {
@@ -1247,20 +1353,38 @@ export class TerminalBufferWorker {
 		}
 	}
 
-	private findNodeForRegion(id: string | number): RegionNode | undefined {
-		if (!this.sceneManager.root) return undefined;
+	private invalidateRegionNodeCache() {
+		this.regionNodeCache.clear();
+		this.regionNodeCacheRoot = undefined;
+	}
 
-		const visit = (node: RegionNode): RegionNode | undefined => {
-			if (node.id === id) return node;
+	private getRegionNodeCache(): Map<string | number, RegionNode> {
+		const root = this.sceneManager.root;
+		if (!root) {
+			this.invalidateRegionNodeCache();
+			return this.regionNodeCache;
+		}
+
+		if (this.regionNodeCacheRoot === root) {
+			return this.regionNodeCache;
+		}
+
+		this.regionNodeCache.clear();
+		this.regionNodeCacheRoot = root;
+
+		const visit = (node: RegionNode) => {
+			this.regionNodeCache.set(node.id, node);
 			for (const child of node.children) {
-				const found = visit(child);
-				if (found) return found;
+				visit(child);
 			}
-
-			return undefined;
 		};
 
-		return visit(this.sceneManager.root);
+		visit(root);
+		return this.regionNodeCache;
+	}
+
+	private findNodeForRegion(id: string | number): RegionNode | undefined {
+		return this.getRegionNodeCache().get(id);
 	}
 
 	private processRegionForScroll(

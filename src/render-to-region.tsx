@@ -1,6 +1,5 @@
 import React, {type ReactNode} from 'react';
 import {LegacyRoot} from 'react-reconciler/constants.js';
-import Yoga from 'yoga-layout';
 import reconciler from './reconciler.js';
 import {createNode, type DOMElement} from './dom.js';
 import {renderToStatic} from './render-node-to-output.js';
@@ -27,7 +26,6 @@ const renderPendingStaticRenderNodes = (
 		typeof node.style.width === 'number' ? node.style.width : width;
 
 	node.yogaNode?.setWidth(staticWidth);
-	node.yogaNode?.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
 
 	renderToStatic(node, {
 		calculateLayout: true,

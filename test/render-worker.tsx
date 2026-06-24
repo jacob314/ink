@@ -104,10 +104,12 @@ test('TerminalBufferWorker correctly tracks backbufferDirty', async t => {
 	// Modify line 0 (Backbuffer, index 0 < 5)
 	wrapper.update(0, [createLine('Line 0 Modified')]);
 
-	t.true(
+	t.false(
 		worker.backbufferDirty,
-		'Modifying backbuffer should set backbufferDirty',
+		'Modifying backbuffer should defer exact backbuffer verification',
 	);
+	t.truthy(worker.terminalWriter.fullRenderTimeout);
+	await worker.flushPendingRender();
 
 	// Reset
 	worker.backbufferDirty = false;
@@ -133,10 +135,12 @@ test('TerminalBufferWorker correctly tracks backbufferDirty', async t => {
 
 	// Modify at 2 (Backbuffer)
 	wrapper.update(2, [createLine('Inserted')]);
-	t.true(
+	t.false(
 		worker.backbufferDirty,
-		'Modifying backbuffer should set backbufferDirty',
+		'Modifying backbuffer should defer exact backbuffer verification',
 	);
+	t.truthy(worker.terminalWriter.fullRenderTimeout);
+	await worker.flushPendingRender();
 });
 
 const createUpdateScroll =
