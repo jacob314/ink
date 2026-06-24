@@ -845,28 +845,12 @@ export class TerminalBufferWorker {
 
 		for (const region of this.sceneManager.regions.values()) {
 			if (region.overflowToBackbuffer && region.isScrollable) {
-				const scrollTop = region.scrollTop ?? 0;
-				const linesOffsetY = region.linesOffsetY ?? 0;
-				const maxRequestedHistory = scrollTop - linesOffsetY;
-				const actualHistoryToRender = Math.max(
-					0,
-					Math.min(maxRequestedHistory, this.maxScrollbackLength),
-				);
-
-				const regionBackbufferHeight = actualHistoryToRender;
-				const regionBackbufferOffset = Math.max(
-					0,
-					scrollTop - actualHistoryToRender,
-				);
-
 				const node = this.findNodeForRegion(region.id);
-				if (node && regionBackbufferHeight > 0) {
-					this.composeToBackbuffer(
-						node,
-						region,
-						regionBackbufferHeight,
-						regionBackbufferOffset,
-					);
+				const range = node
+					? this.getScrollableBackbufferRange(node, region)
+					: undefined;
+				if (node && range && range.height > 0) {
+					this.composeToBackbuffer(node, region, range.height, range.offset);
 				}
 			}
 		}
@@ -942,25 +926,12 @@ export class TerminalBufferWorker {
 
 			for (const region of this.sceneManager.regions.values()) {
 				if (region.overflowToBackbuffer && region.isScrollable) {
-					const scrollTop = region.scrollTop ?? 0;
-					const linesOffsetY = region.linesOffsetY ?? 0;
-					const maxRequestedHistory = scrollTop - linesOffsetY;
-					const actualHistoryToRender = Math.max(
-						0,
-						Math.min(maxRequestedHistory, this.maxScrollbackLength),
-					);
-
-					const regionBackbufferHeight = actualHistoryToRender;
-					const regionBackbufferOffset = scrollTop - actualHistoryToRender;
-
 					const node = this.findNodeForRegion(region.id);
-					if (node && regionBackbufferHeight > 0) {
-						this.composeToBackbuffer(
-							node,
-							region,
-							regionBackbufferHeight,
-							regionBackbufferOffset,
-						);
+					const range = node
+						? this.getScrollableBackbufferRange(node, region)
+						: undefined;
+					if (node && range && range.height > 0) {
+						this.composeToBackbuffer(node, region, range.height, range.offset);
 					}
 				}
 			}
@@ -973,6 +944,59 @@ export class TerminalBufferWorker {
 		});
 		this.screen = canvas.getLines();
 		this.resized = false;
+	}
+
+	private getScrollableBackbufferRange(
+		node: RegionNode,
+		region: Region,
+	): {height: number; offset: number} | undefined {
+		const renderableStart = this.getEarliestRenderableY(node, region);
+		if (renderableStart === undefined) {
+			return undefined;
+		}
+
+		const scrollTop = region.scrollTop ?? 0;
+		const maxRequestedHistory = scrollTop - renderableStart;
+		const height = Math.max(
+			0,
+			Math.min(maxRequestedHistory, this.maxScrollbackLength),
+		);
+
+		return {
+			height,
+			offset: scrollTop - height,
+		};
+	}
+
+	private getEarliestRenderableY(
+		node: RegionNode,
+		region: Region,
+	): number | undefined {
+		let earliest =
+			region.lines.length > 0 ? (region.linesOffsetY ?? 0) : undefined;
+
+		for (const child of node.children) {
+			const childRegion = this.sceneManager.getRegion(child.id);
+			if (!childRegion) {
+				continue;
+			}
+
+			const childStart = this.getEarliestRenderableY(child, childRegion);
+			if (childStart === undefined) {
+				continue;
+			}
+
+			const childViewportStart = childRegion.isScrollable
+				? Math.max(0, childStart - (childRegion.scrollTop ?? 0))
+				: childStart;
+			const childContentStart = childRegion.y + childViewportStart;
+			earliest =
+				earliest === undefined
+					? childContentStart
+					: Math.min(earliest, childContentStart);
+		}
+
+		return earliest;
 	}
 
 	private composeToBackbuffer(
