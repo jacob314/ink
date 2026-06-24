@@ -64,6 +64,7 @@ export type DOMElement = {
 	internal_terminalCursorFocus?: boolean;
 	internal_terminalCursorPosition?: number;
 	internal_onRendered?: (node: DOMElement) => void;
+	internal_staticRenderVersion?: number;
 	cachedRender?: Region;
 	cachedRegion?: Region;
 

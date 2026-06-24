@@ -204,6 +204,38 @@ test('renderToRegion returns rendered lines and measured height', t => {
 	);
 });
 
+test('renderToRegion calls nested StaticRender onRender once', t => {
+	let outerCalls = 0;
+	let innerCalls = 0;
+
+	renderToRegion(
+		<StaticRender
+			width={32}
+			onRender={() => {
+				outerCalls++;
+			}}
+		>
+			{() => (
+				<Box flexDirection="column">
+					<Text>Outer</Text>
+					<StaticRender
+						width={24}
+						onRender={() => {
+							innerCalls++;
+						}}
+					>
+						{() => <Text>Inner</Text>}
+					</StaticRender>
+				</Box>
+			)}
+		</StaticRender>,
+		{width: 32},
+	);
+
+	t.is(outerCalls, 1);
+	t.is(innerCalls, 1);
+});
+
 test.serial('StaticRender renders an offline cached region', async t => {
 	const region = createTestRegion();
 

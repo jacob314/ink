@@ -12,6 +12,9 @@ import {type RegionUpdate} from '../../src/output.js';
 const {Terminal: XtermTerminal} = xtermHeadless;
 
 const serializer = new Serializer();
+type WorkerOptions = NonNullable<
+	ConstructorParameters<typeof TerminalBufferWorker>[2]
+>;
 
 // eslint-disable-next-line max-params
 export function createListUpdates(
@@ -72,15 +75,18 @@ export function getPlainText(line: RenderLine | undefined): string {
 export const getRenderedText = (line: {styledChars: StyledLine} | undefined) =>
 	line?.styledChars.getText().trimEnd() ?? '';
 
-export const createSilentStdout = (columns: number, rows: number) =>
-	({
+export const createSilentStdout = (columns: number, rows: number) => {
+	const stdout: Partial<NodeJS.WriteStream> = {
 		write() {
 			return true;
 		},
 		on() {},
 		rows,
 		columns,
-	}) as unknown as NodeJS.WriteStream;
+	};
+
+	return stdout as NodeJS.WriteStream;
+};
 
 export const writeToTerm = async (
 	term: Terminal,
@@ -101,10 +107,10 @@ export function loadReplayData(replayDir: string, filename: string) {
 export function createWorkerAndTerminal(
 	columns: number,
 	rows: number,
-	options: Readonly<Record<string, unknown>> = {},
+	options: Readonly<Partial<WorkerOptions>> = {},
 ) {
 	let output = '';
-	const stdout = {
+	const stdout: Partial<NodeJS.WriteStream> = {
 		write(chunk: string) {
 			output += chunk;
 			return true;
@@ -112,10 +118,10 @@ export function createWorkerAndTerminal(
 		on() {},
 		rows,
 		columns,
-	} as unknown as NodeJS.WriteStream;
+	};
 
 	const worker = new TerminalBufferWorker(columns, rows, {
-		stdout,
+		stdout: stdout as NodeJS.WriteStream,
 		isAlternateBufferEnabled: false,
 		...options,
 	});

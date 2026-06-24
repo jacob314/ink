@@ -637,7 +637,7 @@ export class TerminalBufferWorker {
 						{
 							start: offsetY,
 							end: offsetY + region.lines.length,
-							data: serializer.serialize(region.lines) as unknown as Uint8Array,
+							data: serializer.serialize(region.lines),
 						},
 					],
 					totalLength: region.lines.length,

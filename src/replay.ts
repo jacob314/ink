@@ -6,7 +6,11 @@
 
 import fs from 'node:fs';
 import {Buffer} from 'node:buffer';
-import {type RegionNode, type RegionUpdate} from './output.js';
+import {
+	type RegionNode,
+	type RegionUpdate,
+	type SerializedStickyHeader,
+} from './output.js';
 import {Deserializer} from './serialization.js';
 import {type StickyHeader} from './dom.js';
 
@@ -147,6 +151,35 @@ type RawReplayData = {
 	}>;
 };
 
+type HumanReadableLines = {
+	totalLength: number;
+	updates: Array<{
+		start: number;
+		end: number;
+		text: string[];
+	}>;
+};
+
+type HumanReadableStickyHeader = Omit<
+	SerializedStickyHeader,
+	'lines' | 'stuckLines' | 'styledOutput'
+> & {
+	lines: string[];
+	stuckLines?: string[];
+	styledOutput: string[];
+	node?: undefined;
+};
+
+type HumanReadableRegionUpdate = Omit<
+	RegionUpdate,
+	'lines' | 'stickyHeaders'
+> & {
+	overflowToBackbuffer?: boolean;
+	isScrollable?: boolean;
+	lines?: HumanReadableLines;
+	stickyHeaders?: HumanReadableStickyHeader[];
+};
+
 export function loadReplay(jsonStr: string): LoadedReplayData {
 	const raw = JSON.parse(jsonStr) as RawReplayData;
 	return {
@@ -167,21 +200,17 @@ export function createHumanReadableDump(data: LoadedReplayData): string {
 			tree: frame.tree,
 			cursorPosition: frame.cursorPosition,
 			updates: frame.updates.map(update => {
-				const dumpUpdate: Omit<RegionUpdate, 'lines' | 'stickyHeaders'> & {
-					overflowToBackbuffer?: boolean;
-					isScrollable?: boolean;
-					lines?: Record<string, unknown>;
-					stickyHeaders?: Array<Record<string, unknown>>;
-				} = {...update};
+				const {lines, stickyHeaders, ...rest} = update;
+				const dumpUpdate: HumanReadableRegionUpdate = {...rest};
 
 				// Explicitly copy properties that could be undefined if omitted in object spread occasionally
 				dumpUpdate.overflowToBackbuffer = update.overflowToBackbuffer;
 				dumpUpdate.isScrollable = update.isScrollable;
 
-				if (update.lines) {
+				if (lines) {
 					dumpUpdate.lines = {
-						totalLength: update.lines.totalLength,
-						updates: update.lines.updates.map(u => {
+						totalLength: lines.totalLength,
+						updates: lines.updates.map(u => {
 							const deserializer = new Deserializer(Buffer.from(u.data));
 							const lines = deserializer.deserialize();
 							return {
@@ -193,8 +222,8 @@ export function createHumanReadableDump(data: LoadedReplayData): string {
 					};
 				}
 
-				if (update.stickyHeaders) {
-					dumpUpdate.stickyHeaders = update.stickyHeaders.map(h => ({
+				if (stickyHeaders) {
+					dumpUpdate.stickyHeaders = stickyHeaders.map(h => ({
 						...h,
 						lines: new Deserializer(Buffer.from(h.lines))
 							.deserialize()

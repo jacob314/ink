@@ -5,7 +5,7 @@ import React, {
 	type ReactNode,
 	type DependencyList,
 } from 'react';
-import {markNodeAsDirty, type DOMElement} from '../dom.js';
+import {type DOMElement} from '../dom.js';
 import {type Styles} from '../styles.js';
 import {type Region} from '../output.js';
 
@@ -122,11 +122,6 @@ export default function StaticRender({
 			deps,
 			children,
 		});
-
-		if (ref.current && !cachedRender) {
-			ref.current.cachedRender = undefined;
-			markNodeAsDirty(ref.current);
-		}
 	}
 
 	// We only render children if we haven't successfully rendered this pendingVersion yet.
@@ -147,6 +142,7 @@ export default function StaticRender({
 			ref={ref}
 			style={{...style, width}}
 			cachedRender={cachedRender}
+			internal_staticRenderVersion={pendingVersion}
 			internal_onRendered={node => {
 				setRenderedVersion(currentVersion =>
 					currentVersion === pendingVersion ? currentVersion : pendingVersion,

@@ -76,20 +76,6 @@ export const renderToRegion = (
 		skipStaticElements: false,
 	});
 
-	const triggerOnRendered = (n: DOMElement) => {
-		if (n.nodeName === 'ink-static-render' && n.cachedRender) {
-			n.internal_onRendered?.(n);
-		}
-
-		for (const child of n.childNodes) {
-			if (child.nodeName !== '#text') {
-				triggerOnRendered(child);
-			}
-		}
-	};
-
-	triggerOnRendered(rootNode);
-
 	// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
 	reconciler.flushSyncWork();
 

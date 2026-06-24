@@ -239,6 +239,11 @@ export default createReconciler<
 				continue;
 			}
 
+			if (key === 'internal_staticRenderVersion') {
+				node.internal_staticRenderVersion = value as number;
+				continue;
+			}
+
 			if (key === 'internal_static') {
 				currentRootNode = rootNode;
 				node.internal_static = true;
@@ -386,6 +391,16 @@ export default createReconciler<
 
 				if (key === 'internal_onRendered') {
 					node.internal_onRendered = value as (node: DOMElement) => void;
+					continue;
+				}
+
+				if (key === 'internal_staticRenderVersion') {
+					node.internal_staticRenderVersion = value as number;
+					if (!newProps['cachedRender']) {
+						node.cachedRender = undefined;
+						shouldMarkDirty = true;
+					}
+
 					continue;
 				}
 
