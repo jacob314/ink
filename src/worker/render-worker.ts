@@ -1359,7 +1359,7 @@ export class TerminalBufferWorker {
 	}
 
 	private getRegionNodeCache(): Map<string | number, RegionNode> {
-		const root = this.sceneManager.root;
+		const {root} = this.sceneManager;
 		if (!root) {
 			this.invalidateRegionNodeCache();
 			return this.regionNodeCache;
