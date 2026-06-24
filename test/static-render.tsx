@@ -5,8 +5,14 @@
  */
 
 import test from 'ava';
-import React from 'react';
-import {StaticRender, Text, Box, type DOMElement} from '../src/index.js';
+import React, {act} from 'react';
+import {
+	StaticRender,
+	Text,
+	Box,
+	renderToRegion,
+	type DOMElement,
+} from '../src/index.js';
 import {waitFor} from './helpers/wait-for.js';
 import {render as renderTerminal} from './helpers/render.js';
 
@@ -113,3 +119,136 @@ test.serial(
 		await instance.unmount();
 	},
 );
+
+test.serial(
+	'StaticRender calls onRender with the rendered DOMElement',
+	async t => {
+		let onRenderNode: DOMElement | undefined;
+		const onRender = (node: DOMElement) => {
+			onRenderNode = node;
+		};
+
+		const instance = await renderTerminal(
+			<StaticRender width={100} onRender={onRender}>
+				{() => <Text>Test onRender</Text>}
+			</StaticRender>,
+			100,
+			defaultTestConfig,
+		);
+
+		await instance.waitUntilReady();
+		await waitFor(() => onRenderNode !== undefined);
+
+		t.truthy(onRenderNode);
+		t.is(onRenderNode?.nodeName, 'ink-static-render');
+		t.truthy(onRenderNode?.cachedRender);
+		t.is(onRenderNode?.cachedRender?.width, 100);
+
+		await instance.unmount();
+	},
+);
+
+test.serial(
+	'StaticRender calls onRender when deps trigger a cached rerender',
+	async t => {
+		const renderedText: string[] = [];
+		const onRender = (node: DOMElement) => {
+			renderedText.push(node.cachedRender?.lines[0]?.getText().trimEnd() ?? '');
+		};
+
+		const renderStatic = (value: string) => (
+			<StaticRender width={100} deps={[value]} onRender={onRender}>
+				{() => <Text>{value}</Text>}
+			</StaticRender>
+		);
+
+		const instance = await renderTerminal(
+			renderStatic('First'),
+			100,
+			defaultTestConfig,
+		);
+
+		await instance.waitUntilReady();
+		await waitFor(() => renderedText.length === 1);
+		t.deepEqual(renderedText, ['First']);
+
+		await instance.rerender(renderStatic('Second'));
+		await waitFor(() => renderedText.length === 2);
+		await instance.waitUntilReady();
+		t.deepEqual(renderedText, ['First', 'Second']);
+		t.is(instance.lastFrame().trim(), 'Second');
+
+		await instance.unmount();
+	},
+);
+
+const createTestRegion = () =>
+	renderToRegion(
+		<Box borderStyle="round" padding={1} flexDirection="column">
+			<Text>Cached item</Text>
+			<Text>Second line</Text>
+		</Box>,
+		{width: 24},
+	);
+
+test('renderToRegion returns rendered lines and measured height', t => {
+	const region = createTestRegion();
+
+	t.true(region.height > 0);
+	t.true(region.lines.length > 0);
+	t.true(
+		region.lines
+			.map(line => line.getText())
+			.join('\n')
+			.includes('Cached item'),
+	);
+});
+
+test('renderToRegion calls nested StaticRender onRender once', t => {
+	let outerCalls = 0;
+	let innerCalls = 0;
+
+	renderToRegion(
+		<StaticRender
+			width={32}
+			onRender={() => {
+				outerCalls++;
+			}}
+		>
+			{() => (
+				<Box flexDirection="column">
+					<Text>Outer</Text>
+					<StaticRender
+						width={24}
+						onRender={() => {
+							innerCalls++;
+						}}
+					>
+						{() => <Text>Inner</Text>}
+					</StaticRender>
+				</Box>
+			)}
+		</StaticRender>,
+		{width: 32},
+	);
+
+	t.is(outerCalls, 1);
+	t.is(innerCalls, 1);
+});
+
+test.serial('StaticRender renders an offline cached region', async t => {
+	const region = createTestRegion();
+
+	const instance = await renderTerminal(
+		<StaticRender width={24} cachedRender={region} />,
+		40,
+		defaultTestConfig,
+	);
+
+	await instance.waitUntilReady();
+	const output = instance.lastFrame();
+	t.true(output.includes('Cached item'));
+	t.true(output.includes('Second line'));
+
+	await instance.unmount();
+});

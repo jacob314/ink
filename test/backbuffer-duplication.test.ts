@@ -1,9 +1,14 @@
 import test from 'ava';
-import {StyledLine} from '../src/styled-line.js';
+import {type StyledLine} from '../src/styled-line.js';
 import xtermHeadless, {type Terminal as XtermTerminal} from '@xterm/headless';
 import {TerminalBufferWorker} from '../src/worker/render-worker.js';
 import {Serializer} from '../src/serialization.js';
-import {createStyledLine} from './helpers/replay-lib.js';
+import {type RegionNode, type RegionUpdate} from '../src/output.js';
+import {
+	createStyledLine,
+	createSilentStdout,
+	getRenderedText,
+} from './helpers/replay-lib.js';
 
 const {Terminal} = xtermHeadless;
 const serializer = new Serializer();
@@ -19,7 +24,7 @@ test('scrolling down, up, and down again does not duplicate lines in backbuffer'
 	const columns = 80;
 	const rows = 5;
 	let output = '';
-	const stdout = {
+	const stdout: Partial<NodeJS.WriteStream> = {
 		write(chunk: string) {
 			output += chunk;
 			return true;
@@ -27,9 +32,11 @@ test('scrolling down, up, and down again does not duplicate lines in backbuffer'
 		on() {},
 		rows,
 		columns,
-	} as unknown as NodeJS.WriteStream;
+	};
 
-	const worker = new TerminalBufferWorker(columns, rows, {stdout});
+	const worker = new TerminalBufferWorker(columns, rows, {
+		stdout: stdout as NodeJS.WriteStream,
+	});
 	const term = new Terminal({
 		cols: columns,
 		rows,
@@ -133,7 +140,7 @@ test('scrolling down 4, up 2, down 1', async t => {
 	const columns = 80;
 	const rows = 5;
 	let output = '';
-	const stdout = {
+	const stdout: Partial<NodeJS.WriteStream> = {
 		write(chunk: string) {
 			output += chunk;
 			return true;
@@ -141,9 +148,11 @@ test('scrolling down 4, up 2, down 1', async t => {
 		on() {},
 		rows,
 		columns,
-	} as unknown as NodeJS.WriteStream;
+	};
 
-	const worker = new TerminalBufferWorker(columns, rows, {stdout});
+	const worker = new TerminalBufferWorker(columns, rows, {
+		stdout: stdout as NodeJS.WriteStream,
+	});
 	const term = new Terminal({
 		cols: columns,
 		rows,
@@ -221,7 +230,7 @@ test('fullRender does not duplicate lines in backbuffer', async t => {
 	const columns = 80;
 	const rows = 10;
 	let output = '';
-	const stdout = {
+	const stdout: Partial<NodeJS.WriteStream> = {
 		write(chunk: string) {
 			output += chunk;
 			return true;
@@ -229,9 +238,11 @@ test('fullRender does not duplicate lines in backbuffer', async t => {
 		on() {},
 		rows,
 		columns,
-	} as unknown as NodeJS.WriteStream;
+	};
 
-	const worker = new TerminalBufferWorker(columns, rows, {stdout});
+	const worker = new TerminalBufferWorker(columns, rows, {
+		stdout: stdout as NodeJS.WriteStream,
+	});
 	const term = new Terminal({
 		cols: columns,
 		rows,
@@ -308,7 +319,7 @@ test('fullRender does not duplicate sub-region backbuffer lines', async t => {
 	const columns = 80;
 	const rows = 10;
 	let output = '';
-	const stdout = {
+	const stdout: Partial<NodeJS.WriteStream> = {
 		write(chunk: string) {
 			output += chunk;
 			return true;
@@ -316,9 +327,11 @@ test('fullRender does not duplicate sub-region backbuffer lines', async t => {
 		on() {},
 		rows,
 		columns,
-	} as unknown as NodeJS.WriteStream;
+	};
 
-	const worker = new TerminalBufferWorker(columns, rows, {stdout});
+	const worker = new TerminalBufferWorker(columns, rows, {
+		stdout: stdout as NodeJS.WriteStream,
+	});
 	const term = new Terminal({
 		cols: columns,
 		rows,
@@ -409,7 +422,7 @@ test('scrolling oscillation with fullRender does not duplicate lines', async t =
 	const columns = 80;
 	const rows = 10;
 	let output = '';
-	const stdout = {
+	const stdout: Partial<NodeJS.WriteStream> = {
 		write(chunk: string) {
 			output += chunk;
 			return true;
@@ -417,10 +430,10 @@ test('scrolling oscillation with fullRender does not duplicate lines', async t =
 		on() {},
 		rows,
 		columns,
-	} as unknown as NodeJS.WriteStream;
+	};
 
 	const worker = new TerminalBufferWorker(columns, rows, {
-		stdout,
+		stdout: stdout as NodeJS.WriteStream,
 		debugRainbowEnabled: true,
 		backbufferUpdateDelay: 0,
 	});
@@ -548,5 +561,227 @@ test('scrolling oscillation with fullRender does not duplicate lines', async t =
 		getBg(0),
 		bg0Initial,
 		'Line 0 in history still should have original color',
+	);
+});
+
+test('scrolling up beyond maxScrollbackLength does not trigger fullRender or duplicate lines', async t => {
+	const columns = 80;
+	const rows = 5;
+	let output = '';
+	const stdout: Partial<NodeJS.WriteStream> = {
+		write(chunk: string) {
+			output += chunk;
+			return true;
+		},
+		on() {},
+		rows,
+		columns,
+	};
+
+	const maxScrollbackLength = 5;
+	const worker = new TerminalBufferWorker(columns, rows, {
+		stdout: stdout as NodeJS.WriteStream,
+		maxScrollbackLength,
+	});
+	const term = new Terminal({
+		cols: columns,
+		rows,
+		allowProposedApi: true,
+		convertEol: true,
+	});
+
+	const totalLines = 50;
+	const allLines = Array.from({length: totalLines}).map((_, i) =>
+		createStyledLine(`Line ${i}`),
+	);
+	const allLinesSerialized = serializer.serialize(allLines);
+
+	const updateScroll = async (scrollTop: number) => {
+		worker.update({id: 'root', children: [{id: 'scroll-box', children: []}]}, [
+			{
+				id: 'root',
+				x: 0,
+				y: 0,
+				width: columns,
+				height: rows,
+			},
+			{
+				id: 'scroll-box',
+				x: 0,
+				y: 0,
+				width: columns,
+				height: rows,
+				scrollTop,
+				isScrollable: true,
+				overflowToBackbuffer: true,
+				lines: {
+					updates: [{start: 0, end: totalLines, data: allLinesSerialized}],
+					totalLength: totalLines,
+				},
+			},
+		]);
+		output = '';
+		await worker.render();
+		await writeToTerm(term, output);
+	};
+
+	await updateScroll(0);
+	await updateScroll(20);
+
+	worker.backbufferDirtyCurrentFrame = false;
+	worker.backbufferDirty = false;
+
+	await updateScroll(10);
+	t.false(
+		worker.backbufferDirtyCurrentFrame || worker.backbufferDirty,
+		'backbuffer verification should be deferred when the cheap length check matches',
+	);
+	t.truthy(worker.terminalWriter.fullRenderTimeout);
+	await worker.flushPendingRender();
+
+	await updateScroll(18);
+	t.false(
+		worker.backbufferDirtyCurrentFrame || worker.backbufferDirty,
+		'backbuffer verification should stay deferred when the retained history length matches',
+	);
+	t.truthy(worker.terminalWriter.fullRenderTimeout);
+	await worker.flushPendingRender();
+});
+
+test('initial huge offset does not create blank history lines', async t => {
+	const columns = 80;
+	const rows = 24;
+	const worker = new TerminalBufferWorker(columns, rows, {
+		stdout: createSilentStdout(columns, rows),
+		maxScrollbackLength: 1000,
+	});
+
+	const lines = Array.from({length: 50}).map((_, i) =>
+		createStyledLine(`Line ${5000 + i}`),
+	);
+	const serializedData = serializer.serialize(lines);
+
+	const rootNode: RegionNode = {
+		id: 'root',
+		children: [
+			{
+				id: 'list',
+				children: [],
+			},
+		],
+	};
+
+	const updates: RegionUpdate[] = [
+		{
+			id: 'root',
+			x: 0,
+			y: 0,
+			width: columns,
+			height: rows,
+			isScrollable: false,
+		},
+		{
+			id: 'list',
+			x: 0,
+			y: 0,
+			width: columns,
+			height: rows,
+			isScrollable: true,
+			overflowToBackbuffer: true,
+			linesOffsetY: 5000,
+			scrollTop: 5000,
+			scrollHeight: 5050,
+			lines: {
+				updates: [
+					{
+						start: 5000,
+						end: 5050,
+						data: serializedData,
+					},
+				],
+				totalLength: 50,
+			},
+		},
+	];
+
+	worker.update(rootNode, updates);
+	await worker.fullRender();
+
+	const region = worker.sceneManager.getRegion('list');
+	t.is(region?.linesOffsetY, 5000);
+	t.is(region?.lines.length, 50);
+	t.is(region?.lines[0]?.getText(), 'Line 5000');
+	t.is(region?.lines.at(-1)?.getText(), 'Line 5049');
+
+	const state = worker.getExpectedState();
+	t.is(state.backbuffer.length, 0);
+	t.is(getRenderedText(state.screen[0]), 'Line 5000');
+	t.is(getRenderedText(state.screen.at(-1)), 'Line 5023');
+});
+
+test('fullRender composes retained non-zero offset history without blank lines', async t => {
+	const columns = 80;
+	const rows = 5;
+	const worker = new TerminalBufferWorker(columns, rows, {
+		stdout: createSilentStdout(columns, rows),
+		maxScrollbackLength: 10,
+	});
+	const lines = Array.from({length: 50}).map((_, i) =>
+		createStyledLine(`Line ${5000 + i}`),
+	);
+	const serializedData = serializer.serialize(lines);
+	const rootNode: RegionNode = {
+		id: 'root',
+		children: [
+			{
+				id: 'list',
+				children: [],
+			},
+		],
+	};
+	const updates: RegionUpdate[] = [
+		{
+			id: 'root',
+			x: 0,
+			y: 0,
+			width: columns,
+			height: rows,
+		},
+		{
+			id: 'list',
+			x: 0,
+			y: 0,
+			width: columns,
+			height: rows,
+			isScrollable: true,
+			overflowToBackbuffer: true,
+			linesOffsetY: 5000,
+			scrollTop: 5020,
+			scrollHeight: 5050,
+			lines: {
+				updates: [
+					{
+						start: 5000,
+						end: 5050,
+						data: serializedData,
+					},
+				],
+				totalLength: 50,
+			},
+		},
+	];
+
+	worker.update(rootNode, updates);
+	await worker.fullRender();
+
+	const state = worker.getExpectedState();
+	t.is(state.backbuffer.length, 10);
+	t.deepEqual(
+		state.backbuffer.map(line => getRenderedText(line)),
+		Array.from({length: 10}).map((_, i) => `Line ${5010 + i}`),
+	);
+	t.deepEqual(
+		state.screen.map(line => getRenderedText(line)),
+		Array.from({length: rows}).map((_, i) => `Line ${5020 + i}`),
 	);
 });

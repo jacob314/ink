@@ -78,9 +78,11 @@ class TestWorkerWrapper {
 	}
 }
 
-test('TerminalBufferWorker correctly tracks backbufferDirty', t => {
+test('TerminalBufferWorker correctly tracks backbufferDirty', async t => {
 	// 5 rows visible
-	const worker = new TerminalBufferWorker(20, 5);
+	const worker = new TerminalBufferWorker(20, 5, {
+		stdout: {write() {}} as unknown as NodeJS.WriteStream,
+	});
 	const wrapper = new TestWorkerWrapper(worker);
 
 	// Add 10 lines (0-9).
@@ -88,7 +90,12 @@ test('TerminalBufferWorker correctly tracks backbufferDirty', t => {
 	const lines = Array.from({length: 10}, (_, i) => createLine(`Line ${i}`));
 	wrapper.append(lines);
 
-	t.true(worker.backbufferDirty);
+	t.false(
+		worker.backbufferDirty,
+		'Appending lines initially should NOT set backbufferDirty',
+	);
+
+	await worker.render();
 
 	// Reset
 	worker.backbufferDirty = false;
@@ -97,10 +104,12 @@ test('TerminalBufferWorker correctly tracks backbufferDirty', t => {
 	// Modify line 0 (Backbuffer, index 0 < 5)
 	wrapper.update(0, [createLine('Line 0 Modified')]);
 
-	t.true(
+	t.false(
 		worker.backbufferDirty,
-		'Modifying backbuffer should set backbufferDirty',
+		'Modifying backbuffer should defer exact backbuffer verification',
 	);
+	t.truthy(worker.terminalWriter.fullRenderTimeout);
+	await worker.flushPendingRender();
 
 	// Reset
 	worker.backbufferDirty = false;
@@ -122,12 +131,16 @@ test('TerminalBufferWorker correctly tracks backbufferDirty', t => {
 		'Appending lines should NOT set backbufferDirty',
 	);
 
+	await worker.render();
+
 	// Modify at 2 (Backbuffer)
 	wrapper.update(2, [createLine('Inserted')]);
-	t.true(
+	t.false(
 		worker.backbufferDirty,
-		'Modifying backbuffer should set backbufferDirty',
+		'Modifying backbuffer should defer exact backbuffer verification',
 	);
+	t.truthy(worker.terminalWriter.fullRenderTimeout);
+	await worker.flushPendingRender();
 });
 
 const createUpdateScroll =

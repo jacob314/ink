@@ -6,9 +6,64 @@ import {TerminalBufferWorker} from '../../src/worker/render-worker.js';
 import {loadReplay} from '../../src/replay.js';
 import {type RenderLine} from '../../src/worker/terminal-writer.js';
 
+import {Serializer} from '../../src/serialization.js';
+import {type RegionUpdate} from '../../src/output.js';
+
 const {Terminal: XtermTerminal} = xtermHeadless;
 
-function getPlainText(line: RenderLine | undefined): string {
+const serializer = new Serializer();
+type WorkerOptions = NonNullable<
+	ConstructorParameters<typeof TerminalBufferWorker>[2]
+>;
+
+// eslint-disable-next-line max-params
+export function createListUpdates(
+	columns: number,
+	rows: number,
+	totalLength: number,
+	scrollTop: number,
+	startIndex = 0,
+	linesOffsetY = 0,
+): RegionUpdate[] {
+	const lines = Array.from({length: totalLength}).map((_, i) =>
+		createStyledLine(`Line ${i + startIndex}`),
+	);
+
+	return [
+		{
+			id: 'root',
+			x: 0,
+			y: 0,
+			width: columns,
+			height: rows,
+			isScrollable: false,
+		},
+		{
+			id: 'list',
+			x: 0,
+			y: 0,
+			width: columns,
+			height: rows,
+			isScrollable: true,
+			overflowToBackbuffer: true,
+			linesOffsetY,
+			scrollTop,
+			scrollHeight: totalLength + linesOffsetY,
+			lines: {
+				updates: [
+					{
+						start: linesOffsetY,
+						end: linesOffsetY + totalLength,
+						data: serializer.serialize(lines),
+					},
+				],
+				totalLength,
+			},
+		},
+	];
+}
+
+export function getPlainText(line: RenderLine | undefined): string {
 	if (!line) {
 		return '';
 	}
@@ -16,6 +71,22 @@ function getPlainText(line: RenderLine | undefined): string {
 	// RenderLine.text contains ANSI codes. We want plain text for comparison with xterm buffer.
 	return line.styledChars.getText().trimEnd();
 }
+
+export const getRenderedText = (line: {styledChars: StyledLine} | undefined) =>
+	line?.styledChars.getText().trimEnd() ?? '';
+
+export const createSilentStdout = (columns: number, rows: number) => {
+	const stdout: Partial<NodeJS.WriteStream> = {
+		write() {
+			return true;
+		},
+		on() {},
+		rows,
+		columns,
+	};
+
+	return stdout as NodeJS.WriteStream;
+};
 
 export const writeToTerm = async (
 	term: Terminal,
@@ -36,10 +107,10 @@ export function loadReplayData(replayDir: string, filename: string) {
 export function createWorkerAndTerminal(
 	columns: number,
 	rows: number,
-	options: Readonly<Record<string, unknown>> = {},
+	options: Readonly<Partial<WorkerOptions>> = {},
 ) {
 	let output = '';
-	const stdout = {
+	const stdout: Partial<NodeJS.WriteStream> = {
 		write(chunk: string) {
 			output += chunk;
 			return true;
@@ -47,10 +118,10 @@ export function createWorkerAndTerminal(
 		on() {},
 		rows,
 		columns,
-	} as unknown as NodeJS.WriteStream;
+	};
 
 	const worker = new TerminalBufferWorker(columns, rows, {
-		stdout,
+		stdout: stdout as NodeJS.WriteStream,
 		isAlternateBufferEnabled: false,
 		...options,
 	});

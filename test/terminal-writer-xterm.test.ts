@@ -161,6 +161,7 @@ test('TerminalWriter output matches xterm expectations for scrollLines (up)', as
 		linesToScroll: 1,
 		lines: [...lines, newLine],
 		direction: 'up',
+		scrollToBackbuffer: false,
 	});
 	writer.flush();
 	await writeToTerm(term, output);

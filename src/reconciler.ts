@@ -16,6 +16,7 @@ import {
 	createNode,
 	setAttribute,
 	markNodeAsDirty,
+	setCachedRender,
 	type DOMNodeAttribute,
 	type TextNode,
 	type ElementNames,
@@ -234,7 +235,12 @@ export default createReconciler<
 			}
 
 			if (key === 'internal_onRendered') {
-				node.internal_onRendered = value as () => void;
+				node.internal_onRendered = value as (node: DOMElement) => void;
+				continue;
+			}
+
+			if (key === 'internal_staticRenderVersion') {
+				node.internal_staticRenderVersion = value as number;
 				continue;
 			}
 
@@ -250,7 +256,12 @@ export default createReconciler<
 			}
 
 			if (key === 'cachedRender') {
-				node.cachedRender = value as Region;
+				if (value) {
+					setCachedRender(node, value as Region);
+				} else {
+					node.cachedRender = undefined;
+				}
+
 				continue;
 			}
 
@@ -379,7 +390,17 @@ export default createReconciler<
 				}
 
 				if (key === 'internal_onRendered') {
-					node.internal_onRendered = value as () => void;
+					node.internal_onRendered = value as (node: DOMElement) => void;
+					continue;
+				}
+
+				if (key === 'internal_staticRenderVersion') {
+					node.internal_staticRenderVersion = value as number;
+					if (!newProps['cachedRender']) {
+						node.cachedRender = undefined;
+						shouldMarkDirty = true;
+					}
+
 					continue;
 				}
 
@@ -390,7 +411,12 @@ export default createReconciler<
 				}
 
 				if (key === 'cachedRender') {
-					node.cachedRender = value as Region;
+					if (value) {
+						setCachedRender(node, value as Region);
+					} else {
+						node.cachedRender = undefined;
+					}
+
 					shouldMarkDirty = true;
 					continue;
 				}
