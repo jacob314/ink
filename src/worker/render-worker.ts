@@ -513,25 +513,11 @@ export class TerminalBufferWorker {
 			this.terminalWriter.fullRenderTimeout = undefined;
 		}
 
-		if (verifyOnly && !this.terminalWriter.backbufferDirty) {
-			if (this.shouldVerifyBackbufferBeforeFullRender) {
-				this.shouldVerifyBackbufferBeforeFullRender = false;
-				const rootRegion = this.sceneManager.getRootRegion();
-				const cameraY = rootRegion ? this.getCameraY(rootRegion) : 0;
-				if (this.checkBackbufferMatchesExpected(cameraY)) {
-					this.updateTrackingMaps(rootRegion, cameraY, true);
-					return;
-				}
-
-				this.terminalWriter.backbufferDirty = true;
-			} else {
+		if (verifyOnly) {
+			if (!this.shouldVerifyBackbufferBeforeFullRender) {
 				return;
 			}
-		} else if (!verifyOnly) {
-			this.shouldVerifyBackbufferBeforeFullRender = false;
-		}
 
-		if (verifyOnly && this.shouldVerifyBackbufferBeforeFullRender) {
 			this.shouldVerifyBackbufferBeforeFullRender = false;
 			const rootRegion = this.sceneManager.getRootRegion();
 			const cameraY = rootRegion ? this.getCameraY(rootRegion) : 0;
@@ -541,6 +527,10 @@ export class TerminalBufferWorker {
 				this.updateTrackingMaps(rootRegion, cameraY, true);
 				return;
 			}
+
+			this.terminalWriter.backbufferDirty = true;
+		} else {
+			this.shouldVerifyBackbufferBeforeFullRender = false;
 		}
 
 		if (!this.terminalWriter.backbufferDirty) {
@@ -936,34 +926,36 @@ export class TerminalBufferWorker {
 		const originalBackbuffer = this.backbuffer;
 		this.backbuffer = [];
 
-		const rootBackbufferHeight = Math.min(cameraY, this.maxScrollbackLength);
-		const rootBackbufferOffset = Math.max(
-			0,
-			cameraY - this.maxScrollbackLength,
-		);
+		try {
+			const rootBackbufferHeight = Math.min(cameraY, this.maxScrollbackLength);
+			const rootBackbufferOffset = Math.max(
+				0,
+				cameraY - this.maxScrollbackLength,
+			);
 
-		this.composeToBackbuffer(
-			this.sceneManager.root!,
-			rootRegion,
-			rootBackbufferHeight,
-			rootBackbufferOffset,
-		);
+			this.composeToBackbuffer(
+				this.sceneManager.root!,
+				rootRegion,
+				rootBackbufferHeight,
+				rootBackbufferOffset,
+			);
 
-		for (const region of this.sceneManager.regions.values()) {
-			if (region.overflowToBackbuffer && region.isScrollable) {
-				const node = this.findNodeForRegion(region.id);
-				const range = node
-					? this.getScrollableBackbufferRange(node, region)
-					: undefined;
-				if (node && range && range.height > 0) {
-					this.composeToBackbuffer(node, region, range.height, range.offset);
+			for (const region of this.sceneManager.regions.values()) {
+				if (region.overflowToBackbuffer && region.isScrollable) {
+					const node = this.findNodeForRegion(region.id);
+					const range = node
+						? this.getScrollableBackbufferRange(node, region)
+						: undefined;
+					if (node && range && range.height > 0) {
+						this.composeToBackbuffer(node, region, range.height, range.offset);
+					}
 				}
 			}
-		}
 
-		const expected = this.backbuffer;
-		this.backbuffer = originalBackbuffer;
-		return expected;
+			return this.backbuffer;
+		} finally {
+			this.backbuffer = originalBackbuffer;
+		}
 	}
 
 	private checkBackbufferMatchesExpected(cameraY: number): boolean {

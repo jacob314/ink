@@ -94,39 +94,28 @@ export default function StaticRender({
 }: Props) {
 	const ref = useRef<DOMElement>(null);
 	const [renderedVersion, setRenderedVersion] = useState(0);
-	const [state, setState] = useState(() => ({
-		version: 1,
-		cachedRender,
-		deps,
-		children,
-	}));
+	const prevCachedRender = useRef(cachedRender);
+	const prevChildren = useRef(children);
+	const prevDeps = useRef(deps);
+	const pendingVersion = useRef(1);
 
-	let pendingVersion = state.version;
-	let changed = false;
+	const cachedRenderChanged = cachedRender !== prevCachedRender.current;
+	const depsChanged =
+		deps !== undefined && !areDepsEqual(prevDeps.current, deps);
+	const childrenChanged =
+		deps === undefined && children !== prevChildren.current;
 
-	if (cachedRender !== state.cachedRender) {
-		changed = true;
-	} else if (deps !== undefined) {
-		if (!areDepsEqual(state.deps, deps)) {
-			changed = true;
-		}
-	} else if (children !== state.children) {
-		changed = true;
-	}
-
-	if (changed) {
-		pendingVersion++;
-		setState({
-			version: pendingVersion,
-			cachedRender,
-			deps,
-			children,
-		});
+	if (cachedRenderChanged || depsChanged || childrenChanged) {
+		prevCachedRender.current = cachedRender;
+		prevChildren.current = children;
+		prevDeps.current = deps;
+		pendingVersion.current++;
 	}
 
 	// We only render children if we haven't successfully rendered this pendingVersion yet.
+	const pendingRenderVersion = pendingVersion.current;
 	const shouldRenderChildren =
-		!cachedRender && renderedVersion !== pendingVersion && children;
+		!cachedRender && renderedVersion !== pendingRenderVersion && children;
 
 	useEffect(() => {
 		const node = ref.current;
@@ -142,10 +131,12 @@ export default function StaticRender({
 			ref={ref}
 			style={{...style, width}}
 			cachedRender={cachedRender}
-			internal_staticRenderVersion={pendingVersion}
+			internal_staticRenderVersion={pendingRenderVersion}
 			internal_onRendered={node => {
 				setRenderedVersion(currentVersion =>
-					currentVersion === pendingVersion ? currentVersion : pendingVersion,
+					currentVersion === pendingRenderVersion
+						? currentVersion
+						: pendingRenderVersion,
 				);
 				if (onRender) {
 					onRender(node);
