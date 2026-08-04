@@ -286,6 +286,29 @@ export class StyledLine {
 		this._spansDirty = true;
 	}
 
+	replaceAt(index: number, chars: StyledLine) {
+		if (chars.length === 0 || index >= this.length) return;
+		this.ensureInitialized();
+		chars.ensureInitialized();
+
+		const start = Math.max(0, index);
+		const end = Math.min(this.length, start + chars.length);
+		const replacementLen = end - start;
+		const slicedChars =
+			chars.length > replacementLen ? chars.slice(0, replacementLen) : chars;
+
+		const left = this.slice(0, start);
+		const right = this.slice(end);
+		const combined = left.combine(slicedChars, right);
+
+		this.length = combined.length;
+		this.text = combined.text;
+		this.charData = combined.charData;
+		this.spans = combined.spans;
+		this._spansDirty = combined._spansDirty;
+		this._cachedTrimmedLength = undefined;
+	}
+
 	// eslint-disable-next-line max-params
 	setChar(
 		index: number,
